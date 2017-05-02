@@ -1,10 +1,19 @@
 Package: jnjscidb
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Janssen SciDB Toolbox
 Version: 0.1
 Date: 2017-04-20
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Kriti Sen Sharma
+Maintainer: Kriti Sen Sharma <ksen@paradigm4.com>
+Description: Functions supporting SciDB pan-study repository at Janssen
+Depends:
+    data.table,
+    tidyr,
+    dplyr,
+    yaml,
+    reshape2,
+    Biobase,
+    shiny,
+    scidb
+License: file LICENSE
 LazyData: TRUE

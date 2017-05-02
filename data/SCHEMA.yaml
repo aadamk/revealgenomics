@@ -1,0 +1,523 @@
+--- 
+array:
+  PROJECT: 
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      name: string
+      description: string
+      created: string
+      updated: string
+    dims: 
+      project_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+    infoArray: TRUE
+  DATASET:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      name: string
+      description: string
+      project_id: int64
+      created: string
+      updated: string
+    dims: 
+      dataset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  # INDIVIDUAL
+  INDIVIDUAL:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      dataset_id: int64
+      name: string
+      description: string
+      species_: int64
+      sex_: int64
+      created: string
+      updated: string
+    dims: 
+      individual_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  # BIOSAMPLE
+  BIOSAMPLE:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      dataset_id: int64
+      name: string
+      description: string
+      disease_: int64
+      individual_id: int64
+      created: string
+      updated: string
+    dims: 
+      biosample_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  # EXPERIMENTSET
+  EXPERIMENTSET:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      name: string
+      description: string
+      molecule: string
+      sequencing_center: string
+      platform_unit: string
+      run_time: string
+      created: string
+      updated: string
+    dims: 
+      experimentset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  # EXPERIMENT
+  EXPERIMENT:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      experimentset_id: int64
+      individual_id: int64
+      name: string
+      created: string
+      updated: string
+    dims: 
+      experiment_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  # RNAQUANTIFICATIONSET
+  RNAQUANTIFICATIONSET:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      dataset_id: int64
+      name: string
+      description: string
+      created: string
+      updated: string
+    dims: 
+      rnaquantificationset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  #RNAQUANTIFICATION
+  RNAQUANTIFICATION:
+    data_class:
+      data
+    namespace: 
+      - public
+      - collaboration
+    attributes:
+      expression_count: float
+    dims:
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      rnaquantificationset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      biosample_id:
+        start: 1
+        end: Inf
+        chunk_interval: 10
+        overlap: 0
+      feature_id:
+        start: 1
+        end: Inf
+        chunk_interval: 10000
+        overlap: 0
+    infoArray: FALSE
+  # VARIANTSET
+  VARIANTSET:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      dataset_id: int64
+      referenceset_id: int64
+      name: string
+      description: string
+      created: string
+      updated: string
+    dims: 
+      variantset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  # VARIANT
+  VARIANT:
+    data_class:
+      variant_data
+    namespace: 
+      - public
+      - collaboration
+    attributes:
+      CHROM: string
+      POS: int64
+      ID: string
+      REF: string
+      ALT: string
+    dims:
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      variantset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      biosample_id:
+        start: 1
+        end: Inf
+        chunk_interval: 100
+        overlap: 0
+      feature_id:
+        start: 1
+        end: Inf
+        chunk_interval: 10000
+        overlap: 0
+      variant_id:
+        start: 1
+        end: Inf
+        chunk_interval: 10000
+        overlap: 0
+    infoArray: TRUE
+  # FUSIONSET
+  FUSIONSET:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      dataset_id: int64
+      name: string
+      description: string
+      created: string
+      updated: string
+    dims: 
+      fusionset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  # FUSION
+  FUSION:
+    data_class:
+      variant_data
+    namespace: 
+      - public
+      - collaboration
+    attributes:
+      feature_id_left: int64
+      feature_id_right: int64
+      gene_left: string
+      reference_name_left: string
+      pos_left: int64
+      gene_right: string
+      reference_name_right: string
+      pos_right: int64
+      num_spanning_reads: int32
+      num_mate_pairs: int32
+      num_mate_pairs_fusion: int32
+      quality_score: double
+      sample_name_unabbreviated: string
+    dims:
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      fusionset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      biosample_id:
+        start: 1
+        end: Inf
+        chunk_interval: 100
+        overlap: 0
+      fusion_id:  
+        start: 1
+        end: Inf
+        chunk_interval: 100
+        overlap: 0
+    infoArray: FALSE
+  # COPYNUMBERSET
+  COPYNUMBERSET:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      dataset_id: int64
+      referenceset_id: int64
+      name: string
+      description: string
+      created: string
+      updated: string
+    dims: 
+      copynumberset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  # COPYNUMBERSUBSET
+  COPYNUMBERSUBSET:
+    data_class:
+      metadata
+    namespace: 
+      - public
+      - collaboration
+    attributes: 
+      dataset_id: int64
+      copynumberset_id: int64
+      name: string
+      description: string
+      created: string
+      updated: string
+    dims: 
+      copynumbersubset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    infoArray: TRUE
+  # COPYNUMBER_SEG
+  COPYNUMBER_SEG:
+    data_class:
+      copynumber_seg_data
+    namespace: 
+      - public
+      - collaboration
+    attributes:
+      reference_name: string
+      start: int64
+      end: int64
+      num_mark: int32
+      seg_mean: double
+    dims:
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      copynumberset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      biosample_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      copynumber_seg_synth_id:
+        start: 1
+        end: Inf
+        chunk_interval: 10000
+        overlap: 0
+    infoArray: FALSE
+  #COPYNUMBER_MAT
+  COPYNUMBER_MAT:
+    data_class:
+      copynumber_mat_data
+    namespace: 
+      - public
+      - collaboration
+    attributes:
+      copynumber_val: double
+    dims:
+      dataset_version:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      copynumbersubset_id:
+        start: 1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      biosample_id:
+        start: 1
+        end: Inf
+        chunk_interval: 100
+        overlap: 0
+      feature_id:
+        start: 1
+        end: Inf
+        chunk_interval: 100000
+        overlap: 0
+    infoArray: FALSE
+          
+  # ONTOLOGY
+  ONTOLOGY:
+    data_class:
+      metadata
+    namespace: 
+      - public
+    attributes: 
+      term: string
+      source_name: string
+      source_version: string
+      created: string
+      updated: string
+    dims: ontology_id
+    infoArray: FALSE
+  # FEATURESET
+  FEATURESET:
+    data_class:
+      featuredata
+    namespace: 
+      - public
+    attributes: 
+      referenceset_id: int64
+      name: string
+      description: string
+      source_uri: string
+      created: string
+      updated: string
+    dims: featureset_id
+    infoArray: TRUE
+  # FEATURE
+  FEATURE:
+    data_class:
+      featuredata
+    namespace: 
+      - public
+    attributes: 
+      name: string
+      gene_symbol: string
+      featureset_id: int64
+      reference_name: string
+      start: int64
+      end: int64
+      strand_term: int64
+      feature_type: string
+      source: string
+      created: string
+      updated: string
+    dims: feature_id
+    infoArray: TRUE
+  # FEATURE_SYNONYM
+  FEATURE_SYNONYM:
+    data_class: 
+      featuredata
+    namespace:
+      - public
+    attributes:
+      synonym: string
+      feature_id: int64
+      library_name: string
+      created: string
+      updated: string
+    dims: synonym_id
+    infoArray: FALSE
