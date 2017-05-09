@@ -224,23 +224,25 @@ register_tuple = function(df, ids_int64_conv, arrayname){
 }
 
 register_project = function(df,
-                            namespace){
+                            namespace,
+                            only_test = FALSE){
   uniq = 'name'
-  # arrayname = jdb$meta$arrProject
-  # stopifnot("namespace" %in% colnames(df))
-  # stopifnot(length(unique(df$namespace))==1)
-  
+  test_register_project(df, uniq)
+  if (only_test) return()
+
   arrayname = paste(namespace, ".", jdb$meta$arrProject, sep = "")
   register_tuple_return_id(df, arrayname, uniq)
 }
 
 register_dataset = function(df,
-                            dataset_version = 1
+                            dataset_version = 1,
+                            only_test = FALSE
 ){
   uniq = c('project_id', 'name')
-  if (dataset_version != 1) stop("to increment dataset versions, use the function `increment_dataset_version()`")
   
-  if(length(unique(df$project_id))!=1) stop("Datasets to be registered must belong to a single project")
+  test_register_dataset(df, uniq, dataset_version)
+  if (only_test) return()
+  
   namespace = find_namespace(id = unique(df$project_id), entitynm=jdb$meta$arrProject)
   arrayname = paste(namespace, ".", jdb$meta$arrDataset, sep = "")
   register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
@@ -255,16 +257,22 @@ find_namespace = function(id, entitynm, dflookup = NULL){
   dflookup[match(id, dflookup[, get_base_idname(entitynm)]), ]$namespace
 }
 
-register_ontology_term = function(df){
+register_ontology_term = function(df, only_test = FALSE){
   uniq = "term"
+  test_register_ontology(df, uniq)
+  if (only_test) return()
+  
   arrayname = jdb$meta$arrOntology
   register_tuple_return_id(df, arrayname, uniq)
 }
 
 register_individual = function(df,
-                               dataset_version = NULL){
+                               dataset_version = NULL, 
+                               only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  if(length(unique(df$dataset_id))!=1) stop("Individuals to be registered must belong to a single dataset/study")
+  test_register_individual(df, uniq)
+  if (only_test) return()
+  
   if (is.null(dataset_version)) {
     dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
     cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
@@ -274,24 +282,33 @@ register_individual = function(df,
   register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
 }
 
-register_featureset = function(df){
+register_featureset = function(df, only_test = FALSE){
   uniq = 'name'
+  test_register_featureset(df, uniq)
+  if (only_test) return()
+  
   arrayname = jdb$meta$arrFeatureset
   
   register_tuple_return_id(df,
                            arrayname, uniq)
 }
 
-register_feature = function(df){
+register_feature = function(df, only_test = FALSE){
   uniq = c("name", "featureset_id", "feature_type")
+  test_register_featureset(df, uniq)
+  if (only_test) return()
+
   arrayname = jdb$meta$arrFeature
   register_tuple_return_id(df, arrayname, uniq)
 }
 
 register_biosample = function(df,
-                              dataset_version = NULL){
+                              dataset_version = NULL,
+                              only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  if(length(unique(df$dataset_id))!=1) stop("Biosamples to be registered must belong to a single dataset/study")
+  test_register_biosample(df, uniq)
+  if (only_test) return()
+
   if (is.null(dataset_version)) {
     dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
     cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
@@ -342,10 +359,7 @@ register_tuple_return_id = function(df,
                                     arrayname,
                                     uniq = NULL,
                                     dataset_version = NULL){
-  if(any(duplicated(df[, uniq]))) {
-    stop("duplicate entries exist in data to be uploaded need to be removed. Check fields: ",
-         paste(uniq, collapse = ", "))
-  }
+  test_unique_fields(df, uniq)
   
   idname = get_idname(arrayname)
   int64_fields = get_int64fields(arrayname)
@@ -442,9 +456,11 @@ update_lookup_array = function(id, arrayname){
   iquery(jdb$db, qq)
 }
 
-register_variantset = function(df, dataset_version = NULL){
+register_variantset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  if(length(unique(df$dataset_id))!=1) stop("VariantSet to be registered must belong to a single dataset/study")
+  test_register_variantset(df, uniq)
+  if (only_test) return()
+  
   if (is.null(dataset_version)) {
     dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
     cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
@@ -454,9 +470,11 @@ register_variantset = function(df, dataset_version = NULL){
   register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
 }
 
-register_rnaquantificationset = function(df, dataset_version = NULL){
+register_rnaquantificationset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c("dataset_id", "name")
-  if(length(unique(df$dataset_id))!=1) stop("Rnaquantificationset to be registered must belong to a single dataset/study")
+  test_register_rnaquantificationset(df, uniq)
+  if (only_test) return()
+  
   if (is.null(dataset_version)) {
     dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
     cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
@@ -466,9 +484,11 @@ register_rnaquantificationset = function(df, dataset_version = NULL){
   register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
 }
 
-register_fusionset = function(df, dataset_version = NULL){
+register_fusionset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  if(length(unique(df$dataset_id))!=1) stop("FusionSet to be registered must belong to a single dataset/study")
+  test_register_fusionset(df, uniq)
+  if (only_test) return()
+  
   if (is.null(dataset_version)) {
     dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
     cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
@@ -478,9 +498,11 @@ register_fusionset = function(df, dataset_version = NULL){
   register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
 }
 
-register_copynumberset = function(df, dataset_version = NULL){
+register_copynumberset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  if(length(unique(df$dataset_id))!=1) stop("CopyNumberSet to be registered must belong to a single dataset/study")
+  test_register_copynumberset(df, uniq)
+  if (only_test) return()
+
   if (is.null(dataset_version)) {
     dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
     cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
@@ -490,9 +512,11 @@ register_copynumberset = function(df, dataset_version = NULL){
   register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
 }
 
-register_copynumbersubset = function(df, dataset_version = NULL){
+register_copynumbersubset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'copynumberset_id', 'name')
-  if(length(unique(df$dataset_id))!=1) stop("CopyNumberSubset to be registered must belong to a single dataset/study")
+  test_register_copynumbersubset(df, uniq)
+  if (only_test) return()
+  
   if (is.null(dataset_version)) {
     dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
     cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
@@ -502,10 +526,12 @@ register_copynumbersubset = function(df, dataset_version = NULL){
   register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
 }
 
-register_variant = function(df, dataset_version = NULL){
+register_variant = function(df, dataset_version = NULL, only_test = FALSE){
+  test_register_variant(df)
+  if (only_test) return()
+  
   df = df %>% group_by(feature_id, biosample_id) %>% mutate(variant_id = row_number())
   df = as.data.frame(df)
-  if(length(unique(df$dataset_id))!=1) stop("VariantSet to be registered must belong to a single dataset/study")
   if (is.null(dataset_version)) {
     dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
     cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
@@ -514,10 +540,7 @@ register_variant = function(df, dataset_version = NULL){
   arrayname = paste(namespace, ".", jdb$meta$arrVariant, sep = "")
   
   ids_int64_conv = c(get_idname(arrayname), get_int64fields(arrayname))
-  # register_tuple(df,
-  #                ,
-  #                arrayname)
-  
+
   ids_int64_conv = ids_int64_conv[(ids_int64_conv != "variant_id")]
   cat("Uploading\n")
   if (nrow(df) < 100000) {x1 = as.scidb(jdb$db, df)} else {x1 = as.scidb(jdb$db, df, chunk_size=nrow(df))}
@@ -537,7 +560,7 @@ register_variant = function(df, dataset_version = NULL){
   df2 = df
   df2$dataset_id = NULL
   df2 = prep_df_fields(df2, 
-                       mandatory_fields = c(get_mandatory_fields_for_entity_upload(arrayname), 
+                       mandatory_fields = c(get_mandatory_fields_for_register_entity(arrayname), 
                                             get_idname(arrayname)))
   
   cat("Now registering info fields\n")
@@ -679,7 +702,7 @@ search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, fe
   iquery(jdb$db, left_query, return = TRUE)
 }
 
-get_mandatory_fields_for_entity_upload = function(arrayname){
+get_mandatory_fields_for_register_entity = function(arrayname){
   attrs = names(jdb$meta$L$array[[strip_namespace(arrayname)]]$attributes)
   attrs = attrs[!(attrs %in% c('created', 'updated'))]
   attrs
@@ -688,50 +711,18 @@ get_mandatory_fields_for_entity_upload = function(arrayname){
 mandatory_fields = function(){
   entities = grep("^L$", names(jdb$meta), invert = TRUE, value = TRUE)
   entitynames = sapply(entities, function(entity){jdb$meta[[entity]]})
-  l1 = sapply(entitynames, function(entitynm){get_mandatory_fields_for_entity_upload(entitynm)})
+  l1 = sapply(entitynames, function(entitynm){get_mandatory_fields_for_register_entity(entitynm)})
   names(l1) = entitynames
   l1
 }
 
-mandatory_fields_project = function(){
-  get_mandatory_fields_for_entity_upload(arrayname = jdb$meta$arrProject)
-}
-
-mandatory_fields_dataset = function(){
-  get_mandatory_fields_for_entity_upload(arrayname = jdb$meta$arrDataset)
-}
-
-mandatory_fields_individual = function(){
-  get_mandatory_fields_for_entity_upload(arrayname = jdb$meta$arrIndividuals)
-}
-
-mandatory_fields_biosample = function(){
-  get_mandatory_fields_for_entity_upload(arrayname = jdb$meta$arrBiosample)
-}
-
-mandatory_fields_rnaquantificationset = function(){
-  get_mandatory_fields_for_entity_upload(arrayname = jdb$meta$arrRnaquantificationset)
-}
-
-mandatory_fields_ontology = function(){
-  get_mandatory_fields_for_entity_upload(arrayname = jdb$meta$arrOntology)
-}
-
-mandatory_fields_featureset = function(){
-  get_mandatory_fields_for_entity_upload(arrayname = jdb$meta$arrFeatureset)
-}
-
-mandatory_fields_feature = function(){
-  get_mandatory_fields_for_entity_upload(arrayname = jdb$meta$arrFeature)
-}
-
 report_missing_mandatory_fields = function(df, arrayname){
-  fields = get_mandatory_fields_for_entity_upload(strip_namespace(arrayname))
+  fields = get_mandatory_fields_for_register_entity(strip_namespace(arrayname))
   fields[which(!(fields %in% colnames(df)))]
 }
 
-test_for_upload = function(df, arrayname){
-  mandatory_fields = get_mandatory_fields_for_entity_upload(arrayname)
+test_mandatory_fields = function(df, arrayname){
+  mandatory_fields = get_mandatory_fields_for_register_entity(arrayname)
   missing_fields =  report_missing_mandatory_fields(df, arrayname = arrayname)
   if (length(missing_fields) == 0){
     cat("Looks OK\n---Preview of mandatory fields:---\n")
@@ -739,42 +730,121 @@ test_for_upload = function(df, arrayname){
     cat("---Flexible fields:\n")
     print(colnames(df)[!(colnames(df) %in% mandatory_fields)])
   } else {
-    cat("Following fields are missing: \n")
-    print(missing_fields)
+    stop("Following fields are missing: \n", paste(missing_fields, collapse = ", "))
   }
 }
 
-test_for_project_upload = function(df){
-  test_for_upload(df, arrayname = jdb$meta$arrProject)
+test_unique_fields = function(df, uniq){
+  if(any(duplicated(df[, uniq]))) {
+    stop("duplicate entries exist in data to be uploaded need to be removed. Check fields: ",
+         paste(uniq, collapse = ", "))
+  }
 }
 
-test_for_dataset_upload = function(df){
-  test_for_upload(df, arrayname = jdb$meta$arrDataset)
+test_register_project = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrProject)
+  test_unique_fields(df, uniq)
 }
 
-test_for_individual_upload = function(df){
-  test_for_upload(df, arrayname = jdb$meta$arrIndividuals)
+test_register_dataset = function(df, uniq, dataset_version){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrDataset)
+  test_unique_fields(df, uniq)
+  if(length(unique(df$project_id))!=1) stop("Datasets to be registered must belong to a single project")
+  if (dataset_version != 1) stop("to increment dataset versions, use the function `increment_dataset_version()`")
 }
 
-test_for_biosample_upload = function(df){
-  test_for_upload(df, arrayname = jdb$meta$arrBiosample)
+test_register_individual = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrIndividuals)
+  test_unique_fields(df, uniq)
+  if(length(unique(df$dataset_id))!=1) stop("Individuals to be registered must belong to a single dataset/study")
 }
 
-test_for_rnaquantificationset_upload = function(df){
-  test_for_upload(df, arrayname = jdb$meta$arrRnaquantificationset)
+test_register_biosample = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrBiosample)
+  test_unique_fields(df, uniq)
+  if(length(unique(df$dataset_id))!=1) stop("Biosamples to be registered must belong to a single dataset/study")
 }
 
-test_for_ontology_upload = function(df){
-  test_for_upload(df, arrayname = jdb$meta$arrOntology)
+test_register_rnaquantificationset = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrRnaquantificationset)
+  test_unique_fields(df, uniq)
+  if(length(unique(df$dataset_id))!=1) stop("Rnaquantificationset to be registered must belong to a single dataset/study")
 }
 
-test_for_featureset_upload = function(df){
-  test_for_upload(df, arrayname = jdb$meta$arrFeatureset)
+test_register_ontology = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrOntology)
+  test_unique_fields(df, uniq)
 }
 
-test_for_feature_upload = function(df){
-  test_for_upload(df, arrayname = jdb$meta$arrFeature)
+test_register_featureset = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrFeatureset)
+  test_unique_fields(df, uniq)
 }
+
+test_register_feature = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrFeature)
+  test_unique_fields(df, uniq)
+}
+
+test_register_feature_synonym = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrFeatureSynonym)
+  test_unique_fields(df, uniq)
+}
+
+test_register_variantset = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrVariantset)
+  test_unique_fields(df, uniq)
+  if(length(unique(df$dataset_id))!=1) stop("VariantSet to be registered must belong to a single dataset/study")
+}
+
+test_register_fusionset = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrFusionset)
+  test_unique_fields(df, uniq)
+  if(length(unique(df$dataset_id))!=1) stop("FusionSet to be registered must belong to a single dataset/study")
+}
+
+test_register_copynumberset = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrCopyNumberSet)
+  test_unique_fields(df, uniq)
+  if(length(unique(df$dataset_id))!=1) stop("CopyNumberSet to be registered must belong to a single dataset/study")
+}
+
+test_register_copynumbersubset = function(df, uniq){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrCopyNumberSubSet)
+  test_unique_fields(df, uniq)
+  if(length(unique(df$dataset_id))!=1) stop("CopyNumberSubset to be registered must belong to a single dataset/study")
+}
+
+test_register_expression_matrix = function(filepath,
+                                             rnaquantificationset_id,
+                                             featureset_id,
+                                             feature_type,
+                                             dataset_version){
+  stopifnot(length(rnaquantificationset_id) == 1)
+  stopifnot(length(featureset_id) == 1)
+  stopifnot(feature_type == 'gene' | feature_type == 'transcript')
+  stopifnot(length(dataset_version) == 1)
+}
+
+test_register_variant = function(df){
+  if(length(unique(df$dataset_id))!=1) stop("Variants to be registered must belong to a single dataset/study")
+  report_missing_mandatory_fields(df, arrayname = jdb$meta$arrVariant)
+}
+
+test_register_copynumber_seg = function(copynumberset){
+  stopifnot(nrow(copynumberset) == 1)
+  stopifnot("filepath" %in% colnames(copynumberset))
+}
+
+test_register_copnyumber_matrix_file = function(copynumberSubSet, dataset_version){
+  stopifnot(nrow(copynumberSubSet) == 1)
+  stopifnot("filepath" %in% colnames(copynumberSubSet))
+}
+
+test_register_fusion_data = function(df, fusionset){
+  stopifnot(nrow(fusionset) == 1)
+}
+
 
 register_info = function(df, idname, arrayname){
   # df[idname] = id
@@ -1219,7 +1289,10 @@ search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_vers
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
-register_feature_synonym = function(df, uniq){
+register_feature_synonym = function(df, uniq, only_test = FALSE){
+  test_register_feature_synonym(df, uniq)
+  if (only_test) return()
+  
   arrayname = jdb$meta$arrFeatureSynonym
   register_tuple_return_id(df, arrayname, uniq)
 }
@@ -1591,7 +1664,15 @@ register_expression_matrix = function(filepath,
                                       rnaquantificationset_id,
                                       featureset_id,
                                       feature_type,
-                                      dataset_version = NULL){
+                                      dataset_version = NULL,
+                                      only_test = FALSE){
+  test_register_expression_matrix(filepath,
+                                    rnaquantificationset_id,
+                                    featureset_id,
+                                    feature_type,
+                                    dataset_version)
+  if (only_test) return()
+  
   if (is.null(dataset_version)) {
     rqset = get_rnaquantificationsets(rnaquantificationset_id = rnaquantificationset_id) # finds the latest version
     dataset_version = rqset$dataset_version
@@ -1792,12 +1873,13 @@ register_expression_matrix = function(filepath,
   return(rnaquantificationset_id)
 }
 
-register_copynumber_seg = function(copynumberset){
-  stopifnot(nrow(copynumberset) == 1)
+register_copynumber_seg = function(copynumberset, only_test = FALSE){
+  test_register_copynumber_seg(copynumberset)
+  if (only_test) return()
+  
   dataset_id = copynumberset$dataset_id
   b = search_biosamples(dataset_id = dataset_id, dataset_version = copynumberset$dataset_version)
   
-  stopifnot("filepath" %in% colnames(copynumberset))
   xx = read.delim(copynumberset$filepath)
   xx$biosample_id = b[match(xx$ID, b$name), ]$biosample_id
   stopifnot(!any(is.na(xx$biosample_id)))
@@ -1819,13 +1901,14 @@ register_copynumber_seg = function(copynumberset){
                  arrayname = arrayname)
 }
 
-register_copynumber_matrix_file = function(copynumberSubSet, dataset_version){
-  stopifnot(nrow(copynumberSubSet) == 1)
+register_copynumber_matrix_file = function(copynumberSubSet, dataset_version, only_test = FALSE){
+  test_register_copnyumber_matrix_file(copynumberSubSet, dataset_version)
+  if (only_test) return()
+  
   dataset_id = copynumberSubSet$dataset_id
   dataset_version = copynumberSubSet$dataset_version
   b = search_biosamples(dataset_id = dataset_id, dataset_version = dataset_version)
   
-  stopifnot("filepath" %in% colnames(copynumberSubSet))
   xx = read.delim(copynumberSubSet$filepath)
   matched_biosample_id = b[match(tail(colnames(xx), -1), b$name), ]$biosample_id
   stopifnot(all(!is.na(matched_biosample_id)))
@@ -1852,9 +1935,10 @@ register_copynumber_matrix_file = function(copynumberSubSet, dataset_version){
   register_tuple(df = xx2, ids_int64_conv = get_idname(jdb$meta$arrCopynumber_mat), arrayname = arrayname)
 }
 
+register_fusion_data = function(df, fusionset, only_test = FALSE){
+  test_register_fusion_data(df, fusionset)
+  if (only_test) return()
 
-register_fusion_data = function(df, fusionset){
-  stopifnot(nrow(fusionset) == 1)
   dataset_id = fusionset$dataset_id
   dataset_version = fusionset$dataset_version
   
@@ -2050,7 +2134,7 @@ increment_dataset_version = function(df){
   df$dataset_version = get_dataset_max_version(dataset_id = df$dataset_id, updateCache = TRUE) + 1
   df$created = NULL
   df$updated = NULL
-  mandatory_fields = get_mandatory_fields_for_entity_upload(jdb$meta$arrDataset)
+  mandatory_fields = get_mandatory_fields_for_entity(jdb$meta$arrDataset)
   df = prep_df_fields(df, c(mandatory_fields, get_idname(jdb$meta$arrDataset)))
   
   register_tuple_update_lookup(df = df, arrayname = arrayname, updateLookup = FALSE)
