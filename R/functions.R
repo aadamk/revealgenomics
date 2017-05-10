@@ -227,11 +227,11 @@ register_project = function(df,
                             namespace,
                             only_test = FALSE){
   uniq = 'name'
-  test_register_project(df, uniq)
-  if (only_test) return()
-
-  arrayname = paste(namespace, ".", jdb$meta$arrProject, sep = "")
-  register_tuple_return_id(df, arrayname, uniq)
+  test_register_project(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = paste(namespace, ".", jdb$meta$arrProject, sep = "")
+    register_tuple_return_id(df, arrayname, uniq)
+  } # end of if (!only_test)
 }
 
 register_dataset = function(df,
@@ -240,12 +240,12 @@ register_dataset = function(df,
 ){
   uniq = c('project_id', 'name')
   
-  test_register_dataset(df, uniq, dataset_version)
-  if (only_test) return()
-  
-  namespace = find_namespace(id = unique(df$project_id), entitynm=jdb$meta$arrProject)
-  arrayname = paste(namespace, ".", jdb$meta$arrDataset, sep = "")
-  register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  test_register_dataset(df, uniq, dataset_version, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    namespace = find_namespace(id = unique(df$project_id), entitynm=jdb$meta$arrProject)
+    arrayname = paste(namespace, ".", jdb$meta$arrDataset, sep = "")
+    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  } # end of if (!only_test)
 }
 
 find_namespace = function(id, entitynm, dflookup = NULL){
@@ -259,63 +259,62 @@ find_namespace = function(id, entitynm, dflookup = NULL){
 
 register_ontology_term = function(df, only_test = FALSE){
   uniq = "term"
-  test_register_ontology(df, uniq)
-  if (only_test) return()
-  
-  arrayname = jdb$meta$arrOntology
-  register_tuple_return_id(df, arrayname, uniq)
+  test_register_ontology(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = jdb$meta$arrOntology
+    register_tuple_return_id(df, arrayname, uniq)
+  } # end of if (!only_test)
 }
 
 register_individual = function(df,
                                dataset_version = NULL, 
                                only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  test_register_individual(df, uniq)
-  if (only_test) return()
-  
-  if (is.null(dataset_version)) {
-    dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-    cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-  }
-  namespace = find_namespace(id = unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-  arrayname = paste(namespace, ".", jdb$meta$arrIndividuals, sep = "")
-  register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  test_register_individual(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    if (is.null(dataset_version)) {
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+    }
+    namespace = find_namespace(id = unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
+    arrayname = paste(namespace, ".", jdb$meta$arrIndividuals, sep = "")
+    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  } # end of if (!only_test)
 }
 
 register_featureset = function(df, only_test = FALSE){
   uniq = 'name'
-  test_register_featureset(df, uniq)
-  if (only_test) return()
-  
-  arrayname = jdb$meta$arrFeatureset
-  
-  register_tuple_return_id(df,
+  test_register_featureset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = jdb$meta$arrFeatureset
+    register_tuple_return_id(df,
                            arrayname, uniq)
+  } # end of if (!only_test)
 }
 
 register_feature = function(df, only_test = FALSE){
   uniq = c("name", "featureset_id", "feature_type")
-  test_register_featureset(df, uniq)
-  if (only_test) return()
-
-  arrayname = jdb$meta$arrFeature
-  register_tuple_return_id(df, arrayname, uniq)
+  test_register_feature(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = jdb$meta$arrFeature
+    register_tuple_return_id(df, arrayname, uniq)
+  } # end of if (!only_test)
 }
 
 register_biosample = function(df,
                               dataset_version = NULL,
                               only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  test_register_biosample(df, uniq)
-  if (only_test) return()
-
-  if (is.null(dataset_version)) {
-    dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-    cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-  }
-  namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-  arrayname = paste(namespace, ".", jdb$meta$arrBiosample, sep = "")
-  register_tuple_return_id(df, arrayname, uniq, dataset_version)
+  test_register_biosample(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    if (is.null(dataset_version)) {
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+    }
+    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
+    arrayname = paste(namespace, ".", jdb$meta$arrBiosample, sep = "")
+    register_tuple_return_id(df, arrayname, uniq, dataset_version)
+  } # end of if (!only_test)
 }
 
 # finds matches of entries in dataframe to be uploaded with entries previously registered in database based on user provided unique fields
@@ -359,7 +358,8 @@ register_tuple_return_id = function(df,
                                     arrayname,
                                     uniq = NULL,
                                     dataset_version = NULL){
-  test_unique_fields(df, uniq)
+  test_unique_fields(df, uniq)         # Ideally this should have already been run earlier
+  test_mandatory_fields(df, arrayname, silent = TRUE) # Ideally this should have already been run earlier
   
   idname = get_idname(arrayname)
   int64_fields = get_int64fields(arrayname)
@@ -367,10 +367,6 @@ register_tuple_return_id = function(df,
   mandatory_fields = names(jdb$meta$L$array[[strip_namespace(arrayname)]]$attributes)
   namespaces_for_entity = jdb$meta$L$array[[strip_namespace(arrayname)]]$namespace
   
-  if (!(all(mandatory_fields %in% c(colnames(df), 'created', 'updated')))){
-    stop("Following fields are missing while registering ", strip_namespace(arrayname), " entity:\n",
-         paste(report_missing_mandatory_fields(df, arrayname), collapse = ", "))
-  }
   df = prep_df_fields(df, mandatory_fields)
   
   if (!is.null(dataset_version)) {
@@ -458,114 +454,114 @@ update_lookup_array = function(id, arrayname){
 
 register_variantset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  test_register_variantset(df, uniq)
-  if (only_test) return()
-  
-  if (is.null(dataset_version)) {
-    dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-    cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-  }
-  namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-  arrayname = paste(namespace, ".", jdb$meta$arrVariantset, sep = "")
-  register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  test_register_variantset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    if (is.null(dataset_version)) {
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+    }
+    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
+    arrayname = paste(namespace, ".", jdb$meta$arrVariantset, sep = "")
+    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  } # end of if (!only_test)
 }
 
 register_rnaquantificationset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c("dataset_id", "name")
-  test_register_rnaquantificationset(df, uniq)
-  if (only_test) return()
-  
-  if (is.null(dataset_version)) {
-    dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-    cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-  }
-  namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-  arrayname = paste(namespace, ".", jdb$meta$arrRnaquantificationset, sep = "")
-  register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  test_register_rnaquantificationset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    if (is.null(dataset_version)) {
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+    }
+    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
+    arrayname = paste(namespace, ".", jdb$meta$arrRnaquantificationset, sep = "")
+    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  } # end of if (!only_test)
 }
 
 register_fusionset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  test_register_fusionset(df, uniq)
-  if (only_test) return()
-  
-  if (is.null(dataset_version)) {
-    dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-    cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-  }
-  namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-  arrayname = paste(namespace, ".", jdb$meta$arrFusionset, sep = "")
-  register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  test_register_fusionset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    if (is.null(dataset_version)) {
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+    }
+    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
+    arrayname = paste(namespace, ".", jdb$meta$arrFusionset, sep = "")
+    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  } # end of if (!only_test)
 }
 
 register_copynumberset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'name')
-  test_register_copynumberset(df, uniq)
-  if (only_test) return()
-
-  if (is.null(dataset_version)) {
-    dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-    cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-  }
-  namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-  arrayname = paste(namespace, ".", jdb$meta$arrCopyNumberSet, sep = "")
-  register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  test_register_copynumberset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    if (is.null(dataset_version)) {
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+    }
+    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
+    arrayname = paste(namespace, ".", jdb$meta$arrCopyNumberSet, sep = "")
+    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  } # end of if (!only_test)
 }
 
 register_copynumbersubset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'copynumberset_id', 'name')
-  test_register_copynumbersubset(df, uniq)
-  if (only_test) return()
-  
-  if (is.null(dataset_version)) {
-    dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-    cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-  }
-  namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-  arrayname = paste(namespace, ".", jdb$meta$arrCopyNumberSubSet, sep = "")
-  register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  test_register_copynumbersubset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    if (is.null(dataset_version)) {
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+    }
+    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
+    arrayname = paste(namespace, ".", jdb$meta$arrCopyNumberSubSet, sep = "")
+    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  } # end of if (!only_test)
 }
 
 register_variant = function(df, dataset_version = NULL, only_test = FALSE){
   test_register_variant(df)
-  if (only_test) return()
+  if (!only_test) {
+    df = df %>% group_by(feature_id, biosample_id) %>% mutate(variant_id = row_number())
+    df = as.data.frame(df)
+    if (is.null(dataset_version)) {
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+    }
+    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
+    arrayname = paste(namespace, ".", jdb$meta$arrVariant, sep = "")
+    
+    ids_int64_conv = c(get_idname(arrayname), get_int64fields(arrayname))
   
-  df = df %>% group_by(feature_id, biosample_id) %>% mutate(variant_id = row_number())
-  df = as.data.frame(df)
-  if (is.null(dataset_version)) {
-    dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-    cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-  }
-  namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-  arrayname = paste(namespace, ".", jdb$meta$arrVariant, sep = "")
-  
-  ids_int64_conv = c(get_idname(arrayname), get_int64fields(arrayname))
-
-  ids_int64_conv = ids_int64_conv[(ids_int64_conv != "variant_id")]
-  cat("Uploading\n")
-  if (nrow(df) < 100000) {x1 = as.scidb(jdb$db, df)} else {x1 = as.scidb(jdb$db, df, chunk_size=nrow(df))}
-  
-  x = x1
-  for (idnm in ids_int64_conv){
-    x = convert_attr_double_to_int64(arr = x, attrname = idnm)
-  }
-  x = jdb$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
-  x = jdb$db$apply(srcArray = x, newAttr = "updated", expression = "created")
-  x = jdb$db$redimension(srcArray = x, schemaArray = R(schema(scidb(jdb$db, arrayname))))
-  
-  query = paste("insert(", x@name, ", ", arrayname, ")", sep="")
-  cat("Redimension and insert\n")
-  iquery(jdb$db, query)
-  
-  df2 = df
-  df2$dataset_id = NULL
-  df2 = prep_df_fields(df2, 
-                       mandatory_fields = c(get_mandatory_fields_for_register_entity(arrayname), 
-                                            get_idname(arrayname)))
-  
-  cat("Now registering info fields\n")
-  register_info(df = df2,
-                idname = get_idname(arrayname), arrayname = arrayname)
+    ids_int64_conv = ids_int64_conv[(ids_int64_conv != "variant_id")]
+    cat("Uploading\n")
+    if (nrow(df) < 100000) {x1 = as.scidb(jdb$db, df)} else {x1 = as.scidb(jdb$db, df, chunk_size=nrow(df))}
+    
+    x = x1
+    for (idnm in ids_int64_conv){
+      x = convert_attr_double_to_int64(arr = x, attrname = idnm)
+    }
+    x = jdb$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
+    x = jdb$db$apply(srcArray = x, newAttr = "updated", expression = "created")
+    x = jdb$db$redimension(srcArray = x, schemaArray = R(schema(scidb(jdb$db, arrayname))))
+    
+    query = paste("insert(", x@name, ", ", arrayname, ")", sep="")
+    cat("Redimension and insert\n")
+    iquery(jdb$db, query)
+    
+    df2 = df
+    df2$dataset_id = NULL
+    df2 = prep_df_fields(df2, 
+                         mandatory_fields = c(get_mandatory_fields_for_register_entity(arrayname), 
+                                              get_idname(arrayname)))
+    
+    cat("Now registering info fields\n")
+    register_info(df = df2,
+                  idname = get_idname(arrayname), arrayname = arrayname)
+  } # end of if (!only_test)
 }
 
 search_variants = function(variantset, biosample = NULL, feature = NULL){
@@ -721,14 +717,16 @@ report_missing_mandatory_fields = function(df, arrayname){
   fields[which(!(fields %in% colnames(df)))]
 }
 
-test_mandatory_fields = function(df, arrayname){
+test_mandatory_fields = function(df, arrayname, silent = TRUE){
   mandatory_fields = get_mandatory_fields_for_register_entity(arrayname)
   missing_fields =  report_missing_mandatory_fields(df, arrayname = arrayname)
   if (length(missing_fields) == 0){
-    cat("Looks OK\n---Preview of mandatory fields:---\n")
-    print(head(df[, mandatory_fields]))
-    cat("---Flexible fields:\n")
-    print(colnames(df)[!(colnames(df) %in% mandatory_fields)])
+    if (!silent){
+      cat("Looks OK\n---Preview of mandatory fields:---\n")
+      print(head(df[, mandatory_fields]))
+      cat("---Flexible fields:\n")
+      print(colnames(df)[!(colnames(df) %in% mandatory_fields)])
+    }
   } else {
     stop("Following fields are missing: \n", paste(missing_fields, collapse = ", "))
   }
@@ -741,76 +739,76 @@ test_unique_fields = function(df, uniq){
   }
 }
 
-test_register_project = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrProject)
+test_register_project = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrProject, silent = silent)
   test_unique_fields(df, uniq)
 }
 
-test_register_dataset = function(df, uniq, dataset_version){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrDataset)
+test_register_dataset = function(df, uniq, dataset_version, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrDataset, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$project_id))!=1) stop("Datasets to be registered must belong to a single project")
   if (dataset_version != 1) stop("to increment dataset versions, use the function `increment_dataset_version()`")
 }
 
-test_register_individual = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrIndividuals)
+test_register_individual = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrIndividuals, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("Individuals to be registered must belong to a single dataset/study")
 }
 
-test_register_biosample = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrBiosample)
+test_register_biosample = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrBiosample, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("Biosamples to be registered must belong to a single dataset/study")
 }
 
-test_register_rnaquantificationset = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrRnaquantificationset)
+test_register_rnaquantificationset = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrRnaquantificationset, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("Rnaquantificationset to be registered must belong to a single dataset/study")
 }
 
-test_register_ontology = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrOntology)
+test_register_ontology = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrOntology, silent = silent)
   test_unique_fields(df, uniq)
 }
 
-test_register_featureset = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrFeatureset)
+test_register_featureset = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrFeatureset, silent = silent)
   test_unique_fields(df, uniq)
 }
 
-test_register_feature = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrFeature)
+test_register_feature = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrFeature, silent = silent)
   test_unique_fields(df, uniq)
 }
 
-test_register_feature_synonym = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrFeatureSynonym)
+test_register_feature_synonym = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrFeatureSynonym, silent = silent)
   test_unique_fields(df, uniq)
 }
 
-test_register_variantset = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrVariantset)
+test_register_variantset = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrVariantset, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("VariantSet to be registered must belong to a single dataset/study")
 }
 
-test_register_fusionset = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrFusionset)
+test_register_fusionset = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrFusionset, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("FusionSet to be registered must belong to a single dataset/study")
 }
 
-test_register_copynumberset = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrCopyNumberSet)
+test_register_copynumberset = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrCopyNumberSet, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("CopyNumberSet to be registered must belong to a single dataset/study")
 }
 
-test_register_copynumbersubset = function(df, uniq){
-  test_mandatory_fields(df, arrayname = jdb$meta$arrCopyNumberSubSet)
+test_register_copynumbersubset = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrCopyNumberSubSet, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("CopyNumberSubset to be registered must belong to a single dataset/study")
 }
@@ -823,12 +821,11 @@ test_register_expression_matrix = function(filepath,
   stopifnot(length(rnaquantificationset_id) == 1)
   stopifnot(length(featureset_id) == 1)
   stopifnot(feature_type == 'gene' | feature_type == 'transcript')
-  stopifnot(length(dataset_version) == 1)
 }
 
 test_register_variant = function(df){
   if(length(unique(df$dataset_id))!=1) stop("Variants to be registered must belong to a single dataset/study")
-  report_missing_mandatory_fields(df, arrayname = jdb$meta$arrVariant)
+  test_mandatory_fields(df, arrayname = jdb$meta$arrVariant)
 }
 
 test_register_copynumber_seg = function(copynumberset){
@@ -844,7 +841,6 @@ test_register_copnyumber_matrix_file = function(copynumberSubSet, dataset_versio
 test_register_fusion_data = function(df, fusionset){
   stopifnot(nrow(fusionset) == 1)
 }
-
 
 register_info = function(df, idname, arrayname){
   # df[idname] = id
@@ -1290,11 +1286,11 @@ search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_vers
 }
 
 register_feature_synonym = function(df, uniq, only_test = FALSE){
-  test_register_feature_synonym(df, uniq)
-  if (only_test) return()
-  
-  arrayname = jdb$meta$arrFeatureSynonym
-  register_tuple_return_id(df, arrayname, uniq)
+  test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = jdb$meta$arrFeatureSynonym
+    register_tuple_return_id(df, arrayname, uniq)
+  } # end of if (!only_test)
 }
 
 search_ontology = function(term, updateCache = FALSE){
@@ -1671,313 +1667,314 @@ register_expression_matrix = function(filepath,
                                     featureset_id,
                                     feature_type,
                                     dataset_version)
-  if (only_test) return()
-  
-  if (is.null(dataset_version)) {
-    rqset = get_rnaquantificationsets(rnaquantificationset_id = rnaquantificationset_id) # finds the latest version
-    dataset_version = rqset$dataset_version
-    cat("Dataset version not specified. Inferred version from rnaquantificationset_id as version:", dataset_version, "\n")
-  } else {
-    rqset = get_rnaquantificationsets(rnaquantificationset_id = rnaquantificationset_id,
-                                      dataset_version = dataset_version)
-  }
-  dataset_id = rqset$dataset_id
-  cat("Specified rnaquantificationset_id belongs to dataset:", dataset_id, "\n")
-  
-  arr_feature = jdb$meta$arrFeature
-  namespace = find_namespace(id = rnaquantificationset_id, entitynm = jdb$meta$arrRnaquantificationset, dflookup = get_rnaquantificationset_lookup())
-  arr_biosample = paste(namespace, jdb$meta$arrBiosample, sep = ".")
-  arrayname = paste(namespace, jdb$meta$arrRnaquantification, sep = ".")
-  cat("======\n")
-  cat(paste("Working on expression file:\n\t", filepath, "\n"))
-  x = read.delim(file = filepath, nrows = 10)
-  ncol(x)
-  
-  
-  ##################
-  # Do some simple checks on the column-names
-  length(colnames(x))
-  length(grep(".*_BM", tail(colnames(x),-1) ))
-  length(grep(".*_PB", colnames(x) ))
-  
-  colnames(x)[grep(".*_2_.*", colnames(x) )]
-  
-  colnames(x)[grep(".*2087.*", colnames(x) )]
-  colnames(x)[grep(".*1179.*", colnames(x) )]
-  ##################
-  
-  xx = tail(colnames(x), -1)
-  # public_id = str_extract(xx, "MMRF_[0-9]+")
-  #
-  # spectrum_suffix = str_extract(
-  #   str_extract(xx, "_[0-9]_"),
-  #   "[0-9]")
-  #
-  # locations = str_locate(xx, "MMRF_[0-9]+_[0-9]_")
-  # suffix2 = NULL
-  # for (i in 1: length(xx)) {
-  #   suffix2[i] = substr(xx[i], locations[i,2]+1, str_length(xx[i]))
-  # }
-  
-  
-  ############# START LOADING INTO SCIDB ########
-  
-  query = paste("aio_input('", filepath, "',
-                'num_attributes=" , length(colnames(x)), "',
-                'split_on_dimension=1')")
-  t1 = scidb(jdb$db, query)
-  t1 = jdb$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, NULL", highCoord = R(paste("NULL, NULL, NULL,", length(colnames(x))-1)))
-  t1 = store(jdb$db, t1, temp=TRUE)
-  
-  # ================================
-  ## Step 1. Join the SciDB feature ID
-  
-  # first form the list of features in current table
-  # featurelist_curr = subset(t1, attribute_no == 0)
-  featurelist_curr = jdb$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, 0", highCoord = "NULL, NULL, NULL, 0")
-  cat(paste("number of feature_id-s in the current expression count table:", scidb_array_count(featurelist_curr)-1, "\n"))
-  FEATUREKEY = scidb(jdb$db, arr_feature)
-  cat(paste("number of feature_id-s in the SciDB feature ID list:", scidb_array_count(FEATUREKEY), "\n"))
-  
-  sel_features = jdb$db$filter(FEATUREKEY, R(paste("feature_type='", feature_type, "' AND featureset_id = ", featureset_id, sep = "")))
-  cat(paste("number of feature_id-s in the SciDB feature ID list for transcript type: '", feature_type,
-            "' and featureset_id: '", featureset_id, "' is:", scidb_array_count(sel_features), "\n", sep = ""))
-  
-  ff = jdb$db$project(srcArray = sel_features, selectedAttr = "name")
-  # ff = scidb(jdb$db, paste("apply(", ff@name, ", feature_id, feature_id)", sep=""))
-  # now do the joining
-  # temp_arr = jdb$db$apply(srcArray = featurelist_curr, newAttr = "tuple_no", expression = "tuple_no")
-  #                      tuple_no = tuple_no,
-  #                      dst_instance_id = dst_instance_id,
-  #                      src_instance_id = src_instance_id)
-  joinFeatureName = scidb(jdb$db,
-                          paste("equi_join(",
-                                ff@name, ", ",
-                                featurelist_curr@name, ", ",
-                                "'left_names=name', 'right_names=a', 'keep_dimensions=1')")
-  )
-  joinFeatureName = jdb$db$redimension(srcArray = joinFeatureName,
-                                       "<feature_id :int64>
-                                       [tuple_no=0:*,10000000,0,dst_instance_id=0:63,1,0,src_instance_id=0:63,1,0]")
-  
-  joinBack1 = scidb(jdb$db,
-                    paste("cross_join(",
-                          t1@name, " as X, ",
-                          joinFeatureName@name, " as Y, ",
-                          "X.tuple_no, Y.tuple_no, X.dst_instance_id, Y.dst_instance_id, X.src_instance_id, Y.src_instance_id)", sep = ""))
-  joinBack1@name
-  
-  joinBack1 = store(jdb$db, joinBack1, temp=TRUE)
-  
-  # Verify with
-  # head(subset(joinBack1, tuple_no == 0))
-  scidb_array_head(jdb$db$between(srcArray = joinBack1, lowCoord = "0, NULL, NULL, NULL", highCoord = "0, NULL, NULL, NULL"))
-  
-  cat("Number of features in study that matched with SciDB ID:\n")
-  countFeatures = scidb_array_count(joinBack1) / ncol(x)
-  print(countFeatures)
-  
-  stopifnot(countFeatures == (scidb_array_count(featurelist_curr)-1))
-  # ================================
-  ## Step 2. Join the SciDB patient ID
-  # first form the list of patients in current table
-  
-  # patientlist_curr = subset(t1, tuple_no == 0 & dst_instance_id == 0 & attribute_no > 0)
-  patientlist_curr = jdb$db$between(t1, lowCoord = "0, 0, NULL, 1", highCoord = "0, 0, NULL, NULL")
-  # Check that the "public_id"_"spectrum_id" is unique enough, otherwise we have to consider the suffix "BM", "PB"
-  stopifnot(length(unique(as.R(patientlist_curr)$a)) == (ncol(x)-1))
-  
-  scidb_array_head(patientlist_curr)
-  
-  cat(paste("number of biosamples in the expression count table:", scidb_array_count(patientlist_curr), "\n"))
-  PATIENTKEY = scidb(jdb$db, arr_biosample)
-  PATIENTKEY = jdb$db$filter(PATIENTKEY, R(paste('dataset_id=', dataset_id)))
-  cat(paste("number of biosamples registered in database in selected namespace:" , scidb_array_count(PATIENTKEY), "\n"))
-  
-  
-  # now do the joining
-  # joinPatientName = merge(transform(patientlist_curr,
-  #                                   attribute_no = attribute_no),
-  #                         project(
-  #                           scidb(paste("apply(", PATIENTKEY@name, ", biosample_id, biosample_id)", sep="")),
-  #                           c("name", "biosample_id")),
-  #                         by.x = "a", by.y = "name")
-  qq = paste("equi_join(",
-             patientlist_curr@name, ", ",
-             "project(filter(", PATIENTKEY@name, ", dataset_version = ", dataset_version, "), name), ",
-             "'left_names=a', 'right_names=name', 'keep_dimensions=1')")
-  joinPatientName = scidb(jdb$db, qq)
-  
-  cat("number of matching public_id-s between expression-count table and PER_PATIENT csv file:\n")
-  countMatches = scidb_array_count(joinPatientName)
-  print(countMatches)
-  
-  
-  
-  # Verify
-  x1 = as.R(jdb$db$project(PATIENTKEY, "name"))
-  x2 = as.R(patientlist_curr)
-  
-  stopifnot(countMatches == sum(x2$a %in% x1$name))
-  
-  # cat("The expression count table public_id-s that are not present in PER_PATIENT csv file: \n")
-  # tt = x2$public_id %in% x1$PUBLIC_ID
-  # print(x2$public_id[which(!tt)])
-  
-  joinPatientName = jdb$db$redimension(joinPatientName,
-                                       R(paste("<biosample_id:int64>
-                                               [attribute_no=0:", countMatches+1, ",",countMatches+2, ",0]", sep = "")))
-  
-  joinBack2 = scidb(jdb$db,
-                    paste("cross_join(",
-                          joinBack1@name, " as X, ",
-                          joinPatientName@name, "as Y, ",
-                          "X.attribute_no, Y.attribute_no)", sep = ""))
-  joinBack2@name
-  
-  joinBack2 = store(jdb$db, joinBack2, temp=TRUE)
-  
-  # Verify with
-  scidb_array_head(jdb$db$filter(joinBack2, "tuple_no = 0"))
-  
-  cat("Number of expression level values in current array:\n")
-  countExpressions = scidb_array_count(joinBack2)
-  print(countExpressions)
-  stopifnot(countExpressions == countMatches*countFeatures)
-  
-  ####################
-  # Redimension the expression level array
-  gct_table = scidb(jdb$db,
-                    paste("apply(",
-                          joinBack2@name, ", ",
-                          "expression_count, dcast(a, float(null)), ",
-                          "rnaquantificationset_id, ", rnaquantificationset_id,
-                          ", dataset_version, ", dataset_version,
-                          ")", sep = "")
-  )
-  # gct_table = attribute_rename(gct_table, "sdb_feature_no", "sdb_feature_no_old")
-  # gct_table = attribute_rename(gct_table, "sdb_feature_no_dim", "sdb_feature_no")
-  
-  # Need to insert the expression matrix table into one big array
-  # insertable = transform(gct_table, sdb_file_id = file_id)
-  insertable = jdb$db$redimension(gct_table,
-                                  R(schema(scidb(jdb$db, arrayname))))
-  
-  if (scidb_exists_array(arrayname)) {
-    cat(paste("Inserting expression matrix data into", arrayname, "at dataset_version", dataset_version, "\n"))
-    iquery(jdb$db, paste("insert(", insertable@name, ", ", arrayname, ")"))
-  } else {
-    stop("expression array does not exist")
-  }
-  
-  return(rnaquantificationset_id)
+  if (!only_test) {
+    if (is.null(dataset_version)) {
+      rqset = get_rnaquantificationsets(rnaquantificationset_id = rnaquantificationset_id) # finds the latest version
+      dataset_version = rqset$dataset_version
+      cat("Dataset version not specified. Inferred version from rnaquantificationset_id as version:", dataset_version, "\n")
+    } else {
+      stopifnot(length(dataset_version) == 1)
+      rqset = get_rnaquantificationsets(rnaquantificationset_id = rnaquantificationset_id,
+                                        dataset_version = dataset_version)
+    }
+    dataset_id = rqset$dataset_id
+    cat("Specified rnaquantificationset_id belongs to dataset:", dataset_id, "\n")
+    
+    arr_feature = jdb$meta$arrFeature
+    namespace = find_namespace(id = rnaquantificationset_id, entitynm = jdb$meta$arrRnaquantificationset, dflookup = get_rnaquantificationset_lookup())
+    arr_biosample = paste(namespace, jdb$meta$arrBiosample, sep = ".")
+    arrayname = paste(namespace, jdb$meta$arrRnaquantification, sep = ".")
+    cat("======\n")
+    cat(paste("Working on expression file:\n\t", filepath, "\n"))
+    x = read.delim(file = filepath, nrows = 10)
+    ncol(x)
+    
+    
+    ##################
+    # Do some simple checks on the column-names
+    length(colnames(x))
+    length(grep(".*_BM", tail(colnames(x),-1) ))
+    length(grep(".*_PB", colnames(x) ))
+    
+    colnames(x)[grep(".*_2_.*", colnames(x) )]
+    
+    colnames(x)[grep(".*2087.*", colnames(x) )]
+    colnames(x)[grep(".*1179.*", colnames(x) )]
+    ##################
+    
+    xx = tail(colnames(x), -1)
+    # public_id = str_extract(xx, "MMRF_[0-9]+")
+    #
+    # spectrum_suffix = str_extract(
+    #   str_extract(xx, "_[0-9]_"),
+    #   "[0-9]")
+    #
+    # locations = str_locate(xx, "MMRF_[0-9]+_[0-9]_")
+    # suffix2 = NULL
+    # for (i in 1: length(xx)) {
+    #   suffix2[i] = substr(xx[i], locations[i,2]+1, str_length(xx[i]))
+    # }
+    
+    
+    ############# START LOADING INTO SCIDB ########
+    
+    query = paste("aio_input('", filepath, "',
+                  'num_attributes=" , length(colnames(x)), "',
+                  'split_on_dimension=1')")
+    t1 = scidb(jdb$db, query)
+    t1 = jdb$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, NULL", highCoord = R(paste("NULL, NULL, NULL,", length(colnames(x))-1)))
+    t1 = store(jdb$db, t1, temp=TRUE)
+    
+    # ================================
+    ## Step 1. Join the SciDB feature ID
+    
+    # first form the list of features in current table
+    # featurelist_curr = subset(t1, attribute_no == 0)
+    featurelist_curr = jdb$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, 0", highCoord = "NULL, NULL, NULL, 0")
+    cat(paste("number of feature_id-s in the current expression count table:", scidb_array_count(featurelist_curr)-1, "\n"))
+    FEATUREKEY = scidb(jdb$db, arr_feature)
+    cat(paste("number of feature_id-s in the SciDB feature ID list:", scidb_array_count(FEATUREKEY), "\n"))
+    
+    sel_features = jdb$db$filter(FEATUREKEY, R(paste("feature_type='", feature_type, "' AND featureset_id = ", featureset_id, sep = "")))
+    cat(paste("number of feature_id-s in the SciDB feature ID list for transcript type: '", feature_type,
+              "' and featureset_id: '", featureset_id, "' is:", scidb_array_count(sel_features), "\n", sep = ""))
+    
+    ff = jdb$db$project(srcArray = sel_features, selectedAttr = "name")
+    # ff = scidb(jdb$db, paste("apply(", ff@name, ", feature_id, feature_id)", sep=""))
+    # now do the joining
+    # temp_arr = jdb$db$apply(srcArray = featurelist_curr, newAttr = "tuple_no", expression = "tuple_no")
+    #                      tuple_no = tuple_no,
+    #                      dst_instance_id = dst_instance_id,
+    #                      src_instance_id = src_instance_id)
+    joinFeatureName = scidb(jdb$db,
+                            paste("equi_join(",
+                                  ff@name, ", ",
+                                  featurelist_curr@name, ", ",
+                                  "'left_names=name', 'right_names=a', 'keep_dimensions=1')")
+    )
+    joinFeatureName = jdb$db$redimension(srcArray = joinFeatureName,
+                                         "<feature_id :int64>
+                                         [tuple_no=0:*,10000000,0,dst_instance_id=0:63,1,0,src_instance_id=0:63,1,0]")
+    
+    joinBack1 = scidb(jdb$db,
+                      paste("cross_join(",
+                            t1@name, " as X, ",
+                            joinFeatureName@name, " as Y, ",
+                            "X.tuple_no, Y.tuple_no, X.dst_instance_id, Y.dst_instance_id, X.src_instance_id, Y.src_instance_id)", sep = ""))
+    joinBack1@name
+    
+    joinBack1 = store(jdb$db, joinBack1, temp=TRUE)
+    
+    # Verify with
+    # head(subset(joinBack1, tuple_no == 0))
+    scidb_array_head(jdb$db$between(srcArray = joinBack1, lowCoord = "0, NULL, NULL, NULL", highCoord = "0, NULL, NULL, NULL"))
+    
+    cat("Number of features in study that matched with SciDB ID:\n")
+    countFeatures = scidb_array_count(joinBack1) / ncol(x)
+    print(countFeatures)
+    
+    stopifnot(countFeatures == (scidb_array_count(featurelist_curr)-1))
+    # ================================
+    ## Step 2. Join the SciDB patient ID
+    # first form the list of patients in current table
+    
+    # patientlist_curr = subset(t1, tuple_no == 0 & dst_instance_id == 0 & attribute_no > 0)
+    patientlist_curr = jdb$db$between(t1, lowCoord = "0, 0, NULL, 1", highCoord = "0, 0, NULL, NULL")
+    # Check that the "public_id"_"spectrum_id" is unique enough, otherwise we have to consider the suffix "BM", "PB"
+    stopifnot(length(unique(as.R(patientlist_curr)$a)) == (ncol(x)-1))
+    
+    scidb_array_head(patientlist_curr)
+    
+    cat(paste("number of biosamples in the expression count table:", scidb_array_count(patientlist_curr), "\n"))
+    PATIENTKEY = scidb(jdb$db, arr_biosample)
+    PATIENTKEY = jdb$db$filter(PATIENTKEY, R(paste('dataset_id=', dataset_id)))
+    cat(paste("number of biosamples registered in database in selected namespace:" , scidb_array_count(PATIENTKEY), "\n"))
+    
+    
+    # now do the joining
+    # joinPatientName = merge(transform(patientlist_curr,
+    #                                   attribute_no = attribute_no),
+    #                         project(
+    #                           scidb(paste("apply(", PATIENTKEY@name, ", biosample_id, biosample_id)", sep="")),
+    #                           c("name", "biosample_id")),
+    #                         by.x = "a", by.y = "name")
+    qq = paste("equi_join(",
+               patientlist_curr@name, ", ",
+               "project(filter(", PATIENTKEY@name, ", dataset_version = ", dataset_version, "), name), ",
+               "'left_names=a', 'right_names=name', 'keep_dimensions=1')")
+    joinPatientName = scidb(jdb$db, qq)
+    
+    cat("number of matching public_id-s between expression-count table and PER_PATIENT csv file:\n")
+    countMatches = scidb_array_count(joinPatientName)
+    print(countMatches)
+    
+    
+    
+    # Verify
+    x1 = as.R(jdb$db$project(PATIENTKEY, "name"))
+    x2 = as.R(patientlist_curr)
+    
+    stopifnot(countMatches == sum(x2$a %in% x1$name))
+    
+    # cat("The expression count table public_id-s that are not present in PER_PATIENT csv file: \n")
+    # tt = x2$public_id %in% x1$PUBLIC_ID
+    # print(x2$public_id[which(!tt)])
+    
+    joinPatientName = jdb$db$redimension(joinPatientName,
+                                         R(paste("<biosample_id:int64>
+                                                 [attribute_no=0:", countMatches+1, ",",countMatches+2, ",0]", sep = "")))
+    
+    joinBack2 = scidb(jdb$db,
+                      paste("cross_join(",
+                            joinBack1@name, " as X, ",
+                            joinPatientName@name, "as Y, ",
+                            "X.attribute_no, Y.attribute_no)", sep = ""))
+    joinBack2@name
+    
+    joinBack2 = store(jdb$db, joinBack2, temp=TRUE)
+    
+    # Verify with
+    scidb_array_head(jdb$db$filter(joinBack2, "tuple_no = 0"))
+    
+    cat("Number of expression level values in current array:\n")
+    countExpressions = scidb_array_count(joinBack2)
+    print(countExpressions)
+    stopifnot(countExpressions == countMatches*countFeatures)
+    
+    ####################
+    # Redimension the expression level array
+    gct_table = scidb(jdb$db,
+                      paste("apply(",
+                            joinBack2@name, ", ",
+                            "expression_count, dcast(a, float(null)), ",
+                            "rnaquantificationset_id, ", rnaquantificationset_id,
+                            ", dataset_version, ", dataset_version,
+                            ")", sep = "")
+    )
+    # gct_table = attribute_rename(gct_table, "sdb_feature_no", "sdb_feature_no_old")
+    # gct_table = attribute_rename(gct_table, "sdb_feature_no_dim", "sdb_feature_no")
+    
+    # Need to insert the expression matrix table into one big array
+    # insertable = transform(gct_table, sdb_file_id = file_id)
+    insertable = jdb$db$redimension(gct_table,
+                                    R(schema(scidb(jdb$db, arrayname))))
+    
+    if (scidb_exists_array(arrayname)) {
+      cat(paste("Inserting expression matrix data into", arrayname, "at dataset_version", dataset_version, "\n"))
+      iquery(jdb$db, paste("insert(", insertable@name, ", ", arrayname, ")"))
+    } else {
+      stop("expression array does not exist")
+    }
+    
+    return(rnaquantificationset_id)
+  } # end of if (!only_test)
 }
 
 register_copynumber_seg = function(copynumberset, only_test = FALSE){
   test_register_copynumber_seg(copynumberset)
-  if (only_test) return()
-  
-  dataset_id = copynumberset$dataset_id
-  b = search_biosamples(dataset_id = dataset_id, dataset_version = copynumberset$dataset_version)
-  
-  xx = read.delim(copynumberset$filepath)
-  xx$biosample_id = b[match(xx$ID, b$name), ]$biosample_id
-  stopifnot(!any(is.na(xx$biosample_id)))
-  xx$ID = NULL
-  colnames(xx) = gsub("chrom", "reference_name", colnames(xx))
-  colnames(xx) = gsub("loc.start", "start", colnames(xx))
-  colnames(xx) = gsub("loc.end",   "end",   colnames(xx))
-  colnames(xx) = gsub("[.]", "_", colnames(xx))
-  
-  xx$copynumberset_id = copynumberset$copynumberset_id
-  xx$dataset_version = copynumberset$dataset_version
-  
-  arrayname = paste(find_namespace(id = copynumberset$copynumberset_id, entitynm = jdb$meta$arrCopyNumberSet),
-                    jdb$meta$arrCopynumber_seg, sep = ".")
-  
-  cat("Inserting", nrow(xx), "entries into array:", arrayname, "at version", copynumberset$dataset_version, "\n")
-  register_tuple(df = xx, 
-                 ids_int64_conv = c('start', 'end', 'dataset_version', 'copynumberset_id', 'biosample_id'), 
-                 arrayname = arrayname)
+  if (!only_test) {
+    dataset_id = copynumberset$dataset_id
+    b = search_biosamples(dataset_id = dataset_id, dataset_version = copynumberset$dataset_version)
+    
+    xx = read.delim(copynumberset$filepath)
+    xx$biosample_id = b[match(xx$ID, b$name), ]$biosample_id
+    stopifnot(!any(is.na(xx$biosample_id)))
+    xx$ID = NULL
+    colnames(xx) = gsub("chrom", "reference_name", colnames(xx))
+    colnames(xx) = gsub("loc.start", "start", colnames(xx))
+    colnames(xx) = gsub("loc.end",   "end",   colnames(xx))
+    colnames(xx) = gsub("[.]", "_", colnames(xx))
+    
+    xx$copynumberset_id = copynumberset$copynumberset_id
+    xx$dataset_version = copynumberset$dataset_version
+    
+    arrayname = paste(find_namespace(id = copynumberset$copynumberset_id, entitynm = jdb$meta$arrCopyNumberSet),
+                      jdb$meta$arrCopynumber_seg, sep = ".")
+    
+    cat("Inserting", nrow(xx), "entries into array:", arrayname, "at version", copynumberset$dataset_version, "\n")
+    register_tuple(df = xx, 
+                   ids_int64_conv = c('start', 'end', 'dataset_version', 'copynumberset_id', 'biosample_id'), 
+                   arrayname = arrayname)
+  } # end of if (!only_test)
 }
 
 register_copynumber_matrix_file = function(copynumberSubSet, dataset_version, only_test = FALSE){
   test_register_copnyumber_matrix_file(copynumberSubSet, dataset_version)
-  if (only_test) return()
-  
-  dataset_id = copynumberSubSet$dataset_id
-  dataset_version = copynumberSubSet$dataset_version
-  b = search_biosamples(dataset_id = dataset_id, dataset_version = dataset_version)
-  
-  xx = read.delim(copynumberSubSet$filepath)
-  matched_biosample_id = b[match(tail(colnames(xx), -1), b$name), ]$biosample_id
-  stopifnot(all(!is.na(matched_biosample_id)))
-  colnames(xx) = c(colnames(xx)[1], matched_biosample_id)
-  
-  ff = search_features(featureset_id = 1) # TODO: Assign automatically
-  ff_genes = ff[ff$feature_type == 'gene', ]
-  
-  matched_feature_id = ff_genes[match(xx$Gene, ff_genes$name), ]$feature_id
-  stopifnot(all(!is.na(matched_feature_id)))
-  xx$Gene = matched_feature_id
-  colnames(xx) = gsub("^Gene$", "feature_id", colnames(xx))
-  head(xx[1:5, 1:5])
-  
-  xx2 = tidyr::gather(xx, "biosample_id", "copynumber_val", 2:ncol(xx))
-  stopifnot(nrow(xx2) == nrow(xx)*(ncol(xx)-1))
-  
-  xx2$dataset_version = dataset_version
-  xx2$copynumbersubset_id = copynumberSubSet$copynumbersubset_id
-  
-  namespace = find_namespace(id = copynumberSubSet$copynumbersubset_id, entitynm = jdb$meta$arrCopyNumberSubSet)
-  arrayname = paste(namespace, jdb$meta$arrCopynumber_mat, sep = ".")
-  cat("Inserting", nrow(xx2), "entries into", arrayname, "at version", dataset_version, "\n")
-  register_tuple(df = xx2, ids_int64_conv = get_idname(jdb$meta$arrCopynumber_mat), arrayname = arrayname)
+  if (!only_test) {
+    dataset_id = copynumberSubSet$dataset_id
+    dataset_version = copynumberSubSet$dataset_version
+    b = search_biosamples(dataset_id = dataset_id, dataset_version = dataset_version)
+    
+    xx = read.delim(copynumberSubSet$filepath)
+    matched_biosample_id = b[match(tail(colnames(xx), -1), b$name), ]$biosample_id
+    stopifnot(all(!is.na(matched_biosample_id)))
+    colnames(xx) = c(colnames(xx)[1], matched_biosample_id)
+    
+    ff = search_features(featureset_id = 1) # TODO: Assign automatically
+    ff_genes = ff[ff$feature_type == 'gene', ]
+    
+    matched_feature_id = ff_genes[match(xx$Gene, ff_genes$name), ]$feature_id
+    stopifnot(all(!is.na(matched_feature_id)))
+    xx$Gene = matched_feature_id
+    colnames(xx) = gsub("^Gene$", "feature_id", colnames(xx))
+    head(xx[1:5, 1:5])
+    
+    xx2 = tidyr::gather(xx, "biosample_id", "copynumber_val", 2:ncol(xx))
+    stopifnot(nrow(xx2) == nrow(xx)*(ncol(xx)-1))
+    
+    xx2$dataset_version = dataset_version
+    xx2$copynumbersubset_id = copynumberSubSet$copynumbersubset_id
+    
+    namespace = find_namespace(id = copynumberSubSet$copynumbersubset_id, entitynm = jdb$meta$arrCopyNumberSubSet)
+    arrayname = paste(namespace, jdb$meta$arrCopynumber_mat, sep = ".")
+    cat("Inserting", nrow(xx2), "entries into", arrayname, "at version", dataset_version, "\n")
+    register_tuple(df = xx2, ids_int64_conv = get_idname(jdb$meta$arrCopynumber_mat), arrayname = arrayname)
+  } # end of if (!only_test)
 }
 
 register_fusion_data = function(df, fusionset, only_test = FALSE){
   test_register_fusion_data(df, fusionset)
-  if (only_test) return()
-
-  dataset_id = fusionset$dataset_id
-  dataset_version = fusionset$dataset_version
-  
-  xx = df
-  
-  update_feature_synonym_cache()
-  syn = get_feature_synonym_from_cache()
-  
-  # Now register the left and right genes with system feature_id-s
-  xx$feature_id_left = syn[match(xx$gene_left, syn$synonym), ]$feature_id
-  xx$feature_id_right = syn[match(xx$gene_right, syn$synonym), ]$feature_id
-  stopifnot(!any(is.na(xx$feature_id_left)))
-  stopifnot(!any(is.na(xx$feature_id_right)))
-  
-  # Biosamples
-  b = search_biosamples(dataset_id = dataset_id, dataset_version = dataset_version)
-  xx$biosample_id = b[match(xx$biosample_name, b$name), ]$biosample_id
-  stopifnot(!any(is.na(xx$biosample_id)))
-  
-  # Rename some columns
-  colnames(xx)[colnames(xx) == 'Sample'] = 'sample_name_unabbreviated'
-  colnames(xx)[colnames(xx) == 'chrom_left'] = 'reference_name_left'
-  colnames(xx)[colnames(xx) == 'chrom_right'] = 'reference_name_right'
-  
-  xx$fusionset_id = fusionset_record$fusionset_id 
-  xx$dataset_version = dataset_version
-  
-  nmsp = find_namespace(id = fusionset_record$fusionset_id, entitynm = jdb$meta$arrFusionset)
-  arrayname = paste(nmsp, jdb$meta$arrFusion, sep = ".")
-  
-  xx = xx %>% group_by(biosample_id) %>% mutate(fusion_id = row_number())
-  xx = as.data.frame(xx)
-  
-  cat("registering", nrow(xx), "entries of fusion data into array", arrayname, "\n")
-  register_tuple(df = xx, 
-                 ids_int64_conv = c(
-                   get_idname(arrayname), get_int64fields(arrayname)), 
-                 arrayname = arrayname
-  )
+  if (!only_test) {
+    dataset_id = fusionset$dataset_id
+    dataset_version = fusionset$dataset_version
+    
+    xx = df
+    
+    update_feature_synonym_cache()
+    syn = get_feature_synonym_from_cache()
+    
+    # Now register the left and right genes with system feature_id-s
+    xx$feature_id_left = syn[match(xx$gene_left, syn$synonym), ]$feature_id
+    xx$feature_id_right = syn[match(xx$gene_right, syn$synonym), ]$feature_id
+    stopifnot(!any(is.na(xx$feature_id_left)))
+    stopifnot(!any(is.na(xx$feature_id_right)))
+    
+    # Biosamples
+    b = search_biosamples(dataset_id = dataset_id, dataset_version = dataset_version)
+    xx$biosample_id = b[match(xx$biosample_name, b$name), ]$biosample_id
+    stopifnot(!any(is.na(xx$biosample_id)))
+    
+    # Rename some columns
+    colnames(xx)[colnames(xx) == 'Sample'] = 'sample_name_unabbreviated'
+    colnames(xx)[colnames(xx) == 'chrom_left'] = 'reference_name_left'
+    colnames(xx)[colnames(xx) == 'chrom_right'] = 'reference_name_right'
+    
+    xx$fusionset_id = fusionset_record$fusionset_id 
+    xx$dataset_version = dataset_version
+    
+    nmsp = find_namespace(id = fusionset_record$fusionset_id, entitynm = jdb$meta$arrFusionset)
+    arrayname = paste(nmsp, jdb$meta$arrFusion, sep = ".")
+    
+    xx = xx %>% group_by(biosample_id) %>% mutate(fusion_id = row_number())
+    xx = as.data.frame(xx)
+    
+    cat("registering", nrow(xx), "entries of fusion data into array", arrayname, "\n")
+    register_tuple(df = xx, 
+                   ids_int64_conv = c(
+                     get_idname(arrayname), get_int64fields(arrayname)), 
+                   arrayname = arrayname
+    )
+  } # end of if (!only_test)
 }
 
 # Following:
@@ -2134,7 +2131,7 @@ increment_dataset_version = function(df){
   df$dataset_version = get_dataset_max_version(dataset_id = df$dataset_id, updateCache = TRUE) + 1
   df$created = NULL
   df$updated = NULL
-  mandatory_fields = get_mandatory_fields_for_entity(jdb$meta$arrDataset)
+  mandatory_fields = get_mandatory_fields_for_register_entity(jdb$meta$arrDataset)
   df = prep_df_fields(df, c(mandatory_fields, get_idname(jdb$meta$arrDataset)))
   
   register_tuple_update_lookup(df = df, arrayname = arrayname, updateLookup = FALSE)

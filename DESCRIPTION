@@ -13,7 +13,7 @@ Depends:
     yaml,
     reshape2,
     Biobase,
-    shiny,
     scidb
 License: file LICENSE
 LazyData: TRUE
+Suggests: testthat
