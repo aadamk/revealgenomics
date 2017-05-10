@@ -16,4 +16,7 @@ Depends:
     scidb
 License: file LICENSE
 LazyData: TRUE
-Suggests: testthat
+Suggests: testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
