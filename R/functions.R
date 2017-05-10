@@ -2041,8 +2041,11 @@ delete_entity = function(entity, ids){
   if (!(all.equal(sort(ids), (min(ids): max(ids))))) stop("Delete only works on consecutive set of entity_id-s")
 
   # Find the correct namespace
-  namespaces = find_namespace(id = ids, entitynm = entity)
-  nmsp = unique(namespaces)
+  lookupExists = ifelse(length(jdb$meta$L$array[[entity]]$namespace) > 1, TRUE, FALSE)
+  if (lookupExists) {
+    namespaces = find_namespace(id = ids, entitynm = entity)
+    nmsp = unique(namespaces)
+  } else { nmsp = 'public' }
   if (length(nmsp) != 1) stop("Can run delete only at one namespace at a time")
   arr = paste(nmsp, entity, sep = ".")
 
@@ -2064,13 +2067,15 @@ delete_entity = function(entity, ids){
     iquery(jdb$db, qq)
   }
 
-  # Clear out the lookup array
-  arrLookup = paste(entity, "_LOOKUP", sep = "")
-  qq = paste("filter(", arrLookup, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
-             get_base_idname(arr), " > ", max(ids), ")", sep = "")
-  qq = paste("store(", qq, ", ", arrLookup, ")", sep = "")
-  cat("Deleting entries for ids ", min(ids), ":", max(ids), " from lookup array: ", arrLookup, "\n", sep = "")
-  iquery(jdb$db, qq)
+  # Clear out the lookup array if required
+  if (lookupExists){
+    arrLookup = paste(entity, "_LOOKUP", sep = "")
+    qq = paste("filter(", arrLookup, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
+               get_base_idname(arr), " > ", max(ids), ")", sep = "")
+    qq = paste("store(", qq, ", ", arrLookup, ")", sep = "")
+    cat("Deleting entries for ids ", min(ids), ":", max(ids), " from lookup array: ", arrLookup, "\n", sep = "")
+    iquery(jdb$db, qq)
+  }
 }
 
 get_entity_count = function(){
