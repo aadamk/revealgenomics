@@ -121,6 +121,18 @@ get_ontology_from_cache = function(updateCache = FALSE){
   }
   return(jdb$cache$dfOntology)
 }
+
+get_ontology = function(ontology_id = NULL, updateCache = FALSE){
+  dfOntology = get_ontology_from_cache(updateCache)
+  if (!is.null(ontology_id)){
+    matches = match(ontology_id, dfOntology$ontology_id)
+    matches = matches[which(!is.na(matches))]
+    dfOntology[matches, ]
+  } else {
+    dfOntology
+  }
+}
+
 update_ontology_cache = function(){
   jdb$cache$dfOntology = iquery(jdb$db, jdb$meta$arrOntology, return = TRUE)
 }
@@ -168,9 +180,7 @@ get_entity_names = function(){
 }
 
 get_max_id = function(arrayname){
-  namespaces_for_entity = jdb$meta$L$array[[strip_namespace(arrayname)]]$namespace
-  if (length(namespaces_for_entity) > 1) { # Lookup array must exist
-    # iquery(jdb$db, paste("op_count(public.", strip_namespace(arrayname), "_LOOKUP)", sep=""), return=TRUE)$count
+  if (lookup_exists(arrayname)) { # Lookup array must exist
     max = iquery(jdb$db,
                  paste("aggregate(apply(public.",
                        strip_namespace(arrayname), "_LOOKUP, id, ",
@@ -180,7 +190,9 @@ get_max_id = function(arrayname){
     if (is.na(max)) max = 0
     return(max)
   } else { # Only exists in public namespaces
-    iquery(jdb$db, paste("op_count(", arrayname, ")", sep=""), return=TRUE)$count
+    iquery(jdb$db, paste("aggregate(apply(", arrayname,
+                                          ", id, ", get_base_idname(arrayname), "), ",
+                                  "max(id))", sep=""), return=TRUE)$id_max
   }
 }
 
@@ -909,7 +921,7 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL){
   namespace = find_namespace(id, entitynm, entity_lookup(entityName = entitynm))
   if (is.null(namespace)) namespace = NA # to handle the case of no entry in lookup array at all
   if (any(is.na(namespace))) {
-    cat("trying to download lookup array once again, to see if there has been a recent update")
+    cat("trying to download lookup array once again, to see if there has been a recent update\n")
     namespace = update_lookup_and_find_namespace_again(entitynm, id)
   }
   if (any(!(namespace %in% jdb$cache$nmsp_list))) stop("user probably does have acecss to id-s: ", paste(id[which(!(namespace %in% jdb$cache$nmsp_list))], collapse = ", "))
@@ -930,7 +942,9 @@ update_lookup_and_find_namespace_again = function(entitynm, id){
   cat("updating lookup array for entity:", entitynm, "\n")
   jdb$cache$lookup[[entitynm]] = entity_lookup(entityName = entitynm, updateCache = TRUE)
   namespace = find_namespace(id, entitynm, jdb$cache$lookup[[entitynm]])
-  if (any(is.na(namespace))) stop(entitynm, " at id: ", id[which(is.na(namespace))], " does not exist\n")
+  if (any(is.na(namespace))) stop(entitynm, " at id: ",
+                                  paste(id[which(is.na(namespace))], collapse = ", "),
+                                  " does not exist\n")
   return(namespace)
 }
 
@@ -1297,15 +1311,6 @@ register_feature_synonym = function(df, uniq, only_test = FALSE){
 }
 
 search_ontology = function(term, updateCache = FALSE){
-  # arrayname = jdb$meta$arrOntology
-  #
-  # qq = arrayname
-  # if (!is.null(term)) {
-  #   subq = paste(sapply(term, FUN = function(x) {paste("term = '", x, "'", sep = "")}), collapse = " OR ")
-  #   qq = paste("filter(", qq, ",", subq, ")", sep="")
-  # }
-  #
-  # iquery(qq, return = TRUE)
   dfOntology = get_ontology_from_cache(updateCache)
   results = dfOntology[grep(term, ignore.case = TRUE, dfOntology$term), ]
 
@@ -2033,49 +2038,99 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   exampleSet
 }
 
-delete_entity = function(entity, ids){
+lookup_exists = function(entitynm){
+  entitynm = strip_namespace(entityn)
+  ifelse(length(jdb$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
+}
+
+dataset_versioning_exists = function(entitynm){
+  "dataset_version" %in% get_idname(entitynm)
+}
+
+get_entity = function(entity, ids){
+  fn_name = paste("get_", tolower(entity), sep = "")
+  f = NULL
+  try({f = get(fn_name)}, silent = TRUE)
+  if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
+  if (entity %in% c('FEATURE', 'ONTOLOGY')) {
+    f(ids, updateCache = TRUE)
+  } else { f(ids) }
+}
+
+delete_entity = function(entity, ids, dataset_version = NULL){
   if (!(entity %in% get_entity_names())) stop("Entity '", entity, "' does not exist")
   if (is.null(ids)) return()
-
+  if (dataset_versioning_exists(entity)) {
+    if (is.null(dataset_version)) {
+      stop("must supply dataset_version for versioned entities.
+             Use dataset_version = 1 if only one version exists for relevant clinical study")
+    } else {
+      stopifnot(length(dataset_version) == 1)
+    }
+  }
   # So far, have coded the case where consecutive ids is provided
   if (!(all.equal(sort(ids), (min(ids): max(ids))))) stop("Delete only works on consecutive set of entity_id-s")
 
-  # Find the correct namespace
-  lookupExists = ifelse(length(jdb$meta$L$array[[entity]]$namespace) > 1, TRUE, FALSE)
-  if (lookupExists) {
-    namespaces = find_namespace(id = ids, entitynm = entity)
-    nmsp = unique(namespaces)
-  } else { nmsp = 'public' }
-  if (length(nmsp) != 1) stop("Can run delete only at one namespace at a time")
-  arr = paste(nmsp, entity, sep = ".")
+  # First check that entity exists at this id
+  entities = get_entity(entity = entity, ids = ids)
+  if (nrow(entities) == 0) {
+    cat("No entries at ids: ", paste(ids, collapse = ", "), " for entity: ", entity, "\n", sep = "")
+  } else { # if entities exist
+    # Find the correct namespace
+    if (lookup_exists(entity)) {
+      namespaces = find_namespace(id = ids, entitynm = entity)
+      nmsp = unique(namespaces)
+    } else { nmsp = 'public' }
 
-  # Clear out the array
-  qq = paste("filter(", arr, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
-                                    get_base_idname(arr), " > ", max(ids), ")", sep = "")
-  qq = paste("store(", qq, ", ", arr, ")", sep = "")
-  cat("Deleting entries for ids ", min(ids), ":", max(ids), " from ", arr, " entity\n", sep = "")
-  iquery(jdb$db, qq)
+    if (length(nmsp) != 1) stop("Can run delete only at one namespace at a time")
+    arr = paste(nmsp, entity, sep = ".")
 
-  # Clear out the info array
-  infoArray = jdb$meta$L$array[[entity]]$infoArray
-  if (infoArray){
-    arrInfo = paste(arr, "_INFO", sep = "")
-    qq = paste("filter(", arrInfo, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
-                                          get_base_idname(arr), " > ", max(ids), ")", sep = "")
-    qq = paste("store(", qq, ", ", arrInfo, ")", sep = "")
-    cat("Deleting entries for ids ", min(ids), ":", max(ids), " from info array: ", arrInfo, "\n", sep = "")
+    # Clear out the array
+    if (dataset_versioning_exists(entity)) {
+      qq = paste("filter(", arr, ", (",  get_base_idname(arr), " < ", min(ids), " OR ",
+                 get_base_idname(arr), " > ", max(ids), ") OR (dataset_version != ", dataset_version, "))", sep = "")
+    } else { # Entity does not have dataset_version-s
+      qq = paste("filter(", arr, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
+                 get_base_idname(arr), " > ", max(ids), ")", sep = "")
+    }
+    qq = paste("store(", qq, ", ", arr, ")", sep = "")
+    cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from ", arr, " entity\n", sep = "")
     iquery(jdb$db, qq)
-  }
 
-  # Clear out the lookup array if required
-  if (lookupExists){
-    arrLookup = paste(entity, "_LOOKUP", sep = "")
-    qq = paste("filter(", arrLookup, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
-               get_base_idname(arr), " > ", max(ids), ")", sep = "")
-    qq = paste("store(", qq, ", ", arrLookup, ")", sep = "")
-    cat("Deleting entries for ids ", min(ids), ":", max(ids), " from lookup array: ", arrLookup, "\n", sep = "")
-    iquery(jdb$db, qq)
-  }
+    # Clear out the info array
+    infoArray = jdb$meta$L$array[[entity]]$infoArray
+    if (infoArray){
+      arrInfo = paste(arr, "_INFO", sep = "")
+      if (dataset_versioning_exists(entity)) {
+        qq = paste("filter(", arrInfo, ", (",  get_base_idname(arr), " < ", min(ids), " OR ",
+                   get_base_idname(arr), " > ", max(ids), ") OR (dataset_version != ", dataset_version, "))", sep = "")
+      } else { # Entity does not have dataset_version-s
+        qq = paste("filter(", arrInfo, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
+                   get_base_idname(arr), " > ", max(ids), ")", sep = "")
+      }
+      qq = paste("store(", qq, ", ", arrInfo, ")", sep = "")
+      cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from info array: ", arrInfo, "\n", sep = "")
+      iquery(jdb$db, qq)
+    }
+
+    # Clear out the lookup array if required
+    if (lookup_exists(entity)){
+      # Check if there are no entities at this ID
+      qcount = paste("op_count(filter(", arr, ", ",
+                     get_base_idname(entity), " >= ", min(ids), " AND ",
+                     get_base_idname(entity), " <= ", max(ids), "))" )
+      newcount = iquery(jdb$db, qcount, return = TRUE)$count
+      if (newcount == 0){ # there are no entities at this level
+        arrLookup = paste(entity, "_LOOKUP", sep = "")
+        qq = paste("filter(", arrLookup, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
+                   get_base_idname(arr), " > ", max(ids), ")", sep = "")
+        qq = paste("store(", qq, ", ", arrLookup, ")", sep = "")
+        cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from lookup array: ", arrLookup, "\n", sep = "")
+        iquery(jdb$db, qq)
+        updatedcache = entity_lookup(entityName = entity, updateCache = TRUE)
+      }
+    }
+  } # end of check that some data existed in the first place
 }
 
 get_entity_count = function(){
