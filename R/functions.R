@@ -2039,7 +2039,7 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
 }
 
 lookup_exists = function(entitynm){
-  entitynm = strip_namespace(entityn)
+  entitynm = strip_namespace(entitynm)
   ifelse(length(jdb$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
 }
 
