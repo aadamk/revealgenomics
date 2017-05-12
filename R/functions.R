@@ -1370,7 +1370,7 @@ search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
   if (exact_match){
     res = ont_ids[terms]
     names(res) = terms
-    res
+    as.integer(res)
   } else {
     stop("Need to add code from search_ontology_OLD")
   }
@@ -2306,7 +2306,8 @@ prep_df_fields = function(df, mandatory_fields){
 
   colnames(df)[pos] = paste("info_", available_fields[pos], sep = "")
 
-  posNotChar = which((sapply(df, class) != "character")[pos])
+  posNotChar = which((sapply(df, class) != "character") & 
+                       !(colnames(df) %in% mandatory_fields))
   for (posi in posNotChar){
     df[, posi] = paste(df[, posi])
   }
