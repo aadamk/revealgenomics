@@ -1372,19 +1372,14 @@ search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
     names(res) = terms
     as.integer(res)
   } else {
-    stop("Need to add code from search_ontology_OLD")
+    if (length(terms) != 1) {
+      # do a recursive call
+      if (updateCache) stop("cannot do inexact searching on multiple terms with updateCache set to TRUE")
+      lapply(terms, FUN = function(term) {search_ontology(terms = term, exact_match = FALSE)})
+    } else {
+      ont[grep(terms, ignore.case = TRUE, dfOntology$term), ]
+    }
   }
-}
-
-search_ontology_OLD = function(term, updateCache = FALSE){
-  dfOntology = get_ontology_from_cache(updateCache)
-  results = dfOntology[grep(term, ignore.case = TRUE, dfOntology$term), ]
-
-  if (!updateCache & nrow(results) == 0){ # did not find a hit, try updating the ontology cache
-    dfOntology = get_ontology_from_cache(updateCache = TRUE)
-    results = dfOntology[grep(term, ignore.case = TRUE, dfOntology$term), ]
-  }
-  results
 }
 
 search_rnaquantificationset = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
@@ -2190,7 +2185,7 @@ delete_entity = function(entity, ids, dataset_version = NULL){
 }
 
 update_entity = function(entity, df){
-  if (dataset_versioning_exists(entity)){
+  if (lookup_exists(entity)){
     namespaces = find_namespace(id = df[, get_base_idname(entity)], entitynm = entity)
     nmsp = unique(namespaces)
     if (length(nmsp) != 1) stop("entity to be updated must belong to one namespace only")
