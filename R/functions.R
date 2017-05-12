@@ -92,6 +92,16 @@ get_fusionset_lookup = function(updateCache = FALSE){
   entity_lookup(jdb$meta$arrFusionset, updateCache = updateCache)
 }
 
+get_entity = function(entity, ids){
+  fn_name = paste("get_", tolower(entity), sep = "")
+  f = NULL
+  try({f = get(fn_name)}, silent = TRUE)
+  if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
+  if (entity %in% c('FEATURE', 'ONTOLOGY')) {
+    f(ids, updateCache = TRUE)
+  } else { f(ids) }
+}
+
 # cat("Downloading reference dataframes for fast ExpressionSet formation\n")
 get_feature_from_cache = function(updateCache = FALSE){
   if (updateCache | is.null(jdb$cache$feature_ref)){
@@ -149,6 +159,15 @@ update_feature_synonym_cache = function(){
 
 scidb_exists_array = function(arrayName) {
   !is.null(tryCatch({iquery(jdb$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
+}
+
+lookup_exists = function(entitynm){
+  entitynm = strip_namespace(entitynm)
+  ifelse(length(jdb$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
+}
+
+dataset_versioning_exists = function(entitynm){
+  "dataset_version" %in% get_idname(entitynm)
 }
 
 get_idname = function(arrayname){
@@ -223,6 +242,21 @@ scidb_attribute_rename = function(arr, old, new){
 
   arr = jdb$db$cast(srcArray = arr, schemaArray = R(newSchema))
   arr
+}
+
+update_tuple = function(df, ids_int64_conv, arrayname){
+  if (nrow(df) < 100000) {x1 = as.scidb(jdb$db, df)} else {x1 = as.scidb(jdb$db, df, chunk_size=nrow(df))}
+
+  x = x1
+  for (idnm in ids_int64_conv){
+    x = convert_attr_double_to_int64(arr = x, attrname = idnm)
+  }
+  x = scidb_attribute_rename(arr = x, old = "updated", new = "updated_old")
+  x = jdb$db$apply(srcArray = x, newAttr = "updated", expression = "string(now())")
+  x = jdb$db$redimension(srcArray = x, schemaArray = R(schema(scidb(jdb$db, arrayname))))
+
+  query = paste("insert(", x@name, ", ", arrayname, ")", sep="")
+  iquery(jdb$db, query)
 }
 
 register_tuple = function(df, ids_int64_conv, arrayname){
@@ -352,6 +386,26 @@ get_infoArray = function(arrayname){
   infoArray = jdb$meta$L$array[[strip_namespace(arrayname)]]$infoArray
   if (is.null(infoArray)) infoArray = TRUE
   return(infoArray)
+}
+
+# Wrapper function that (1) updates mandatory fields, (2) updates flex fields
+update_mandatory_and_info_fields = function(df, arrayname){
+  idname = get_idname(arrayname)
+  if (any(is.na(df[, idname]))) stop("Dimensions: ", paste(idname, collapse = ", "), " should have had non null values at upload time!")
+  int64_fields = get_int64fields(arrayname)
+  infoArray = get_infoArray(arrayname)
+  update_tuple(df, ids_int64_conv = c(idname, int64_fields), arrayname)
+  if(infoArray){
+    delete_info_fields(fullarrayname = arrayname,
+                       ids = df[, get_base_idname(arrayname)],
+                       dataset_version = unique(df$dataset_version))
+    cat("Registering info for ", nrow(df)," entries in array: ", arrayname, "_INFO\n", sep = "")
+    register_info(df = prep_df_fields(df,
+                                      mandatory_fields = c(get_mandatory_fields_for_register_entity(arrayname),
+                                                           get_idname(arrayname),
+                                                           'created', 'updated')),
+                  idname, arrayname)
+  }
 }
 
 # Wrapper function that (1) registers mandatory fields, (2) updates lookup array (based on flag), and (3) registers flex fields
@@ -571,12 +625,11 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE){
 
     df2 = df
     df2$dataset_id = NULL
-    df2 = prep_df_fields(df2,
-                         mandatory_fields = c(get_mandatory_fields_for_register_entity(arrayname),
-                                              get_idname(arrayname)))
 
     cat("Now registering info fields\n")
-    register_info(df = df2,
+    register_info(df = prep_df_fields(df2,
+                                      mandatory_fields = c(get_mandatory_fields_for_register_entity(arrayname),
+                                                           get_idname(arrayname))),
                   idname = get_idname(arrayname), arrayname = arrayname)
   } # end of if (!only_test)
 }
@@ -1310,7 +1363,20 @@ register_feature_synonym = function(df, uniq, only_test = FALSE){
   } # end of if (!only_test)
 }
 
-search_ontology = function(term, updateCache = FALSE){
+search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
+  ont = get_ontology(updateCache = updateCache)
+  ont_ids = ont$ontology_id
+  names(ont_ids) = ont$term
+  if (exact_match){
+    res = ont_ids[terms]
+    names(res) = terms
+    res
+  } else {
+    stop("Need to add code from search_ontology_OLD")
+  }
+}
+
+search_ontology_OLD = function(term, updateCache = FALSE){
   dfOntology = get_ontology_from_cache(updateCache)
   results = dfOntology[grep(term, ignore.case = TRUE, dfOntology$term), ]
 
@@ -2038,25 +2104,25 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   exampleSet
 }
 
-lookup_exists = function(entitynm){
-  entitynm = strip_namespace(entitynm)
-  ifelse(length(jdb$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
-}
+delete_info_fields = function(fullarrayname, ids, dataset_version){
+  # So far, have coded the case where consecutive ids is provided
+  if (!(all.equal(sort(ids), (min(ids): max(ids))))) stop("Delete only works on consecutive set of entity_id-s")
 
-dataset_versioning_exists = function(entitynm){
-  "dataset_version" %in% get_idname(entitynm)
+  arr = fullarrayname
+  entity = strip_namespace(fullarrayname)
+  arrInfo = paste(arr, "_INFO", sep = "")
+  if (dataset_versioning_exists(entity)) {
+    stopifnot(length(dataset_version) == 1)
+    qq = paste("filter(", arrInfo, ", (",  get_base_idname(arr), " < ", min(ids), " OR ",
+               get_base_idname(arr), " > ", max(ids), ") OR (dataset_version != ", dataset_version, "))", sep = "")
+  } else { # Entity does not have dataset_version-s
+    qq = paste("filter(", arrInfo, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
+               get_base_idname(arr), " > ", max(ids), ")", sep = "")
+  }
+  qq = paste("store(", qq, ", ", arrInfo, ")", sep = "")
+  cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from info array: ", arrInfo, "\n", sep = "")
+  iquery(jdb$db, qq)
 }
-
-get_entity = function(entity, ids){
-  fn_name = paste("get_", tolower(entity), sep = "")
-  f = NULL
-  try({f = get(fn_name)}, silent = TRUE)
-  if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
-  if (entity %in% c('FEATURE', 'ONTOLOGY')) {
-    f(ids, updateCache = TRUE)
-  } else { f(ids) }
-}
-
 delete_entity = function(entity, ids, dataset_version = NULL){
   if (!(entity %in% get_entity_names())) stop("Entity '", entity, "' does not exist")
   if (is.null(ids)) return()
@@ -2100,17 +2166,7 @@ delete_entity = function(entity, ids, dataset_version = NULL){
     # Clear out the info array
     infoArray = jdb$meta$L$array[[entity]]$infoArray
     if (infoArray){
-      arrInfo = paste(arr, "_INFO", sep = "")
-      if (dataset_versioning_exists(entity)) {
-        qq = paste("filter(", arrInfo, ", (",  get_base_idname(arr), " < ", min(ids), " OR ",
-                   get_base_idname(arr), " > ", max(ids), ") OR (dataset_version != ", dataset_version, "))", sep = "")
-      } else { # Entity does not have dataset_version-s
-        qq = paste("filter(", arrInfo, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
-                   get_base_idname(arr), " > ", max(ids), ")", sep = "")
-      }
-      qq = paste("store(", qq, ", ", arrInfo, ")", sep = "")
-      cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from info array: ", arrInfo, "\n", sep = "")
-      iquery(jdb$db, qq)
+      delete_info_fields(fullarrayname = arr, ids = ids)
     }
 
     # Clear out the lookup array if required
@@ -2131,6 +2187,18 @@ delete_entity = function(entity, ids, dataset_version = NULL){
       }
     }
   } # end of check that some data existed in the first place
+}
+
+update_entity = function(entity, df){
+  if (dataset_versioning_exists(entity)){
+    namespaces = find_namespace(id = df[, get_base_idname(entity)], entitynm = entity)
+    nmsp = unique(namespaces)
+    if (length(nmsp) != 1) stop("entity to be updated must belong to one namespace only")
+  } else {
+    nmsp = "public"
+  }
+  fullarraynm = paste(nmsp, entity, sep = ".")
+  update_mandatory_and_info_fields(df = df, arrayname = fullarraynm)
 }
 
 get_entity_count = function(){
@@ -2216,9 +2284,11 @@ increment_dataset_version = function(df){
   df$created = NULL
   df$updated = NULL
   mandatory_fields = get_mandatory_fields_for_register_entity(jdb$meta$arrDataset)
-  df = prep_df_fields(df, c(mandatory_fields, get_idname(jdb$meta$arrDataset)))
 
-  register_tuple_update_lookup(df = df, arrayname = arrayname, updateLookup = FALSE)
+  register_tuple_update_lookup(df = prep_df_fields(df,
+                                                   c(mandatory_fields,
+                                                     get_idname(jdb$meta$arrDataset))),
+                               arrayname = arrayname, updateLookup = FALSE)
   return(df[, c(get_idname(arrayname))])
 }
 # END: Functions exclusively for handling versioning
