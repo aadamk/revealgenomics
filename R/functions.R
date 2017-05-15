@@ -2101,8 +2101,9 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
 
 delete_info_fields = function(fullarrayname, ids, dataset_version){
   # So far, have coded the case where consecutive ids is provided
-  if (!(all.equal(sort(ids), (min(ids): max(ids))))) stop("Delete only works on consecutive set of entity_id-s")
-
+  if ( !( identical( as.integer(sort(ids)), 
+                     (min(ids): max(ids)) ) ) ) stop("Delete only works on consecutive set of entity_id-s")
+  
   arr = fullarrayname
   entity = strip_namespace(fullarrayname)
   arrInfo = paste(arr, "_INFO", sep = "")
@@ -2130,7 +2131,8 @@ delete_entity = function(entity, ids, dataset_version = NULL){
     }
   }
   # So far, have coded the case where consecutive ids is provided
-  if (!(all.equal(sort(ids), (min(ids): max(ids))))) stop("Delete only works on consecutive set of entity_id-s")
+  if ( !( identical( as.integer(sort(ids)), 
+                    (min(ids): max(ids)) ) ) ) stop("Delete only works on consecutive set of entity_id-s")
 
   # First check that entity exists at this id
   entities = get_entity(entity = entity, ids = ids)
@@ -2161,7 +2163,7 @@ delete_entity = function(entity, ids, dataset_version = NULL){
     # Clear out the info array
     infoArray = jdb$meta$L$array[[entity]]$infoArray
     if (infoArray){
-      delete_info_fields(fullarrayname = arr, ids = ids)
+      delete_info_fields(fullarrayname = arr, ids = ids, dataset_version = dataset_version)
     }
 
     # Clear out the lookup array if required
