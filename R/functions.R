@@ -414,7 +414,10 @@ register_tuple_update_lookup = function(df, arrayname, updateLookup){
   if (any(is.na(df[, idname]))) stop("Dimensions: ", paste(idname, collapse = ", "), " should have had non null values at upload time!")
   int64_fields = get_int64fields(arrayname)
   infoArray = get_infoArray(arrayname)
-  register_tuple(df, ids_int64_conv = c(idname, int64_fields), arrayname)
+  
+  non_info_cols = c(get_idname(strip_namespace(arrayname)), 
+                    mandatory_fields()[[strip_namespace(arrayname)]])
+  register_tuple(df = df[, non_info_cols], ids_int64_conv = c(idname, int64_fields), arrayname)
   if (updateLookup){
     new_id = df[, get_base_idname(arrayname)]
     update_lookup_array(new_id, arrayname)
