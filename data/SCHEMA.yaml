@@ -18,6 +18,7 @@ array:
         chunk_interval: 1000
         overlap: 0
     infoArray: TRUE
+    compression_on: FALSE
   DATASET:
     data_class:
       metadata
@@ -42,6 +43,7 @@ array:
         chunk_interval: 1
         overlap: 0
     infoArray: TRUE
+    compression_on: FALSE
   # INDIVIDUAL
   INDIVIDUAL:
     data_class:
@@ -69,6 +71,8 @@ array:
         chunk_interval: 1
         overlap: 0
     infoArray: TRUE
+    infoArray_max_keys: 10000
+    compression_on: FALSE
   # BIOSAMPLE
   BIOSAMPLE:
     data_class:
@@ -96,6 +100,7 @@ array:
         chunk_interval: 1
         overlap: 0
     infoArray: TRUE
+    compression_on: FALSE
   # EXPERIMENTSET
   EXPERIMENTSET:
     data_class:
@@ -124,6 +129,7 @@ array:
         chunk_interval: 1
         overlap: 0
     infoArray: TRUE
+    compression_on: FALSE
   # EXPERIMENT
   EXPERIMENT:
     data_class:
@@ -174,6 +180,7 @@ array:
         chunk_interval: 1
         overlap: 0
     infoArray: TRUE
+    compression_on: FALSE
   #RNAQUANTIFICATION
   RNAQUANTIFICATION:
     data_class:
@@ -205,6 +212,7 @@ array:
         chunk_interval: 10000
         overlap: 0
     infoArray: FALSE
+    compression_on: TRUE
   # VARIANTSET
   VARIANTSET:
     data_class:
@@ -231,6 +239,7 @@ array:
         chunk_interval: 1
         overlap: 0
     infoArray: TRUE
+    compression_on: FALSE
   # VARIANT
   VARIANT:
     data_class:
@@ -271,6 +280,8 @@ array:
         chunk_interval: 10000
         overlap: 0
     infoArray: TRUE
+    infoArray_max_keys: 1000
+    compression_on: TRUE
   # FUSIONSET
   FUSIONSET:
     data_class:
@@ -296,6 +307,7 @@ array:
         chunk_interval: 1
         overlap: 0
     infoArray: TRUE
+    compression_on: FALSE
   # FUSION
   FUSION:
     data_class:
@@ -339,6 +351,7 @@ array:
         chunk_interval: 100
         overlap: 0
     infoArray: FALSE
+    compression_on: TRUE
   # COPYNUMBERSET
   COPYNUMBERSET:
     data_class:
@@ -365,6 +378,7 @@ array:
         chunk_interval: 1
         overlap: 0
     infoArray: TRUE
+    compression_on: FALSE
   # COPYNUMBERSUBSET
   COPYNUMBERSUBSET:
     data_class:
@@ -391,6 +405,7 @@ array:
         chunk_interval: 1
         overlap: 0
     infoArray: TRUE
+    compression_on: FALSE
   # COPYNUMBER_SEG
   COPYNUMBER_SEG:
     data_class:
@@ -426,6 +441,7 @@ array:
         chunk_interval: 10000
         overlap: 0
     infoArray: FALSE
+    compression_on: TRUE
   #COPYNUMBER_MAT
   COPYNUMBER_MAT:
     data_class:
@@ -457,6 +473,7 @@ array:
         chunk_interval: 100000
         overlap: 0
     infoArray: FALSE
+    compression_on: TRUE
           
   # ONTOLOGY
   ONTOLOGY:
@@ -472,6 +489,7 @@ array:
       updated: string
     dims: ontology_id
     infoArray: FALSE
+    compression_on: FALSE
   # FEATURESET
   FEATURESET:
     data_class:
@@ -487,6 +505,7 @@ array:
       updated: string
     dims: featureset_id
     infoArray: TRUE
+    compression_on: FALSE
   # FEATURE
   FEATURE:
     data_class:
@@ -507,6 +526,7 @@ array:
       updated: string
     dims: feature_id
     infoArray: TRUE
+    compression_on: FALSE
   # FEATURE_SYNONYM
   FEATURE_SYNONYM:
     data_class: 
@@ -521,3 +541,4 @@ array:
       updated: string
     dims: synonym_id
     infoArray: FALSE
+    compression_on: FALSE

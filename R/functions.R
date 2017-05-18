@@ -12,7 +12,6 @@
 # END_COPYRIGHT
 #
 
-# source('~/ga4gh-config.R')
 jnj_connect = function(username, password, host = NULL, port = 8083, protocol = "https"){
   jdb$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="jnjscidb"))
 
@@ -2346,8 +2345,13 @@ yaml_to_dim_str = function(dims){
     sep = "", collapse = ", ")
   dim_str
 }
-yaml_to_attr_string = function(attributes){
-  paste(names(attributes), ":", attributes, collapse=" , ")
+
+yaml_to_attr_string = function(attributes, compression_on = FALSE){
+  if (!compression_on) { 
+    paste(names(attributes), ":", attributes, collapse=" , ") 
+  } else {
+    paste(names(attributes), ":", attributes, "COMPRESSION 'zlib'", collapse=" , ") 
+  }
 }
 # END: Helper functions for using YAML schema object
 ############################################################
