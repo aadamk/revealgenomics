@@ -777,8 +777,7 @@ get_mandatory_fields_for_register_entity = function(arrayname){
 }
 
 mandatory_fields = function(){
-  entities = grep("^L$", names(jdb$meta), invert = TRUE, value = TRUE)
-  entitynames = sapply(entities, function(entity){jdb$meta[[entity]]})
+  entitynames = get_entity_names()
   l1 = sapply(entitynames, function(entitynm){get_mandatory_fields_for_register_entity(entitynm)})
   names(l1) = entitynames
   l1

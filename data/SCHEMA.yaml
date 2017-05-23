@@ -524,6 +524,10 @@ array:
       source: string
       created: string
       updated: string
+    unique_fields:
+      - name
+      - featureset_id
+      - feature_type
     dims: feature_id
     infoArray: TRUE
     compression_on: FALSE
@@ -536,6 +540,7 @@ array:
     attributes:
       synonym: string
       feature_id: int64
+      featureset_id: int64
       library_name: string
       created: string
       updated: string
