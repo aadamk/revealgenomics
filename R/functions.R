@@ -1379,7 +1379,7 @@ search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
       if (updateCache) stop("cannot do inexact searching on multiple terms with updateCache set to TRUE")
       lapply(terms, FUN = function(term) {search_ontology(terms = term, exact_match = FALSE)})
     } else {
-      ont[grep(terms, ignore.case = TRUE, dfOntology$term), ]
+      ont[grep(terms, ignore.case = TRUE, ont$term), ]
     }
   }
 }
