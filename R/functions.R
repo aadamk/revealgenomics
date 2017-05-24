@@ -96,9 +96,13 @@ get_entity = function(entity, ids){
   f = NULL
   try({f = get(fn_name)}, silent = TRUE)
   if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
-  if (entity %in% c('FEATURE', 'ONTOLOGY')) {
+  if (entity == 'ONTOLOGY') {
     f(ids, updateCache = TRUE)
-  } else { f(ids) }
+  } else if (entity == 'FEATURE') {
+    f(ids, fromCache =  FALSE)
+  } else { 
+    f(ids) 
+  }
 }
 
 # cat("Downloading reference dataframes for fast ExpressionSet formation\n")
@@ -1247,12 +1251,12 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
 
 # synonym: Another name for a specific feature
 # source: The id type by which to search e.g. ensembl_gene_id, entrez_id, vega_id
-search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL){
-  syn = get_feature_synonym_from_cache()
+search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL, updateCache = TRUE){
+  syn = get_feature_synonym_from_cache(updateCache = updateCache)
   f1 = syn[syn$synonym == synonym, ]
   if (!is.null(id_type)) {f1 = f1[f1$source == id_type, ]}
   if (!is.null(featureset_id)) {f1 = f1[f1$featureset_id == f1$featureset_id, ]}
-  get_features(feature_id = f1$feature_id)
+  get_features(feature_id = f1$feature_id, fromCache = !updateCache)
 }
 
 search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_id = NULL){
