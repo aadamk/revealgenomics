@@ -205,13 +205,13 @@ get_max_id = function(arrayname){
                        get_base_idname(arrayname), "), max(id))", sep = ""
                  ),
                  return=TRUE)$id_max
-    if (is.na(max)) max = 0
-    return(max)
   } else { # Only exists in public namespaces
-    iquery(jdb$db, paste("aggregate(apply(", arrayname,
+    max = iquery(jdb$db, paste("aggregate(apply(", arrayname,
                                           ", id, ", get_base_idname(arrayname), "), ",
                                   "max(id))", sep=""), return=TRUE)$id_max
   }
+  if (is.na(max)) max = 0
+  return(max)
 }
 
 convert_attr_double_to_int64 = function(arr, attrname){
@@ -390,7 +390,7 @@ get_infoArray = function(arrayname){
 # Wrapper function that (1) updates mandatory fields, (2) updates flex fields
 update_mandatory_and_info_fields = function(df, arrayname){
   idname = get_idname(arrayname)
-  if (any(is.na(df[, idname]))) stop("Dimensions: ", paste(idname, collapse = ", "), " should have had non null values at upload time!")
+  if (any(is.na(df[, idname]))) stop("Dimensions: ", paste(idname, collapse = ", "), " should not have null values at upload time!")
   int64_fields = get_int64fields(arrayname)
   infoArray = get_infoArray(arrayname)
   update_tuple(df, ids_int64_conv = c(idname, int64_fields), arrayname)
@@ -1155,13 +1155,14 @@ get_features = function(feature_id = NULL, fromCache = TRUE){
       if (is.null(jdb$cache$feature_ref)) { # the first time (when feature cache has never been filled)
         jdb$cache$feature_ref = allfeatures
       }
+      allfeatures
     }
   } else { # read from cache
     feature_ref = get_feature_from_cache()
     if (is.null(feature_id)){
       return(drop_na_columns(feature_ref))
     } else {
-      return(drop_na_columns(feature_ref[feature_ref$feature_id %in% feature_id, ]))
+      return(drop_na_columns(feature_ref[match(feature_id, feature_ref$feature_id),  ]))
     }
   }
 }
@@ -1242,6 +1243,16 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
                  sep = "")
   }
   query
+}
+
+# synonym: Another name for a specific feature
+# source: The id type by which to search e.g. ensembl_gene_id, entrez_id, vega_id
+search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL){
+  syn = get_feature_synonym_from_cache()
+  f1 = syn[syn$synonym == synonym, ]
+  if (!is.null(id_type)) {f1 = f1[f1$source == id_type, ]}
+  if (!is.null(featureset_id)) {f1 = f1[f1$featureset_id == f1$featureset_id, ]}
+  get_features(feature_id = f1$feature_id)
 }
 
 search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_id = NULL){

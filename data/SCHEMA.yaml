@@ -541,7 +541,7 @@ array:
       synonym: string
       feature_id: int64
       featureset_id: int64
-      library_name: string
+      source: string
       created: string
       updated: string
     dims: synonym_id
