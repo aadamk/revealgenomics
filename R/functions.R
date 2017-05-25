@@ -12,6 +12,7 @@
 # END_COPYRIGHT
 #
 
+#' @export
 jnj_connect = function(username, password, host = NULL, port = 8083, protocol = "https"){
   jdb$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="jnjscidb"))
 
@@ -135,6 +136,7 @@ get_ontology_from_cache = function(updateCache = FALSE){
   return(jdb$cache$dfOntology)
 }
 
+#' @export
 get_ontology = function(ontology_id = NULL, updateCache = FALSE){
   dfOntology = get_ontology_from_cache(updateCache)
   if (!is.null(ontology_id)){
@@ -160,6 +162,7 @@ update_feature_synonym_cache = function(){
   jdb$cache$dfFeatureSynonym = iquery(jdb$db, jdb$meta$arrFeatureSynonym, return = TRUE)
 }
 
+#' @export
 scidb_exists_array = function(arrayName) {
   !is.null(tryCatch({iquery(jdb$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
 }
@@ -195,6 +198,7 @@ get_int64fields = function(arrayname){
   int64_fields
 }
 
+#' @export
 get_entity_names = function(){
   varnames = names(jdb$meta)
   varnames = varnames[varnames != "L"]
@@ -227,25 +231,6 @@ convert_attr_double_to_int64 = function(arr, attrname){
   arr
 }
 
-scidb_attribute_rename = function(arr, old, new){
-  attrs = schema(arr, what = "attributes")
-  attrnames = attrs$name
-  stopifnot(old %in% attrnames)
-
-  attrs[match(old, attrnames), "name"] = new
-  # dims = schema(arr, "dimensions")
-
-  attr_schema = paste(
-    paste(
-      paste(attrs$name, attrs$type, sep = ": "),
-      ifelse(attrs$nullable, "", "NOT NULL"), sep = " "),
-    collapse = ", ")
-  dim_schema = gsub("<.*> *", "", schema(arr)) # TODO : build up from scratch
-  newSchema = paste("<", attr_schema, ">", dim_schema)
-
-  arr = jdb$db$cast(srcArray = arr, schemaArray = R(newSchema))
-  arr
-}
 
 update_tuple = function(df, ids_int64_conv, arrayname){
   if (nrow(df) < 100000) {x1 = as.scidb(jdb$db, df)} else {x1 = as.scidb(jdb$db, df, chunk_size=nrow(df))}
@@ -277,6 +262,7 @@ register_tuple = function(df, ids_int64_conv, arrayname){
   iquery(jdb$db, query)
 }
 
+#' @export
 register_project = function(df,
                             namespace,
                             only_test = FALSE){
@@ -288,6 +274,7 @@ register_project = function(df,
   } # end of if (!only_test)
 }
 
+#' @export
 register_dataset = function(df,
                             dataset_version = 1,
                             only_test = FALSE
@@ -311,6 +298,7 @@ find_namespace = function(id, entitynm, dflookup = NULL){
   dflookup[match(id, dflookup[, get_base_idname(entitynm)]), ]$namespace
 }
 
+#' @export
 register_ontology_term = function(df, only_test = FALSE){
   uniq = "term"
   test_register_ontology(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
@@ -320,6 +308,7 @@ register_ontology_term = function(df, only_test = FALSE){
   } # end of if (!only_test)
 }
 
+#' @export
 register_individual = function(df,
                                dataset_version = NULL,
                                only_test = FALSE){
@@ -336,6 +325,7 @@ register_individual = function(df,
   } # end of if (!only_test)
 }
 
+#' @export
 register_featureset = function(df, only_test = FALSE){
   uniq = 'name'
   test_register_featureset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
@@ -346,6 +336,7 @@ register_featureset = function(df, only_test = FALSE){
   } # end of if (!only_test)
 }
 
+#' @export
 register_feature = function(df, only_test = FALSE){
   uniq = c("name", "featureset_id", "feature_type")
   test_register_feature(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
@@ -355,6 +346,7 @@ register_feature = function(df, only_test = FALSE){
   } # end of if (!only_test)
 }
 
+#' @export
 register_biosample = function(df,
                               dataset_version = NULL,
                               only_test = FALSE){
@@ -529,6 +521,7 @@ update_lookup_array = function(id, arrayname){
   iquery(jdb$db, qq)
 }
 
+#' @export
 register_variantset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'name')
   test_register_variantset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
@@ -543,6 +536,7 @@ register_variantset = function(df, dataset_version = NULL, only_test = FALSE){
   } # end of if (!only_test)
 }
 
+#' @export
 register_rnaquantificationset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c("dataset_id", "name")
   test_register_rnaquantificationset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
@@ -557,6 +551,7 @@ register_rnaquantificationset = function(df, dataset_version = NULL, only_test =
   } # end of if (!only_test)
 }
 
+#' @export
 register_fusionset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'name')
   test_register_fusionset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
@@ -571,6 +566,7 @@ register_fusionset = function(df, dataset_version = NULL, only_test = FALSE){
   } # end of if (!only_test)
 }
 
+#' @export
 register_copynumberset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'name')
   test_register_copynumberset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
@@ -585,6 +581,7 @@ register_copynumberset = function(df, dataset_version = NULL, only_test = FALSE)
   } # end of if (!only_test)
 }
 
+#' @export
 register_copynumbersubset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c('dataset_id', 'copynumberset_id', 'name')
   test_register_copynumbersubset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
@@ -599,6 +596,7 @@ register_copynumbersubset = function(df, dataset_version = NULL, only_test = FAL
   } # end of if (!only_test)
 }
 
+#' @export
 register_variant = function(df, dataset_version = NULL, only_test = FALSE){
   test_register_variant(df)
   if (!only_test) {
@@ -640,6 +638,32 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE){
   } # end of if (!only_test)
 }
 
+register_info = function(df, idname, arrayname){
+  # df[idname] = id
+  info_col_pos = grep("info_", colnames(df))
+  if (length(info_col_pos) > 0){
+    info_col_nm = grep("info_", colnames(df), value = TRUE)
+    info = df[, c(idname, info_col_nm)]
+    info_col_pos = grep("info_", colnames(info))
+    new_info_col_nm = sapply(strsplit(info_col_nm, "info_"), function(x){x[2]})
+    colnames(info) = c(idname,
+                       new_info_col_nm)
+    info = info %>%
+      gather(key, val, info_col_pos)
+    register_tuple(df = info, ids_int64_conv = idname, arrayname = paste(arrayname,"_INFO",sep=""))
+  }
+}
+
+register_feature_synonym = function(df, uniq, only_test = FALSE){
+  test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = jdb$meta$arrFeatureSynonym
+    register_tuple_return_id(df, arrayname, uniq)
+  } # end of if (!only_test)
+}
+
+
+#' @export
 search_variants = function(variantset, biosample = NULL, feature = NULL){
   if (!is.null(variantset)) {variantset_id = variantset$variantset_id} else {
     stop("variantset must be supplied"); variantset_id = NULL
@@ -714,6 +738,7 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
   xx
 }
 
+#' @export
 search_fusion = function(fusionset, biosample = NULL, feature = NULL){
   if (!is.null(fusionset)) {fusionset_id = fusionset$fusionset_id} else {
     stop("fusionset must be supplied"); fusionset_id = NULL
@@ -780,6 +805,7 @@ get_mandatory_fields_for_register_entity = function(arrayname){
   attrs
 }
 
+#' @export
 mandatory_fields = function(){
   entitynames = get_entity_names()
   l1 = sapply(entitynames, function(entitynm){get_mandatory_fields_for_register_entity(entitynm)})
@@ -917,47 +943,6 @@ test_register_fusion_data = function(df, fusionset){
   stopifnot(nrow(fusionset) == 1)
 }
 
-register_info = function(df, idname, arrayname){
-  # df[idname] = id
-  info_col_pos = grep("info_", colnames(df))
-  if (length(info_col_pos) > 0){
-    info_col_nm = grep("info_", colnames(df), value = TRUE)
-    info = df[, c(idname, info_col_nm)]
-    info_col_pos = grep("info_", colnames(info))
-    new_info_col_nm = sapply(strsplit(info_col_nm, "info_"), function(x){x[2]})
-    colnames(info) = c(idname,
-                       new_info_col_nm)
-    info = info %>%
-      gather(key, val, info_col_pos)
-    register_tuple(df = info, ids_int64_conv = idname, arrayname = paste(arrayname,"_INFO",sep=""))
-  }
-}
-
-# x is a SciDB array with ontology terms marked with "_" at the very end
-# s_join_ontology_terms = function(arrayname, ontologyname){
-#   x = scidb(arrayname)
-#   o = scidb(ontologyname)
-#   terms = grep(".*_$", scidb_attributes(x), value=TRUE)
-#
-#   x2 = x
-#   for (term in terms){
-#     qq = paste("equi_join(",
-#                x2@name,
-#                ", project(",
-#                o@name,
-#                ", term), 'left_names=",
-#                term,
-#                "', 'right_names=ontology_id', 'left_outer=0', 'right_outer=0'",
-#                ")",
-#                sep = "")
-#     x2 = scidb(qq)
-#     x2 = attribute_rename(x2, term, "old")
-#     x2 = attribute_rename(x2, "term", term)
-#     x2 = project(x2, c(scidb_attributes(x)))
-#   }
-#   return(x2)
-# }
-
 join_ontology_terms = function(df){
   terms = grep(".*_$", colnames(df), value=TRUE)
   df2 = df
@@ -967,6 +952,7 @@ join_ontology_terms = function(df){
   return(df2)
 }
 
+#' @export
 get_projects = function(project_id = NULL){
   if (!is.null(project_id)) { # Need to look up specific individual ID
     select_from_1d_entity(entitynm = jdb$meta$arrProject, id = project_id)
@@ -1042,6 +1028,7 @@ merge_across_namespaces = function(arrayname){
   if (nrow(df) > 0) {return(df[order(df[, get_base_idname(arrayname)]), ])} else {return(df)}
 }
 
+#' @export
 get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions = TRUE){
   check_args_get(id = dataset_id, dataset_version, all_versions)
   if (!is.null(dataset_id)) { # Need to look up specific project ID
@@ -1052,6 +1039,7 @@ get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions 
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 get_individuals = function(individual_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = individual_id, dataset_version, all_versions)
   if (!is.null(individual_id)) { # Need to look up specific individual ID
@@ -1062,6 +1050,7 @@ get_individuals = function(individual_id = NULL, dataset_version = NULL, all_ver
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 get_biosamples = function(biosample_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = biosample_id, dataset_version, all_versions)
 
@@ -1078,6 +1067,7 @@ check_args_get = function(id, dataset_version, all_versions){
   if (!is.null(dataset_version) & all_versions==TRUE) stop("Cannot specify specific dataset_version, and also set all_versions = TRUE")
 }
 
+#' @export
 get_rnaquantificationsets = function(rnaquantificationset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = rnaquantificationset_id, dataset_version, all_versions)
   if (!is.null(rnaquantificationset_id)) { # Need to look up specific ID
@@ -1088,6 +1078,7 @@ get_rnaquantificationsets = function(rnaquantificationset_id = NULL, dataset_ver
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 get_variantsets = function(variantset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = variantset_id, dataset_version, all_versions)
   if (!is.null(variantset_id)) { # Need to look up specific ID
@@ -1098,6 +1089,7 @@ get_variantsets = function(variantset_id = NULL, dataset_version = NULL, all_ver
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 get_fusionset = function(fusionset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = fusionset_id, dataset_version, all_versions)
   if (!is.null(fusionset_id)) { # Need to look up specific ID
@@ -1108,6 +1100,7 @@ get_fusionset = function(fusionset_id = NULL, dataset_version = NULL, all_versio
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 get_copynumberset = function(copynumberset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = copynumberset_id, dataset_version, all_versions)
   if (!is.null(copynumberset_id)) { # Need to look up specific ID
@@ -1118,6 +1111,7 @@ get_copynumberset = function(copynumberset_id = NULL, dataset_version = NULL, al
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 get_copynumbersubset = function(copynumbersubset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = copynumbersubset_id, dataset_version, all_versions)
   if (!is.null(copynumbersubset_id)) { # Need to look up specific ID
@@ -1129,6 +1123,7 @@ get_copynumbersubset = function(copynumbersubset_id = NULL, dataset_version = NU
 }
 
 
+#' @export
 get_featuresets= function(id = NULL){
   arrayname = jdb$meta$arrFeatureset
 
@@ -1142,6 +1137,7 @@ get_featuresets= function(id = NULL){
 }
 
 
+#' @export
 get_features = function(feature_id = NULL, fromCache = TRUE){
   if (!fromCache | is.null(jdb$cache$feature_ref)){ # work from SciDB directly
     arrayname = jdb$meta$arrFeature
@@ -1249,8 +1245,13 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
   query
 }
 
-# synonym: Another name for a specific feature
-# source: The id type by which to search e.g. ensembl_gene_id, entrez_id, vega_id
+#' Search features by synonym
+#' 
+#' @param synonym: A name for a gene by any convention e.g. ensembl_gene_id, entrez_id, vega_id
+#' @param id_type: (Optional) The id type by which to search e.g. ensembl_gene_id, entrez_id, vega_id
+#' @param featureset_id: (Optional) The featureset within which to search
+#' @return feature(s) associated with provided synonym
+#' @export
 search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL, updateCache = TRUE){
   syn = get_feature_synonym_from_cache(updateCache = updateCache)
   f1 = syn[syn$synonym == synonym, ]
@@ -1259,6 +1260,7 @@ search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NU
   get_features(feature_id = f1$feature_id, fromCache = !updateCache)
 }
 
+#' @export
 search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_id = NULL){
   arrayname = jdb$meta$arrFeature
 
@@ -1288,6 +1290,7 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
   # s_join_ontology_terms(qq)[]
 }
 
+#' @export
 search_datasets = function(project_id = NULL, dataset_version = NULL, all_versions = TRUE){
   check_args_search(dataset_version, all_versions)
   arrayname = jdb$meta$arrDataset
@@ -1317,6 +1320,7 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 search_individuals = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
   i = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrIndividuals, dataset_id, dataset_version = dataset_version)
@@ -1365,20 +1369,14 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname, dataset_id, dat
                                  namespace = namespace)
 }
 
+#' @export
 search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
   df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrBiosample, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
-register_feature_synonym = function(df, uniq, only_test = FALSE){
-  test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    arrayname = jdb$meta$arrFeatureSynonym
-    register_tuple_return_id(df, arrayname, uniq)
-  } # end of if (!only_test)
-}
-
+#' @export
 search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
   ont = get_ontology(updateCache = updateCache)
   ont_ids = ont$ontology_id
@@ -1398,36 +1396,42 @@ search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
   }
 }
 
+#' @export
 search_rnaquantificationset = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
   df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrRnaquantificationset, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 search_variantsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
   df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrVariantset, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 search_fusionsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
   df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrFusionset, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 search_copynumbersets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
   df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrCopyNumberSet, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 search_copynumbersubsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
   df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrCopyNumberSubSet, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' @export
 search_rnaquantification = function(rnaquantificationset = NULL,
                                     biosample = NULL,
                                     feature = NULL,
@@ -1647,6 +1651,7 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
   iquery(jdb$db, qq, return = T)
 }
 
+#' @export
 get_rnaquantification_counts = function(rnaquantificationset_id = NULL){
   if (is.null(rnaquantificationset_id)){
     x = scidb(jdb$db, jdb$meta$arrRnaquantification)
@@ -1731,16 +1736,7 @@ unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
   return(x5)
 }
 
-scidb_array_count = function(array){
-  qq = paste("op_count(", array@name, ")", sep = "")
-  # scidb(jdb$db, qq)
-  iquery(jdb$db, qq, schema="<count:uint64> [i=0:0]", return = T)$count
-}
-
-scidb_array_head= function(array, n = 5){
-  as.R(jdb$db$limit(array, R(n)))
-}
-
+#' @export
 register_expression_matrix = function(filepath,
                                       rnaquantificationset_id,
                                       featureset_id,
@@ -1955,6 +1951,7 @@ register_expression_matrix = function(filepath,
   } # end of if (!only_test)
 }
 
+#' @export
 register_copynumber_seg = function(copynumberset, only_test = FALSE){
   test_register_copynumber_seg(copynumberset)
   if (!only_test) {
@@ -1983,6 +1980,7 @@ register_copynumber_seg = function(copynumberset, only_test = FALSE){
   } # end of if (!only_test)
 }
 
+#' @export
 register_copynumber_matrix_file = function(copynumberSubSet, dataset_version, only_test = FALSE){
   test_register_copnyumber_matrix_file(copynumberSubSet, dataset_version)
   if (!only_test) {
@@ -2017,6 +2015,7 @@ register_copynumber_matrix_file = function(copynumberSubSet, dataset_version, on
   } # end of if (!only_test)
 }
 
+#' @export
 register_fusion_data = function(df, fusionset, only_test = FALSE){
   test_register_fusion_data(df, fusionset)
   if (!only_test) {
@@ -2135,6 +2134,7 @@ delete_info_fields = function(fullarrayname, ids, dataset_version){
   cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from info array: ", arrInfo, "\n", sep = "")
   iquery(jdb$db, qq)
 }
+#' @export
 delete_entity = function(entity, ids, dataset_version = NULL){
   if (!(entity %in% get_entity_names())) stop("Entity '", entity, "' does not exist")
   if (is.null(ids)) return()
@@ -2202,6 +2202,7 @@ delete_entity = function(entity, ids, dataset_version = NULL){
   } # end of check that some data existed in the first place
 }
 
+#' @export
 update_entity = function(entity, df){
   if (lookup_exists(entity)){
     namespaces = find_namespace(id = df[, get_base_idname(entity)], entitynm = entity)
@@ -2214,6 +2215,7 @@ update_entity = function(entity, df){
   update_mandatory_and_info_fields(df = df, arrayname = fullarraynm)
 }
 
+#' @export
 get_entity_count = function(){
   entities = c(jdb$meta$arrProject, jdb$meta$arrDataset, jdb$meta$arrIndividuals, jdb$meta$arrBiosample, jdb$meta$arrRnaquantificationset)
   if (length(jdb$cache$nmsp_list) == 1){
@@ -2257,94 +2259,4 @@ get_entity_count = function(){
   }
   counts
 }
-
-############################################################
-# BEGIN: Functions exclusively for handling versioning
-
-# maintain a cache of `dataset_id, dataset_version`, and to retrieve the lookup
-get_dataset_version_lookup = function(updateCache = FALSE){
-  str = 'DATASET_VERSION'
-  if (updateCache | is.null(jdb$cache$lookup[[str]])){
-    namespaces = jdb$cache$nmsp_list
-    qq = "public.DATASET"
-    if (length(namespaces) > 1)  {
-      for (nmsp in namespaces[2:length(namespaces)]) qq = paste("merge(", qq, ", ", nmsp, ".DATASET)", sep = "")
-    }
-    # qq2 = paste("project(apply(", qq, ", dataset_id, dataset_id, dataset_version, dataset_version), dataset_id, dataset_version)", sep = "")
-    df = iquery(jdb$db, qq, return = T)
-    jdb$cache$lookup[[str]] = df[, c('dataset_id', 'dataset_version')]
-  }
-  return(jdb$cache$lookup[[str]])
-}
-
-# Find the current maximum `dataset_version` for a user specified `dataset_id`
-get_dataset_max_version = function(dataset_id, updateCache = FALSE){
-  df = get_dataset_version_lookup(updateCache)
-  if (!(dataset_id %in% df$dataset_id)) {stop("Either this dataset_id does not access or you do not have access to it")}
-  df = df[df$dataset_id == dataset_id, ]
-  max(df$dataset_version)
-}
-
-# increment the version for a given dataset
-# parameter df is typically the output of a get_datasets(dataset_id = ...) call, and required modifications on that result
-increment_dataset_version = function(df){
-  if(length(df$dataset_id)!=1) stop("Can increment version for one specific dataset_id only")
-
-  arrayname = jdb$meta$arrDataset
-  nmsp = find_namespace(id = df$dataset_id, entitynm = arrayname)
-  arrayname = paste(nmsp, arrayname, sep = ".")
-  df$dataset_version = get_dataset_max_version(dataset_id = df$dataset_id, updateCache = TRUE) + 1
-  df$created = NULL
-  df$updated = NULL
-  mandatory_fields = get_mandatory_fields_for_register_entity(jdb$meta$arrDataset)
-
-  register_tuple_update_lookup(df = prep_df_fields(df,
-                                                   c(mandatory_fields,
-                                                     get_idname(jdb$meta$arrDataset))),
-                               arrayname = arrayname, updateLookup = FALSE)
-  return(df[, c(get_idname(arrayname))])
-}
-# END: Functions exclusively for handling versioning
-############################################################
-
-############################################################
-# BEGIN: Helper functions for dataframe / text manipulation
-# Compare with mandatory fields passed by user
-# Rename remaining columns of dataframe as info_<column-name>
-# Take the info columns that are non-string and convert to string
-prep_df_fields = function(df, mandatory_fields){
-  available_fields = colnames(df)
-
-  pos = which(!(available_fields %in% mandatory_fields))
-
-  colnames(df)[pos] = paste("info_", available_fields[pos], sep = "")
-
-  posNotChar = which((sapply(df, class) != "character") & 
-                       !(colnames(df) %in% mandatory_fields))
-  for (posi in posNotChar){
-    df[, posi] = paste(df[, posi])
-  }
-  df
-}
-
-remove_duplicates = function(df_data){
-  df_data[which(!duplicated(df_data)), ]
-}
-
-df_rename_column = function(df, oldname, newname){
-  colnames(df)[grep(paste("^",oldname,"$",sep = ""), colnames(df))] = newname
-  df
-}
-## YAML related
-strip_namespace = function(arrayname) sub("^.*[.]", "", arrayname)
-
-## YAML related
-get_namespace = function(arrayname) sub("[.].*$", "", arrayname)
-
-drop_na_columns = function(df){
-  # http://stackoverflow.com/questions/2643939/remove-columns-from-dataframe-where-all-values-are-na
-  df[,colSums(is.na(df))<nrow(df)]
-}
-# END: Helper functions for dataframe / text manipulation
-############################################################
 
