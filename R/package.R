@@ -3,20 +3,20 @@
 #' Available package options (you can override the defaults with the \code{options} function):
 #'
 #' \itemize{
-#' \item \code{jnjscidb.dummy_option=7999}
+#' \item \code{scidb4gh.dummy_option=7999}
 #' }
 #' Placeholder for documentation
 #'
-#' @name jnjscidb
+#' @name scidb4gh
 #' @seealso \code{\link{get_individuals}}, \code{\link{search_individuals}},  
 #' @docType package
 NULL
 
 .onAttach = function(libname, pkgname)
 {
-  packageStartupMessage("To get started see ?jnjscidb for a list of available functions. Each\nfunction has a detailed help page with examples.\nThe original PDF specification is available from vignette('jnjscidb')." , 
+  packageStartupMessage("To get started see ?scidb4gh for a list of available functions. Each\nfunction has a detailed help page with examples.\nThe original PDF specification is available from vignette('scidb4gh')." , 
                         domain = NULL, appendLF = TRUE)
-  options("jnjscidb.dummy_option"=7999)
+  options("scidb4gh.dummy_option"=7999)
 }
 
 # A global environment used to store the metadata information, and cache state by some functions

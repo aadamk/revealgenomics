@@ -13,8 +13,8 @@
 #
 
 #' @export
-jnj_connect = function(username, password, host = NULL, port = 8083, protocol = "https"){
-  jdb$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="jnjscidb"))
+gh_connect = function(username, password, host = NULL, port = 8083, protocol = "https"){
+  jdb$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="scidb4gh"))
 
   jdb$meta$arrProject = 'PROJECT'
   jdb$meta$arrDataset = 'DATASET'

@@ -1,4 +1,4 @@
 library(testthat)
-library(jnjscidb)
+library(scidb4gh)
 
-test_check("jnjscidb")
+test_check("scidb4gh")

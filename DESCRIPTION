@@ -1,11 +1,11 @@
-Package: jnjscidb
+Package: scidb4gh
 Type: Package
-Title: Janssen SciDB Toolbox
+Title: GA4GH inspired R-API for SciDB
 Version: 0.1
 Date: 2017-04-20
 Author: Kriti Sen Sharma
 Maintainer: Kriti Sen Sharma <ksen@paradigm4.com>
-Description: Functions supporting SciDB pan-study repository at Janssen
+Description: GA4GH inspired R-API for SciDB. Used to load (register), maintain (update, delete), and retrieve (search, get) data. Multiple data types are supported e.g. clinical data, gene, transcript, RNASeq, GXP by microarray, variant, fusion etc.
 Depends:
     data.table,
     tidyr,

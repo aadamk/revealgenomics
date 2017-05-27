@@ -1,6 +1,6 @@
-# jnjscidb
+# scidb4gh
 
 ```R
-library(jnjscidb)
-jnj_connect(username = 'root', password = '...')
+library(scidb4gh)
+gh_connect(username = 'root', password = '...')
 ```
