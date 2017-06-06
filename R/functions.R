@@ -46,6 +46,7 @@ gh_connect = function(username, password, host = NULL, port = 8083, protocol = "
   jdb$cache$lookup[[jdb$meta$arrVariantset]] = NULL
   jdb$cache$lookup[[jdb$meta$arrFusionset]] = NULL
   jdb$cache$feature_ref = NULL
+  jdb$cache$dfFeatureSynonym = NULL
   jdb$cache$biosample_ref = NULL
 
   # SciDB connection and R API
@@ -133,6 +134,7 @@ get_ontology_from_cache = function(updateCache = FALSE){
   if (updateCache | is.null(jdb$cache$dfOntology)){
     update_ontology_cache()
   }
+  if (nrow(jdb$cache$dfOntology) == 0) update_ontology_cache()
   return(jdb$cache$dfOntology)
 }
 
@@ -1252,7 +1254,7 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
 #' @param featureset_id: (Optional) The featureset within which to search
 #' @return feature(s) associated with provided synonym
 #' @export
-search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL, updateCache = TRUE){
+search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL, updateCache = FALSE){
   syn = get_feature_synonym_from_cache(updateCache = updateCache)
   f1 = syn[syn$synonym == synonym, ]
   if (!is.null(id_type)) {f1 = f1[f1$source == id_type, ]}

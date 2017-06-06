@@ -135,8 +135,8 @@ merge_gene_annotation_and_location = function(gene_annotation_file_path,
 }
 
 # Build a reference set of genes and synonym at a given featureset_id
-# Need paths to <hugo/hgnc_complete_set.txt> for annotation info
-# and <grch38_release85_homosap_gene/newGene.tsv> as gene location info
+# Need paths to <hugo/hgnc_complete_set.txt> for annotation info (param: gene_annotation_file_path)
+# and <grch38_release85_homosap_gene/newGene.tsv> as gene location info (param: gene_location_file_path)
 build_reference_gene_set = function( featureset_id,
                                      gene_annotation_file_path, 
                                      gene_location_file_path, 
@@ -177,10 +177,13 @@ build_reference_gene_set = function( featureset_id,
   cat("Taking the non-alias fields and registering to get unique feature id-s\n")
   df1 = x12e[, which(!(colnames(x12e) %in% alias_fields))]
   strand_term = search_ontology(terms = "strand_term_unspecified")
-  if (is.na(strand_term)) {strand_term = register_ontology_term(df = data.frame(term = "strand_term_unspecified",
+  if (is.na(strand_term)) {
+    cat("Registering ontology term\n")
+    strand_term = register_ontology_term(df = data.frame(term = "strand_term_unspecified",
                                                                                 source_name = "...",
                                                                                 source_version = "...", 
-                                                                                stringsAsFactors = FALSE))}
+                                                                                stringsAsFactors = FALSE))
+  }
   df1$strand_term = strand_term
   df1$feature_type = "gene"
   df1$featureset_id = featureset_id
