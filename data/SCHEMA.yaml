@@ -166,6 +166,7 @@ array:
       dataset_id: int64
       name: string
       description: string
+#      file_path: string
       created: string
       updated: string
     dims: 
@@ -545,5 +546,34 @@ array:
       created: string
       updated: string
     dims: synonym_id
+    infoArray: FALSE
+    compression_on: FALSE
+  # GENELIST
+  GENELIST:
+    data_class: 
+      featuredata
+    namespace:
+      - public
+    attributes:
+      name: string
+      description: string
+      owner: string
+      created: string
+      updated: string
+    dims: genelist_id
+    infoArray: FALSE
+    compression_on: FALSE
+  # GENELIST_GENE
+  GENELIST_GENE:
+    data_class: 
+      featuredata
+    namespace:
+      - public
+    attributes:
+      genelist_id: int64
+      gene_symbol: string
+      created: string
+      updated: string
+    dims: genelist_gene_id
     infoArray: FALSE
     compression_on: FALSE

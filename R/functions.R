@@ -26,6 +26,8 @@ gh_connect = function(username, password, host = NULL, port = 8083, protocol = "
   jdb$meta$arrFeature = 'FEATURE'
   jdb$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
   jdb$meta$arrFeatureset = 'FEATURESET'
+  jdb$meta$arrGenelist = 'GENELIST'
+  jdb$meta$arrGenelist_gene = 'GENELIST_GENE'
   jdb$meta$arrVariantset = 'VARIANTSET'
   jdb$meta$arrVariant = 'VARIANT'
   jdb$meta$arrFusionset = 'FUSIONSET'
@@ -335,6 +337,29 @@ register_featureset = function(df, only_test = FALSE){
     arrayname = jdb$meta$arrFeatureset
     register_tuple_return_id(df,
                            arrayname, uniq)
+  } # end of if (!only_test)
+}
+
+#' @export
+register_genelist = function(df, only_test = FALSE){
+  uniq = c('name', 'owner')
+  df$owner = 'default'
+  test_register_genelist(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = jdb$meta$arrGenelist
+    register_tuple_return_id(df,
+                             arrayname, uniq)
+  } # end of if (!only_test)
+}
+
+#' @export
+register_genelist_gene = function(df, only_test = FALSE){
+  uniq = c('genelist_id', 'gene_symbol')
+  test_register_genelist_gene(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = jdb$meta$arrGenelist_gene
+    register_tuple_return_id(df,
+                             arrayname, uniq)
   } # end of if (!only_test)
 }
 
@@ -882,6 +907,16 @@ test_register_featureset = function(df, uniq, silent = TRUE){
   test_unique_fields(df, uniq)
 }
 
+test_register_genelist = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrGenelist, silent = silent)
+  test_unique_fields(df, uniq)
+}
+
+test_register_genelist_gene = function(df, uniq, silent = TRUE){
+  test_mandatory_fields(df, arrayname = jdb$meta$arrGenelist_gene, silent = silent)
+  test_unique_fields(df, uniq)
+}
+
 test_register_feature = function(df, uniq, silent = TRUE){
   test_mandatory_fields(df, arrayname = jdb$meta$arrFeature, silent = silent)
   test_unique_fields(df, uniq)
@@ -1126,7 +1161,7 @@ get_copynumbersubset = function(copynumbersubset_id = NULL, dataset_version = NU
 
 
 #' @export
-get_featuresets= function(id = NULL){
+get_featuresets= function(featureset_id = NULL){
   arrayname = jdb$meta$arrFeatureset
 
   local_arrnm = strip_namespace(arrayname)
@@ -1134,8 +1169,21 @@ get_featuresets= function(id = NULL){
   stopifnot(class(idname) == "character")
 
   qq = arrayname
-  if (!is.null(id)) {qq = paste("filter(", arrayname, ", ", idname, " = ", id, ")", sep="")}
+  if (!is.null(featureset_id)) {qq = paste("filter(", arrayname, ", ", idname, " = ", featureset_id, ")", sep="")}
   join_info_ontology_and_unpivot(qq, arrayname)
+}
+
+#' @export
+get_genelist = function(genelist_id = NULL){
+  arrayname = jdb$meta$arrGenelist
+  
+  local_arrnm = strip_namespace(arrayname)
+  idname = get_idname(arrayname)
+  stopifnot(class(idname) == "character")
+  
+  qq = arrayname
+  if (!is.null(genelist_id)) {qq = paste("filter(", arrayname, ", ", idname, " = ", genelist_id, ")", sep="")}
+  iquery(jdb$db, qq, return = TRUE)
 }
 
 
@@ -1290,6 +1338,18 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
 
   join_info_ontology_and_unpivot(qq, arrayname)
   # s_join_ontology_terms(qq)[]
+}
+
+#' @export
+search_genelist_gene = function(genelist_id){
+  arrayname = jdb$meta$arrGenelist_gene
+  
+  qq = arrayname
+  if (length(genelist_id)==1){
+      qq = paste("filter(", qq, ", genelist_id = ", genelist_id, ")", sep="")
+  } else {stop("Not covered yet")}
+
+  iquery(jdb$db, qq, return = TRUE)
 }
 
 #' @export
