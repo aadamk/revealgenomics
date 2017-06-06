@@ -1834,7 +1834,7 @@ register_expression_matrix = function(filepath,
 
 
     ##################
-    # Do some simple checks on the column-names
+    # Do some simple checks on the column-names (only for debug purposes)
     length(colnames(x))
     length(grep(".*_BM", tail(colnames(x),-1) ))
     length(grep(".*_PB", colnames(x) ))
@@ -1844,19 +1844,6 @@ register_expression_matrix = function(filepath,
     colnames(x)[grep(".*2087.*", colnames(x) )]
     colnames(x)[grep(".*1179.*", colnames(x) )]
     ##################
-
-    xx = tail(colnames(x), -1)
-    # public_id = str_extract(xx, "MMRF_[0-9]+")
-    #
-    # spectrum_suffix = str_extract(
-    #   str_extract(xx, "_[0-9]_"),
-    #   "[0-9]")
-    #
-    # locations = str_locate(xx, "MMRF_[0-9]+_[0-9]_")
-    # suffix2 = NULL
-    # for (i in 1: length(xx)) {
-    #   suffix2[i] = substr(xx[i], locations[i,2]+1, str_length(xx[i]))
-    # }
 
 
     ############# START LOADING INTO SCIDB ########
@@ -1883,12 +1870,7 @@ register_expression_matrix = function(filepath,
               "' and featureset_id: '", featureset_id, "' is:", scidb_array_count(sel_features), "\n", sep = ""))
 
     ff = jdb$db$project(srcArray = sel_features, selectedAttr = "name")
-    # ff = scidb(jdb$db, paste("apply(", ff@name, ", feature_id, feature_id)", sep=""))
-    # now do the joining
-    # temp_arr = jdb$db$apply(srcArray = featurelist_curr, newAttr = "tuple_no", expression = "tuple_no")
-    #                      tuple_no = tuple_no,
-    #                      dst_instance_id = dst_instance_id,
-    #                      src_instance_id = src_instance_id)
+
     joinFeatureName = scidb(jdb$db,
                             paste("equi_join(",
                                   ff@name, ", ",
@@ -1921,7 +1903,6 @@ register_expression_matrix = function(filepath,
     ## Step 2. Join the SciDB patient ID
     # first form the list of patients in current table
 
-    # patientlist_curr = subset(t1, tuple_no == 0 & dst_instance_id == 0 & attribute_no > 0)
     patientlist_curr = jdb$db$between(t1, lowCoord = "0, 0, NULL, 1", highCoord = "0, 0, NULL, NULL")
     # Check that the "public_id"_"spectrum_id" is unique enough, otherwise we have to consider the suffix "BM", "PB"
     stopifnot(length(unique(as.R(patientlist_curr)$a)) == (ncol(x)-1))
@@ -1935,12 +1916,6 @@ register_expression_matrix = function(filepath,
 
 
     # now do the joining
-    # joinPatientName = merge(transform(patientlist_curr,
-    #                                   attribute_no = attribute_no),
-    #                         project(
-    #                           scidb(paste("apply(", PATIENTKEY@name, ", biosample_id, biosample_id)", sep="")),
-    #                           c("name", "biosample_id")),
-    #                         by.x = "a", by.y = "name")
     qq = paste("equi_join(",
                patientlist_curr@name, ", ",
                "project(filter(", PATIENTKEY@name, ", dataset_version = ", dataset_version, "), name), ",
@@ -1994,13 +1969,10 @@ register_expression_matrix = function(filepath,
                             ", dataset_version, ", dataset_version,
                             ")", sep = "")
     )
-    # gct_table = attribute_rename(gct_table, "sdb_feature_no", "sdb_feature_no_old")
-    # gct_table = attribute_rename(gct_table, "sdb_feature_no_dim", "sdb_feature_no")
 
     # Need to insert the expression matrix table into one big array
-    # insertable = transform(gct_table, sdb_file_id = file_id)
     insertable = jdb$db$redimension(gct_table,
-                                    R(schema(scidb(jdb$db, arrayname))))
+                                    R(scidb::schema(scidb(jdb$db, arrayname)))) # TODO: would be good to not have this resolution clash
 
     if (scidb_exists_array(arrayname)) {
       cat(paste("Inserting expression matrix data into", arrayname, "at dataset_version", dataset_version, "\n"))
