@@ -343,7 +343,7 @@ register_featureset = function(df, only_test = FALSE){
 #' @export
 register_genelist = function(df, only_test = FALSE){
   uniq = c('name', 'owner')
-  df$owner = 'default'
+  df$owner = iquery(jdb$db, query = "show_user()", return = TRUE)$name
   test_register_genelist(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = jdb$meta$arrGenelist
