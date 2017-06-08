@@ -173,12 +173,30 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
     iquery(.ghEnv$db, qq)
   }
 
+###############################################################################
+## NEXT STEPS / ELEMENTS STILL REMAINING TO IMPLEMENT:
+## 
+##  - Have print_dataset_subelements() return the list of all elements that 
+##    it identifies for the given dataset.
+##  - Call the actual "delete_entity()" function for each of the elements within
+##    a dataset (as specified within the list of returned objects)
+##      - Note: Will have to figure out how to programmatically identify the
+##        type of entity that each object is, since this is necessary for the 
+##        "delete_entity()" function.
+##  - Call the function that deletes actual data entries associated with a
+##    given dataset once Kriti implements that function.
+##  - Process the user input project_ID to verify that it is only a single ID,
+##    and that it exists.
+###############################################################################
+
 delete_project <- function(projectID) {
   ##---------------=
   ## If there is more than one project_ID, or it is not a valid ID, then give an error.
   ##---------------=
   
-  ## << FINISH!!! >> 
+  #####################
+  ## << FINISH!!! >> ## 
+  #####################
   
   
   ##---------------=
@@ -192,6 +210,11 @@ delete_project <- function(projectID) {
   ##---------------=
   for (nextDataset in datasetIDs) {
     print_dataset_subelements(nextDataset)
+    
+    #####################
+    ## << FINISH!!! >> ## 
+    #####################
+    ## Need to keep track of the elements under each dataset for deleting down below.
   }
   
   ##---------------=
@@ -207,8 +230,17 @@ delete_project <- function(projectID) {
     
     ## Now delete all of the datasets and their sub-elements.
     for (nextDataset in datasetIDs) {
-      recursive_delete_dataset(nextDataset)
+      recursive_delete_dataset(nextDataset)  ## Actually don't need a recursive delete since we can currently use dataset_ID.
     }
+    
+    #####################
+    ## << FINISH!!! >> ## 
+    #####################
+    ## Replace the "recursive_delete_dataset()" with calls to the  
+    ##  "delete_entity()" function and goes through the list of objects r
+    ##  returned above and deletes each one.
+    ## Also, need to add in the calls to delete actual data from the 
+    ##  data matrixes once that functionality is available.
     
   } else {
     ## Don't delete the project.
@@ -237,30 +269,23 @@ print_dataset_subelements <- function(datasetID) {
   variantsets <- try(search_variantsets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
   biosamples <- try(search_biosamples(dataset_id = datasetID), silent = SEARCH_SILENTLY)
   
-  
-  
-  ##---------------=
-  ## For each dataset sub-element, get the list of all of their sub-elements.
-  ##---------------=
-  
-  ##---------------=
-  ## (Recursive?...)
-  ##---------------=
-  
-  ##---------------=
-  ## Keep doing this until there are no further child elements -- I think this happens when
-  ##  you have reached the actual data matrix.
-  ##---------------=
-  
   ##---------------=
   ## Output the lists of elements that will be deleted.
   ##---------------=
+  
+  #####################
+  ## << FINISH!!! >> ## 
+  #####################
+  ## Print the list of elements that will be deleted in a neat, readable manner. 
+  ## Also return the list of elements so that they can be tracked by the calling function.
+  
 }
 
 
-
-## This is actually currently unnecessary, since all entities connect to the
-##  dataset_ID.
+##-----------------------------------------------------------------------------=
+## ACTUALLY: This is currently unnecessary, since all entities connect to the
+##  dataset_ID...
+##-----------------------------------------------------------------------------=
 recursive_delete_dataset(datasetID) {
   
   ## Get the list of sub-entities.
