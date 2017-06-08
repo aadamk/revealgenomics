@@ -172,4 +172,105 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
     print(qq)
     iquery(.ghEnv$db, qq)
   }
+
+delete_project <- function(projectID) {
+  ##---------------=
+  ## If there is more than one project_ID, or it is not a valid ID, then give an error.
+  ##---------------=
+  
+  ## << FINISH!!! >> 
+  
+  
+  ##---------------=
+  ## Get the datasets under this project.
+  ##---------------=
+  datasetIDs <- get_entity("dataset", projectID)
+  
+  ##---------------=
+  ## For each dataset, call "get_dataset_subelements", to print the list of subelements
+  ##  of each dataset.
+  ##---------------=
+  for (nextDataset in datasetIDs) {
+    print_dataset_subelements(nextDataset)
+  }
+  
+  ##---------------=
+  ## Ask the user to confirm that they want to delete this project.
+  ##---------------=
+  userResponse <- readline(prompt = "Do you want to continue deleting this project? (yes/no)  ")
+  
+  ##---------------=
+  ## If the user said to procede, then delete the datasets.
+  ##---------------=
+  if(charmatch(tolower(userResponse), "yes") == 1) {
+    cat("Deleting project ", projectID, "... ",  sep="")
+    
+    ## Now delete all of the datasets and their sub-elements.
+    for (nextDataset in datasetIDs) {
+      recursive_delete_dataset(nextDataset)
+    }
+    
+  } else {
+    ## Don't delete the project.
+    cat("Project ", projectID, " was NOT deleted. ",  sep="")
+  }
+  
+}
+
+
+print_dataset_subelements <- function(datasetID) {
+  ## DEBUG: A flag for whether to surpess the errors for searching for entities
+  ## that might not be there.  This should be coded concretely one way or the
+  ## other.
+  SEARCH_SILENTLY <- TRUE  
+  
+  ##---------------=
+  ## Get all of the sub-elements of this dataset.
+  ##
+  ## For now, this will have to be done explicitly, but hopefully will
+  ##  be able to do it programatically in the future.
+  ##---------------=
+  individuals <- try(search_individuals(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  rnaquantificationsets <- try(search_rnaquantificationset(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  copynumbersets <- try(search_copynumbersets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  copynumbersubsets <- try(search_copynumbersubsets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  variantsets <- try(search_variantsets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  biosamples <- try(search_biosamples(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  
+  
+  
+  ##---------------=
+  ## For each dataset sub-element, get the list of all of their sub-elements.
+  ##---------------=
+  
+  ##---------------=
+  ## (Recursive?...)
+  ##---------------=
+  
+  ##---------------=
+  ## Keep doing this until there are no further child elements -- I think this happens when
+  ##  you have reached the actual data matrix.
+  ##---------------=
+  
+  ##---------------=
+  ## Output the lists of elements that will be deleted.
+  ##---------------=
+}
+
+
+
+## This is actually currently unnecessary, since all entities connect to the
+##  dataset_ID.
+recursive_delete_dataset(datasetID) {
+  
+  ## Get the list of sub-entities.
+  ## NOTE: Currently there is no list of child-entities attached to a higher
+  ##  level entity. So for now, this will have to be done manually by calling
+  ##  each of the search functions that could possibly exist at this level.
+  delete_entity(entity = 'INDIVIDUAL', ids = i$individual_id[1:2], dataset_version = 1)
+  
+  ## Delete each of the sub-entities.
+  
+  ## Delete this dataset.
+  delete_entity(entity = 'INDIVIDUAL', ids = i$individual_id[1:2], dataset_version = 1)
 }
