@@ -1360,6 +1360,11 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
   qq = arrayname
   if (!is.null(project_id)) {
     namespace = find_namespace(id = project_id, entitynm = jdb$meta$arrProject, dflookup = get_project_lookup())
+    if (is.null(namespace)) namespace = NA # to handle the case of no entry in lookup array at all
+    if (is.na(namespace)) {
+      cat("trying to download project lookup array once again, to see if there has been a recent update")
+      namespace = find_namespace(id = project_id, entitynm = jdb$meta$arrProject, dflookup = get_project_lookup(updateCache = TRUE))
+    }
     if (!(namespace %in% jdb$cache$nmsp_list)) {stop("user does not have permission to access data for project_id: ", project_id)}
     fullnm = paste(namespace, ".", qq, sep = "")
     if (is.null(dataset_version)) {
