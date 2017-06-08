@@ -9,7 +9,7 @@ get_dataset_version_lookup = function(updateCache = FALSE){
     namespaces = jdb$cache$nmsp_list
     qq = "public.DATASET"
     if (length(namespaces) > 1)  {
-      for (nmsp in namespaces[2:length(namespaces)]) qq = paste("merge(", qq, ", ", nmsp, ".DATASET)", sep = "")
+      for (nmsp in namespaces[namespaces != 'public']) qq = paste("merge(", qq, ", ", nmsp, ".DATASET)", sep = "")
     }
     # qq2 = paste("project(apply(", qq, ", dataset_id, dataset_id, dataset_version, dataset_version), dataset_id, dataset_version)", sep = "")
     df = iquery(jdb$db, qq, return = T)
@@ -21,13 +21,14 @@ get_dataset_version_lookup = function(updateCache = FALSE){
 # Find the current maximum `dataset_version` for a user specified `dataset_id`
 get_dataset_max_version = function(dataset_id, updateCache = FALSE){
   df = get_dataset_version_lookup(updateCache)
-  if (!(dataset_id %in% df$dataset_id)) {stop("Either this dataset_id does not access or you do not have access to it")}
+  if (!(dataset_id %in% df$dataset_id)) {stop("Either this dataset_id does not exist or you do not have access to it")}
   df = df[df$dataset_id == dataset_id, ]
   max(df$dataset_version)
 }
 
 # increment the version for a given dataset
 # parameter df is typically the output of a get_datasets(dataset_id = ...) call, and required modifications on that result
+#' @export
 increment_dataset_version = function(df){
   if(length(df$dataset_id)!=1) stop("Can increment version for one specific dataset_id only")
   
