@@ -56,6 +56,7 @@ prep_df_fields = function(df, mandatory_fields){
   df
 }
 
+#' @export
 remove_duplicates = function(df_data){
   df_data[which(!duplicated(df_data)), ]
 }
@@ -70,6 +71,7 @@ strip_namespace = function(arrayname) sub("^.*[.]", "", arrayname)
 ## YAML related
 get_namespace = function(arrayname) sub("[.].*$", "", arrayname)
 
+#' @export
 drop_na_columns = function(df){
   # http://stackoverflow.com/questions/2643939/remove-columns-from-dataframe-where-all-values-are-na
   df[,colSums(is.na(df))<nrow(df)]
