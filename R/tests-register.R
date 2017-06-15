@@ -103,6 +103,12 @@ test_register_featureset = function(df, uniq, silent = TRUE){
   test_unique_fields(df, uniq)
 }
 
+test_register_referenceset = function(df, uniq, silent = TRUE){
+  test_dataframe_formatting(df)
+  test_mandatory_fields(df, arrayname = jdb$meta$arrReferenceset, silent = silent)
+  test_unique_fields(df, uniq)
+}
+
 test_register_genelist = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
   test_mandatory_fields(df, arrayname = jdb$meta$arrGenelist, silent = silent)

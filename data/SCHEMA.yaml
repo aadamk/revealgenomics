@@ -577,3 +577,22 @@ array:
     dims: genelist_gene_id
     infoArray: FALSE
     compression_on: FALSE
+  # REFERENCESET
+  REFERENCESET:
+    data_class:
+      featuredata
+    namespace:
+      - public
+    attributes:
+      name: string
+      description: string
+      species_: int64
+      assembly_id: string
+      source_uri: string
+      source_accessions: string
+      is_derived: bool
+      created: string
+      updated: string
+    dims: referenceset_id
+    infoArray: TRUE
+    compression_on: FALSE

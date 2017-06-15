@@ -26,6 +26,7 @@ gh_connect = function(username, password, host = NULL, port = 8083, protocol = "
   jdb$meta$arrFeature = 'FEATURE'
   jdb$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
   jdb$meta$arrFeatureset = 'FEATURESET'
+  jdb$meta$arrReferenceset = 'REFERENCESET'
   jdb$meta$arrGenelist = 'GENELIST'
   jdb$meta$arrGenelist_gene = 'GENELIST_GENE'
   jdb$meta$arrVariantset = 'VARIANTSET'
@@ -95,17 +96,17 @@ get_fusionset_lookup = function(updateCache = FALSE){
   entity_lookup(jdb$meta$arrFusionset, updateCache = updateCache)
 }
 
-get_entity = function(entity, ids){
+get_entity = function(entity, ids, ...){
   fn_name = paste("get_", tolower(entity), sep = "")
   f = NULL
   try({f = get(fn_name)}, silent = TRUE)
   if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
   if (entity == 'ONTOLOGY') {
-    f(ids, updateCache = TRUE)
+    f(ids, updateCache = TRUE, ...)
   } else if (entity == 'FEATURE') {
-    f(ids, fromCache =  FALSE)
+    f(ids, fromCache =  FALSE, ...)
   } else { 
-    f(ids) 
+    f(ids, ...) 
   }
 }
 
@@ -194,10 +195,8 @@ get_base_idname = function(arrayname){
 get_int64fields = function(arrayname){
   local_arrnm = strip_namespace(arrayname)
   attr_types = unlist(jdb$meta$L$array[[local_arrnm]]$attributes)
-  int64_fields = names(which(attr_types != "string" &
-                               attr_types != "datetime" &
-                               attr_types != "int32" &
-                               attr_types != "double"))
+  int64_fields = names(attr_types[which(!(attr_types %in% 
+                                            c('string', 'datetime', 'int32', 'double', 'bool')))])
   stopifnot(all(unique(attr_types[int64_fields]) %in% c("int64", "numeric")))
   int64_fields
 }
@@ -337,6 +336,17 @@ register_featureset = function(df, only_test = FALSE){
     arrayname = jdb$meta$arrFeatureset
     register_tuple_return_id(df,
                            arrayname, uniq)
+  } # end of if (!only_test)
+}
+
+#' @export
+register_referenceset = function(df, only_test = FALSE){
+  uniq = 'name'
+  test_register_referenceset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = jdb$meta$arrReferenceset
+    register_tuple_return_id(df,
+                             arrayname, uniq)
   } # end of if (!only_test)
 }
 
@@ -1022,28 +1032,37 @@ get_copynumbersubset = function(copynumbersubset_id = NULL, dataset_version = NU
 
 #' @export
 get_featuresets= function(featureset_id = NULL){
-  arrayname = jdb$meta$arrFeatureset
+  get_unversioned_public_metadata_entity(arrayname = jdb$meta$arrFeatureset, 
+                                      id = featureset_id)
+}
 
+get_unversioned_public_metadata_entity = function(arrayname, id, infoArray = TRUE){
   local_arrnm = strip_namespace(arrayname)
   idname = get_idname(arrayname)
   stopifnot(class(idname) == "character")
-
+  
   qq = arrayname
-  if (!is.null(featureset_id)) {qq = paste("filter(", arrayname, ", ", idname, " = ", featureset_id, ")", sep="")}
-  join_info_ontology_and_unpivot(qq, arrayname)
+  if (!is.null(id)) {
+    qq = form_selector_query_1d_array(arrayname, idname, id)
+  }
+  if (infoArray) {
+    join_info_ontology_and_unpivot(qq, arrayname)
+  } else {
+    iquery(jdb$db, qq, return = TRUE)
+  }
+}
+
+#' @export
+get_referenceset = function(){
+  get_unversioned_public_metadata_entity(arrayname = jdb$meta$arrReferenceset, 
+                                      id = featureset_id)
 }
 
 #' @export
 get_genelist = function(genelist_id = NULL){
-  arrayname = jdb$meta$arrGenelist
-  
-  local_arrnm = strip_namespace(arrayname)
-  idname = get_idname(arrayname)
-  stopifnot(class(idname) == "character")
-  
-  qq = arrayname
-  if (!is.null(genelist_id)) {qq = paste("filter(", arrayname, ", ", idname, " = ", genelist_id, ")", sep="")}
-  iquery(jdb$db, qq, return = TRUE)
+  get_unversioned_public_metadata_entity(arrayname = jdb$meta$arrGenelist, 
+                                      id = genelist_id,
+                                      infoArray = FALSE)
 }
 
 
@@ -1661,6 +1680,52 @@ unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
 
   if (is.data.frame(x2t)) x5 = merge(x4, x2t, by = idname) else x5 = x4
   return(x5)
+}
+
+#' @export
+register_expression_dataframe = function(df1, dataset_version){
+  stopifnot(c('rnaquantificationset_id', 'biosample_id', 'feature_id', 'expression')
+            %in% colnames(df1))
+  # Check that parent entity exists at id-s specified in dataframe
+  check_entity_exists_at_id = function(entity, id){
+    df1 = get_entity(entity = entity, ids = ids)
+    stopifnot(nrow(df1) == length(ids))
+  }
+  
+  check_entity_exists_at_id(entity = 'RNAQUANTIFICATIONSET',
+                            ids = sort(unique(df1$rnaquantificationset_id)))
+  check_entity_exists_at_id(entity = 'BIOSAMPLE',
+                            ids = sort(unique(df1$rnaquantificationset_id)))
+  bios_id = sort(unique(df1$biosample_id))
+  ftr_id = sort(unique(df1$feature_id))
+  rqs = get_rnaquantificationset(rnaquantificationset_id = rqs_id)
+  bios = get_biosample(biosample_id = bios_id)
+  ftr = get_features(feature_id = ftr_id)
+  stopifnot((nrow(rqs) == length(rqs_id)))
+  stopifnot((nrow(bios) == length(bios_id)))
+  stopifnot((nrow(ftr) == length(ftr_id)))
+  
+  
+  namespace_to_insert = unique(find_namespace(id = unique(df_expr$rnaquantificationset_id), 
+                                              entitynm = jdb$meta$arrRnaquantificationset))
+  if (length(namespace_to_insert) != 1) stop("Error: Trying to insert expression data into multiple namespaces")
+  
+  adf_expr0 = as.scidb(jdb$db, df_expr, chunk_size=nrow(df_expr), name = "temp_df")
+  
+  adf_expr = convert_attr_double_to_int64(arr = adf_expr0, attrname = "rnaquantificationset_id")
+  adf_expr = convert_attr_double_to_int64(arr = adf_expr, attrname = "biosample_id")
+  adf_expr = convert_attr_double_to_int64(arr = adf_expr, attrname = "feature_id")
+  adf_expr = scidb(jdb$db, paste("apply(", 
+                                 adf_expr@name, 
+                                 ", expression_count, float(expression),
+                                          dataset_version, ", dataset_version, ")", 
+                                 sep = ""))
+  
+  subarr = jdb$db$redimension(adf_expr, R(schema(scidb(jdb$db, jdb$meta$arrRnaquantification))))
+  
+  fullnm = paste(namespace_to_insert, jdb$meta$arrRnaquantification, sep = ".")
+  cat("inserting data for", nrow(df_expr), "expression values into", fullnm, "array \n")
+  iquery(jdb$db, paste("insert(", subarr@name, ", ", fullnm, ")"))
 }
 
 #' @export
