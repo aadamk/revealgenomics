@@ -13,7 +13,7 @@ array:
       updated: string
     dims: 
       project_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
@@ -33,12 +33,12 @@ array:
       updated: string
     dims: 
       dataset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -61,12 +61,12 @@ array:
       updated: string
     dims: 
       individual_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -90,12 +90,12 @@ array:
       updated: string
     dims: 
       biosample_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -119,12 +119,12 @@ array:
       updated: string
     dims: 
       experimentset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -145,12 +145,12 @@ array:
       updated: string
     dims: 
       experiment_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -171,12 +171,12 @@ array:
       updated: string
     dims: 
       rnaquantificationset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -193,22 +193,22 @@ array:
       expression_count: float
     dims:
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       rnaquantificationset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       biosample_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 10
         overlap: 0
       feature_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 10000
         overlap: 0
@@ -230,12 +230,12 @@ array:
       updated: string
     dims: 
       variantset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -256,27 +256,27 @@ array:
       ALT: string
     dims:
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       variantset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       biosample_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 100
         overlap: 0
       feature_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 10000
         overlap: 0
       variant_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 10000
         overlap: 0
@@ -298,12 +298,12 @@ array:
       updated: string
     dims: 
       fusionset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -332,22 +332,22 @@ array:
       sample_name_unabbreviated: string
     dims:
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       fusionset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       biosample_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 100
         overlap: 0
       fusion_id:  
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 100
         overlap: 0
@@ -369,12 +369,12 @@ array:
       updated: string
     dims: 
       copynumberset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -396,12 +396,12 @@ array:
       updated: string
     dims: 
       copynumbersubset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
@@ -422,22 +422,22 @@ array:
       seg_mean: double
     dims:
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       copynumberset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       biosample_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1000
         overlap: 0
       copynumber_seg_synth_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 10000
         overlap: 0
@@ -454,22 +454,22 @@ array:
       copynumber_val: double
     dims:
       dataset_version:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       copynumbersubset_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 1
         overlap: 0
       biosample_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 100
         overlap: 0
       feature_id:
-        start: 1
+        start: 0
         end: Inf
         chunk_interval: 100000
         overlap: 0

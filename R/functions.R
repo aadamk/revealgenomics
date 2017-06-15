@@ -1097,6 +1097,7 @@ get_features = function(feature_id = NULL, fromCache = TRUE){
 }
 
 form_selector_query_2d_array = function(arrayname, dim1, dim1_selected_ids, dim2, dim2_selected_ids){
+  dim1_selected_ids = unique(dim1_selected_ids)
   dim2_selected_ids = ifelse(is.null(dim2_selected_ids), "NULL", dim2_selected_ids)
   stopifnot(dim2 == "dataset_version" & length(dim2_selected_ids) == 1)
   sorted=sort(dim1_selected_ids)
@@ -1117,16 +1118,17 @@ form_selector_query_2d_array = function(arrayname, dim1, dim1_selected_ids, dim2
   else # mostly non-contiguous tickers, use `cross_join`
   {
     # Formulate the cross_join query
+    idname = get_base_idname(fullnm)
     diminfo = jdb$meta$L$array[[strip_namespace(arrayname)]]$dims
     upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
                      idname, length(dim1_selected_ids), paste(dim1_selected_ids, sep=",", collapse="), ("))
     apply_dim2 = paste("apply(", upload, ", ", dim2, ", ", dim2_selected_ids, ")", sep = "")
-    redim = paste("redimension(", apply_dim2, ", <idx:int64>[", get_idname(arrayname), "])", sep = "")
+    redim = paste("redimension(", apply_dim2, ", <idx:int64>[", idname, "])", sep = "")
 
     query= paste("project(
                  cross_join(",
                  arrayname, " as A, ",
-                 redim, "as B, ",
+                 redim, " as B, ",
                  "A.", idname, ", " ,
                  "B.", idname,
                  "),",
