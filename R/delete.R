@@ -202,19 +202,20 @@ delete_project <- function(projectID) {
   ##---------------=
   ## Get the datasets under this project.
   ##---------------=
-  datasetIDs <- get_entity("dataset", projectID)
+  datasets <- search_datasets(project_id = projectID)
+  #   datasetIDs <- datasets$dataset_id
+  #   datasetVersions <- datasets$dataset_version
   
   ##---------------=
   ## For each dataset, call "get_dataset_subelements", to print the list of subelements
   ##  of each dataset.
   ##---------------=
-  for (nextDataset in datasetIDs) {
-    print_dataset_subelements(nextDataset)
-    
-    #####################
-    ## << FINISH!!! >> ## 
-    #####################
-    ## Need to keep track of the elements under each dataset for deleting down below.
+  datasetStructures.lst <- list()
+  for (i in 1:nrow(datasets)) {
+    nextDataset <- datasets[i, "dataset_id"]
+    nextDatasetVersion <- datasets[i, "dataset_version"]
+    nextDatasetName <- paste0(nextDataset, "_v", nextDatasetVersion)
+    datasetStructures.lst[[nextDatasetName]] <- print_dataset_subelements(nextDataset, nextDatasetVersion)
   }
   
   ##---------------=
@@ -226,17 +227,18 @@ delete_project <- function(projectID) {
   ## If the user said to procede, then delete the datasets.
   ##---------------=
   if(charmatch(tolower(userResponse), "yes") == 1) {
-    cat("Deleting project ", projectID, "... ",  sep="")
+    cat("Deleting project ", projectID, "... \n",  sep="")
     
     ## Now delete all of the datasets and their sub-elements.
-    for (nextDataset in datasetIDs) {
-      recursive_delete_dataset(nextDataset)  ## Actually don't need a recursive delete since we can currently use dataset_ID.
+    for (nextDataset in names(datasetStructures.lst)) {
+      #delete_dataset(nextDataset)  ## Actually don't need a recursive delete since we can currently use dataset_ID.
+      cat("DEBUG-- Will eventually be deleting dataset - ", nextDataset, " here...\n")
     }
     
     #####################
     ## << FINISH!!! >> ## 
     #####################
-    ## Replace the "recursive_delete_dataset()" with calls to the  
+    ## Replace the "delete_dataset()" with calls to the  
     ##  "delete_entity()" function and goes through the list of objects r
     ##  returned above and deletes each one.
     ## Also, need to add in the calls to delete actual data from the 
@@ -250,7 +252,7 @@ delete_project <- function(projectID) {
 }
 
 
-get_dataset_subelements <- function(datasetID) {
+get_dataset_subelements <- function(datasetID, datasetVersion) {
   ## DEBUG: A flag for whether to surpess the errors for searching for entities
   ## that might not be there.  This should be coded concretely one way or the
   ## other.
@@ -263,12 +265,12 @@ get_dataset_subelements <- function(datasetID) {
   ##  be able to do it programatically in the future.
   ##---------------=
   dataset_subelements <- list()
-  dataset_subelements$individuals <- try(search_individuals(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  dataset_subelements$biosamples <- try(search_biosamples(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  dataset_subelements$rnaquantificationsets <- try(search_rnaquantificationset(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  dataset_subelements$variantsets <- try(search_variantsets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  dataset_subelements$copynumbersets <- try(search_copynumbersets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  dataset_subelements$copynumbersubsets <- try(search_copynumbersubsets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  dataset_subelements[[jdb$meta$arrIndividuals]] <- try(search_individuals(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[jdb$meta$arrBiosample]] <- try(search_biosamples(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[jdb$meta$arrRnaquantificationset]] <- try(search_rnaquantificationset(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[jdb$meta$arrVariantset]] <- try(search_variantsets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[jdb$meta$arrCopyNumberSet]] <- try(search_copynumbersets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[jdb$meta$arrCopyNumberSubSet]] <- try(search_copynumbersubsets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
   
   ## Now set each of the fields to NULL that did not return any values (i.e. that produced a try-error).
   for (next.name in names(dataset_subelements)) {
@@ -280,7 +282,13 @@ get_dataset_subelements <- function(datasetID) {
 }
 
 
-print_dataset_subelements <- function(datasetID, print.nonexistant.metadata = FALSE) {
+## IDEA: Might be able to eventually create a table that lists all of the types of metadata
+##  that will need to be accessed.  It will give the name (ex: "arrIndividuals"), 
+##  entity-name (ex: "INDIVIDUAL"), the lookup function (ex: "search_individuals"),
+##  the ID column name (ex: "individual_id"), and the parent object? (ex: the dataset ID or project ID?)
+
+
+print_dataset_subelements <- function(datasetID, datasetVersion, print.nonexistant.metadata = FALSE) {
   
   ## A flag on whether to explicitly state which types of information have been searched
   ##  but do not exist for this dataset. 
@@ -290,12 +298,12 @@ print_dataset_subelements <- function(datasetID, print.nonexistant.metadata = FA
   ##---------------=
   ## Get the dataset's subelements
   ##---------------=
-  dataset_subelements <- get_dataset_subelements(datasetID)
+  dataset_subelements <- get_dataset_subelements(datasetID, datasetVersion)
   
   ##---------------=
   ## Print to the screen the lists of elements that will be deleted.
   ##---------------=
-  cat("Summary of dataset = ", datasetID, ":  \n", sep="")
+  cat("Summary of dataset = ", datasetID, " (version = ", datasetVersion, "):  \n", sep="")
   for(next.subelement in names(dataset_subelements)) {
     if ( all(is.na(dataset_subelements[[next.subelement]])) ) {
       ## Then there were no data of this type in the given dataset.
@@ -339,25 +347,48 @@ print_dataset_subelements <- function(datasetID, print.nonexistant.metadata = FA
 
 
 ##-----------------------------------------------------------------------------=
-## ACTUALLY: This is currently not a "recursive" deletion, but rather just a
-##  deep deletion -- it will delete elements from each of the actual measurement
-##  data matrices as well as deleting the entities from the metadata matrices.
+## This function will loop through and delete each of the entities within a 
+##  dataset, but for the moment it will only delete the metadata.  It will
+##  eventually delete the actual measurement data as well.
 ##-----------------------------------------------------------------------------=
-recursive_delete_dataset(datasetID, datasetStructure = NULL) {
+delete_dataset <- function(datasetID, datasetVersion, datasetStructure = NULL) {
   
   ## Get the list of sub-entities.
   ## If the dataset's structure is provided, then use that structure, otherwise call
   ##  the function to get the dataset's sub-structure.
   if (is.null(datasetStructure)) {
-    datasetStructure <- get_dataset_subelements(datasetID)
+    datasetStructure <- get_dataset_subelements(datasetID, datasetVersion)
   }
   
   
   ## For each dataset entities, delete the the actual measurements, then delete
-  ##  the metadata.
-  for (next.metadata in names(datasetStructure)) {
-    ## Get the list of object IDs.
-    nextIDs <- next.metadata[,1] ## THIS IS HARD-CODING THE OPTION AGAIN!...
+  ##  the metadata.  Note that the metadata field name is the actual entity
+  ##  name as well.
+  for (next.metadata.name in names(datasetStructure)) {
+    next.metadata.object <- datasetStructure[[next.metadata.name]]
+    
+   
+    
+    if (!is.na(next.metadata.object)) {
+      ## Get the list of object IDs.
+      
+      ## Delete each of the measurements based on their ID, dataset ID, and dataset version.
+      
+      ## Now delete the metadata entity.
+      delete_entity(entity = next.metadata.name, ids = )
+    }
+    
+    
+    ######################################
+    ##### FINISH!!!! ###############
+    ######################################
+    nextIDs <- next.metadata.name[, 1]#### THE NAME OF THE COLUMN THAT HOLDS THE IDS IN THIS DATAFRAME!!!!! ######] 
+    ######################################
+    ##### FINISH!!!! ###############
+    ######################################
+    
+    
+    
   }
   
   
