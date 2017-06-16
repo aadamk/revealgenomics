@@ -250,7 +250,7 @@ delete_project <- function(projectID) {
 }
 
 
-print_dataset_subelements <- function(datasetID) {
+get_dataset_subelements <- function(datasetID) {
   ## DEBUG: A flag for whether to surpess the errors for searching for entities
   ## that might not be there.  This should be coded concretely one way or the
   ## other.
@@ -262,33 +262,105 @@ print_dataset_subelements <- function(datasetID) {
   ## For now, this will have to be done explicitly, but hopefully will
   ##  be able to do it programatically in the future.
   ##---------------=
-  individuals <- try(search_individuals(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  rnaquantificationsets <- try(search_rnaquantificationset(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  copynumbersets <- try(search_copynumbersets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  copynumbersubsets <- try(search_copynumbersubsets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  variantsets <- try(search_variantsets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
-  biosamples <- try(search_biosamples(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  dataset_subelements <- list()
+  dataset_subelements$individuals <- try(search_individuals(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  dataset_subelements$biosamples <- try(search_biosamples(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  dataset_subelements$rnaquantificationsets <- try(search_rnaquantificationset(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  dataset_subelements$variantsets <- try(search_variantsets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  dataset_subelements$copynumbersets <- try(search_copynumbersets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  dataset_subelements$copynumbersubsets <- try(search_copynumbersubsets(dataset_id = datasetID), silent = SEARCH_SILENTLY)
+  
+  ## Now set each of the fields to NULL that did not return any values (i.e. that produced a try-error).
+  for (next.name in names(dataset_subelements)) {
+    if (class(dataset_subelements[[next.name]]) == "try-error")
+      dataset_subelements[[next.name]] <- NA 
+  } 
+  
+  return (dataset_subelements)
+}
+
+
+print_dataset_subelements <- function(datasetID, print.nonexistant.metadata = FALSE) {
+  
+  ## A flag on whether to explicitly state which types of information have been searched
+  ##  but do not exist for this dataset. 
+  # print.nonexistant.metadata
+  
   
   ##---------------=
-  ## Output the lists of elements that will be deleted.
+  ## Get the dataset's subelements
   ##---------------=
+  dataset_subelements <- get_dataset_subelements(datasetID)
   
-  #####################
-  ## << FINISH!!! >> ## 
-  #####################
-  ## Print the list of elements that will be deleted in a neat, readable manner. 
-  ## Also return the list of elements so that they can be tracked by the calling function.
-  
+  ##---------------=
+  ## Print to the screen the lists of elements that will be deleted.
+  ##---------------=
+  cat("Summary of dataset = ", datasetID, ":  \n", sep="")
+  for(next.subelement in names(dataset_subelements)) {
+    if ( all(is.na(dataset_subelements[[next.subelement]])) ) {
+      ## Then there were no data of this type in the given dataset.
+      
+      if (print.nonexistant.metadata) {
+        ## Then we will print out that there was no metadata of this type.
+        cat("\t", next.subelement, ":\t <NA> \n", sep="")
+      }
+    } else {
+      ## There are elements of this metadata type located in this dataset, so print them out.
+      cat("\t", next.subelement, ":\t ", sep="")
+      cat(dataset_subelements[[next.subelement]][, 1], sep=", ")  ## The object ids appear to be in the first column in each entity matrix.
+      cat("\n")
+      
+      
+      #####################
+      ## << FINISH!!! >> ## 
+      #####################
+      ## (1) Add the ability to output a range if it is present, rather than just the explicit 
+      ##    list of all IDs for the given object.  For example, if within this dataset, there are
+      ##    individual_IDs 1,2,3,4,5, it would be nice to output "individuals: 1-5" than listing
+      ##    all of them individually.
+      ##
+      ## (2) *** This is important -- Currently I'm hard-coding that the IDs for each 
+      ##    type of element are in column 1.  This happens to be true in the data that 
+      ##    I've been looking at, but it doesn't necessarily have to be!  I need to 
+      ##    figure out a way to make this more programmatic.
+      ##
+      ##  So, for each object type in "dataset_subelements", the ID is in the row:
+      ##    $individual --> "individual_id"
+      ##    $biosample --> "biosample_id"
+      ##    $rnaquantificationsets --> "rnaquantificationset_id"
+      ##    $variantsets --> ??
+      ##    $copynumbersets --> ??
+      ##    $copynumbersubsets --> ??
+      
+    }
+  }
+  return(dataset_subelements)
 }
 
 
 ##-----------------------------------------------------------------------------=
-## ACTUALLY: This is currently unnecessary, since all entities connect to the
-##  dataset_ID...
+## ACTUALLY: This is currently not a "recursive" deletion, but rather just a
+##  deep deletion -- it will delete elements from each of the actual measurement
+##  data matrices as well as deleting the entities from the metadata matrices.
 ##-----------------------------------------------------------------------------=
-recursive_delete_dataset(datasetID) {
+recursive_delete_dataset(datasetID, datasetStructure = NULL) {
   
   ## Get the list of sub-entities.
+  ## If the dataset's structure is provided, then use that structure, otherwise call
+  ##  the function to get the dataset's sub-structure.
+  if (is.null(datasetStructure)) {
+    datasetStructure <- get_dataset_subelements(datasetID)
+  }
+  
+  
+  ## For each dataset entities, delete the the actual measurements, then delete
+  ##  the metadata.
+  for (next.metadata in names(datasetStructure)) {
+    ## Get the list of object IDs.
+    nextIDs <- next.metadata[,1] ## THIS IS HARD-CODING THE OPTION AGAIN!...
+  }
+  
+  
   ## NOTE: Currently there is no list of child-entities attached to a higher
   ##  level entity. So for now, this will have to be done manually by calling
   ##  each of the search functions that could possibly exist at this level.
