@@ -1684,28 +1684,23 @@ unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
   return(x5)
 }
 
+# Check that parent entity exists at id-s specified in dataframe
+check_entity_exists_at_id = function(entity, id){
+  df1 = get_entity(entity = entity, ids = id)
+  stopifnot(nrow(df1) == length(id))
+}
+
 #' @export
 register_expression_dataframe = function(df1, dataset_version){
   stopifnot(c('rnaquantificationset_id', 'biosample_id', 'feature_id', 'expression')
             %in% colnames(df1))
-  # Check that parent entity exists at id-s specified in dataframe
-  check_entity_exists_at_id = function(entity, id){
-    df1 = get_entity(entity = entity, ids = ids)
-    stopifnot(nrow(df1) == length(ids))
-  }
   
   check_entity_exists_at_id(entity = 'RNAQUANTIFICATIONSET',
-                            ids = sort(unique(df1$rnaquantificationset_id)))
+                            id = sort(unique(df1$rnaquantificationset_id)))
   check_entity_exists_at_id(entity = 'BIOSAMPLE',
-                            ids = sort(unique(df1$rnaquantificationset_id)))
-  bios_id = sort(unique(df1$biosample_id))
-  ftr_id = sort(unique(df1$feature_id))
-  rqs = get_rnaquantificationset(rnaquantificationset_id = rqs_id)
-  bios = get_biosample(biosample_id = bios_id)
-  ftr = get_features(feature_id = ftr_id)
-  stopifnot((nrow(rqs) == length(rqs_id)))
-  stopifnot((nrow(bios) == length(bios_id)))
-  stopifnot((nrow(ftr) == length(ftr_id)))
+                            id = sort(unique(df1$rnaquantificationset_id)))
+#   check_entity_exists_at_id(entity = 'FEATURE',
+#                             id = sort(unique(df1$feature_id)))
   
   
   namespace_to_insert = unique(find_namespace(id = unique(df_expr$rnaquantificationset_id), 
