@@ -1280,10 +1280,10 @@ check_args_search = function(dataset_version, all_versions){
 }
 
 latest_version = function(df){
+  if (nrow(df) == 0) return(df)
+  
   stopifnot(all(c("dataset_version", "dataset_id") %in% colnames(df)))
-
   df = df %>% group_by(dataset_id) %>% filter(dataset_version == max(dataset_version))
-
   drop_na_columns(as.data.frame(df))
 }
 
