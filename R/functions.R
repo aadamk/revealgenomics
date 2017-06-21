@@ -172,12 +172,12 @@ scidb_exists_array = function(arrayName) {
   !is.null(tryCatch({iquery(jdb$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
 }
 
-lookup_exists = function(entitynm){
+is_entity_secured = function(entitynm){
   entitynm = strip_namespace(entitynm)
   ifelse(length(jdb$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
 }
 
-dataset_versioning_exists = function(entitynm){
+is_entity_versioned = function(entitynm){
   "dataset_version" %in% get_idname(entitynm)
 }
 
@@ -209,7 +209,7 @@ get_entity_names = function(){
 }
 
 get_max_id = function(arrayname){
-  if (lookup_exists(arrayname)) { # Lookup array must exist
+  if (is_entity_secured(arrayname)) { # Lookup array must exist
     max = iquery(jdb$db,
                  paste("aggregate(apply(public.",
                        strip_namespace(arrayname), "_LOOKUP, id, ",
@@ -1693,7 +1693,7 @@ check_entity_exists_at_id = function(entity, id, ...){
     req_ids = unique(sort(id))
     returned_ids = unique(sort(df1[, get_base_idname(entity)]))
     missing_ids = req_ids[which(!(req_ids %in% returned_ids))]
-    if (dataset_versioning_exists(entity)) {
+    if (is_entity_versioned(entity)) {
       stop(cat("No entries for entity", entity, "at ids:", paste(missing_ids, collapse = ", "), 
            "at specified version", sep = " "))
     } else {
@@ -2093,7 +2093,7 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
 
 #' @export
 update_entity = function(entity, df){
-  if (lookup_exists(entity)){
+  if (is_entity_secured(entity)){
     namespaces = find_namespace(id = df[, get_base_idname(entity)], entitynm = entity)
     nmsp = unique(namespaces)
     if (length(nmsp) != 1) stop("entity to be updated must belong to one namespace only")

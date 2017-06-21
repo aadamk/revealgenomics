@@ -37,7 +37,7 @@ formulate_base_selection_query = function(fullarrayname, ids){
 
 formulate_versioned_selection_query = function(entity, base_selection_query, dataset_version) {
   # Clear out the array
-  if (dataset_versioning_exists(entity)) {
+  if (is_entity_versioned(entity)) {
     expr_query = paste("(dataset_version = ", dataset_version, ") AND (", base_selection_query, ")", sep = "")
   } else {
     expr_query = base_selection_query
@@ -49,7 +49,7 @@ formulate_versioned_selection_query = function(entity, base_selection_query, dat
 delete_entity = function(entity, ids, dataset_version = NULL){
   if (!(entity %in% get_entity_names())) stop("Entity '", entity, "' does not exist")
   if (is.null(ids)) return()
-  if (dataset_versioning_exists(entity)) {
+  if (is_entity_versioned(entity)) {
     if (is.null(dataset_version)) {
       stop("must supply dataset_version for versioned entities.
            Use dataset_version = 1 if only one version exists for relevant clinical study")
@@ -59,7 +59,7 @@ delete_entity = function(entity, ids, dataset_version = NULL){
   }
 
   # First check that entity exists at this id
-  if (dataset_versioning_exists(entitynm = entity)){
+  if (is_entity_versioned(entitynm = entity)){
     # entities = get_entity(entity = entity, ids = ids, dataset_version = dataset_version)
     status = try(check_entity_exists_at_id(entity = entity, id = ids, dataset_version = dataset_version, all_versions = F))
   } else {
@@ -71,7 +71,7 @@ delete_entity = function(entity, ids, dataset_version = NULL){
     # cat(status[1])
   } else if (status) { # if entities exist
     # Find the correct namespace
-    if (lookup_exists(entity)) {
+    if (is_entity_secured(entity)) {
       namespaces = find_namespace(id = ids, entitynm = entity)
       nmsp = unique(namespaces)
     } else { nmsp = 'public' }
@@ -96,7 +96,7 @@ delete_entity = function(entity, ids, dataset_version = NULL){
     }
     
     # Clear out the lookup array if required
-    if (lookup_exists(entity)){
+    if (is_entity_secured(entity)){
       # Check if there are no remaining entities at this ID at any version
       qcount = paste("op_count(filter(", arr, ", ",
                      base_selection_query, "))" )
