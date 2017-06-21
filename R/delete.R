@@ -12,6 +12,39 @@
 # END_COPYRIGHT
 #
 
+formulate_base_selection_query = function(fullarrayname, ids){
+  THRESH_K = 100
+  sorted=sort(ids)
+  breaks=c(0, which(diff(sorted)!=1), length(sorted))
+  idname = get_base_idname(fullarrayname)
+  if (length(breaks) <= (THRESH_K + 2)) # few sets of contiguous tickers; use `cross_between`
+  {
+    expr_query1 = paste( sapply(seq(length(breaks)-1), function(i) {
+      left = sorted[breaks[i]+1]
+      right = sorted[breaks[i+1]]
+      if (left == right) {
+        paste("(", idname, "=", right, ")")
+      } else {
+        sprintf("(%s >= %d AND %s <= %d)", idname, left,
+                idname, right)
+      }
+    }), collapse=" OR ")
+  } else {
+    stop("Try fewer ids at a time")
+  }
+  return(expr_query1)
+}
+
+formulate_versioned_selection_query = function(entity, base_selection_query, dataset_version) {
+  # Clear out the array
+  if (dataset_versioning_exists(entity)) {
+    expr_query = paste("(dataset_version = ", dataset_version, ") AND (", base_selection_query, ")", sep = "")
+  } else {
+    expr_query = base_selection_query
+  }
+  return(expr_query)
+}
+
 #' @export
 delete_entity = function(entity, ids, dataset_version = NULL){
   if (!(entity %in% get_entity_names())) stop("Entity '", entity, "' does not exist")
@@ -24,15 +57,19 @@ delete_entity = function(entity, ids, dataset_version = NULL){
       stopifnot(length(dataset_version) == 1)
     }
   }
-  # So far, have coded the case where consecutive ids is provided
-  if ( !( identical( as.integer(sort(ids)), 
-                     (min(ids): max(ids)) ) ) ) stop("Delete only works on consecutive set of entity_id-s")
-  
+
   # First check that entity exists at this id
-  entities = get_entity(entity = entity, ids = ids)
-  if (nrow(entities) == 0) {
-    cat("No entries at ids: ", paste(ids, collapse = ", "), " for entity: ", entity, "\n", sep = "")
-  } else { # if entities exist
+  if (dataset_versioning_exists(entitynm = entity)){
+    # entities = get_entity(entity = entity, ids = ids, dataset_version = dataset_version)
+    status = try(check_entity_exists_at_id(entity = entity, id = ids, dataset_version = dataset_version, all_versions = F))
+  } else {
+#     entities = get_entity(entity = entity, ids = ids)
+    status = try(check_entity_exists_at_id(entity = entity, id = ids))
+  }
+  if (class(status) == 'try-error') {
+    # cat("No entries at ids: ", paste(ids, collapse = ", "), " for entity: ", entity, "\n", sep = "")
+    # cat(status[1])
+  } else if (status) { # if entities exist
     # Find the correct namespace
     if (lookup_exists(entity)) {
       namespaces = find_namespace(id = ids, entitynm = entity)
@@ -42,16 +79,14 @@ delete_entity = function(entity, ids, dataset_version = NULL){
     if (length(nmsp) != 1) stop("Can run delete only at one namespace at a time")
     arr = paste(nmsp, entity, sep = ".")
     
-    # Clear out the array
-    if (dataset_versioning_exists(entity)) {
-      qq = paste("filter(", arr, ", (",  get_base_idname(arr), " < ", min(ids), " OR ",
-                 get_base_idname(arr), " > ", max(ids), ") OR (dataset_version != ", dataset_version, "))", sep = "")
-    } else { # Entity does not have dataset_version-s
-      qq = paste("filter(", arr, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
-                 get_base_idname(arr), " > ", max(ids), ")", sep = "")
-    }
-    qq = paste("store(", qq, ", ", arr, ")", sep = "")
+    base_selection_query  = formulate_base_selection_query(fullarrayname = arr, ids = ids)
+    versioned_selection_query = formulate_versioned_selection_query(entity = entity, 
+                                                                    base_selection_query = base_selection_query, 
+                                                                    dataset_version = dataset_version)
+    ### asdf
     cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from ", arr, " entity\n", sep = "")
+    qq = paste("delete(", arr, ", ", versioned_selection_query, ")", sep = "")
+    print(qq)
     iquery(jdb$db, qq)
     
     # Clear out the info array
@@ -62,41 +97,37 @@ delete_entity = function(entity, ids, dataset_version = NULL){
     
     # Clear out the lookup array if required
     if (lookup_exists(entity)){
-      # Check if there are no entities at this ID
+      # Check if there are no remaining entities at this ID at any version
       qcount = paste("op_count(filter(", arr, ", ",
-                     get_base_idname(entity), " >= ", min(ids), " AND ",
-                     get_base_idname(entity), " <= ", max(ids), "))" )
+                     base_selection_query, "))" )
       newcount = iquery(jdb$db, qcount, return = TRUE)$count
       if (newcount == 0){ # there are no entities at this level
         arrLookup = paste(entity, "_LOOKUP", sep = "")
-        qq = paste("filter(", arrLookup, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
-                   get_base_idname(arr), " > ", max(ids), ")", sep = "")
-        qq = paste("store(", qq, ", ", arrLookup, ")", sep = "")
+        qq = paste("delete(", arrLookup, ", ", base_selection_query, ")", sep = "")
         cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from lookup array: ", arrLookup, "\n", sep = "")
+        print(qq)
         iquery(jdb$db, qq)
         updatedcache = entity_lookup(entityName = entity, updateCache = TRUE)
       }
     }
-  } # end of check that some data existed in the first place
+  } else { # end of check that some data existed in the first place
+    stop("Unexpected class for try() expression")
+  }
 }
 
 delete_info_fields = function(fullarrayname, ids, dataset_version){
-  # So far, have coded the case where consecutive ids is provided
-  if ( !( identical( as.integer(sort(ids)), 
-                     (min(ids): max(ids)) ) ) ) stop("Delete only works on consecutive set of entity_id-s")
-  
   arr = fullarrayname
-  entity = strip_namespace(fullarrayname)
   arrInfo = paste(arr, "_INFO", sep = "")
-  if (dataset_versioning_exists(entity)) {
-    stopifnot(length(dataset_version) == 1)
-    qq = paste("filter(", arrInfo, ", (",  get_base_idname(arr), " < ", min(ids), " OR ",
-               get_base_idname(arr), " > ", max(ids), ") OR (dataset_version != ", dataset_version, "))", sep = "")
-  } else { # Entity does not have dataset_version-s
-    qq = paste("filter(", arrInfo, ", ",  get_base_idname(arr), " < ", min(ids), " OR ",
-               get_base_idname(arr), " > ", max(ids), ")", sep = "")
-  }
-  qq = paste("store(", qq, ", ", arrInfo, ")", sep = "")
+  entity = strip_namespace(fullarrayname)
+
+  base_selection_query = formulate_base_selection_query(fullarrayname = fullarrayname, 
+                                                        ids = ids)  
+  versioned_selection_query = formulate_versioned_selection_query(entity = entity, 
+                                                                  base_selection_query = base_selection_query, 
+                                                                  dataset_version = dataset_version)
+
+  qq = paste("delete(", arrInfo, ", ", versioned_selection_query, ")", sep = "")
   cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from info array: ", arrInfo, "\n", sep = "")
+  print(qq)
   iquery(jdb$db, qq)
 }

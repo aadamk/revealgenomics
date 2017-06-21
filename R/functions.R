@@ -1685,9 +1685,24 @@ unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
 }
 
 # Check that parent entity exists at id-s specified in dataframe
-check_entity_exists_at_id = function(entity, id){
-  df1 = get_entity(entity = entity, ids = id)
-  stopifnot(nrow(df1) == length(id))
+check_entity_exists_at_id = function(entity, id, ...){
+  df1 = get_entity(entity = entity, ids = id, ...)
+  if (nrow(df1) == 0) {
+    stop("No entries for entity", entity, "at any of the specified ids")
+  } else if (nrow(df1) != length(id)) {
+    req_ids = unique(sort(id))
+    returned_ids = unique(sort(df1[, get_base_idname(entity)]))
+    missing_ids = req_ids[which(!(req_ids %in% returned_ids))]
+    if (dataset_versioning_exists(entity)) {
+      stop(cat("No entries for entity", entity, "at ids:", paste(missing_ids, collapse = ", "), 
+           "at specified version", sep = " "))
+    } else {
+      stop(cat("No entries for entity", entity, "at ids:", paste(missing_ids, collapse = ", "),
+           sep = " ")) 
+    }
+  } else {
+    return(TRUE)
+  }
 }
 
 #' @export
