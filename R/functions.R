@@ -214,6 +214,7 @@ get_entity_class = function(entity) {
 }
 
 get_search_by_entity = function(entity) { 
+  entity = strip_namespace(entity)
   stopifnot(entity %in% get_entity_names())
   jdb$meta$L$array[[entity]]$search_by_entity 
 }
@@ -1556,7 +1557,7 @@ search_rnaquantification_scidb = function(arrayname,
   } else if (!is.null(rnaquantificationset_id) & is.null(biosample_id) & is.null(feature_id)) { # user selected rqs only
     if (exists('debug_trace')) cat("Only RNAQuantificationSet is selected.\n")
     if (length(rnaquantificationset_id) == 1){
-      qq = paste("between(", qq, ",NULL,", rnaquantificationset_id, ",NULL,NULL,NULL,", rnaquantificationset_id, ",NULL,NULL)", sep = "")
+      qq = paste("between(", qq, ",", dataset_version, ",", rnaquantificationset_id, ",NULL,NULL,", dataset_version, ",", rnaquantificationset_id, ",NULL,NULL)", sep = "")
     } else {
       stop("code for multiple rnaquantificationset_id to be added. Alternatively, call the search function by individual rnaquantificationset_id.")
     }
