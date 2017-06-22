@@ -16,7 +16,7 @@ get_entity_info()
 # 7     RNAQUANTIFICATION                data RNAQUANTIFICATIONSET RNAQUANTIFICATIONSET
 ```
 
-2. Delete of measurment data is now working as 
+2. Delete of measurement data is now working as 
 
 ```R
 delete_entity(entity = 'RNAQUANTIFICATION', 
