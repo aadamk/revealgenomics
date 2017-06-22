@@ -17,6 +17,8 @@ array:
         end: Inf
         chunk_interval: 1000
         overlap: 0
+    search_by_entity: 
+    delete_by_entity: PROJECT
     infoArray: TRUE
     compression_on: FALSE
   DATASET:
@@ -42,6 +44,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: PROJECT
+    delete_by_entity: DATASET
     infoArray: TRUE
     compression_on: FALSE
   # INDIVIDUAL
@@ -70,6 +74,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: DATASET
+    delete_by_entity: INDIVIDUAL
     infoArray: TRUE
     infoArray_max_keys: 10000
     compression_on: FALSE
@@ -99,6 +105,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: DATASET
+    delete_by_entity: BIOSAMPLE
     infoArray: TRUE
     compression_on: FALSE
   # EXPERIMENTSET
@@ -128,6 +136,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: DATASET
+    delete_by_entity: EXPERIMENTSET
     infoArray: TRUE
     compression_on: FALSE
   # EXPERIMENT
@@ -154,6 +164,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: DATASET
+    delete_by_entity: EXPERIMENT
     infoArray: TRUE
   # RNAQUANTIFICATIONSET
   RNAQUANTIFICATIONSET:
@@ -180,6 +192,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: DATASET
+    delete_by_entity: RNAQUANTIFICATIONSET
     infoArray: TRUE
     compression_on: FALSE
   #RNAQUANTIFICATION
@@ -212,6 +226,8 @@ array:
         end: Inf
         chunk_interval: 10000
         overlap: 0
+    search_by_entity: RNAQUANTIFICATIONSET
+    delete_by_entity: RNAQUANTIFICATIONSET
     infoArray: FALSE
     compression_on: TRUE
   # VARIANTSET
@@ -239,6 +255,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: DATASET
+    delete_by_entity: VARIANTSET
     infoArray: TRUE
     compression_on: FALSE
   # VARIANT
@@ -280,6 +298,8 @@ array:
         end: Inf
         chunk_interval: 10000
         overlap: 0
+    search_by_entity: VARIANTSET
+    delete_by_entity: VARIANTSET
     infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: TRUE
@@ -307,6 +327,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: DATASET
+    delete_by_entity: FUSIONSET
     infoArray: TRUE
     compression_on: FALSE
   # FUSION
@@ -351,6 +373,8 @@ array:
         end: Inf
         chunk_interval: 100
         overlap: 0
+    search_by_entity: FUSIONSET
+    delete_by_entity: FUSIONSET
     infoArray: FALSE
     compression_on: TRUE
   # COPYNUMBERSET
@@ -378,6 +402,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: DATASET
+    delete_by_entity: COPYNUMBERSET
     infoArray: TRUE
     compression_on: FALSE
   # COPYNUMBERSUBSET
@@ -405,6 +431,8 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    search_by_entity: DATASET
+    delete_by_entity: COPYNUMBERSUBSET
     infoArray: TRUE
     compression_on: FALSE
   # COPYNUMBER_SEG
@@ -441,6 +469,8 @@ array:
         end: Inf
         chunk_interval: 10000
         overlap: 0
+    search_by_entity: COPYNUMBERSET
+    delete_by_entity: COPYNUMBERSET
     infoArray: FALSE
     compression_on: TRUE
   #COPYNUMBER_MAT
@@ -473,6 +503,8 @@ array:
         end: Inf
         chunk_interval: 100000
         overlap: 0
+    search_by_entity: COPYNUMBERSUBSET
+    delete_by_entity: COPYNUMBERSUBSET
     infoArray: FALSE
     compression_on: TRUE
           
@@ -489,6 +521,8 @@ array:
       created: string
       updated: string
     dims: ontology_id
+    search_by_entity: 
+    delete_by_entity: ONTOLOGY
     infoArray: FALSE
     compression_on: FALSE
   # FEATURESET
@@ -505,6 +539,8 @@ array:
       created: string
       updated: string
     dims: featureset_id
+    search_by_entity: 
+    delete_by_entity: FEATURESET
     infoArray: TRUE
     compression_on: FALSE
   # FEATURE
@@ -530,6 +566,8 @@ array:
       - featureset_id
       - feature_type
     dims: feature_id
+    search_by_entity: FEATURESET
+    delete_by_entity: FEATURE
     infoArray: TRUE
     compression_on: FALSE
   # FEATURE_SYNONYM
@@ -545,7 +583,9 @@ array:
       source: string
       created: string
       updated: string
-    dims: synonym_id
+    dims: feature_synonym_id
+    search_by_entity: FEATURESET
+    delete_by_entity: FEATURE_SYNONYM
     infoArray: FALSE
     compression_on: FALSE
   # GENELIST
@@ -561,6 +601,8 @@ array:
       created: string
       updated: string
     dims: genelist_id
+    search_by_entity: 
+    delete_by_entity: GENELIST
     infoArray: FALSE
     compression_on: FALSE
   # GENELIST_GENE
@@ -575,6 +617,8 @@ array:
       created: string
       updated: string
     dims: genelist_gene_id
+    search_by_entity: GENELIST
+    delete_by_entity: GENELIST_GENE
     infoArray: FALSE
     compression_on: FALSE
   # REFERENCESET
@@ -594,5 +638,7 @@ array:
       created: string
       updated: string
     dims: referenceset_id
+    search_by_entity: 
+    delete_by_entity: REFERENCESET
     infoArray: TRUE
     compression_on: FALSE

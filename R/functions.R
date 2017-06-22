@@ -219,6 +219,23 @@ get_search_by_entity = function(entity) {
   jdb$meta$L$array[[entity]]$search_by_entity 
 }
 
+get_delete_by_entity = function(entity) { 
+  entity = strip_namespace(entity)
+  stopifnot(entity %in% get_entity_names())
+  jdb$meta$L$array[[entity]]$delete_by_entity 
+}
+
+#' @export
+get_entity_info = function(){
+  df1 = data.frame(entity = get_entity_names())
+  df1$class =            sapply(get_entity_names(), function(entity) get_entity_class(entity))
+  df1$search_by_entity = sapply(get_entity_names(), function(entity) get_search_by_entity(entity))
+  df1$delete_by_entity = sapply(get_entity_names(), function(entity) get_delete_by_entity(entity))
+  df1 = data.frame(apply(df1, 2, function(col) {sapply(col, function(elem) {ifelse (is.null(elem), NA, elem)})}))
+  rownames(df1) = NULL
+  df1
+}
+
 get_max_id = function(arrayname){
   if (is_entity_secured(arrayname)) { # Lookup array must exist
     max = iquery(jdb$db,
@@ -1702,7 +1719,7 @@ unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
 check_entity_exists_at_id = function(entity, id, ...){
   df1 = get_entity(entity = entity, id = id, ...)
   if (nrow(df1) == 0) {
-    stop("No entries for entity ", entity, " at any of the specified ids")
+    stop("No entries for entity ", entity, " at any of the specified ids / version")
   } else if (nrow(df1) != length(id)) {
     req_ids = unique(sort(id))
     returned_ids = unique(sort(df1[, get_base_idname(entity)]))
