@@ -199,7 +199,9 @@ array:
   #RNAQUANTIFICATION
   RNAQUANTIFICATION:
     data_class:
-      data
+      measurementdata
+    measurementdata_subclass:
+      rnaquantification
     namespace: 
       - public
       - collaboration
@@ -262,7 +264,9 @@ array:
   # VARIANT
   VARIANT:
     data_class:
-      variant_data
+      measurementdata
+    measurementdata_subclass:
+      variant
     namespace: 
       - public
       - collaboration
@@ -334,7 +338,9 @@ array:
   # FUSION
   FUSION:
     data_class:
-      variant_data
+      measurementdata
+    measurementdata_subclass:
+      variant
     namespace: 
       - public
       - collaboration
@@ -438,7 +444,9 @@ array:
   # COPYNUMBER_SEG
   COPYNUMBER_SEG:
     data_class:
-      copynumber_seg_data
+      measurementdata
+    measurementdata_subclass:
+      copynumber_seg
     namespace: 
       - public
       - collaboration
@@ -476,7 +484,9 @@ array:
   #COPYNUMBER_MAT
   COPYNUMBER_MAT:
     data_class:
-      copynumber_mat_data
+      measurementdata
+    measurementdata_subclass:
+      copynumber_mat
     namespace: 
       - public
       - collaboration

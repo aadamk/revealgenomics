@@ -66,11 +66,11 @@ init_db = function(arrays_to_init){
 
     ## Handle LOOKUP array
     # arrays exist in multiple namespaces ==> need a lookup array
-    # also if entity is of class "data / variant_data / copynumber_data etc."
+    # also if entity is of class "measurementdata"
     # e.g. RNAQuantification (Expression), VARIANT, COPYNUMBER_SEG
     # do not need a LOOKUP array
     if (length(namespaces)>1 &
-        length(grep("^data$|^variant_.*data$|^copynumber_.*_data$", arr$data_class)) == 0) {
+        arr$data_class != 'measurementdata') {
       cat("Trying to remove array: public.", name, "_LOOKUP\n", sep = "")
       tryCatch({iquery(db, paste("remove(public.", name, "_LOOKUP)", sep = ""), force=TRUE)},
                error = function(e){cat("====Failed to remove", paste("remove array: public.", name, "_LOOKUP\n", sep = ""))})
@@ -103,7 +103,7 @@ init_db = function(arrays_to_init){
 
       info_flag = arr$infoArray
       if (!is.null(info_flag)) { if(info_flag){
-        if(arr$data_class == "data") {stop("array of class \"data\" cannot have INFO array")}
+#         if(arr$data_class == "data") {stop("array of class \"data\" cannot have INFO array")}
         tryCatch({
           # Info array
           if (is.null(arr$infoArray_max_keys)){
@@ -124,11 +124,11 @@ init_db = function(arrays_to_init){
     }
     ## Handle LOOKUP array
     # arrays exist in multiple namespaces ==> need a lookup array
-    # also if entity is of class "data / variant_data / copynumber_data etc."
+    # also if entity is of class "measurementdata"
     # e.g. RNAQuantification (Expression), VARIANT, COPYNUMBER_SEG
     # do not need a LOOKUP array
-    if (length(namespaces)>1 &
-        length(grep("^data$|^variant_.*data$|^copynumber_.*_data$", arr$data_class)) == 0) {
+    if ( length(namespaces)>1 &
+        arr$data_class != 'measurement_data' ) {
       tryCatch({
         # Info array
         query = paste("create array public.", name, "_LOOKUP <namespace:string> [", get_base_idname(name), "]",

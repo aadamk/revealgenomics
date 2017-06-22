@@ -66,7 +66,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
     }
   }
 
-  if (get_entity_class(entity = entity) %in% c('data', 'variant_data')) {
+  if (get_entity_class(entity = entity) == 'measurementdata') {
     if (length(id) != 1) stop("Delete of entity ", entity, " can be done only 1 ", 
                               get_base_idname(delete_by_entity), " at a time")
   } 
@@ -92,7 +92,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
   arr = paste(nmsp, entity, sep = ".")
   
   # Delete the mandatory fields array
-  if (get_entity_class(entity = entity) %in% c('data', 'variant_data')) { # Special handling for measurement data class
+  if (get_entity_class(entity = entity)  == 'measurementdata') { # Special handling for measurement data class
                                                                           # -- they do not have get_<ENTITY>() calls
                                                                           # -- only allow deleting by one preferred id at a time
     cat("Deleting entries for ", get_base_idname(delete_by_entity), " = ",  
@@ -119,8 +119,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
   }
   
   # Clear out the lookup array if required
-  if ( !( get_entity_class(entity = entity) %in% 
-          c('data', 'variant_data') ) ) { # No lookup handling for measurement data class
+  if ( get_entity_class(entity = entity) != 'measurementdata' ) { # No lookup handling for measurement data class
     if (is_entity_secured(entity)){
       # Check if there are no remaining entities at this ID at any version
       qcount = paste("op_count(filter(", arr, ", ",
@@ -135,7 +134,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
         updatedcache = entity_lookup(entityName = entity, updateCache = TRUE)
       }
     } # end of: if (is_entity_secured(entity))
-  } # end of: if ( !( get_entity_class(entity = entity) %in%  c('data', 'variant_data') ) )
+  } # end of: if ( get_entity_class(entity = entity) != 'measurementdata' )
 }
 
 delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_entity = NULL){
@@ -152,7 +151,7 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
   entity = strip_namespace(fullarrayname)
 
   # Delete the mandatory fields array
-  if (get_entity_class(entity = entity) %in% c('data', 'variant_data')) { # Special handling for measurement data class
+  if (get_entity_class(entity = entity) == 'measurementdata') { # Special handling for measurement data class
     # -- they do not have get_<ENTITY>() calls
     # -- only allow deleting by one preferred id at a time
     cat("Deleting entries for ", get_base_idname(delete_by_entity), " = ",  
