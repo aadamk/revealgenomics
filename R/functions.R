@@ -96,17 +96,17 @@ get_fusionset_lookup = function(updateCache = FALSE){
   entity_lookup(jdb$meta$arrFusionset, updateCache = updateCache)
 }
 
-get_entity = function(entity, ids, ...){
+get_entity = function(entity, id, ...){
   fn_name = paste("get_", tolower(entity), sep = "")
   f = NULL
   try({f = get(fn_name)}, silent = TRUE)
   if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
   if (entity == 'ONTOLOGY') {
-    f(ids, updateCache = TRUE, ...)
+    f(id, updateCache = TRUE, ...)
   } else if (entity == 'FEATURE') {
-    f(ids, fromCache =  FALSE, ...)
+    f(id, fromCache =  FALSE, ...)
   } else { 
-    f(ids, ...) 
+    f(id, ...) 
   }
 }
 
@@ -439,7 +439,7 @@ update_mandatory_and_info_fields = function(df, arrayname){
   update_tuple(df, ids_int64_conv = c(idname, int64_fields), arrayname)
   if(infoArray){
     delete_info_fields(fullarrayname = arrayname,
-                       ids = df[, get_base_idname(arrayname)],
+                       id = df[, get_base_idname(arrayname)],
                        dataset_version = unique(df$dataset_version))
     cat("Registering info for ", nrow(df)," entries in array: ", arrayname, "_INFO\n", sep = "")
     register_info(df = prep_df_fields(df,
@@ -1696,7 +1696,7 @@ unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
 
 # Check that parent entity exists at id-s specified in dataframe
 check_entity_exists_at_id = function(entity, id, ...){
-  df1 = get_entity(entity = entity, ids = id, ...)
+  df1 = get_entity(entity = entity, id = id, ...)
   if (nrow(df1) == 0) {
     stop("No entries for entity ", entity, " at any of the specified ids")
   } else if (nrow(df1) != length(id)) {
