@@ -888,16 +888,19 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL){
   }
   if (any(!(namespace %in% jdb$cache$nmsp_list))) stop("user probably does have acecss to id-s: ", paste(id[which(!(namespace %in% jdb$cache$nmsp_list))], collapse = ", "))
   names(id) = namespace
-  df = data.frame()
+  df0 = data.frame()
   for (nmsp in unique(namespace)){
     cat("--DEBUG--: retrieving entities from namespace:", nmsp, "\n")
-    l = list(df,
-             select_from_1d_entity_by_namespace(namespace = nmsp, entitynm, id = id[which(names(id) == nmsp)], dataset_version = dataset_version))
-    df = rbindlist(l, use.names=TRUE, fill=TRUE)
+    df1 = select_from_1d_entity_by_namespace(namespace = nmsp, entitynm, id = id[which(names(id) == nmsp)], dataset_version = dataset_version)
+    if (nrow(df1) > 0){
+      l = list(df0,
+               df1)
+      df0 = rbindlist(l, use.names=TRUE, fill=TRUE)
+    }
   }
-  df = data.frame(df)
-  # return(df[match(id, df[, get_base_idname(entitynm)]), ])
-  return(df)
+  df0 = data.frame(df0)
+  # return(df0[match(id, df0[, get_base_idname(entitynm)]), ])
+  return(df0)
 }
 
 update_lookup_and_find_namespace_again = function(entitynm, id){
