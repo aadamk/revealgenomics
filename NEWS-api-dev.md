@@ -4,7 +4,7 @@ At commit d54f3e5
 
 Recent changes:
 
-- The following external-facing API formulates a table containing information about
+1. The following external-facing API formulates a table containing information about
 entities in the hierarchy
 
 ```R
@@ -16,7 +16,7 @@ get_entity_info()
 # 7     RNAQUANTIFICATION                data RNAQUANTIFICATIONSET RNAQUANTIFICATIONSET
 ```
 
-- Delete of measurment data is now working as 
+2. Delete of measurment data is now working as 
 
 ```R
 delete_entity(entity = 'RNAQUANTIFICATION', 
@@ -34,24 +34,25 @@ delete_entity(entity = 'DATASET', id = 1, dataset_version = 2)
 delete_entity(entity = 'ONTOLOGY', id = 1)
 ```
 
-- Change in `delete_entity()` and `get_entity()` API: 
+3. Change in `delete_entity()` and `get_entity()` API: 
 parameter `ids` is now called `id`
 (to be consistent with other calls in the API)
 
-- Two internal API to infer hierarchy and delete preferences
-    + New internal API: The parent entity by which one would search an entity 
+4. Two internal API to infer hierarchy and delete preferences
 ```R
+## parent entity by which one would search an entity 
 scidb4gh:::get_search_by_entity(entity = 'RNAQUANTIFICATION')
 # [1] "RNAQUANTIFICATIONSET"
 scidb4gh:::get_search_by_entity(entity = 'RNAQUANTIFICATIONSET')
 # [1] "DATASET"
 ```
-    + New internal API: The entity by which one would delete an entity 
+    
 ```R
+## entity by which one would delete an entity 
 scidb4gh:::get_delete_by_entity(entity = 'RNAQUANTIFICATION')
 # [1] "RNAQUANTIFICATIONSET"
 scidb4gh:::get_delete_by_entity(entity = 'RNAQUANTIFICATIONSET')
 # [1] "RNAQUANTIFICATIONSET"
 ```
-- `search_copynumberset(dataset_id = ..)` was throwing an error earlier when there 
+5. `search_copynumberset(dataset_id = ..)` was throwing an error earlier when there 
 were no CopyNumberSets in a dataset. This should be fixed now.
