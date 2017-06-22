@@ -58,13 +58,21 @@ delete_entity = function(entity, ids, dataset_version = NULL){
     }
   }
 
-  # First check that entity exists at this id
-  if (is_entity_versioned(entitynm = entity)){
-    # entities = get_entity(entity = entity, ids = ids, dataset_version = dataset_version)
-    status = try(check_entity_exists_at_id(entity = entity, id = ids, dataset_version = dataset_version, all_versions = F))
+  if (get_entity_class(entity = entity) %in% c('data', 'variant_data')) {
+    stopifnot(length(ids) == 1)
+    search_by_entity = get_search_by_entity(entity = entity)
+    # delete_by_entity = get_delete_by_entity(entity = entity)
+    status = TRUE # assume user has provided a relevant (id, version) pair
   } else {
-#     entities = get_entity(entity = entity, ids = ids)
-    status = try(check_entity_exists_at_id(entity = entity, id = ids))
+    # First check that entity exists at this id
+    if (is_entity_versioned(entitynm = entity)){
+      # entities = get_entity(entity = entity, ids = ids, dataset_version = dataset_version)
+      status = try(check_entity_exists_at_id(entity = entity, id = ids, dataset_version = dataset_version, all_versions = F))
+    } else {
+  #     entities = get_entity(entity = entity, ids = ids)
+      status = try(check_entity_exists_at_id(entity = entity, id = ids))
+    }
+    search_by_entity = entity
   }
   if (class(status) == 'try-error') {
     # cat("No entries at ids: ", paste(ids, collapse = ", "), " for entity: ", entity, "\n", sep = "")
@@ -72,44 +80,62 @@ delete_entity = function(entity, ids, dataset_version = NULL){
   } else if (status) { # if entities exist
     # Find the correct namespace
     if (is_entity_secured(entity)) {
-      namespaces = find_namespace(id = ids, entitynm = entity)
+      namespaces = find_namespace(id = ids, entitynm = search_by_entity)
       nmsp = unique(namespaces)
     } else { nmsp = 'public' }
     
     if (length(nmsp) != 1) stop("Can run delete only at one namespace at a time")
     arr = paste(nmsp, entity, sep = ".")
     
-    base_selection_query  = formulate_base_selection_query(fullarrayname = arr, ids = ids)
-    versioned_selection_query = formulate_versioned_selection_query(entity = entity, 
-                                                                    base_selection_query = base_selection_query, 
-                                                                    dataset_version = dataset_version)
-    ### asdf
-    cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from ", arr, " entity\n", sep = "")
-    qq = paste("delete(", arr, ", ", versioned_selection_query, ")", sep = "")
-    print(qq)
-    iquery(jdb$db, qq)
+    if (get_entity_class(entity = entity) %in% c('data', 'variant_data')) { # Special handling for measurement data class
+                                                                            # -- they do not have get_<ENTITY>() calls
+                                                                            # -- only allow deleting by one preferred id at a time
+      cat("Deleting entries for", get_base_idname(search_by_entity), "=",  
+          ids, " from ", arr, " entity\n", sep = "")
+      qq = paste("delete(", arr, ", ", get_base_idname(search_by_entity), "=",  
+                 ids, " AND dataset_version = ", dataset_version, ")", sep = "")
+      print(qq)
+      # iquery(jdb$db, qq)
+    } else {
+      base_selection_query  = formulate_base_selection_query(fullarrayname = arr, ids = ids)
+      versioned_selection_query = formulate_versioned_selection_query(entity = entity, 
+                                                                      base_selection_query = base_selection_query, 
+                                                                      dataset_version = dataset_version)
+      ### asdf
+      cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from ", arr, " entity\n", sep = "")
+      qq = paste("delete(", arr, ", ", versioned_selection_query, ")", sep = "")
+      print(qq)
+      iquery(jdb$db, qq)
+    }
     
     # Clear out the info array
     infoArray = jdb$meta$L$array[[entity]]$infoArray
     if (infoArray){
-      delete_info_fields(fullarrayname = arr, ids = ids, dataset_version = dataset_version)
+      if (get_entity_class(entity = entity) %in% c('data', 'variant_data')) { # Special handling for measurement data class
+        stop("Not implemented yet") 
+      } else {
+        delete_info_fields(fullarrayname = arr, ids = ids, dataset_version = dataset_version)
+      }
     }
     
     # Clear out the lookup array if required
-    if (is_entity_secured(entity)){
-      # Check if there are no remaining entities at this ID at any version
-      qcount = paste("op_count(filter(", arr, ", ",
-                     base_selection_query, "))" )
-      newcount = iquery(jdb$db, qcount, return = TRUE)$count
-      if (newcount == 0){ # there are no entities at this level
-        arrLookup = paste(entity, "_LOOKUP", sep = "")
-        qq = paste("delete(", arrLookup, ", ", base_selection_query, ")", sep = "")
-        cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from lookup array: ", arrLookup, "\n", sep = "")
-        print(qq)
-        iquery(jdb$db, qq)
-        updatedcache = entity_lookup(entityName = entity, updateCache = TRUE)
-      }
-    }
+    if ( !( get_entity_class(entity = entity) %in% 
+            c('data', 'variant_data') ) ) { # No lookup handling for measurement data class
+      if (is_entity_secured(entity)){
+        # Check if there are no remaining entities at this ID at any version
+        qcount = paste("op_count(filter(", arr, ", ",
+                       base_selection_query, "))" )
+        newcount = iquery(jdb$db, qcount, return = TRUE)$count
+        if (newcount == 0){ # there are no entities at this level
+          arrLookup = paste(entity, "_LOOKUP", sep = "")
+          qq = paste("delete(", arrLookup, ", ", base_selection_query, ")", sep = "")
+          cat("Deleting entries for ids ", paste(sort(ids), collapse = ", "), " from lookup array: ", arrLookup, "\n", sep = "")
+          print(qq)
+          iquery(jdb$db, qq)
+          updatedcache = entity_lookup(entityName = entity, updateCache = TRUE)
+        }
+      } # end of: if (is_entity_secured(entity))
+    } # end of: if ( !( get_entity_class(entity = entity) %in%  c('data', 'variant_data') ) )
   } else { # end of check that some data existed in the first place
     stop("Unexpected class for try() expression")
   }

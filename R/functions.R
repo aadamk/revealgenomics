@@ -208,6 +208,16 @@ get_entity_names = function(){
   sapply(varnames, function(nm){as.character(jdb$meta[nm])})
 }
 
+get_entity_class = function(entity) { 
+  stopifnot(entity %in% get_entity_names())
+  jdb$meta$L$array[[entity]]$data_class 
+}
+
+get_search_by_entity = function(entity) { 
+  stopifnot(entity %in% get_entity_names())
+  jdb$meta$L$array[[entity]]$search_by_entity 
+}
+
 get_max_id = function(arrayname){
   if (is_entity_secured(arrayname)) { # Lookup array must exist
     max = iquery(jdb$db,
@@ -1688,7 +1698,7 @@ unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
 check_entity_exists_at_id = function(entity, id, ...){
   df1 = get_entity(entity = entity, ids = id, ...)
   if (nrow(df1) == 0) {
-    stop("No entries for entity", entity, "at any of the specified ids")
+    stop("No entries for entity ", entity, " at any of the specified ids")
   } else if (nrow(df1) != length(id)) {
     req_ids = unique(sort(id))
     returned_ids = unique(sort(df1[, get_base_idname(entity)]))
