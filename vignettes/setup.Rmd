@@ -31,6 +31,11 @@ iquery --auth-file ~/.scidb_root_auth -aq "list()"
 iquery --auth-file ~/.scidb_root_auth -aq "list('libraries')"
 ```
 
+We create one of the two possible security namespaces:
+```{sh}
+iquery -aq "create_namespace('collaboration')"
+```
+
 3. Use the following trick to bypass the `auth-file` parameter:
 
 Open a config file:
@@ -102,3 +107,61 @@ Importantly, we set `aio=1` in that file for faster download of data from SciDB
 ```{sh}
 sudo service shimsvc restart
 ```
+
+# Package installation
+
+First the dependencies
+
+```{sh}
+# Ubuntu
+sudo apt-get install libxml2-dev
+# Centos
+sudo yum install libxml2-dev # need the Centos equivalent here (auto-prompted by R roxgen2 install below)
+```
+
+Next, install the following R packages from CRAN
+```{sh}
+sudo R
+# Then run
+install.packages(c('roxygen2', 'tidyr', 'RPostgreSQL')); 
+source("http://bioconductor.org/biocLite.R"); 
+biocLite(c("Biobase")); 
+```
+
+Next we install the SciDB-R package (we can also install from CRAN). Below,
+we show how to install via devtools:
+```{sh}
+sudo R --slave -e "devtools::install_github('Paradigm4/scidbr')"
+```
+
+
+Finally the API install (assuming the directory choice described above):
+
+```{sh}
+USER=scidb
+pushd /home/$USER/coding/downloads/scidb4gh/; R --slave -e "library(roxygen2); roxygenize()" && cd .. && sudo R CMD build scidb4gh && sudo R CMD INSTALL scidb4gh_0.1.tar.gz ; popd
+```
+
+# Package setup and usage
+
+Password (just for demo purposes)
+
+```{sh}
+vi ~/ga4gh-config.R
+# Put in the following there
+#######
+CODEPATH = '~/coding/jnj/sow2/load'
+rootpassword="Paradigm4"
+#######
+```
+
+Now let us get to using the package:
+
+```{R}
+library(scidb4gh)
+gh_connect('root', 'Paradigm4')
+init_db(arrays_to_init = 'ONTOLOGY')           # CAUTION: To be used with care by DB admin only
+init_db(arrays_to_init = get_entity_names())   # EXTREME CAUTION: To be used with extreme care by DB admin only
+```
+
+
