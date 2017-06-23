@@ -128,7 +128,7 @@ init_db = function(arrays_to_init){
     # e.g. RNAQuantification (Expression), VARIANT, COPYNUMBER_SEG
     # do not need a LOOKUP array
     if ( length(namespaces)>1 &
-        arr$data_class != 'measurement_data' ) {
+        arr$data_class != 'measurementdata' ) {
       tryCatch({
         # Info array
         query = paste("create array public.", name, "_LOOKUP <namespace:string> [", get_base_idname(name), "]",
