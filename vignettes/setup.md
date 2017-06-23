@@ -40,3 +40,46 @@ At this point, you should be able to run:
 ```sh
 iquery -aq "list('libraries')"
 ```
+
+# Plugins
+
+The plugins and API can be downloaded and installed via any directory, but a 
+standard directory structure is currently being used for development.
+
+```sh
+mkdir -p ~/coding/downloads/plugins
+```
+
+Download the scidb4gh API
+```sh
+cd ~/coding/downloads/
+# On Ubuntu
+git clone https://github.com/Paradigm4/scidb4gh.git
+# On Centos
+git clone https://<USERNAME>@github.com/Paradigm4/scidb4gh.git
+# Contact support@paradigm4.com for access to this repo
+```
+
+Download the SciDB plugins
+```sh
+cd ~/coding/downloads/plugins/
+git clone https://github.com/Paradigm4/dev_tools.git
+```
+
+Next follow [instructions](https://github.com/Paradigm4/dev_tools)
+for installing dev_tools. Then load the following libraries:
+
+```sh
+LIBS_TO_INSTALL="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between limit summarize"
+ALL="10.0.20.185 10.0.20.186 10.0.20.187 10.0.20.184"
+# Using dev_tools
+# Assuming that dev_tools is already installed
+LIBS_TO_INSTALL="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between limit summarize"
+for lib in $LIBS_TO_INSTALL; 
+  do
+  echo $lib
+  iquery -aq "install_github('Paradigm4/$lib')"
+  iquery -aq "load_library($lib)"
+done
+```
+
