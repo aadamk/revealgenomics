@@ -1,3 +1,12 @@
+---
+title: "SciDB pan-study repository Software stack"
+output: pdf_document
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(eval=FALSE)
+```
+
 # Security
 
 The API assumes the following:
@@ -79,7 +88,17 @@ for lib in $LIBS_TO_INSTALL;
   do
   echo $lib
   iquery -aq "install_github('Paradigm4/$lib')"
-  iquery -aq "load_library($lib)"
+  iquery -aq "load_library('$lib')"
 done
 ```
 
+# Shim
+
+Follow instructions at the [P4 Github page](https://github.com/paradigm4/shim). 
+Shim is configured using a file under `/var/lib/shim/conf`. 
+Importantly, we set `aio=1` in that file for faster download of data from SciDB 
+(remember to restart SciDB at this point)
+
+```sh
+sudo service shimsvc restart
+```
