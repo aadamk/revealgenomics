@@ -3,7 +3,7 @@ title: "SciDB pan-study repository Software stack"
 output: pdf_document
 ---
 
-```{r include=FALSE}
+```{r include = FALSE}
 knitr::opts_chunk$set(eval=FALSE)
 ```
 
@@ -25,7 +25,7 @@ https://paradigm4.atlassian.net/wiki/display/ESD169/More+Info
 https://paradigm4.atlassian.net/wiki/display/ESD169/Setting+up+the+Root+User)
 
 At this point, you should be able to run the following:
-```sh
+```{sh}
 iquery --auth-file ~/.scidb_root_auth -aq "show_user();"
 iquery --auth-file ~/.scidb_root_auth -aq "list()"
 iquery --auth-file ~/.scidb_root_auth -aq "list('libraries')"
@@ -34,7 +34,7 @@ iquery --auth-file ~/.scidb_root_auth -aq "list('libraries')"
 3. Use the following trick to bypass the `auth-file` parameter:
 
 Open a config file:
-```sh
+```{sh}
 vi ~/.config/scidb/iquery.conf
 # Paste the following there
 ############################
@@ -46,7 +46,7 @@ vi ~/.config/scidb/iquery.conf
 
 At this point, you should be able to run:
 
-```sh
+```{sh}
 iquery -aq "list('libraries')"
 ```
 
@@ -55,12 +55,12 @@ iquery -aq "list('libraries')"
 The plugins and API can be downloaded and installed via any directory, but a 
 standard directory structure is currently being used for development.
 
-```sh
+```{sh}
 mkdir -p ~/coding/downloads/plugins
 ```
 
 Download the scidb4gh API
-```sh
+```{sh}
 cd ~/coding/downloads/
 # On Ubuntu
 git clone https://github.com/Paradigm4/scidb4gh.git
@@ -70,7 +70,7 @@ git clone https://<USERNAME>@github.com/Paradigm4/scidb4gh.git
 ```
 
 Download the SciDB plugins
-```sh
+```{sh}
 cd ~/coding/downloads/plugins/
 git clone https://github.com/Paradigm4/dev_tools.git
 ```
@@ -78,7 +78,7 @@ git clone https://github.com/Paradigm4/dev_tools.git
 Next follow [instructions](https://github.com/Paradigm4/dev_tools)
 for installing dev_tools. Then load the following libraries:
 
-```sh
+```{sh}
 LIBS_TO_INSTALL="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between limit summarize"
 ALL="10.0.20.185 10.0.20.186 10.0.20.187 10.0.20.184"
 # Using dev_tools
@@ -99,6 +99,6 @@ Shim is configured using a file under `/var/lib/shim/conf`.
 Importantly, we set `aio=1` in that file for faster download of data from SciDB 
 (remember to restart SciDB at this point)
 
-```sh
+```{sh}
 sudo service shimsvc restart
 ```
