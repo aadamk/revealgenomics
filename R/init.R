@@ -25,8 +25,8 @@
 #' @export
 init_db = function(arrays_to_init){
   # if (is.null(arrays_to_init)) arrays_to_init = get_entity_names()
-  db = jdb$db
-  L = jdb$meta$L
+  db = .ghEnv$db
+  L = .ghEnv$meta$L
   
   arrays_to_init = arrays_to_init[arrays_to_init %in% names(L$array)]
   

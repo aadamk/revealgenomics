@@ -58,13 +58,13 @@ test_return_carriage_in_df = function(df){
 
 test_register_project = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrProject, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrProject, silent = silent)
   test_unique_fields(df, uniq)
 }
 
 test_register_dataset = function(df, uniq, dataset_version, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrDataset, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrDataset, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$project_id))!=1) stop("Datasets to be registered must belong to a single project")
   if (dataset_version != 1) stop("to increment dataset versions, use the function `increment_dataset_version()`")
@@ -72,91 +72,91 @@ test_register_dataset = function(df, uniq, dataset_version, silent = TRUE){
 
 test_register_individual = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrIndividuals, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrIndividuals, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("Individuals to be registered must belong to a single dataset/study")
 }
 
 test_register_biosample = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrBiosample, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrBiosample, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("Biosamples to be registered must belong to a single dataset/study")
 }
 
 test_register_rnaquantificationset = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrRnaquantificationset, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrRnaquantificationset, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("Rnaquantificationset to be registered must belong to a single dataset/study")
 }
 
 test_register_ontology = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrOntology, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrOntology, silent = silent)
   test_unique_fields(df, uniq)
 }
 
 test_register_featureset = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrFeatureset, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrFeatureset, silent = silent)
   test_unique_fields(df, uniq)
 }
 
 test_register_referenceset = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrReferenceset, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrReferenceset, silent = silent)
   test_unique_fields(df, uniq)
 }
 
 test_register_genelist = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrGenelist, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrGenelist, silent = silent)
   test_unique_fields(df, uniq)
 }
 
 test_register_genelist_gene = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrGenelist_gene, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrGenelist_gene, silent = silent)
   test_unique_fields(df, uniq)
 }
 
 test_register_feature = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrFeature, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrFeature, silent = silent)
   test_unique_fields(df, uniq)
 }
 
 test_register_feature_synonym = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrFeatureSynonym, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrFeatureSynonym, silent = silent)
   test_unique_fields(df, uniq)
 }
 
 test_register_variantset = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrVariantset, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrVariantset, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("VariantSet to be registered must belong to a single dataset/study")
 }
 
 test_register_fusionset = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrFusionset, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrFusionset, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("FusionSet to be registered must belong to a single dataset/study")
 }
 
 test_register_copynumberset = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrCopyNumberSet, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrCopyNumberSet, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("CopyNumberSet to be registered must belong to a single dataset/study")
 }
 
 test_register_copynumbersubset = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = jdb$meta$arrCopyNumberSubSet, silent = silent)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrCopyNumberSubSet, silent = silent)
   test_unique_fields(df, uniq)
   if(length(unique(df$dataset_id))!=1) stop("CopyNumberSubset to be registered must belong to a single dataset/study")
 }
@@ -174,7 +174,7 @@ test_register_expression_matrix = function(filepath,
 test_register_variant = function(df){
   test_dataframe_formatting(df)
   if(length(unique(df$dataset_id))!=1) stop("Variants to be registered must belong to a single dataset/study")
-  test_mandatory_fields(df, arrayname = jdb$meta$arrVariant)
+  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrVariant)
 }
 
 test_register_copynumber_seg = function(copynumberset){

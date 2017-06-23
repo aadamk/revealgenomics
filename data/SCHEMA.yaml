@@ -221,7 +221,7 @@ array:
       biosample_id:
         start: 0
         end: Inf
-        chunk_interval: 10
+        chunk_interval: 100
         overlap: 0
       feature_id:
         start: 0

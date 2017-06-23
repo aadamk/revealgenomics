@@ -100,7 +100,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
     qq = paste("delete(", arr, ", ", get_base_idname(delete_by_entity), " = ",  
                id, " AND dataset_version = ", dataset_version, ")", sep = "")
     print(qq)
-    iquery(jdb$db, qq)
+    iquery(.ghEnv$db, qq)
   } else {
     base_selection_query  = formulate_base_selection_query(fullarrayname = arr, id = id)
     versioned_selection_query = formulate_versioned_selection_query(entity = entity, 
@@ -109,11 +109,11 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
     cat("Deleting entries for ids ", paste(sort(id), collapse = ", "), " from ", arr, " entity\n", sep = "")
     qq = paste("delete(", arr, ", ", versioned_selection_query, ")", sep = "")
     print(qq)
-    iquery(jdb$db, qq)
+    iquery(.ghEnv$db, qq)
   }
   
   # Clear out the info array
-  infoArray = jdb$meta$L$array[[entity]]$infoArray
+  infoArray = .ghEnv$meta$L$array[[entity]]$infoArray
   if (infoArray){
     delete_info_fields(fullarrayname = arr, id = id, dataset_version = dataset_version)
   }
@@ -124,13 +124,13 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
       # Check if there are no remaining entities at this ID at any version
       qcount = paste("op_count(filter(", arr, ", ",
                      base_selection_query, "))" )
-      newcount = iquery(jdb$db, qcount, return = TRUE)$count
+      newcount = iquery(.ghEnv$db, qcount, return = TRUE)$count
       if (newcount == 0){ # there are no entities at this level
         arrLookup = paste(entity, "_LOOKUP", sep = "")
         qq = paste("delete(", arrLookup, ", ", base_selection_query, ")", sep = "")
         cat("Deleting entries for ids ", paste(sort(id), collapse = ", "), " from lookup array: ", arrLookup, "\n", sep = "")
         print(qq)
-        iquery(jdb$db, qq)
+        iquery(.ghEnv$db, qq)
         updatedcache = entity_lookup(entityName = entity, updateCache = TRUE)
       }
     } # end of: if (is_entity_secured(entity))
@@ -159,7 +159,7 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
     qq = paste("delete(", arrInfo, ", ", get_base_idname(delete_by_entity), " = ",  
                id, " AND dataset_version = ", dataset_version, ")", sep = "")
     print(qq)
-    iquery(jdb$db, qq)
+    iquery(.ghEnv$db, qq)
   } else {
     base_selection_query = formulate_base_selection_query(fullarrayname = fullarrayname, 
                                                           id = id)  
@@ -170,6 +170,6 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
     qq = paste("delete(", arrInfo, ", ", versioned_selection_query, ")", sep = "")
     cat("Deleting entries for ids ", paste(sort(id), collapse = ", "), " from info array: ", arrInfo, "\n", sep = "")
     print(qq)
-    iquery(jdb$db, qq)
+    iquery(.ghEnv$db, qq)
   }
 }

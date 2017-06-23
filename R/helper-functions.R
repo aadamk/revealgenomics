@@ -96,15 +96,15 @@ convert_factors_to_char = function(dfx){
 ############################################################
 #' @export
 scidb_exists_array = function(arrayName) {
-  !is.null(tryCatch({iquery(jdb$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
+  !is.null(tryCatch({iquery(.ghEnv$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
 }
 
 convert_attr_double_to_int64 = function(arr, attrname){
   attrnames = schema(arr, "attributes")$name
   randString = "for_int64_conversion"
   arr = scidb_attribute_rename(arr, old = attrname, new = randString)
-  arr = jdb$db$apply(srcArray = arr, newAttr = R(attrname), expression = int64(R(randString)))
-  arr = jdb$db$project(arr, R(paste(attrnames, collapse = ", ")))
+  arr = .ghEnv$db$apply(srcArray = arr, newAttr = R(attrname), expression = int64(R(randString)))
+  arr = .ghEnv$db$project(arr, R(paste(attrnames, collapse = ", ")))
   arr
 }
 
@@ -125,19 +125,19 @@ scidb_attribute_rename = function(arr, old, new){
   dim_schema = gsub("<.*> *", "", schema(arr)) # TODO : build up from scratch
   newSchema = paste("<", attr_schema, ">", dim_schema)
   
-  arr = jdb$db$cast(srcArray = arr, schemaArray = R(newSchema))
+  arr = .ghEnv$db$cast(srcArray = arr, schemaArray = R(newSchema))
   arr
 }
 
 #' @export
 scidb_array_count = function(array){
   qq = paste("op_count(", array@name, ")", sep = "")
-  # scidb(jdb$db, qq)
-  iquery(jdb$db, qq, schema="<count:uint64> [i=0:0]", return = T)$count
+  # scidb(.ghEnv$db, qq)
+  iquery(.ghEnv$db, qq, schema="<count:uint64> [i=0:0]", return = T)$count
 }
 
 #' @export
 scidb_array_head= function(array, n = 5){
-  as.R(jdb$db$limit(array, R(n)))
+  as.R(.ghEnv$db$limit(array, R(n)))
 }
 

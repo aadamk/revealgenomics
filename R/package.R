@@ -21,7 +21,7 @@ NULL
 
 # A global environment used to store the metadata information, and cache state by some functions
 #' @export
-jdb = new.env(parent = emptyenv())
+.ghEnv = new.env(parent = emptyenv())
 
 # Set up a lazily-assigned cache for miscellaneous tables used by getSeries
 #' delayedAssign("tickers_table", iquery("tickers", return=TRUE), assign.env=.pdqEnv)

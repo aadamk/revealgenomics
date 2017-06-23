@@ -14,86 +14,86 @@
 
 #' @export
 gh_connect = function(username, password, host = NULL, port = 8083, protocol = "https"){
-  jdb$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="scidb4gh"))
+  .ghEnv$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="scidb4gh"))
 
-  jdb$meta$arrProject = 'PROJECT'
-  jdb$meta$arrDataset = 'DATASET'
-  jdb$meta$arrIndividuals = 'INDIVIDUAL'
-  jdb$meta$arrOntology = 'ONTOLOGY'
-  jdb$meta$arrBiosample = 'BIOSAMPLE'
-  jdb$meta$arrRnaquantificationset = 'RNAQUANTIFICATIONSET'
-  jdb$meta$arrRnaquantification = 'RNAQUANTIFICATION'
-  jdb$meta$arrFeature = 'FEATURE'
-  jdb$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
-  jdb$meta$arrFeatureset = 'FEATURESET'
-  jdb$meta$arrReferenceset = 'REFERENCESET'
-  jdb$meta$arrGenelist = 'GENELIST'
-  jdb$meta$arrGenelist_gene = 'GENELIST_GENE'
-  jdb$meta$arrVariantset = 'VARIANTSET'
-  jdb$meta$arrVariant = 'VARIANT'
-  jdb$meta$arrFusionset = 'FUSIONSET'
-  jdb$meta$arrFusion = 'FUSION'
-  jdb$meta$arrCopyNumberSet = 'COPYNUMBERSET'
-  jdb$meta$arrCopyNumberSubSet = 'COPYNUMBERSUBSET'
-  jdb$meta$arrCopynumber_seg = 'COPYNUMBER_SEG'
-  jdb$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
+  .ghEnv$meta$arrProject = 'PROJECT'
+  .ghEnv$meta$arrDataset = 'DATASET'
+  .ghEnv$meta$arrIndividuals = 'INDIVIDUAL'
+  .ghEnv$meta$arrOntology = 'ONTOLOGY'
+  .ghEnv$meta$arrBiosample = 'BIOSAMPLE'
+  .ghEnv$meta$arrRnaquantificationset = 'RNAQUANTIFICATIONSET'
+  .ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
+  .ghEnv$meta$arrFeature = 'FEATURE'
+  .ghEnv$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
+  .ghEnv$meta$arrFeatureset = 'FEATURESET'
+  .ghEnv$meta$arrReferenceset = 'REFERENCESET'
+  .ghEnv$meta$arrGenelist = 'GENELIST'
+  .ghEnv$meta$arrGenelist_gene = 'GENELIST_GENE'
+  .ghEnv$meta$arrVariantset = 'VARIANTSET'
+  .ghEnv$meta$arrVariant = 'VARIANT'
+  .ghEnv$meta$arrFusionset = 'FUSIONSET'
+  .ghEnv$meta$arrFusion = 'FUSION'
+  .ghEnv$meta$arrCopyNumberSet = 'COPYNUMBERSET'
+  .ghEnv$meta$arrCopyNumberSubSet = 'COPYNUMBERSUBSET'
+  .ghEnv$meta$arrCopynumber_seg = 'COPYNUMBER_SEG'
+  .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
 
   # Prepare variables for the cache
-  jdb$cache$ontology_ref = NULL
-  jdb$cache$lookup = list()
-  jdb$cache$lookup[[jdb$meta$arrProject]] = NULL
-  jdb$cache$lookup[[jdb$meta$arrDataset]] = NULL
-  jdb$cache$lookup[[jdb$meta$arrIndividuals]] = NULL
-  jdb$cache$lookup[[jdb$meta$arrBiosample]] = NULL
-  jdb$cache$lookup[[jdb$meta$arrRnaquantificationset]] = NULL
-  jdb$cache$lookup[[jdb$meta$arrVariantset]] = NULL
-  jdb$cache$lookup[[jdb$meta$arrFusionset]] = NULL
-  jdb$cache$feature_ref = NULL
-  jdb$cache$dfFeatureSynonym = NULL
-  jdb$cache$biosample_ref = NULL
+  .ghEnv$cache$ontology_ref = NULL
+  .ghEnv$cache$lookup = list()
+  .ghEnv$cache$lookup[[.ghEnv$meta$arrProject]] = NULL
+  .ghEnv$cache$lookup[[.ghEnv$meta$arrDataset]] = NULL
+  .ghEnv$cache$lookup[[.ghEnv$meta$arrIndividuals]] = NULL
+  .ghEnv$cache$lookup[[.ghEnv$meta$arrBiosample]] = NULL
+  .ghEnv$cache$lookup[[.ghEnv$meta$arrRnaquantificationset]] = NULL
+  .ghEnv$cache$lookup[[.ghEnv$meta$arrVariantset]] = NULL
+  .ghEnv$cache$lookup[[.ghEnv$meta$arrFusionset]] = NULL
+  .ghEnv$cache$feature_ref = NULL
+  .ghEnv$cache$dfFeatureSynonym = NULL
+  .ghEnv$cache$biosample_ref = NULL
 
   # SciDB connection and R API
   if (is.null(host)) {
-    jdb$db = scidbconnect(username = username, password = password, port = port, protocol = protocol)
+    .ghEnv$db = scidbconnect(username = username, password = password, port = port, protocol = protocol)
   } else {
-    jdb$db = scidbconnect(host = host, username = username, password = password, port = port, protocol = protocol)
+    .ghEnv$db = scidbconnect(host = host, username = username, password = password, port = port, protocol = protocol)
   }
 
-  jdb$cache$nmsp_list = iquery(jdb$db, "list('namespaces')", schema = "<name:string NOT NULL> [No=0:1,2,0]", return = T)$name
-  jdb$cache$nmsp_list = jdb$cache$nmsp_list[jdb$cache$nmsp_list %in% c('public', 'clinical', 'collaboration')]
+  .ghEnv$cache$nmsp_list = iquery(.ghEnv$db, "list('namespaces')", schema = "<name:string NOT NULL> [No=0:1,2,0]", return = T)$name
+  .ghEnv$cache$nmsp_list = .ghEnv$cache$nmsp_list[.ghEnv$cache$nmsp_list %in% c('public', 'clinical', 'collaboration')]
 
-  # return(jdb)
+  # return(.ghEnv)
 }
 
 entity_lookup = function(entityName, updateCache = FALSE){
-  if (updateCache | is.null(jdb$cache$lookup[[entityName]])){
-    jdb$cache$lookup[[entityName]] = iquery(jdb$db, paste(entityName, "_LOOKUP", sep = ""),
+  if (updateCache | is.null(.ghEnv$cache$lookup[[entityName]])){
+    .ghEnv$cache$lookup[[entityName]] = iquery(.ghEnv$db, paste(entityName, "_LOOKUP", sep = ""),
                                             schema = paste("<namespace:string> [", get_idname(entityName), "=0:*]", sep = ""),
                                             return = T)
   }
-  return(jdb$cache$lookup[[entityName]])
+  return(.ghEnv$cache$lookup[[entityName]])
 }
 
 get_project_lookup = function(updateCache = FALSE){
-  entity_lookup(jdb$meta$arrProject, updateCache = updateCache)
+  entity_lookup(.ghEnv$meta$arrProject, updateCache = updateCache)
 }
 get_dataset_lookup = function(updateCache = FALSE){
-  entity_lookup(jdb$meta$arrDataset, updateCache = updateCache)
+  entity_lookup(.ghEnv$meta$arrDataset, updateCache = updateCache)
 }
 get_individuals_lookup = function(updateCache = FALSE){
-  entity_lookup(jdb$meta$arrIndividuals, updateCache = updateCache)
+  entity_lookup(.ghEnv$meta$arrIndividuals, updateCache = updateCache)
 }
 get_biosample_lookup = function(updateCache = FALSE){
-  entity_lookup(jdb$meta$arrBiosample, updateCache = updateCache)
+  entity_lookup(.ghEnv$meta$arrBiosample, updateCache = updateCache)
 }
 get_rnaquantificationset_lookup = function(updateCache = FALSE){
-  entity_lookup(jdb$meta$arrRnaquantificationset, updateCache = updateCache)
+  entity_lookup(.ghEnv$meta$arrRnaquantificationset, updateCache = updateCache)
 }
 get_variantset_lookup = function(updateCache = FALSE){
-  entity_lookup(jdb$meta$arrVariantset, updateCache = updateCache)
+  entity_lookup(.ghEnv$meta$arrVariantset, updateCache = updateCache)
 }
 get_fusionset_lookup = function(updateCache = FALSE){
-  entity_lookup(jdb$meta$arrFusionset, updateCache = updateCache)
+  entity_lookup(.ghEnv$meta$arrFusionset, updateCache = updateCache)
 }
 
 get_entity = function(entity, id, ...){
@@ -112,33 +112,33 @@ get_entity = function(entity, id, ...){
 
 # cat("Downloading reference dataframes for fast ExpressionSet formation\n")
 get_feature_from_cache = function(updateCache = FALSE){
-  if (updateCache | is.null(jdb$cache$feature_ref)){
+  if (updateCache | is.null(.ghEnv$cache$feature_ref)){
     update_feature_cache()
   }
-  return(jdb$cache$feature_ref)
+  return(.ghEnv$cache$feature_ref)
 }
 update_feature_cache = function(){
-  jdb$cache$feature_ref = NULL
-  jdb$cache$feature_ref = get_features(fromCache = FALSE)
+  .ghEnv$cache$feature_ref = NULL
+  .ghEnv$cache$feature_ref = get_features(fromCache = FALSE)
 }
 
 get_biosamples_from_cache = function(updateCache = FALSE){
-  if (updateCache | is.null(jdb$cache$biosample_ref)){
+  if (updateCache | is.null(.ghEnv$cache$biosample_ref)){
     update_biosample_cache()
   }
-  return(jdb$cache$biosample_ref)
+  return(.ghEnv$cache$biosample_ref)
 }
 
 update_biosample_cache = function(){
-  jdb$cache$biosample_ref = get_biosamples()
+  .ghEnv$cache$biosample_ref = get_biosamples()
 }
 
 get_ontology_from_cache = function(updateCache = FALSE){
-  if (updateCache | is.null(jdb$cache$dfOntology)){
+  if (updateCache | is.null(.ghEnv$cache$dfOntology)){
     update_ontology_cache()
   }
-  if (nrow(jdb$cache$dfOntology) == 0) update_ontology_cache()
-  return(jdb$cache$dfOntology)
+  if (nrow(.ghEnv$cache$dfOntology) == 0) update_ontology_cache()
+  return(.ghEnv$cache$dfOntology)
 }
 
 #' @export
@@ -154,27 +154,27 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE){
 }
 
 update_ontology_cache = function(){
-  jdb$cache$dfOntology = iquery(jdb$db, jdb$meta$arrOntology, return = TRUE)
+  .ghEnv$cache$dfOntology = iquery(.ghEnv$db, .ghEnv$meta$arrOntology, return = TRUE)
 }
 
 get_feature_synonym_from_cache = function(updateCache = FALSE){
-  if (updateCache | is.null(jdb$cache$dfFeatureSynonym)){
+  if (updateCache | is.null(.ghEnv$cache$dfFeatureSynonym)){
     update_feature_synonym_cache()
   }
-  return(jdb$cache$dfFeatureSynonym)
+  return(.ghEnv$cache$dfFeatureSynonym)
 }
 update_feature_synonym_cache = function(){
-  jdb$cache$dfFeatureSynonym = iquery(jdb$db, jdb$meta$arrFeatureSynonym, return = TRUE)
+  .ghEnv$cache$dfFeatureSynonym = iquery(.ghEnv$db, .ghEnv$meta$arrFeatureSynonym, return = TRUE)
 }
 
 #' @export
 scidb_exists_array = function(arrayName) {
-  !is.null(tryCatch({iquery(jdb$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
+  !is.null(tryCatch({iquery(.ghEnv$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
 }
 
 is_entity_secured = function(entitynm){
   entitynm = strip_namespace(entitynm)
-  ifelse(length(jdb$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
+  ifelse(length(.ghEnv$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
 }
 
 is_entity_versioned = function(entitynm){
@@ -183,7 +183,7 @@ is_entity_versioned = function(entitynm){
 
 get_idname = function(arrayname){
   local_arrnm = strip_namespace(arrayname)
-  idname = jdb$meta$L$array[[local_arrnm]]$dims
+  idname = .ghEnv$meta$L$array[[local_arrnm]]$dims
   if (class(idname) == "character") return(idname) else return(names(idname))
 }
 
@@ -194,7 +194,7 @@ get_base_idname = function(arrayname){
 
 get_int64fields = function(arrayname){
   local_arrnm = strip_namespace(arrayname)
-  attr_types = unlist(jdb$meta$L$array[[local_arrnm]]$attributes)
+  attr_types = unlist(.ghEnv$meta$L$array[[local_arrnm]]$attributes)
   int64_fields = names(attr_types[which(!(attr_types %in% 
                                             c('string', 'datetime', 'int32', 'double', 'bool')))])
   stopifnot(all(unique(attr_types[int64_fields]) %in% c("int64", "numeric")))
@@ -203,33 +203,33 @@ get_int64fields = function(arrayname){
 
 #' @export
 get_entity_names = function(){
-  varnames = names(jdb$meta)
+  varnames = names(.ghEnv$meta)
   varnames = varnames[varnames != "L"]
-  sapply(varnames, function(nm){as.character(jdb$meta[nm])})
+  sapply(varnames, function(nm){as.character(.ghEnv$meta[nm])})
 }
 
 get_entity_class = function(entity) { 
   stopifnot(entity %in% get_entity_names())
-  jdb$meta$L$array[[entity]]$data_class 
+  .ghEnv$meta$L$array[[entity]]$data_class 
 }
 
 get_search_by_entity = function(entity) { 
   entity = strip_namespace(entity)
   stopifnot(entity %in% get_entity_names())
-  jdb$meta$L$array[[entity]]$search_by_entity 
+  .ghEnv$meta$L$array[[entity]]$search_by_entity 
 }
 
 get_delete_by_entity = function(entity) { 
   entity = strip_namespace(entity)
   stopifnot(entity %in% get_entity_names())
-  jdb$meta$L$array[[entity]]$delete_by_entity 
+  .ghEnv$meta$L$array[[entity]]$delete_by_entity 
 }
 
 #' @export
 get_entity_info = function(){
   df1 = data.frame(entity = get_entity_names())
   df1$class =            sapply(get_entity_names(), function(entity) get_entity_class(entity))
-  df1$measurementdata_subclass = sapply(get_entity_names(), function(entity) jdb$meta$L$array[[entity]]$measurementdata_subclass)
+  df1$measurementdata_subclass = sapply(get_entity_names(), function(entity) .ghEnv$meta$L$array[[entity]]$measurementdata_subclass)
   df1$search_by_entity = sapply(get_entity_names(), function(entity) get_search_by_entity(entity))
   df1$delete_by_entity = sapply(get_entity_names(), function(entity) get_delete_by_entity(entity))
   df1 = data.frame(apply(df1, 2, function(col) {sapply(col, function(elem) {ifelse (is.null(elem), NA, elem)})}))
@@ -239,14 +239,14 @@ get_entity_info = function(){
 
 get_max_id = function(arrayname){
   if (is_entity_secured(arrayname)) { # Lookup array must exist
-    max = iquery(jdb$db,
+    max = iquery(.ghEnv$db,
                  paste("aggregate(apply(public.",
                        strip_namespace(arrayname), "_LOOKUP, id, ",
                        get_base_idname(arrayname), "), max(id))", sep = ""
                  ),
                  return=TRUE)$id_max
   } else { # Only exists in public namespaces
-    max = iquery(jdb$db, paste("aggregate(apply(", arrayname,
+    max = iquery(.ghEnv$db, paste("aggregate(apply(", arrayname,
                                           ", id, ", get_base_idname(arrayname), "), ",
                                   "max(id))", sep=""), return=TRUE)$id_max
   }
@@ -258,40 +258,40 @@ convert_attr_double_to_int64 = function(arr, attrname){
   attrnames = schema(arr, "attributes")$name
   randString = "for_int64_conversion"
   arr = scidb_attribute_rename(arr, old = attrname, new = randString)
-  arr = jdb$db$apply(srcArray = arr, newAttr = R(attrname), expression = int64(R(randString)))
-  arr = jdb$db$project(arr, R(paste(attrnames, collapse = ", ")))
+  arr = .ghEnv$db$apply(srcArray = arr, newAttr = R(attrname), expression = int64(R(randString)))
+  arr = .ghEnv$db$project(arr, R(paste(attrnames, collapse = ", ")))
   arr
 }
 
 
 update_tuple = function(df, ids_int64_conv, arrayname){
-  if (nrow(df) < 100000) {x1 = as.scidb(jdb$db, df)} else {x1 = as.scidb(jdb$db, df, chunk_size=nrow(df))}
+  if (nrow(df) < 100000) {x1 = as.scidb(.ghEnv$db, df)} else {x1 = as.scidb(.ghEnv$db, df, chunk_size=nrow(df))}
 
   x = x1
   for (idnm in ids_int64_conv){
     x = convert_attr_double_to_int64(arr = x, attrname = idnm)
   }
   x = scidb_attribute_rename(arr = x, old = "updated", new = "updated_old")
-  x = jdb$db$apply(srcArray = x, newAttr = "updated", expression = "string(now())")
-  x = jdb$db$redimension(srcArray = x, schemaArray = R(schema(scidb(jdb$db, arrayname))))
+  x = .ghEnv$db$apply(srcArray = x, newAttr = "updated", expression = "string(now())")
+  x = .ghEnv$db$redimension(srcArray = x, schemaArray = R(schema(scidb(.ghEnv$db, arrayname))))
 
   query = paste("insert(", x@name, ", ", arrayname, ")", sep="")
-  iquery(jdb$db, query)
+  iquery(.ghEnv$db, query)
 }
 
 register_tuple = function(df, ids_int64_conv, arrayname){
-  if (nrow(df) < 100000) {x1 = as.scidb(jdb$db, df)} else {x1 = as.scidb(jdb$db, df, chunk_size=nrow(df))}
+  if (nrow(df) < 100000) {x1 = as.scidb(.ghEnv$db, df)} else {x1 = as.scidb(.ghEnv$db, df, chunk_size=nrow(df))}
 
   x = x1
   for (idnm in ids_int64_conv){
     x = convert_attr_double_to_int64(arr = x, attrname = idnm)
   }
-  x = jdb$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
-  x = jdb$db$apply(srcArray = x, newAttr = "updated", expression = "created")
-  x = jdb$db$redimension(srcArray = x, schemaArray = R(schema(scidb(jdb$db, arrayname))))
+  x = .ghEnv$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
+  x = .ghEnv$db$apply(srcArray = x, newAttr = "updated", expression = "created")
+  x = .ghEnv$db$redimension(srcArray = x, schemaArray = R(schema(scidb(.ghEnv$db, arrayname))))
 
   query = paste("insert(", x@name, ", ", arrayname, ")", sep="")
-  iquery(jdb$db, query)
+  iquery(.ghEnv$db, query)
 }
 
 #' @export
@@ -301,7 +301,7 @@ register_project = function(df,
   uniq = 'name'
   test_register_project(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = paste(namespace, ".", jdb$meta$arrProject, sep = "")
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrProject, sep = "")
     register_tuple_return_id(df, arrayname, uniq)
   } # end of if (!only_test)
 }
@@ -315,8 +315,8 @@ register_dataset = function(df,
 
   test_register_dataset(df, uniq, dataset_version, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    namespace = find_namespace(id = unique(df$project_id), entitynm=jdb$meta$arrProject)
-    arrayname = paste(namespace, ".", jdb$meta$arrDataset, sep = "")
+    namespace = find_namespace(id = unique(df$project_id), entitynm=.ghEnv$meta$arrProject)
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrDataset, sep = "")
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
   } # end of if (!only_test)
 }
@@ -324,7 +324,7 @@ register_dataset = function(df,
 find_namespace = function(id, entitynm, dflookup = NULL){
   if (is.null(dflookup)) { # if need to download the lookup array from scidb
     lookuparr = paste(entitynm, "_LOOKUP", sep = "")
-    dflookup = iquery(jdb$db, lookuparr, return = T)
+    dflookup = iquery(.ghEnv$db, lookuparr, return = T)
     # dflookup[, get_idname(entitynm)] = as.integer(dflookup[, get_idname(entitynm)])
   }
   dflookup[match(id, dflookup[, get_base_idname(entitynm)]), ]$namespace
@@ -335,7 +335,7 @@ register_ontology_term = function(df, only_test = FALSE){
   uniq = "term"
   test_register_ontology(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = jdb$meta$arrOntology
+    arrayname = .ghEnv$meta$arrOntology
     register_tuple_return_id(df, arrayname, uniq)
   } # end of if (!only_test)
 }
@@ -351,8 +351,8 @@ register_individual = function(df,
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
-    namespace = find_namespace(id = unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-    arrayname = paste(namespace, ".", jdb$meta$arrIndividuals, sep = "")
+    namespace = find_namespace(id = unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrIndividuals, sep = "")
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
   } # end of if (!only_test)
 }
@@ -362,7 +362,7 @@ register_featureset = function(df, only_test = FALSE){
   uniq = 'name'
   test_register_featureset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = jdb$meta$arrFeatureset
+    arrayname = .ghEnv$meta$arrFeatureset
     register_tuple_return_id(df,
                            arrayname, uniq)
   } # end of if (!only_test)
@@ -373,7 +373,7 @@ register_referenceset = function(df, only_test = FALSE){
   uniq = 'name'
   test_register_referenceset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = jdb$meta$arrReferenceset
+    arrayname = .ghEnv$meta$arrReferenceset
     register_tuple_return_id(df,
                              arrayname, uniq)
   } # end of if (!only_test)
@@ -382,10 +382,10 @@ register_referenceset = function(df, only_test = FALSE){
 #' @export
 register_genelist = function(df, only_test = FALSE){
   uniq = c('name', 'owner')
-  df$owner = iquery(jdb$db, query = "show_user()", return = TRUE)$name
+  df$owner = iquery(.ghEnv$db, query = "show_user()", return = TRUE)$name
   test_register_genelist(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = jdb$meta$arrGenelist
+    arrayname = .ghEnv$meta$arrGenelist
     register_tuple_return_id(df,
                              arrayname, uniq)
   } # end of if (!only_test)
@@ -396,7 +396,7 @@ register_genelist_gene = function(df, only_test = FALSE){
   uniq = c('genelist_id', 'gene_symbol')
   test_register_genelist_gene(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = jdb$meta$arrGenelist_gene
+    arrayname = .ghEnv$meta$arrGenelist_gene
     register_tuple_return_id(df,
                              arrayname, uniq)
   } # end of if (!only_test)
@@ -407,7 +407,7 @@ register_feature = function(df, only_test = FALSE){
   uniq = c("name", "featureset_id", "feature_type")
   test_register_feature(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = jdb$meta$arrFeature
+    arrayname = .ghEnv$meta$arrFeature
     register_tuple_return_id(df, arrayname, uniq)
   } # end of if (!only_test)
 }
@@ -423,8 +423,8 @@ register_biosample = function(df,
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-    arrayname = paste(namespace, ".", jdb$meta$arrBiosample, sep = "")
+    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrBiosample, sep = "")
     register_tuple_return_id(df, arrayname, uniq, dataset_version)
   } # end of if (!only_test)
 }
@@ -444,7 +444,7 @@ find_matches_with_db = function(df_for_upload, df_in_db, unique_fields) {
 }
 
 get_infoArray = function(arrayname){
-  infoArray = jdb$meta$L$array[[strip_namespace(arrayname)]]$infoArray
+  infoArray = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$infoArray
   if (is.null(infoArray)) infoArray = TRUE
   return(infoArray)
 }
@@ -499,8 +499,8 @@ register_tuple_return_id = function(df,
   idname = get_idname(arrayname)
   int64_fields = get_int64fields(arrayname)
 
-  mandatory_fields = names(jdb$meta$L$array[[strip_namespace(arrayname)]]$attributes)
-  namespaces_for_entity = jdb$meta$L$array[[strip_namespace(arrayname)]]$namespace
+  mandatory_fields = names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)
+  namespaces_for_entity = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$namespace
 
   df = prep_df_fields(df, mandatory_fields)
 
@@ -513,7 +513,7 @@ register_tuple_return_id = function(df,
   }
 
   # Find matches by set of unique fields provided by user
-  xx = iquery(jdb$db, paste("project(", arrayname, ", ", paste(uniq, collapse = ", "), ")", sep = ""), return = TRUE)
+  xx = iquery(.ghEnv$db, paste("project(", arrayname, ", ", paste(uniq, collapse = ", "), ")", sep = ""), return = TRUE)
   matching_entity_ids = find_matches_with_db(df_for_upload = df, df_in_db = xx, unique_fields = uniq)
   nonmatching_idx = which(is.na(matching_entity_ids))
   matching_idx = which(!is.na(matching_entity_ids))
@@ -576,7 +576,7 @@ update_lookup_array = function(id, arrayname){
   namespace = get_namespace(arrayname)
 
   lookuparr = paste(name, "_LOOKUP", sep = "")
-  a = scidb(jdb$db, lookuparr)
+  a = scidb(.ghEnv$db, lookuparr)
 
   qq = sprintf("build(<%s:int64, namespace: string>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
                get_base_idname(arrayname), length(id), paste(id, namespace, sep=",", collapse="), ("))
@@ -584,7 +584,7 @@ update_lookup_array = function(id, arrayname){
   qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
   cat("inserting id-s:", id, "into array", lookuparr, "\n")
   # cat("query:", qq, "\n")
-  iquery(jdb$db, qq)
+  iquery(.ghEnv$db, qq)
 }
 
 #' @export
@@ -596,8 +596,8 @@ register_variantset = function(df, dataset_version = NULL, only_test = FALSE){
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-    arrayname = paste(namespace, ".", jdb$meta$arrVariantset, sep = "")
+    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrVariantset, sep = "")
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
   } # end of if (!only_test)
 }
@@ -611,8 +611,8 @@ register_rnaquantificationset = function(df, dataset_version = NULL, only_test =
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-    arrayname = paste(namespace, ".", jdb$meta$arrRnaquantificationset, sep = "")
+    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrRnaquantificationset, sep = "")
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
   } # end of if (!only_test)
 }
@@ -626,8 +626,8 @@ register_fusionset = function(df, dataset_version = NULL, only_test = FALSE){
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-    arrayname = paste(namespace, ".", jdb$meta$arrFusionset, sep = "")
+    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrFusionset, sep = "")
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
   } # end of if (!only_test)
 }
@@ -641,8 +641,8 @@ register_copynumberset = function(df, dataset_version = NULL, only_test = FALSE)
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-    arrayname = paste(namespace, ".", jdb$meta$arrCopyNumberSet, sep = "")
+    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrCopyNumberSet, sep = "")
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
   } # end of if (!only_test)
 }
@@ -656,8 +656,8 @@ register_copynumbersubset = function(df, dataset_version = NULL, only_test = FAL
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-    arrayname = paste(namespace, ".", jdb$meta$arrCopyNumberSubSet, sep = "")
+    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrCopyNumberSubSet, sep = "")
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
   } # end of if (!only_test)
 }
@@ -672,26 +672,26 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE){
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=jdb$meta$arrDataset)
-    arrayname = paste(namespace, ".", jdb$meta$arrVariant, sep = "")
+    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
+    arrayname = paste(namespace, ".", .ghEnv$meta$arrVariant, sep = "")
 
     ids_int64_conv = c(get_idname(arrayname), get_int64fields(arrayname))
 
     ids_int64_conv = ids_int64_conv[(ids_int64_conv != "variant_id")]
     cat("Uploading\n")
-    if (nrow(df) < 100000) {x1 = as.scidb(jdb$db, df)} else {x1 = as.scidb(jdb$db, df, chunk_size=nrow(df))}
+    if (nrow(df) < 100000) {x1 = as.scidb(.ghEnv$db, df)} else {x1 = as.scidb(.ghEnv$db, df, chunk_size=nrow(df))}
 
     x = x1
     for (idnm in ids_int64_conv){
       x = convert_attr_double_to_int64(arr = x, attrname = idnm)
     }
-    x = jdb$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
-    x = jdb$db$apply(srcArray = x, newAttr = "updated", expression = "created")
-    x = jdb$db$redimension(srcArray = x, schemaArray = R(schema(scidb(jdb$db, arrayname))))
+    x = .ghEnv$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
+    x = .ghEnv$db$apply(srcArray = x, newAttr = "updated", expression = "created")
+    x = .ghEnv$db$redimension(srcArray = x, schemaArray = R(schema(scidb(.ghEnv$db, arrayname))))
 
     query = paste("insert(", x@name, ", ", arrayname, ")", sep="")
     cat("Redimension and insert\n")
-    iquery(jdb$db, query)
+    iquery(.ghEnv$db, query)
 
     df2 = df
     df2$dataset_id = NULL
@@ -723,7 +723,7 @@ register_info = function(df, idname, arrayname){
 register_feature_synonym = function(df, uniq, only_test = FALSE){
   test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = jdb$meta$arrFeatureSynonym
+    arrayname = .ghEnv$meta$arrFeatureSynonym
     register_tuple_return_id(df, arrayname, uniq)
   } # end of if (!only_test)
 }
@@ -743,10 +743,10 @@ search_variants = function(variantset, biosample = NULL, feature = NULL){
     if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of variantset and biosample must be same")
   }
   namespace = find_namespace(id = variantset_id,
-                             entitynm = jdb$meta$arrVariantset,
+                             entitynm = .ghEnv$meta$arrVariantset,
                              dflookup = get_variantset_lookup())
   cat("Found namespace: ", namespace, "\n")
-  arrayname = paste(namespace, jdb$meta$arrVariant, sep = ".")
+  arrayname = paste(namespace, .ghEnv$meta$arrVariant, sep = ".")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
   if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
 
@@ -818,10 +818,10 @@ search_fusion = function(fusionset, biosample = NULL, feature = NULL){
     if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of fusionset and biosample must be same")
   }
   namespace = find_namespace(id = fusionset_id,
-                             entitynm = jdb$meta$arrFusionset,
+                             entitynm = .ghEnv$meta$arrFusionset,
                              dflookup = get_fusionset_lookup())
   cat("Found namespace: ", namespace, "\n")
-  arrayname = paste(namespace, jdb$meta$arrFusion, sep = ".")
+  arrayname = paste(namespace, .ghEnv$meta$arrFusion, sep = ".")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
   if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
 
@@ -862,11 +862,11 @@ search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, fe
     }
   }
 
-  iquery(jdb$db, left_query, return = TRUE)
+  iquery(.ghEnv$db, left_query, return = TRUE)
 }
 
 get_mandatory_fields_for_register_entity = function(arrayname){
-  attrs = names(jdb$meta$L$array[[strip_namespace(arrayname)]]$attributes)
+  attrs = names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)
   attrs = attrs[!(attrs %in% c('created', 'updated'))]
   attrs
 }
@@ -891,9 +891,9 @@ join_ontology_terms = function(df){
 #' @export
 get_projects = function(project_id = NULL){
   if (!is.null(project_id)) { # Need to look up specific individual ID
-    select_from_1d_entity(entitynm = jdb$meta$arrProject, id = project_id)
+    select_from_1d_entity(entitynm = .ghEnv$meta$arrProject, id = project_id)
   } else { # Need to gather info across namespaces
-    merge_across_namespaces(arrayname = jdb$meta$arrProject)
+    merge_across_namespaces(arrayname = .ghEnv$meta$arrProject)
   }
 }
 
@@ -904,7 +904,7 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL){
     cat("trying to download lookup array once again, to see if there has been a recent update\n")
     namespace = update_lookup_and_find_namespace_again(entitynm, id)
   }
-  if (any(!(namespace %in% jdb$cache$nmsp_list))) stop("user probably does have acecss to id-s: ", paste(id[which(!(namespace %in% jdb$cache$nmsp_list))], collapse = ", "))
+  if (any(!(namespace %in% .ghEnv$cache$nmsp_list))) stop("user probably does have acecss to id-s: ", paste(id[which(!(namespace %in% .ghEnv$cache$nmsp_list))], collapse = ", "))
   names(id) = namespace
   df0 = data.frame()
   for (nmsp in unique(namespace)){
@@ -923,8 +923,8 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL){
 
 update_lookup_and_find_namespace_again = function(entitynm, id){
   cat("updating lookup array for entity:", entitynm, "\n")
-  jdb$cache$lookup[[entitynm]] = entity_lookup(entityName = entitynm, updateCache = TRUE)
-  namespace = find_namespace(id, entitynm, jdb$cache$lookup[[entitynm]])
+  .ghEnv$cache$lookup[[entitynm]] = entity_lookup(entityName = entitynm, updateCache = TRUE)
+  namespace = find_namespace(id, entitynm, .ghEnv$cache$lookup[[entitynm]])
   if (any(is.na(namespace))) stop(entitynm, " at id: ",
                                   paste(id[which(is.na(namespace))], collapse = ", "),
                                   " does not exist\n")
@@ -951,7 +951,7 @@ merge_across_namespaces = function(arrayname){
   # public namespace first
   qq = arrayname
   df = join_info_ontology_and_unpivot(qq, arrayname)
-  for (namespace in jdb$cache$nmsp_list){
+  for (namespace in .ghEnv$cache$nmsp_list){
     if (namespace != 'public'){
       cat("--DEBUG--: joining with data from namespace:", namespace, "\n")
       fullnm = paste(namespace, ".", arrayname, sep = "")
@@ -971,9 +971,9 @@ merge_across_namespaces = function(arrayname){
 get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions = TRUE){
   check_args_get(id = dataset_id, dataset_version, all_versions)
   if (!is.null(dataset_id)) { # Need to look up specific project ID
-    df = select_from_1d_entity(entitynm = jdb$meta$arrDataset, id = dataset_id, dataset_version = dataset_version)
+    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrDataset, id = dataset_id, dataset_version = dataset_version)
   } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = jdb$meta$arrDataset)
+    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrDataset)
   }
   if (!all_versions) return(latest_version(df)) else return(df)
 }
@@ -982,9 +982,9 @@ get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions 
 get_individuals = function(individual_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = individual_id, dataset_version, all_versions)
   if (!is.null(individual_id)) { # Need to look up specific individual ID
-    df = select_from_1d_entity(entitynm = jdb$meta$arrIndividuals, id = individual_id, dataset_version = dataset_version)
+    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrIndividuals, id = individual_id, dataset_version = dataset_version)
   } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = jdb$meta$arrIndividuals)
+    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrIndividuals)
   }
   if (!all_versions) return(latest_version(df)) else return(df)
 }
@@ -994,9 +994,9 @@ get_biosamples = function(biosample_id = NULL, dataset_version = NULL, all_versi
   check_args_get(id = biosample_id, dataset_version, all_versions)
 
   if (!is.null(biosample_id)) { # Need to look up specific biosample ID
-    df = select_from_1d_entity(entitynm = jdb$meta$arrBiosample, id = biosample_id, dataset_version = dataset_version)
+    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrBiosample, id = biosample_id, dataset_version = dataset_version)
   } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = jdb$meta$arrBiosample)
+    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrBiosample)
   }
   if (!all_versions) return(latest_version(df)) else return(df)
 }
@@ -1010,9 +1010,9 @@ check_args_get = function(id, dataset_version, all_versions){
 get_rnaquantificationsets = function(rnaquantificationset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = rnaquantificationset_id, dataset_version, all_versions)
   if (!is.null(rnaquantificationset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = jdb$meta$arrRnaquantificationset, id = rnaquantificationset_id, dataset_version = dataset_version)
+    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrRnaquantificationset, id = rnaquantificationset_id, dataset_version = dataset_version)
   } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = jdb$meta$arrRnaquantificationset)
+    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrRnaquantificationset)
   }
   if (!all_versions) return(latest_version(df)) else return(df)
 }
@@ -1021,9 +1021,9 @@ get_rnaquantificationsets = function(rnaquantificationset_id = NULL, dataset_ver
 get_variantsets = function(variantset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = variantset_id, dataset_version, all_versions)
   if (!is.null(variantset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = jdb$meta$arrVariantset, id = variantset_id, dataset_version = dataset_version)
+    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrVariantset, id = variantset_id, dataset_version = dataset_version)
   } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = jdb$meta$arrVariantset)
+    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrVariantset)
   }
   if (!all_versions) return(latest_version(df)) else return(df)
 }
@@ -1032,9 +1032,9 @@ get_variantsets = function(variantset_id = NULL, dataset_version = NULL, all_ver
 get_fusionset = function(fusionset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = fusionset_id, dataset_version, all_versions)
   if (!is.null(fusionset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = jdb$meta$arrFusionset, id = fusionset_id, dataset_version = dataset_version)
+    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrFusionset, id = fusionset_id, dataset_version = dataset_version)
   } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = jdb$meta$arrFusionset)
+    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrFusionset)
   }
   if (!all_versions) return(latest_version(df)) else return(df)
 }
@@ -1043,9 +1043,9 @@ get_fusionset = function(fusionset_id = NULL, dataset_version = NULL, all_versio
 get_copynumberset = function(copynumberset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = copynumberset_id, dataset_version, all_versions)
   if (!is.null(copynumberset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = jdb$meta$arrCopyNumberSet, id = copynumberset_id, dataset_version = dataset_version)
+    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrCopyNumberSet, id = copynumberset_id, dataset_version = dataset_version)
   } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = jdb$meta$arrCopyNumberSet)
+    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrCopyNumberSet)
   }
   if (!all_versions) return(latest_version(df)) else return(df)
 }
@@ -1054,9 +1054,9 @@ get_copynumberset = function(copynumberset_id = NULL, dataset_version = NULL, al
 get_copynumbersubset = function(copynumbersubset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = copynumbersubset_id, dataset_version, all_versions)
   if (!is.null(copynumbersubset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = jdb$meta$arrCopyNumberSubSet, id = copynumbersubset_id, dataset_version = dataset_version)
+    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrCopyNumberSubSet, id = copynumbersubset_id, dataset_version = dataset_version)
   } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = jdb$meta$arrCopyNumberSubSet)
+    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrCopyNumberSubSet)
   }
   if (!all_versions) return(latest_version(df)) else return(df)
 }
@@ -1064,7 +1064,7 @@ get_copynumbersubset = function(copynumbersubset_id = NULL, dataset_version = NU
 
 #' @export
 get_featuresets= function(featureset_id = NULL){
-  get_unversioned_public_metadata_entity(arrayname = jdb$meta$arrFeatureset, 
+  get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrFeatureset, 
                                       id = featureset_id)
 }
 
@@ -1080,19 +1080,19 @@ get_unversioned_public_metadata_entity = function(arrayname, id, infoArray = TRU
   if (infoArray) {
     join_info_ontology_and_unpivot(qq, arrayname)
   } else {
-    iquery(jdb$db, qq, return = TRUE)
+    iquery(.ghEnv$db, qq, return = TRUE)
   }
 }
 
 #' @export
 get_referenceset = function(){
-  get_unversioned_public_metadata_entity(arrayname = jdb$meta$arrReferenceset, 
+  get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrReferenceset, 
                                       id = featureset_id)
 }
 
 #' @export
 get_genelist = function(genelist_id = NULL){
-  get_unversioned_public_metadata_entity(arrayname = jdb$meta$arrGenelist, 
+  get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrGenelist, 
                                       id = genelist_id,
                                       infoArray = FALSE)
 }
@@ -1100,8 +1100,8 @@ get_genelist = function(genelist_id = NULL){
 
 #' @export
 get_features = function(feature_id = NULL, fromCache = TRUE){
-  if (!fromCache | is.null(jdb$cache$feature_ref)){ # work from SciDB directly
-    arrayname = jdb$meta$arrFeature
+  if (!fromCache | is.null(.ghEnv$cache$feature_ref)){ # work from SciDB directly
+    arrayname = .ghEnv$meta$arrFeature
     idname = get_idname(arrayname)
 
     qq = arrayname
@@ -1109,12 +1109,12 @@ get_features = function(feature_id = NULL, fromCache = TRUE){
       qq = form_selector_query_1d_array(arrayname, idname, feature_id)
       join_info_ontology_and_unpivot(qq, arrayname)
     } else { # FASTER path when all data has to be downloaded
-      ftr = iquery(jdb$db, qq, return = T)
-      ftr_info = iquery(jdb$db, paste(qq, "_INFO", sep=""), return = T)
+      ftr = iquery(.ghEnv$db, qq, return = T)
+      ftr_info = iquery(.ghEnv$db, paste(qq, "_INFO", sep=""), return = T)
       ftr = merge(ftr, ftr_info, by = idname, all.x = T)
       allfeatures = unpivot_key_value_pairs(ftr, arrayname, key_col = "key", val = "val")
-      if (is.null(jdb$cache$feature_ref)) { # the first time (when feature cache has never been filled)
-        jdb$cache$feature_ref = allfeatures
+      if (is.null(.ghEnv$cache$feature_ref)) { # the first time (when feature cache has never been filled)
+        .ghEnv$cache$feature_ref = allfeatures
       }
       allfeatures
     }
@@ -1151,7 +1151,7 @@ form_selector_query_2d_array = function(arrayname, dim1, dim1_selected_ids, dim2
   {
     # Formulate the cross_join query
     idname = get_base_idname(fullnm)
-    diminfo = jdb$meta$L$array[[strip_namespace(arrayname)]]$dims
+    diminfo = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims
     upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
                      idname, length(dim1_selected_ids), paste(dim1_selected_ids, sep=",", collapse="), ("))
     apply_dim2 = paste("apply(", upload, ", ", dim2, ", ", dim2_selected_ids, ")", sep = "")
@@ -1164,7 +1164,7 @@ form_selector_query_2d_array = function(arrayname, dim1, dim1_selected_ids, dim2
                  "A.", idname, ", " ,
                  "B.", idname,
                  "),",
-                 paste(names(jdb$meta$L$array[[strip_namespace(arrayname)]]$attributes), collapse = ", "),
+                 paste(names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes), collapse = ", "),
                  ")",
                  sep = "")
   }
@@ -1189,7 +1189,7 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
   else # mostly non-contiguous tickers, use `cross_join`
   {
     # Formulate the cross_join query
-    diminfo = jdb$meta$L$array[[strip_namespace(arrayname)]]$dims
+    diminfo = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims
     if (class(diminfo) == "character") chunksize = 1000000 else stop("code not covered")
     upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
                      idname, length(selected_ids), paste(selected_ids, sep=",", collapse="), ("))
@@ -1201,7 +1201,7 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
                  "A.", idname, ", " ,
                  "B.", idname,
                  "),",
-                 paste(names(jdb$meta$L$array[[strip_namespace(arrayname)]]$attributes), collapse = ", "),
+                 paste(names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes), collapse = ", "),
                  ")",
                  sep = "")
   }
@@ -1225,7 +1225,7 @@ search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NU
 
 #' @export
 search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_id = NULL){
-  arrayname = jdb$meta$arrFeature
+  arrayname = .ghEnv$meta$arrFeature
 
   qq = arrayname
   if (!is.null(featureset_id)){
@@ -1255,30 +1255,30 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
 
 #' @export
 search_genelist_gene = function(genelist_id){
-  arrayname = jdb$meta$arrGenelist_gene
+  arrayname = .ghEnv$meta$arrGenelist_gene
   
   qq = arrayname
   if (length(genelist_id)==1){
       qq = paste("filter(", qq, ", genelist_id = ", genelist_id, ")", sep="")
   } else {stop("Not covered yet")}
 
-  iquery(jdb$db, qq, return = TRUE)
+  iquery(.ghEnv$db, qq, return = TRUE)
 }
 
 #' @export
 search_datasets = function(project_id = NULL, dataset_version = NULL, all_versions = TRUE){
   check_args_search(dataset_version, all_versions)
-  arrayname = jdb$meta$arrDataset
+  arrayname = .ghEnv$meta$arrDataset
 
   qq = arrayname
   if (!is.null(project_id)) {
-    namespace = find_namespace(id = project_id, entitynm = jdb$meta$arrProject, dflookup = get_project_lookup())
+    namespace = find_namespace(id = project_id, entitynm = .ghEnv$meta$arrProject, dflookup = get_project_lookup())
     if (is.null(namespace)) namespace = NA # to handle the case of no entry in lookup array at all
     if (is.na(namespace)) {
       cat("trying to download project lookup array once again, to see if there has been a recent update")
-      namespace = find_namespace(id = project_id, entitynm = jdb$meta$arrProject, dflookup = get_project_lookup(updateCache = TRUE))
+      namespace = find_namespace(id = project_id, entitynm = .ghEnv$meta$arrProject, dflookup = get_project_lookup(updateCache = TRUE))
     }
-    if (!(namespace %in% jdb$cache$nmsp_list)) {stop("user does not have permission to access data for project_id: ", project_id)}
+    if (!(namespace %in% .ghEnv$cache$nmsp_list)) {stop("user does not have permission to access data for project_id: ", project_id)}
     fullnm = paste(namespace, ".", qq, sep = "")
     if (is.null(dataset_version)) {
       qq = paste("filter(", fullnm, ", ", "project_id = ", project_id, ")", sep="")
@@ -1303,7 +1303,7 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
 #' @export
 search_individuals = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
-  i = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrIndividuals, dataset_id, dataset_version = dataset_version)
+  i = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrIndividuals, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(i)) else return(i)
 }
 
@@ -1322,13 +1322,13 @@ latest_version = function(df){
 find_nmsp_filter_on_dataset_id_and_version = function(arrayname, dataset_id, dataset_version){
   qq = arrayname
   if (!is.null(dataset_id)) {
-    namespace = find_namespace(id = dataset_id, entitynm = jdb$meta$arrDataset, dflookup = get_dataset_lookup())
+    namespace = find_namespace(id = dataset_id, entitynm = .ghEnv$meta$arrDataset, dflookup = get_dataset_lookup())
     if (is.null(namespace)) namespace = NA # to handle the case of no entry in lookup array at all
     if (any(is.na(namespace))) {
       cat("trying to download lookup array once again, to see if there has been a recent update")
-      namespace = update_lookup_and_find_namespace_again(entitynm = jdb$meta$arrDataset, id = dataset_id)
+      namespace = update_lookup_and_find_namespace_again(entitynm = .ghEnv$meta$arrDataset, id = dataset_id)
     }
-    if (!(namespace %in% jdb$cache$nmsp_list)) {stop("user does not have permission to access data for dataset_id: ", dataset_id)}
+    if (!(namespace %in% .ghEnv$cache$nmsp_list)) {stop("user does not have permission to access data for dataset_id: ", dataset_id)}
     fullnm = paste(namespace, ".", qq, sep = "")
     if (is.null(dataset_version)) {
       qq = paste("filter(", fullnm, ", ", "dataset_id = ", dataset_id, ")", sep="")
@@ -1352,7 +1352,7 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname, dataset_id, dat
 #' @export
 search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrBiosample, dataset_id, dataset_version = dataset_version)
+  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrBiosample, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
@@ -1380,35 +1380,35 @@ search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
 #' @export
 search_rnaquantificationset = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrRnaquantificationset, dataset_id, dataset_version = dataset_version)
+  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrRnaquantificationset, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
 #' @export
 search_variantsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrVariantset, dataset_id, dataset_version = dataset_version)
+  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrVariantset, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
 #' @export
 search_fusionsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrFusionset, dataset_id, dataset_version = dataset_version)
+  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrFusionset, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
 #' @export
 search_copynumbersets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrCopyNumberSet, dataset_id, dataset_version = dataset_version)
+  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrCopyNumberSet, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
 #' @export
 search_copynumbersubsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = jdb$meta$arrCopyNumberSubSet, dataset_id, dataset_version = dataset_version)
+  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrCopyNumberSubSet, dataset_id, dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
@@ -1429,9 +1429,9 @@ search_rnaquantification = function(rnaquantificationset = NULL,
     stopifnot(unique(biosample$dataset_version)==dataset_version)
   }
   namespace = find_namespace(id = rnaquantificationset_id,
-                             entitynm = jdb$meta$arrRnaquantificationset,
+                             entitynm = .ghEnv$meta$arrRnaquantificationset,
                              dflookup = get_rnaquantificationset_lookup())
-  arrayname = paste(namespace, jdb$meta$arrRnaquantification, sep = ".")
+  arrayname = paste(namespace, .ghEnv$meta$arrRnaquantification, sep = ".")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
   if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
 
@@ -1486,7 +1486,7 @@ search_rnaquantification_scidb = function(arrayname,
                                           biosample_id,
                                           feature_id,
                                           dataset_version){
-  tt = scidb(jdb$db, arrayname)
+  tt = scidb(.ghEnv$db, arrayname)
 
   if (is.null(dataset_version)) dataset_version = "NULL"
   if (length(dataset_version) != 1) {stop("cannot specify one dataset_version at a time")}
@@ -1505,7 +1505,7 @@ search_rnaquantification_scidb = function(arrayname,
                  ", ", biosample_id,
                  ", ", feature_id,
                  ")", sep="")
-      res = iquery(jdb$db, qq, return = T)
+      res = iquery(.ghEnv$db, qq, return = T)
     }
     else {
       selector = merge(
@@ -1517,7 +1517,7 @@ search_rnaquantification_scidb = function(arrayname,
       if (TRUE){ # Return data using join
         selector$flag = TRUE
         # t1 = proc.time()
-        xx = as.scidb(jdb$db, selector)
+        xx = as.scidb(.ghEnv$db, selector)
         # print(proc.time()-t1)
         qq2 = paste("apply(", xx@name, ",
                     dataset_version_, int64(dataset_version),
@@ -1536,7 +1536,7 @@ search_rnaquantification_scidb = function(arrayname,
                     feature_id:int64
                     >
                     [tuple_no,dst_instance_id,src_instance_id] )")
-        qq2 = paste("redimension(", qq2, ", <flag:bool>[", yaml_to_dim_str(jdb$meta$L$array[[jdb$meta$arrRnaquantification]]$dims), "])")
+        qq2 = paste("redimension(", qq2, ", <flag:bool>[", yaml_to_dim_str(.ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims), "])")
         # head(scidb(qq2))
         # dimschema = gsub("<.*>([A-Z]*)", "\\1", schema(tt))
         # newschema = paste("<flag:bool>", dimschema)
@@ -1546,7 +1546,7 @@ search_rnaquantification_scidb = function(arrayname,
                    qq, ",",
                    qq2, ")")
         qq = paste("project(", qq, ", expression_count)")
-        res = iquery(jdb$db, qq, return = T)
+        res = iquery(.ghEnv$db, qq, return = T)
       } else { # Return data using cross_between_
         stop("Code needs to be added here to support inclusion of `dataset_version` in expression matrix schema")
         df = selector[order(selector$rnaquantificationset_id, selector$biosample_id, selector$feature_id), ]
@@ -1558,7 +1558,7 @@ search_rnaquantification_scidb = function(arrayname,
           sqq = paste(sqq, si, sep=ifelse(is.null(sqq), "", ", "))
         }
         qq = paste("cross_between_(", qq, ", ", sqq, ")")
-        res = iquery(jdb$db, qq, return = T)
+        res = iquery(.ghEnv$db, qq, return = T)
       }
     }
   } else if (!is.null(rnaquantificationset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected rqs and bs, not f
@@ -1583,7 +1583,7 @@ search_rnaquantification_scidb = function(arrayname,
     } else {
       stop("code for multiple rnaquantificationset_id to be added. Alternatively, call the search function by individual rnaquantificationset_id.")
     }
-    res = iquery(jdb$db, qq, return = TRUE)
+    res = iquery(.ghEnv$db, qq, return = TRUE)
   } else if (is.null(rnaquantificationset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected bs only
     stop("Only biosample is selected. Downloaded data could be quite large. Consider downselecting by RNAQuantificationSet_id or feature_id. ")
   }
@@ -1600,7 +1600,7 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
   colnames(selector) = selected_names_all
   selector$flag = TRUE
 
-  xx = as.scidb(jdb$db, selector)
+  xx = as.scidb(.ghEnv$db, selector)
   xx1 = xx
   for (attr in selected_names_all){
     xx1 = convert_attr_double_to_int64(arr = xx1, attrname = attr)
@@ -1618,10 +1618,10 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
   # selected_names
   # selectpos
   # fn = function(i) {paste(dims0[i], "=", diminfo$start[i], ":", diminfo$end[i], ",", cs[i], ",", ovlp[i], sep = "" )}
-  fn = function(dimname) {yaml_to_dim_str(jdb$meta$L$array[[jdb$meta$arrRnaquantification]]$dims[dimname])}
+  fn = function(dimname) {yaml_to_dim_str(.ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims[dimname])}
   newdim = paste(sapply(selected_names_all, FUN = fn), collapse = ",")
   newsch = paste("<flag:bool>[", newdim, "]", sep="")
-  xx1 = jdb$db$redimension(xx1, R(newsch))
+  xx1 = .ghEnv$db$redimension(xx1, R(newsch))
 
   subq = paste(sapply(selected_names_all, FUN=function(x) {paste(paste("A.", x, sep=""), paste("B.", x, sep=""), sep=", ")}), collapse=", ")
   qq = paste("cross_join(",
@@ -1629,26 +1629,26 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
              xx1@name, " as B,", subq, ")", sep="")
   qq = paste("project(", qq, ", ", schema(tt, "attributes")$name, ")")
 
-  iquery(jdb$db, qq, return = T)
+  iquery(.ghEnv$db, qq, return = T)
 }
 
 #' @export
 get_rnaquantification_counts = function(rnaquantificationset_id = NULL){
   if (is.null(rnaquantificationset_id)){
-    x = scidb(jdb$db, jdb$meta$arrRnaquantification)
-    c = as.R(jdb$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
-    for (nmsp in jdb$cache$nmsp_list){
+    x = scidb(.ghEnv$db, .ghEnv$meta$arrRnaquantification)
+    c = as.R(.ghEnv$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
+    for (nmsp in .ghEnv$cache$nmsp_list){
       if (nmsp != 'public'){
-        x = scidb(jdb$db, paste(nmsp, jdb$meta$arrRnaquantification, sep = "."))
-        c1 = as.R(jdb$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
+        x = scidb(.ghEnv$db, paste(nmsp, .ghEnv$meta$arrRnaquantification, sep = "."))
+        c1 = as.R(.ghEnv$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
         c = rbind(c, c1)
       }
     }
   } else { #specific rnaquantificationset_id is specified
-    nmsp = find_namespace(id = rnaquantificationset_id, entitynm = jdb$meta$arrRnaquantificationset, dflookup = get_rnaquantificationset_lookup())
-    qq = paste("between(", nmsp, ".", jdb$meta$arrRnaquantification, ", null, ", rnaquantificationset_id, ", null, null, null, ", rnaquantificationset_id, ", null, null)", sep = "" )
+    nmsp = find_namespace(id = rnaquantificationset_id, entitynm = .ghEnv$meta$arrRnaquantificationset, dflookup = get_rnaquantificationset_lookup())
+    qq = paste("between(", nmsp, ".", .ghEnv$meta$arrRnaquantification, ", null, ", rnaquantificationset_id, ", null, null, null, ", rnaquantificationset_id, ", null, null)", sep = "" )
     qq = paste("aggregate(", qq, ", count(*), rnaquantificationset_id, dataset_version)")
-    c = iquery(jdb$db, qq, return = T)
+    c = iquery(.ghEnv$db, qq, return = T)
   }
   c = c[order(c$rnaquantificationset_id, c$dataset_version), ]
   return(c)
@@ -1667,7 +1667,7 @@ join_info_ontology_and_unpivot = function(qq, arrayname, namespace = 'public'){
   } else {
     qq1 = paste("equi_join(", qq, ", ", namespace, ".", arrayname, "_INFO, 'left_names=", paste(idname, collapse = ","), "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')", sep = "")
   }
-  x2 = iquery(jdb$db, qq1, return = TRUE)
+  x2 = iquery(.ghEnv$db, qq1, return = TRUE)
   # # TODO: BEGIN: Remove this when bit64 integration is removed from SciDBR package
   # int64_cols = which(sapply(x2, class) == "integer64")
   # x2[, int64_cols] = sapply(int64_cols, FUN=function(i){as.integer(x2[, i])})
@@ -1681,17 +1681,17 @@ join_info_ontology_and_unpivot = function(qq, arrayname, namespace = 'public'){
     if (exists('debug_trace')) {cat("unpivot:\n"); print( proc.time()-t1 )}
   } else {
     if (nrow(x2) > 0) {
-      x3 = x2[, c(jdb$meta$L$array[[strip_namespace(arrayname)]]$dims,
-                  names(jdb$meta$L$array[[strip_namespace(arrayname)]]$attributes))]
+      x3 = x2[, c(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims,
+                  names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes))]
     } else {
-      x3 = x2[, names(jdb$meta$L$array[[strip_namespace(arrayname)]]$attributes)]
+      x3 = x2[, names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)]
     }
   }
 
   # Join ontology terms
-  #   if (is.null(jdb$cache$dfOntology)) { # when ontology has not been downloaded
+  #   if (is.null(.ghEnv$cache$dfOntology)) { # when ontology has not been downloaded
   #     if (exists('debug_trace')) {t1 = proc.time()}
-  #     jdb$cache$dfOntology = iquery(jdb$db, jdb$meta$arrOntology, return = TRUE)
+  #     .ghEnv$cache$dfOntology = iquery(.ghEnv$db, .ghEnv$meta$arrOntology, return = TRUE)
   #     if (exists('debug_trace')) {cat("download arrOntology:\n"); print( proc.time()-t1 )}
   #   }
   join_ontology_terms(df = x3)
@@ -1710,7 +1710,7 @@ unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
   x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
   # tail(x2t)
 
-  x4 = df[, c(get_idname(arrayname), names(jdb$meta$L$array[[strip_namespace(arrayname)]]$attributes))]
+  x4 = df[, c(get_idname(arrayname), names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes))]
   x4 = x4[!duplicated(x4[, idname]), ]
 
   if (is.data.frame(x2t)) x5 = merge(x4, x2t, by = idname) else x5 = x4
@@ -1752,25 +1752,25 @@ register_expression_dataframe = function(df1, dataset_version){
   
   
   namespace_to_insert = unique(find_namespace(id = unique(df_expr$rnaquantificationset_id), 
-                                              entitynm = jdb$meta$arrRnaquantificationset))
+                                              entitynm = .ghEnv$meta$arrRnaquantificationset))
   if (length(namespace_to_insert) != 1) stop("Error: Trying to insert expression data into multiple namespaces")
   
-  adf_expr0 = as.scidb(jdb$db, df_expr, chunk_size=nrow(df_expr), name = "temp_df")
+  adf_expr0 = as.scidb(.ghEnv$db, df_expr, chunk_size=nrow(df_expr), name = "temp_df")
   
   adf_expr = convert_attr_double_to_int64(arr = adf_expr0, attrname = "rnaquantificationset_id")
   adf_expr = convert_attr_double_to_int64(arr = adf_expr, attrname = "biosample_id")
   adf_expr = convert_attr_double_to_int64(arr = adf_expr, attrname = "feature_id")
-  adf_expr = scidb(jdb$db, paste("apply(", 
+  adf_expr = scidb(.ghEnv$db, paste("apply(", 
                                  adf_expr@name, 
                                  ", expression_count, float(expression),
                                           dataset_version, ", dataset_version, ")", 
                                  sep = ""))
   
-  subarr = jdb$db$redimension(adf_expr, R(schema(scidb(jdb$db, jdb$meta$arrRnaquantification))))
+  subarr = .ghEnv$db$redimension(adf_expr, R(schema(scidb(.ghEnv$db, .ghEnv$meta$arrRnaquantification))))
   
-  fullnm = paste(namespace_to_insert, jdb$meta$arrRnaquantification, sep = ".")
+  fullnm = paste(namespace_to_insert, .ghEnv$meta$arrRnaquantification, sep = ".")
   cat("inserting data for", nrow(df_expr), "expression values into", fullnm, "array \n")
-  iquery(jdb$db, paste("insert(", subarr@name, ", ", fullnm, ")"))
+  iquery(.ghEnv$db, paste("insert(", subarr@name, ", ", fullnm, ")"))
 }
 
 #' @export
@@ -1798,10 +1798,10 @@ register_expression_matrix = function(filepath,
     dataset_id = rqset$dataset_id
     cat("Specified rnaquantificationset_id belongs to dataset:", dataset_id, "\n")
 
-    arr_feature = jdb$meta$arrFeature
-    namespace = find_namespace(id = rnaquantificationset_id, entitynm = jdb$meta$arrRnaquantificationset, dflookup = get_rnaquantificationset_lookup())
-    arr_biosample = paste(namespace, jdb$meta$arrBiosample, sep = ".")
-    arrayname = paste(namespace, jdb$meta$arrRnaquantification, sep = ".")
+    arr_feature = .ghEnv$meta$arrFeature
+    namespace = find_namespace(id = rnaquantificationset_id, entitynm = .ghEnv$meta$arrRnaquantificationset, dflookup = get_rnaquantificationset_lookup())
+    arr_biosample = paste(namespace, .ghEnv$meta$arrBiosample, sep = ".")
+    arrayname = paste(namespace, .ghEnv$meta$arrRnaquantification, sep = ".")
     cat("======\n")
     cat(paste("Working on expression file:\n\t", filepath, "\n"))
     x = read.delim(file = filepath, nrows = 10)
@@ -1826,48 +1826,48 @@ register_expression_matrix = function(filepath,
     query = paste("aio_input('", filepath, "',
                   'num_attributes=" , length(colnames(x)), "',
                   'split_on_dimension=1')")
-    t1 = scidb(jdb$db, query)
-    t1 = jdb$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, NULL", highCoord = R(paste("NULL, NULL, NULL,", length(colnames(x))-1)))
-    t1 = store(jdb$db, t1, temp=TRUE)
+    t1 = scidb(.ghEnv$db, query)
+    t1 = .ghEnv$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, NULL", highCoord = R(paste("NULL, NULL, NULL,", length(colnames(x))-1)))
+    t1 = store(.ghEnv$db, t1, temp=TRUE)
 
     # ================================
     ## Step 1. Join the SciDB feature ID
 
     # first form the list of features in current table
     # featurelist_curr = subset(t1, attribute_no == 0)
-    featurelist_curr = jdb$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, 0", highCoord = "NULL, NULL, NULL, 0")
+    featurelist_curr = .ghEnv$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, 0", highCoord = "NULL, NULL, NULL, 0")
     cat(paste("number of feature_id-s in the current expression count table:", scidb_array_count(featurelist_curr)-1, "\n"))
-    FEATUREKEY = scidb(jdb$db, arr_feature)
+    FEATUREKEY = scidb(.ghEnv$db, arr_feature)
     cat(paste("number of feature_id-s in the SciDB feature ID list:", scidb_array_count(FEATUREKEY), "\n"))
 
-    sel_features = jdb$db$filter(FEATUREKEY, R(paste("feature_type='", feature_type, "' AND featureset_id = ", featureset_id, sep = "")))
+    sel_features = .ghEnv$db$filter(FEATUREKEY, R(paste("feature_type='", feature_type, "' AND featureset_id = ", featureset_id, sep = "")))
     cat(paste("number of feature_id-s in the SciDB feature ID list for transcript type: '", feature_type,
               "' and featureset_id: '", featureset_id, "' is:", scidb_array_count(sel_features), "\n", sep = ""))
 
-    ff = jdb$db$project(srcArray = sel_features, selectedAttr = "name")
+    ff = .ghEnv$db$project(srcArray = sel_features, selectedAttr = "name")
 
-    joinFeatureName = scidb(jdb$db,
+    joinFeatureName = scidb(.ghEnv$db,
                             paste("equi_join(",
                                   ff@name, ", ",
                                   featurelist_curr@name, ", ",
                                   "'left_names=name', 'right_names=a', 'keep_dimensions=1')")
     )
-    joinFeatureName = jdb$db$redimension(srcArray = joinFeatureName,
+    joinFeatureName = .ghEnv$db$redimension(srcArray = joinFeatureName,
                                          "<feature_id :int64>
                                          [tuple_no=0:*,10000000,0,dst_instance_id=0:63,1,0,src_instance_id=0:63,1,0]")
 
-    joinBack1 = scidb(jdb$db,
+    joinBack1 = scidb(.ghEnv$db,
                       paste("cross_join(",
                             t1@name, " as X, ",
                             joinFeatureName@name, " as Y, ",
                             "X.tuple_no, Y.tuple_no, X.dst_instance_id, Y.dst_instance_id, X.src_instance_id, Y.src_instance_id)", sep = ""))
     joinBack1@name
 
-    joinBack1 = store(jdb$db, joinBack1, temp=TRUE)
+    joinBack1 = store(.ghEnv$db, joinBack1, temp=TRUE)
 
     # Verify with
     # head(subset(joinBack1, tuple_no == 0))
-    scidb_array_head(jdb$db$between(srcArray = joinBack1, lowCoord = "0, NULL, NULL, NULL", highCoord = "0, NULL, NULL, NULL"))
+    scidb_array_head(.ghEnv$db$between(srcArray = joinBack1, lowCoord = "0, NULL, NULL, NULL", highCoord = "0, NULL, NULL, NULL"))
 
     cat("Number of features in study that matched with SciDB ID:\n")
     countFeatures = scidb_array_count(joinBack1) / ncol(x)
@@ -1878,15 +1878,15 @@ register_expression_matrix = function(filepath,
     ## Step 2. Join the SciDB patient ID
     # first form the list of patients in current table
 
-    patientlist_curr = jdb$db$between(t1, lowCoord = "0, 0, NULL, 1", highCoord = "0, 0, NULL, NULL")
+    patientlist_curr = .ghEnv$db$between(t1, lowCoord = "0, 0, NULL, 1", highCoord = "0, 0, NULL, NULL")
     # Check that the "public_id"_"spectrum_id" is unique enough, otherwise we have to consider the suffix "BM", "PB"
     stopifnot(length(unique(as.R(patientlist_curr)$a)) == (ncol(x)-1))
 
     scidb_array_head(patientlist_curr)
 
     cat(paste("number of biosamples in the expression count table:", scidb_array_count(patientlist_curr), "\n"))
-    PATIENTKEY = scidb(jdb$db, arr_biosample)
-    PATIENTKEY = jdb$db$filter(PATIENTKEY, R(paste('dataset_id=', dataset_id)))
+    PATIENTKEY = scidb(.ghEnv$db, arr_biosample)
+    PATIENTKEY = .ghEnv$db$filter(PATIENTKEY, R(paste('dataset_id=', dataset_id)))
     cat(paste("number of biosamples registered in database in selected namespace:" , scidb_array_count(PATIENTKEY), "\n"))
 
 
@@ -1895,7 +1895,7 @@ register_expression_matrix = function(filepath,
                patientlist_curr@name, ", ",
                "project(filter(", PATIENTKEY@name, ", dataset_version = ", dataset_version, "), name), ",
                "'left_names=a', 'right_names=name', 'keep_dimensions=1')")
-    joinPatientName = scidb(jdb$db, qq)
+    joinPatientName = scidb(.ghEnv$db, qq)
 
     cat("number of matching public_id-s between expression-count table and PER_PATIENT csv file:\n")
     countMatches = scidb_array_count(joinPatientName)
@@ -1904,7 +1904,7 @@ register_expression_matrix = function(filepath,
 
 
     # Verify
-    x1 = as.R(jdb$db$project(PATIENTKEY, "name"))
+    x1 = as.R(.ghEnv$db$project(PATIENTKEY, "name"))
     x2 = as.R(patientlist_curr)
 
     stopifnot(countMatches == sum(x2$a %in% x1$name))
@@ -1913,21 +1913,21 @@ register_expression_matrix = function(filepath,
     # tt = x2$public_id %in% x1$PUBLIC_ID
     # print(x2$public_id[which(!tt)])
 
-    joinPatientName = jdb$db$redimension(joinPatientName,
+    joinPatientName = .ghEnv$db$redimension(joinPatientName,
                                          R(paste("<biosample_id:int64>
                                                  [attribute_no=0:", countMatches+1, ",",countMatches+2, ",0]", sep = "")))
 
-    joinBack2 = scidb(jdb$db,
+    joinBack2 = scidb(.ghEnv$db,
                       paste("cross_join(",
                             joinBack1@name, " as X, ",
                             joinPatientName@name, "as Y, ",
                             "X.attribute_no, Y.attribute_no)", sep = ""))
     joinBack2@name
 
-    joinBack2 = store(jdb$db, joinBack2, temp=TRUE)
+    joinBack2 = store(.ghEnv$db, joinBack2, temp=TRUE)
 
     # Verify with
-    scidb_array_head(jdb$db$filter(joinBack2, "tuple_no = 0"))
+    scidb_array_head(.ghEnv$db$filter(joinBack2, "tuple_no = 0"))
 
     cat("Number of expression level values in current array:\n")
     countExpressions = scidb_array_count(joinBack2)
@@ -1936,7 +1936,7 @@ register_expression_matrix = function(filepath,
 
     ####################
     # Redimension the expression level array
-    gct_table = scidb(jdb$db,
+    gct_table = scidb(.ghEnv$db,
                       paste("apply(",
                             joinBack2@name, ", ",
                             "expression_count, dcast(a, float(null)), ",
@@ -1946,12 +1946,12 @@ register_expression_matrix = function(filepath,
     )
 
     # Need to insert the expression matrix table into one big array
-    insertable = jdb$db$redimension(gct_table,
-                                    R(scidb::schema(scidb(jdb$db, arrayname)))) # TODO: would be good to not have this resolution clash
+    insertable = .ghEnv$db$redimension(gct_table,
+                                    R(scidb::schema(scidb(.ghEnv$db, arrayname)))) # TODO: would be good to not have this resolution clash
 
     if (scidb_exists_array(arrayname)) {
       cat(paste("Inserting expression matrix data into", arrayname, "at dataset_version", dataset_version, "\n"))
-      iquery(jdb$db, paste("insert(", insertable@name, ", ", arrayname, ")"))
+      iquery(.ghEnv$db, paste("insert(", insertable@name, ", ", arrayname, ")"))
     } else {
       stop("expression array does not exist")
     }
@@ -1979,8 +1979,8 @@ register_copynumber_seg = function(copynumberset, only_test = FALSE){
     xx$copynumberset_id = copynumberset$copynumberset_id
     xx$dataset_version = copynumberset$dataset_version
 
-    arrayname = paste(find_namespace(id = copynumberset$copynumberset_id, entitynm = jdb$meta$arrCopyNumberSet),
-                      jdb$meta$arrCopynumber_seg, sep = ".")
+    arrayname = paste(find_namespace(id = copynumberset$copynumberset_id, entitynm = .ghEnv$meta$arrCopyNumberSet),
+                      .ghEnv$meta$arrCopynumber_seg, sep = ".")
 
     cat("Inserting", nrow(xx), "entries into array:", arrayname, "at version", copynumberset$dataset_version, "\n")
     register_tuple(df = xx,
@@ -2017,10 +2017,10 @@ register_copynumber_matrix_file = function(copynumberSubSet, dataset_version, on
     xx2$dataset_version = dataset_version
     xx2$copynumbersubset_id = copynumberSubSet$copynumbersubset_id
 
-    namespace = find_namespace(id = copynumberSubSet$copynumbersubset_id, entitynm = jdb$meta$arrCopyNumberSubSet)
-    arrayname = paste(namespace, jdb$meta$arrCopynumber_mat, sep = ".")
+    namespace = find_namespace(id = copynumberSubSet$copynumbersubset_id, entitynm = .ghEnv$meta$arrCopyNumberSubSet)
+    arrayname = paste(namespace, .ghEnv$meta$arrCopynumber_mat, sep = ".")
     cat("Inserting", nrow(xx2), "entries into", arrayname, "at version", dataset_version, "\n")
-    register_tuple(df = xx2, ids_int64_conv = get_idname(jdb$meta$arrCopynumber_mat), arrayname = arrayname)
+    register_tuple(df = xx2, ids_int64_conv = get_idname(.ghEnv$meta$arrCopynumber_mat), arrayname = arrayname)
   } # end of if (!only_test)
 }
 
@@ -2055,8 +2055,8 @@ register_fusion_data = function(df, fusionset, only_test = FALSE){
     xx$fusionset_id = fusionset_record$fusionset_id
     xx$dataset_version = dataset_version
 
-    nmsp = find_namespace(id = fusionset_record$fusionset_id, entitynm = jdb$meta$arrFusionset)
-    arrayname = paste(nmsp, jdb$meta$arrFusion, sep = ".")
+    nmsp = find_namespace(id = fusionset_record$fusionset_id, entitynm = .ghEnv$meta$arrFusionset)
+    arrayname = paste(nmsp, .ghEnv$meta$arrFusion, sep = ".")
 
     xx = xx %>% group_by(biosample_id) %>% mutate(fusion_id = row_number())
     xx = as.data.frame(xx)
@@ -2139,15 +2139,15 @@ update_entity = function(entity, df){
 
 #' @export
 get_entity_count = function(){
-  entities = c(jdb$meta$arrProject, jdb$meta$arrDataset, jdb$meta$arrIndividuals, jdb$meta$arrBiosample, jdb$meta$arrRnaquantificationset)
-  if (length(jdb$cache$nmsp_list) == 1){
-    nmsp = jdb$cache$nmsp_list
+  entities = c(.ghEnv$meta$arrProject, .ghEnv$meta$arrDataset, .ghEnv$meta$arrIndividuals, .ghEnv$meta$arrBiosample, .ghEnv$meta$arrRnaquantificationset)
+  if (length(.ghEnv$cache$nmsp_list) == 1){
+    nmsp = .ghEnv$cache$nmsp_list
     queries = sapply(entities, function(entity){paste("op_count(", nmsp, ".", entity, ")", sep = "")})
   }
-  else if (length(jdb$cache$nmsp_list) == 2){
+  else if (length(.ghEnv$cache$nmsp_list) == 2){
     queries = sapply(entities, FUN = function(entity) {
       paste("join(",
-            paste(sapply(jdb$cache$nmsp_list, function(nmsp){paste("op_count(", nmsp, ".", entity, ")", sep = "")}), collapse=", "),
+            paste(sapply(.ghEnv$cache$nmsp_list, function(nmsp){paste("op_count(", nmsp, ".", entity, ")", sep = "")}), collapse=", "),
             ")", sep = "")
     })
   } else {
@@ -2158,23 +2158,23 @@ get_entity_count = function(){
     qq = paste("join(", qq, ", ", query, ")", sep = "" )
   }
   attrs = paste(
-    sapply(entities, FUN=function(entity) {paste(entity, "_", jdb$cache$nmsp_list, sep = "")}),
+    sapply(entities, FUN=function(entity) {paste(entity, "_", .ghEnv$cache$nmsp_list, sep = "")}),
     ":uint64",
     sep = "",
     collapse = ", ")
   res_schema = paste("<", attrs, ">[i=0:0,1,0]", sep = "")
-  res = iquery(jdb$db, qq,
+  res = iquery(.ghEnv$db, qq,
                schema = res_schema, return = T)
   colnames(res) = gsub("X_", "", colnames(res))
 
-  xx = sapply(entities, FUN=function(entity) {res[, paste(entity, jdb$cache$nmsp_list, sep = "_")]})
+  xx = sapply(entities, FUN=function(entity) {res[, paste(entity, .ghEnv$cache$nmsp_list, sep = "_")]})
 
   counts = data.frame(entity = entities)
-  if (length(jdb$cache$nmsp_list) == 1){
-    counts[, jdb$cache$nmsp_list] = as.integer(xx)
+  if (length(.ghEnv$cache$nmsp_list) == 1){
+    counts[, .ghEnv$cache$nmsp_list] = as.integer(xx)
   } else {
     rownum = 1
-    for (nmsp in jdb$cache$nmsp_list){
+    for (nmsp in .ghEnv$cache$nmsp_list){
       counts[, nmsp] = as.integer(xx[rownum,])
       rownum = rownum + 1
     }
