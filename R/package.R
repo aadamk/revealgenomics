@@ -16,24 +16,47 @@ NULL
 {
   packageStartupMessage("To get started see ?scidb4gh for a list of available functions. Each\nfunction has a detailed help page with examples.\nThe original PDF specification is available from vignette('scidb4gh')." , 
                         domain = NULL, appendLF = TRUE)
-  options("scidb4gh.dummy_option"=7999)
+  # options("scidb4gh.dummy_option"=7999)
 }
 
 # A global environment used to store the metadata information, and cache state by some functions
 #' @export
 .ghEnv = new.env(parent = emptyenv())
 
-# Set up a lazily-assigned cache for miscellaneous tables used by getSeries
-#' delayedAssign("tickers_table", iquery("tickers", return=TRUE), assign.env=.pdqEnv)
-#' delayedAssign("exchanges_table", iquery("exchanges", return=TRUE), assign.env=.pdqEnv)
-#' delayedAssign("sources_table", iquery("sources", return=TRUE), assign.env=.pdqEnv)
-#' #' Clear cached exchanges, sources, and tickers tables forcing
-#' #' \code{getSeries()} to look them up again.
-#' #' @export
-#' clearLocalCache = function()
-#' {
-#'   rm(list=c("tickers_table", "exchanges_table", "sources_table"), envir=.pdqEnv)
-#'   delayedAssign("tickers_table", iquery("tickers", return=TRUE), assign.env=.pdqEnv)
-#'   delayedAssign("exchanges_table", iquery("exchanges", return=TRUE), assign.env=.pdqEnv)
-#'   delayedAssign("sources_table", iquery("sources", return=TRUE), assign.env=.pdqEnv)
-#' }
+.ghEnv$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="scidb4gh"))
+
+.ghEnv$meta$arrProject = 'PROJECT'
+.ghEnv$meta$arrDataset = 'DATASET'
+.ghEnv$meta$arrIndividuals = 'INDIVIDUAL'
+.ghEnv$meta$arrOntology = 'ONTOLOGY'
+.ghEnv$meta$arrBiosample = 'BIOSAMPLE'
+.ghEnv$meta$arrRnaquantificationset = 'RNAQUANTIFICATIONSET'
+.ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
+.ghEnv$meta$arrFeature = 'FEATURE'
+.ghEnv$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
+.ghEnv$meta$arrFeatureset = 'FEATURESET'
+.ghEnv$meta$arrReferenceset = 'REFERENCESET'
+.ghEnv$meta$arrGenelist = 'GENELIST'
+.ghEnv$meta$arrGenelist_gene = 'GENELIST_GENE'
+.ghEnv$meta$arrVariantset = 'VARIANTSET'
+.ghEnv$meta$arrVariant = 'VARIANT'
+.ghEnv$meta$arrFusionset = 'FUSIONSET'
+.ghEnv$meta$arrFusion = 'FUSION'
+.ghEnv$meta$arrCopyNumberSet = 'COPYNUMBERSET'
+.ghEnv$meta$arrCopyNumberSubSet = 'COPYNUMBERSUBSET'
+.ghEnv$meta$arrCopynumber_seg = 'COPYNUMBER_SEG'
+.ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
+
+# Prepare variables for the cache
+.ghEnv$cache$ontology_ref = NULL
+.ghEnv$cache$lookup = list()
+.ghEnv$cache$lookup[[.ghEnv$meta$arrProject]] = NULL
+.ghEnv$cache$lookup[[.ghEnv$meta$arrDataset]] = NULL
+.ghEnv$cache$lookup[[.ghEnv$meta$arrIndividuals]] = NULL
+.ghEnv$cache$lookup[[.ghEnv$meta$arrBiosample]] = NULL
+.ghEnv$cache$lookup[[.ghEnv$meta$arrRnaquantificationset]] = NULL
+.ghEnv$cache$lookup[[.ghEnv$meta$arrVariantset]] = NULL
+.ghEnv$cache$lookup[[.ghEnv$meta$arrFusionset]] = NULL
+.ghEnv$cache$feature_ref = NULL
+.ghEnv$cache$dfFeatureSynonym = NULL
+.ghEnv$cache$biosample_ref = NULL

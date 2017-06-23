@@ -14,44 +14,6 @@
 
 #' @export
 gh_connect = function(username, password, host = NULL, port = 8083, protocol = "https"){
-  .ghEnv$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="scidb4gh"))
-
-  .ghEnv$meta$arrProject = 'PROJECT'
-  .ghEnv$meta$arrDataset = 'DATASET'
-  .ghEnv$meta$arrIndividuals = 'INDIVIDUAL'
-  .ghEnv$meta$arrOntology = 'ONTOLOGY'
-  .ghEnv$meta$arrBiosample = 'BIOSAMPLE'
-  .ghEnv$meta$arrRnaquantificationset = 'RNAQUANTIFICATIONSET'
-  .ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
-  .ghEnv$meta$arrFeature = 'FEATURE'
-  .ghEnv$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
-  .ghEnv$meta$arrFeatureset = 'FEATURESET'
-  .ghEnv$meta$arrReferenceset = 'REFERENCESET'
-  .ghEnv$meta$arrGenelist = 'GENELIST'
-  .ghEnv$meta$arrGenelist_gene = 'GENELIST_GENE'
-  .ghEnv$meta$arrVariantset = 'VARIANTSET'
-  .ghEnv$meta$arrVariant = 'VARIANT'
-  .ghEnv$meta$arrFusionset = 'FUSIONSET'
-  .ghEnv$meta$arrFusion = 'FUSION'
-  .ghEnv$meta$arrCopyNumberSet = 'COPYNUMBERSET'
-  .ghEnv$meta$arrCopyNumberSubSet = 'COPYNUMBERSUBSET'
-  .ghEnv$meta$arrCopynumber_seg = 'COPYNUMBER_SEG'
-  .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
-
-  # Prepare variables for the cache
-  .ghEnv$cache$ontology_ref = NULL
-  .ghEnv$cache$lookup = list()
-  .ghEnv$cache$lookup[[.ghEnv$meta$arrProject]] = NULL
-  .ghEnv$cache$lookup[[.ghEnv$meta$arrDataset]] = NULL
-  .ghEnv$cache$lookup[[.ghEnv$meta$arrIndividuals]] = NULL
-  .ghEnv$cache$lookup[[.ghEnv$meta$arrBiosample]] = NULL
-  .ghEnv$cache$lookup[[.ghEnv$meta$arrRnaquantificationset]] = NULL
-  .ghEnv$cache$lookup[[.ghEnv$meta$arrVariantset]] = NULL
-  .ghEnv$cache$lookup[[.ghEnv$meta$arrFusionset]] = NULL
-  .ghEnv$cache$feature_ref = NULL
-  .ghEnv$cache$dfFeatureSynonym = NULL
-  .ghEnv$cache$biosample_ref = NULL
-
   # SciDB connection and R API
   if (is.null(host)) {
     .ghEnv$db = scidbconnect(username = username, password = password, port = port, protocol = protocol)
