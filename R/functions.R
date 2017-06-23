@@ -1359,6 +1359,7 @@ search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_vers
 #' @export
 search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
   ont = get_ontology(updateCache = updateCache)
+  if (nrow(ont) == 0) return(NA)
   ont_ids = ont$ontology_id
   names(ont_ids) = ont$term
   if (exact_match){
