@@ -1733,6 +1733,7 @@ register_expression_dataframe = function(df1, dataset_version){
   fullnm = paste(namespace_to_insert, .ghEnv$meta$arrRnaquantification, sep = ".")
   cat("inserting data for", nrow(df_expr), "expression values into", fullnm, "array \n")
   iquery(.ghEnv$db, paste("insert(", subarr@name, ", ", fullnm, ")"))
+  .ghEnv$db$remove("temp_df")
 }
 
 #' @export
