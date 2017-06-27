@@ -440,6 +440,14 @@ delete_dataset <- function(datasetID, datasetVersion, datasetStructure = NULL) {
   ## TODO:
   ##  - Instead of deleting individually (looping), delete all metadata at once.
   ############################################################
+  ## TRY THIS IMPLEMENTATION NEXT TIME WHEN THE PACKAGE HAS BEEN BUILT:
+  #
+  #   delete_entity(entity = next.metadata.name, 
+  #                 id = next.metadata.ids.mat[, column.name], 
+  #                 dataset_version = datasetVersion, 
+  #                 delete_by_entity = next.metadata.name)
+  
+  
   
   ##-----------------=
   ## Delete the dataset_id itself from the DATASET metadata table.
