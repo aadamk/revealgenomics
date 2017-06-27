@@ -176,8 +176,6 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
 ###############################################################################
 ## NEXT STEPS / ELEMENTS STILL REMAINING TO IMPLEMENT:
 ## 
-##  - Have print_dataset_subelements() return the list of all elements that 
-##    it identifies for the given dataset.
 ##  - Call the actual "delete_entity()" function for each of the elements within
 ##    a dataset (as specified within the list of returned objects)
 ##      - Note: Will have to figure out how to programmatically identify the
@@ -191,64 +189,67 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
 
 delete_project <- function(projectID) {
   ##---------------=
-  ## If there is more than one project_ID, or it is not a valid ID, then give an error.
+  ## If there is more than one projectID, or it is not a valid ID, then give an error.
   ##---------------=
-  
-  #####################
-  ## << FINISH!!! >> ## 
-  #####################
-  
+  if (!length(projectID) == 1) {
+    stop("You can only specify one project ID at a time to 'delete_project()'.")
+  }
+  ## Note, incorrect projectIDs will be caught by the call to "search_datasets()".
+
   
   ##---------------=
   ## Get the datasets under this project.
   ##---------------=
   datasets <- search_datasets(project_id = projectID)
-  #   datasetIDs <- datasets$dataset_id
-  #   datasetVersions <- datasets$dataset_version
-  datasetNames <- apply(datasets[,1:2], 1, function(x) { paste(x, collapse = "_ver")})
-  cat("Project ", projectID, " consists of DATASET(S):  \t", paste(datasetNames, collapse=", "), "\n\n", sep="")
   
-  ########################################################################
-  ## TODO: 
-  ##  - First sort this table of datasets by DATASET_ID (ascending) and VERSION (descending)
-  ##    before printing and deleting.
-  ########################################################################
-  
-  
-  
-  ##---------------=
-  ## For each dataset, call "get_dataset_subelements", to print the list of subelements
-  ##  of each dataset.
-  ##---------------=
   datasetStructures.lst <- list()
-  for (i in 1:nrow(datasets)) {
-    nextDataset <- datasets[i, "dataset_id"]
-    nextDatasetVersion <- datasets[i, "dataset_version"]
-    # nextDatasetName <- paste0(nextDataset, "_v", nextDatasetVersion)
-    datasetStructures.lst[[ datasetNames[i] ]] <- print_dataset_subelements(nextDataset, nextDatasetVersion)
+  
+  if (nrow(datasets) > 0) {
+    ## First re-order the datasets by ascending dataset number and descending version 
+    ##  number (so the most recent version of each dataset is first).
+    datasets <-  datasets[order(datasets[,"dataset_id"], -datasets[,"dataset_version"]), ]
+    
+    datasetNames <- apply(datasets[, c("dataset_id", "dataset_version")],  MARGIN = 1,  FUN = function(x) { paste(x, collapse = "_ver")})
+    cat("Project ", projectID, " consists of DATASET(S):  \t", paste(datasetNames, collapse=", "), "\n\n", sep="")
+    
+    
+    
+    ##---------------=
+    ## For each dataset, call "get_dataset_subelements", to print the list of subelements
+    ##  of each dataset.
+    ##---------------=
+    for (i in 1:nrow(datasets)) {
+      nextDataset <- datasets[i, "dataset_id"]
+      nextDatasetVersion <- datasets[i, "dataset_version"]
+      # nextDatasetName <- paste0(nextDataset, "_v", nextDatasetVersion)
+      datasetStructures.lst[[ datasetNames[i] ]] <- print_dataset_subelements(nextDataset, nextDatasetVersion)
+    }
+  } else {
+    ## If there are no datasests, then indicate that there are no datasets underneath.
+    cat("Project", projectID, "contains no datasets. \n\n")
   }
+  
+  
   
   ##---------------=
   ## Ask the user to confirm that they want to delete this project.
   ##---------------=
-  userResponse <- readline(prompt = "Do you want to continue deleting this project? (yes/no)  ")
-  
-  ################################################################################
-  ## TODO! 
-  ##  Make sure that this does not procede to deleting if the user just hits enter!!!
-  ################################################################################
-  
-  
+  userResponse <- readline(prompt = "Do you want to continue deleting this project? (yes/no): \n  ")
   
   ##---------------=
   ## If the user said to procede, then delete the datasets.
   ##---------------=
-  if(charmatch(tolower(userResponse), "yes") == 1) {
+  if(charmatch(tolower(userResponse), c("yes", "no")) == 1) {
     cat("Deleting project ", projectID, "... \n",  sep="")
     
-    ## Delete all of the datasets and their sub-elements.
-    for (i in 1:length(datasetStructures.lst)) {
-      delete_dataset(nextDataset) 
+    if (length(datasetStructures.lst) > 0) {
+      ## Delete all of the datasets and their sub-elements.
+      for (i in 1:length(datasetStructures.lst)) {
+        nextDatasetStructure <- datasetStructures.lst[[i]]
+        delete_dataset(datasetID = attr(nextDatasetStructure, "datasetID"),
+                       datasetVersion = attr(nextDatasetStructure, "datasetVersion"),
+                       datasetStructure = nextDatasetStructure)
+      }
     }
     
     ## Now delete the actual project ID.
@@ -290,17 +291,22 @@ get_dataset_subelements <- function(datasetID, datasetVersion) {
   
   
   
-  
-  
-  
   ## Now set each of the fields to NULL that did not return any values (i.e. that produced a try-error).
   for (next.name in names(dataset_subelements)) {
     if (class(dataset_subelements[[next.name]]) == "try-error")
       dataset_subelements[[next.name]] <- NA 
   } 
   
+  ## And add the datasetID and datasetVersion as attributes for this datasetStructure object,
+  ##  so that they do not conflict with the other information types, but are still embedded 
+  ##  in the dataset object.
+  attr(dataset_subelements, which = "datasetID") <- datasetID
+  attr(dataset_subelements, which = "datasetVersion") <- datasetVersion
+  
+  
   return (dataset_subelements)
 }
+
 
 
 ## IDEA: Might be able to eventually create a table that lists all of the types of metadata
@@ -309,12 +315,12 @@ get_dataset_subelements <- function(datasetID, datasetVersion) {
 ##  the ID column name (ex: "individual_id"), and the parent object? (ex: the dataset ID or project ID?)
 
 
+
+
 print_dataset_subelements <- function(datasetID, datasetVersion, print.nonexistant.metadata = FALSE) {
   
-  ## A flag on whether to explicitly state which types of information have been searched
-  ##  but do not exist for this dataset. 
-  # print.nonexistant.metadata
-  
+  ## Note that "print.nonexistent.metadata" is just an option to explicitly state which types of 
+  ##  information have been searched but do not exist for this dataset.  It is FALSE by default.
   
   ##---------------=
   ## Get the dataset's subelements
@@ -325,42 +331,27 @@ print_dataset_subelements <- function(datasetID, datasetVersion, print.nonexista
   ## Print to the screen the lists of elements that will be deleted.
   ##---------------=
   cat("Summary of dataset = ", datasetID, " (version = ", datasetVersion, "):  \n", sep="")
+  max_char_length <- max(nchar(names(dataset_subelements)))
   for(next.subelement in names(dataset_subelements)) {
-    if ( all(is.na(dataset_subelements[[next.subelement]])) ) {
+    
+    
+    if ( nrow(dataset_subelements[[next.subelement]]) == 0) {
       ## Then there were no data of this type in the given dataset.
       
       if (print.nonexistant.metadata) {
         ## Then we will print out that there was no metadata of this type.
-        cat("\t", next.subelement, ":\t <NA> \n", sep="")
+        cat("\t", formatC(paste0(next.subelement, " ids: "), width = -(max_char_length + 5)), "\t<NA> \n", sep="")
       }
     } else {
       ## There are elements of this metadata type located in this dataset, so print them out.
-      cat("\t", next.subelement, ":\t ", sep="")
-      cat(dataset_subelements[[next.subelement]][, 1], sep=", ")  ## The object ids appear to be in the first column in each entity matrix.
-      cat("\n")
+      cat("\t", formatC(paste0(next.subelement, " ids: "), width = -(max_char_length + 5)), "\t", sep="")
       
+      ## Get the name for the column which will contain these IDs.
+      base_idname <- scidb4gh:::get_base_idname(next.subelement)
       
-      #####################
-      ## << FINISH!!! >> ## 
-      #####################
-      ## (1) Add the ability to output a range if it is present, rather than just the explicit 
-      ##    list of all IDs for the given object.  For example, if within this dataset, there are
-      ##    individual_IDs 1,2,3,4,5, it would be nice to output "individuals: 1-5" than listing
-      ##    all of them individually.
-      ##
-      ## (2) *** This is important -- Currently I'm hard-coding that the IDs for each 
-      ##    type of element are in column 1.  This happens to be true in the data that 
-      ##    I've been looking at, but it doesn't necessarily have to be!  I need to 
-      ##    figure out a way to make this more programmatic.
-      ##
-      ##  So, for each object type in "dataset_subelements", the ID is in the row:
-      ##    $individual --> "individual_id"
-      ##    $biosample --> "biosample_id"
-      ##    $rnaquantificationsets --> "rnaquantificationset_id"
-      ##    $variantsets --> ??
-      ##    $copynumbersets --> ??
-      ##    $copynumbersubsets --> ??
-      
+      ## The object ids appear to be in the first column in each entity matrix.  
+      ids_vec <- dataset_subelements[[next.subelement]][, base_idname]
+      cat(convert_to_id_ranges(ids_vec), "\n")
     }
   }
   return(dataset_subelements)
@@ -374,26 +365,24 @@ print_dataset_subelements <- function(datasetID, datasetVersion, print.nonexista
 ##-----------------------------------------------------------------------------=
 delete_dataset <- function(datasetID, datasetVersion, datasetStructure = NULL) {
   
-  ######################
-  ## TODO!!
-  ##  - Add in an explicit error check to verify that if "datasetStructure" is provided,
-  ##    that the datasetID and version match up with those that are provided as parameters!!
-  #####################
-  
-  
   ## Get the list of sub-entities.
   ## If the dataset's structure is provided, then use that structure, otherwise call
   ##  the function to get the dataset's sub-structure.
   if (is.null(datasetStructure)) {
     datasetStructure <- get_dataset_subelements(datasetID, datasetVersion)
+  } else {
+    ## If the dataset structure was provided, verify that it is the same as is being 
+    ##  specified by the datasetID and datasetVersion.
+    stopifnot( attr(datasetStructure, "datasetID")==datasetID 
+               & attr(datasetStructure, "datasetVersion")==datasetVersion )
   }
   
   
   
   ##---------------------------------------=
-  ## For each dataset entities, delete the the actual measurements, then delete
-  ##  the metadata.  Note that the metadata field name is the actual entity
-  ##  name as well.
+  ## For each type of dataset entities, delete the the actual measurements, 
+  ##  then delete the metadata.  Note that the metadata field name is the 
+  ##  actual entity name as well.
   ##---------------------------------------=
   
   ##-----------------=
@@ -500,3 +489,37 @@ delete_dataset <- function(datasetID, datasetVersion, datasetStructure = NULL) {
   #   ## Delete this dataset.
   #   delete_entity(entity = 'INDIVIDUAL', ids = i$individual_id[1:2], dataset_version = 1)
 }
+
+
+
+##-----------------------------------------------------------------------------=
+## Utility function (based on Kriti's "formulate_base_selection_query()" function)
+##  for collapsing a vector of numerical ids into a representation that indicates 
+##  ranges of IDs by starting and end points.
+##-----------------------------------------------------------------------------=
+convert_to_id_ranges = function(id_vec, exclude_duplicates=TRUE){
+  # THRESH_K = 100
+  if (exclude_duplicates) {
+    id_vec <- unique(id_vec)
+  }
+  sorted = sort(id_vec)
+  breaks = c(0, which(diff(sorted)!=1), length(sorted))
+  # idname = ""
+  # if (length(breaks) <= (THRESH_K + 2)) # few sets of contiguous tickers; use `cross_between`
+  id_ranges = paste( sapply(seq(length(breaks)-1), 
+                              function(i) {
+                                left = sorted[breaks[i]+1]
+                                right = sorted[breaks[i+1]]
+                                if (left == right) {
+                                  as.character(right)
+                                  # paste("(", right, ")")
+                                } else {
+                                  sprintf("%d-%d", left,
+                                          right)
+                                }
+                              }), 
+                       collapse = ", ")
+
+  return(id_ranges)
+}
+

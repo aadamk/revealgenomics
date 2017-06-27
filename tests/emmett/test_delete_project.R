@@ -14,14 +14,21 @@ p.sublist = p.list[grep("Emmett", p.list$name, ignore.case = TRUE), ]
 p = p.sublist[1, ]
 print(p)
 
+# Actually, let's look at the last project, which should have versions of the databases associated.
+p <- p.sublist[nrow(p.sublist),]
+print(p)
+
 # Search for datasets within that project
-d = search_datasets(project_id = p$project_id)
-print(d)
+d.list = search_datasets(project_id = p$project_id)
+print(d.list)
+#   dataset_id dataset_version                name description project_id             created             updated flexfield1  flexfield_new
+# 1        235               1 Emmett_test_dataset         ...        210 2017-06-27 18:55:47 2017-06-27 18:55:47  any-value           <NA>
+# 2        235               2 Emmett_test_dataset   version 2        210 2017-06-27 18:57:31 2017-06-27 18:57:31       <NA> new value here
 
 # Search for individuals within a dataset
 # Pick a dataset (in case there are multiple)
-d = d[1, ]
-i = search_individuals(dataset_id = d$dataset_id)
+d = d.list[1, ]
+i = search_individuals(dataset_id = d$dataset_id, dataset_version = d$dataset_version)
 
 print(i)
 
