@@ -172,7 +172,7 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
     print(qq)
     iquery(.ghEnv$db, qq)
   }
-
+}
 ###############################################################################
 ## NEXT STEPS / ELEMENTS STILL REMAINING TO IMPLEMENT:
 ## 
@@ -187,6 +187,7 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
 ##    and that it exists.
 ###############################################################################
 
+#' @export
 delete_project <- function(projectID) {
   ##---------------=
   ## If there is more than one projectID, or it is not a valid ID, then give an error.
@@ -258,7 +259,7 @@ delete_project <- function(projectID) {
     
   } else {
     ## Don't delete the project.
-    cat("Project ", projectID, " was NOT deleted. ",  sep="")
+    cat("Project ", projectID, " was NOT deleted. \n",  sep="")
   }
   
 }
@@ -347,7 +348,7 @@ print_dataset_subelements <- function(datasetID, datasetVersion, print.nonexista
       cat("\t", formatC(paste0(next.subelement, " ids: "), width = -(max_char_length + 5)), "\t", sep="")
       
       ## Get the name for the column which will contain these IDs.
-      base_idname <- scidb4gh:::get_base_idname(next.subelement)
+      base_idname <- get_base_idname(next.subelement)
       
       ## The object ids appear to be in the first column in each entity matrix.  
       ids_vec <- dataset_subelements[[next.subelement]][, base_idname]
@@ -406,7 +407,7 @@ delete_dataset <- function(datasetID, datasetVersion, datasetStructure = NULL) {
         ## So, delete this entire type of measurement data for this dataset.  Loop through and 
         ##  delete each pipeline ID, one at a time.
         
-        column.name <- scidb4gh:::get_base_idname(next.parent.entity)  ## Get the name for the column that contains the IDs for this measurement type.
+        column.name <- get_base_idname(next.parent.entity)  ## Get the name for the column that contains the IDs for this measurement type.
         
         for (next.row in 1:nrow(next.entity.ids) ) {
           delete_entity(entity = next.entity, 
@@ -425,7 +426,7 @@ delete_dataset <- function(datasetID, datasetVersion, datasetStructure = NULL) {
     next.metadata.ids.mat <- datasetStructure[[next.metadata.name]]
     
     ## Get the name for the column that contains the IDs for this metadata type.
-    column.name <- scidb4gh:::get_base_idname(next.metadata.name)  
+    column.name <- get_base_idname(next.metadata.name)  
     
     for (next.row in 1:nrow(next.metadata.ids.mat) ) {
       delete_entity(entity = next.metadata.name, 
