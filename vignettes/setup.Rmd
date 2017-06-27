@@ -138,8 +138,12 @@ sudo R --slave -e "devtools::install_github('Paradigm4/scidbr')"
 Finally the API install (assuming the directory choice described above):
 
 ```{sh}
+# When user `scidb` has sudo privileges
 USER=scidb
 pushd /home/$USER/coding/downloads/scidb4gh/; R --slave -e "library(roxygen2); roxygenize()" && cd .. && sudo R CMD build scidb4gh && sudo R CMD INSTALL scidb4gh_0.1.tar.gz ; popd
+# When you are logged in as root, but latest package is with user `ksenshar`
+USER=ksenshar
+cd /home/$USER/coding/downloads/scidb4gh/; R --slave -e "library(roxygen2); roxygenize()" && cd /home/$USER/coding/downloads/ && R CMD build scidb4gh && R CMD INSTALL scidb4gh_0.1.tar.gz
 ```
 
 # Package setup and usage
