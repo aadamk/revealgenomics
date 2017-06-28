@@ -1047,9 +1047,9 @@ get_unversioned_public_metadata_entity = function(arrayname, id, infoArray = TRU
 }
 
 #' @export
-get_referenceset = function(){
+get_referenceset = function(referenceset_id = NULL){
   get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrReferenceset, 
-                                      id = featureset_id)
+                                         id = referenceset_id)
 }
 
 #' @export
@@ -2102,7 +2102,10 @@ update_entity = function(entity, df){
 
 #' @export
 get_entity_count = function(){
-  entities = c(.ghEnv$meta$arrProject, .ghEnv$meta$arrDataset, .ghEnv$meta$arrIndividuals, .ghEnv$meta$arrBiosample, .ghEnv$meta$arrRnaquantificationset)
+  entities = c(.ghEnv$meta$arrProject, .ghEnv$meta$arrDataset, 
+               .ghEnv$meta$arrIndividuals, .ghEnv$meta$arrBiosample, 
+               .ghEnv$meta$arrRnaquantificationset, 
+               .ghEnv$meta$arrVariantset)
   if (length(.ghEnv$cache$nmsp_list) == 1){
     nmsp = .ghEnv$cache$nmsp_list
     queries = sapply(entities, function(entity){paste("op_count(", nmsp, ".", entity, ")", sep = "")})

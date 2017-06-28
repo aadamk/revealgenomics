@@ -134,9 +134,18 @@ merge_gene_annotation_and_location = function(gene_annotation_file_path,
   x12b
 }
 
-# Build a reference set of genes and synonym at a given featureset_id
-# Need paths to <hugo/hgnc_complete_set.txt> for annotation info (param: gene_annotation_file_path)
-# and <grch38_release85_homosap_gene/newGene.tsv> as gene location info (param: gene_location_file_path)
+#' Build a reference gene set at user specified FeatureSet id
+#' 
+#' Build a reference set of genes and synonym at a given featureset_id. Need paths to 
+#' <hugo/hgnc_complete_set.txt> for annotation info (param: gene_annotation_file_path)
+#' and <grch38_release85_homosap_gene/newGene.tsv> as gene location info 
+#' (param: gene_location_file_path)
+#' 
+#' @param featureset_id FeatureSet id at which to build a reference gene set
+#' @param gene_annotation_file_path file providing annotation info (e.g. <hugo/hgnc_complete_set.txt>)
+#' @param gene_location_file_path gene location info (e.g. <grch38_release85_homosap_gene/newGene.tsv>)
+#' 
+#' @export 
 build_reference_gene_set = function( featureset_id,
                                      gene_annotation_file_path, 
                                      gene_location_file_path, 
