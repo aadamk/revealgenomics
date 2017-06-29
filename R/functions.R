@@ -748,6 +748,15 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
       right_query = paste("between(", right_query,
                           ", null, null, ", biosample_id, ", null, null, null",
                           ", null, null, ", biosample_id, ", null, null, null)", sep = "")
+    } else {
+      left_query = paste("filter(", left_query, 
+                         ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
+                                                              id = biosample_id), ")")
+      right_query = paste("filter(", right_query, 
+                          ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
+                                                               id = biosample_id), ")")
+      # print(left_query)
+      # print(right_query)
     }
   }
 
@@ -759,6 +768,15 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
       right_query = paste("between(", right_query,
                           ", null, null, null, ", feature_id, ", null, null",
                           ", null, null, null, ", feature_id, ", null, null)", sep = "")
+    } else {
+      left_query = paste("filter(", left_query, 
+                         ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
+                                                              id = feature_id), ")")
+      right_query = paste("filter(", right_query, 
+                         ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
+                                                              id = feature_id), ")")
+      # print(left_query)
+      # print(right_query)
     }
   }
 
@@ -2039,8 +2057,10 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
 
   #############################################
   ## Step 0 # Retain biosample and feature info for returned data
-  feature_df = feature_df[match(unique(expr_df$feature_id), feature_df$feature_id), ]
-  biosample_df = biosample_df[match(unique(expr_df$biosample_id), biosample_df$biosample_id), ]
+  feature_df =   drop_na_columns(
+    feature_df[match(unique(expr_df$feature_id), feature_df$feature_id), ])
+  biosample_df = drop_na_columns(
+    biosample_df[match(unique(expr_df$biosample_id), biosample_df$biosample_id), ])
 
   #############################################
   ## Step 1 # Convert data frame to matrix
