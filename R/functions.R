@@ -858,6 +858,10 @@ search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, fe
       left_query = paste("between(", left_query,
                          ", null, null, ", biosample_id, ", null",
                          ", null, null, ", biosample_id, ", null)", sep = "")
+    } else {
+      filter_expr = formulate_base_selection_query('BIOSAMPLE', id = biosample_id)
+      left_query = paste("filter(", left_query,
+                         ", ", filter_expr, ")", sep = "")
     }
   }
 
@@ -866,7 +870,13 @@ search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, fe
       left_query = paste("filter(", left_query,
                          ", feature_id_left = ", feature_id, " OR feature_id_right = ", feature_id, ")", sep = "")
     } else {
-      stop("not yet covered")
+      filter_expr = formulate_base_selection_query('FEATURE', id = feature_id)
+      filter_expr_left = gsub("feature_id", "feature_id_left", filter_expr)
+      filter_expr_right = gsub("feature_id", "feature_id_right", filter_expr)
+      
+      left_query = paste("filter(", left_query,
+                                     ", (", filter_expr_left, ") OR (", 
+                                            filter_expr_right, "))", sep = "")
     }
   }
 
@@ -1231,7 +1241,7 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
 #' @export
 search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL, updateCache = FALSE){
   syn = get_feature_synonym_from_cache(updateCache = updateCache)
-  f1 = syn[syn$synonym == synonym, ]
+  f1 = syn[syn$synonym %in% synonym, ]
   if (!is.null(id_type)) {f1 = f1[f1$source == id_type, ]}
   if (!is.null(featureset_id)) {f1 = f1[f1$featureset_id == f1$featureset_id, ]}
   get_features(feature_id = f1$feature_id, fromCache = !updateCache)
@@ -2158,7 +2168,8 @@ get_entity_count_old = function(){
   entities = c(.ghEnv$meta$arrProject, .ghEnv$meta$arrDataset, 
                .ghEnv$meta$arrIndividuals, .ghEnv$meta$arrBiosample, 
                .ghEnv$meta$arrRnaquantificationset, 
-               .ghEnv$meta$arrVariantset)
+               .ghEnv$meta$arrVariantset,
+               .ghEnv$meta$arrFusionset)
   if (length(.ghEnv$cache$nmsp_list) == 1){
     nmsp = .ghEnv$cache$nmsp_list
     queries = sapply(entities, function(entity){paste("op_count(", nmsp, ".", entity, ")", sep = "")})
