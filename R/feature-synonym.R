@@ -196,13 +196,13 @@ build_reference_gene_set = function( featureset_id,
   df1$strand_term = strand_term
   df1$feature_type = "gene"
   df1$featureset_id = featureset_id
-  try(register_feature(df = df1, only_test = TRUE))
-  
+
   # Register the features (without the alias fields)
-  feature_id = register_feature(df = df1, register_gene_synonyms = FALSE) # Manually do this below
+  feature_id = register_feature(df = df1, 
+                                register_gene_synonyms = FALSE) # Manually do gene synonym registration below
   
   # Now work on registering the alias values as synonyms
-  cat("-------\nNow work on registering the alias values as synonyms\n")
+  cat("-------\nNow working on registering the alias values as synonyms\n")
   features_db = search_features(featureset_id = featureset_id)
   x12f = merge(x12e, features_db[, c('featureset_id', 'feature_id', 'name','source')],
                by = c('name', 'source'))

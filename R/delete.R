@@ -168,7 +168,7 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
                                                                     dataset_version = dataset_version)
     
     qq = paste("delete(", arrInfo, ", ", versioned_selection_query, ")", sep = "")
-    cat("Deleting entries for ids ", paste(sort(id), collapse = ", "), " from info array: ", arrInfo, "\n", sep = "")
+    cat("Deleting entries for ids ", pretty_print(sort(id)), " from info array: ", arrInfo, "\n", sep = "")
     print(qq)
     iquery(.ghEnv$db, qq)
   }

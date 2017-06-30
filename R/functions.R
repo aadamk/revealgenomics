@@ -377,7 +377,7 @@ register_genelist_gene = function(df, only_test = FALSE){
 }
 
 #' @export
-register_feature = function(df, register_gene_synonyms = FALSE, only_test = FALSE){
+register_feature = function(df, register_gene_synonyms = TRUE, only_test = FALSE){
   uniq = c("name", "featureset_id", "feature_type")
   test_register_feature(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
@@ -385,10 +385,11 @@ register_feature = function(df, register_gene_synonyms = FALSE, only_test = FALS
     fid = register_tuple_return_id(df, arrayname, uniq)
     gene_ftrs = df[df$feature_type == 'gene', ]
     if (register_gene_synonyms & nrow(gene_ftrs) > 0){
+      cat("Working on gene synonyms\n")
       df_syn = data.frame(synonym = gene_ftrs$name, 
                           feature_id = fid,
                           featureset_id = unique(gene_ftrs$featureset_id),
-                          source = "register_feature",
+                          source = gene_ftrs$source,
                           stringsAsFactors = F)
       ftr_syn_id = register_feature_synonym(df = df_syn)
       output = list(feature_id = fid,
@@ -2153,8 +2154,7 @@ update_entity = function(entity, df){
   update_mandatory_and_info_fields(df = df, arrayname = fullarraynm)
 }
 
-#' @export
-get_entity_count = function(){
+get_entity_count_old = function(){
   entities = c(.ghEnv$meta$arrProject, .ghEnv$meta$arrDataset, 
                .ghEnv$meta$arrIndividuals, .ghEnv$meta$arrBiosample, 
                .ghEnv$meta$arrRnaquantificationset, 
@@ -2201,37 +2201,42 @@ get_entity_count = function(){
   counts
 }
 
-get_entity_count_v2 = function(skip_measurement_data = TRUE){
-  all_entities = get_entity_names()
-  if (skip_measurement_data) {
-    msrmnt_entities = get_entity_names(data_class = 'measurementdata')
-    entities = all_entities[!(all_entities %in% msrmnt_entities)]
+#' @export
+get_entity_count = function(new_function = FALSE, skip_measurement_data = TRUE){
+  if (!new_function) {
+    get_entity_count_old()
   } else {
-    entities = all_entities
+    all_entities = get_entity_names()
+    if (skip_measurement_data) {
+      msrmnt_entities = get_entity_names(data_class = 'measurementdata')
+      entities = all_entities[!(all_entities %in% msrmnt_entities)]
+    } else {
+      entities = all_entities
+    }
+    entity_arrays = unlist(
+      sapply(entities, function(entity) {
+        paste(.ghEnv$meta$L$array[[entity]]$namespace, entity, sep = ".")
+      }))
+    queries = paste("op_count(", entity_arrays, ")", sep = "")
+    qq = queries[1]
+    for (query in queries[2:length(queries)]){
+      qq = paste("join(", qq, ", ", query, ")", sep = "" )
+    }
+    res = iquery(.ghEnv$db, qq, return = T)
+    
+    colnames(res) = c('i', entity_arrays)
+    
+    res2 = data.frame(entity = entities)
+    rownames(res2) = 1:nrow(res2)
+    
+    counts = t(sapply(res2$entity, function(entity){
+              sapply(.ghEnv$cache$nmsp_list, function(nmsp){
+                fullarnm = paste(nmsp, entity, sep = ".")
+                ifelse(fullarnm %in% colnames(res), res[, fullarnm], NA)
+              })
+              }))
+    
+    res2 = cbind(res2, counts)  
+    res2
   }
-  entity_arrays = unlist(
-    sapply(entities, function(entity) {
-      paste(.ghEnv$meta$L$array[[entity]]$namespace, entity, sep = ".")
-    }))
-  queries = paste("op_count(", entity_arrays, ")", sep = "")
-  qq = queries[1]
-  for (query in queries[2:length(queries)]){
-    qq = paste("join(", qq, ", ", query, ")", sep = "" )
-  }
-  res = iquery(.ghEnv$db, qq, return = T)
-  
-  colnames(res) = c('i', entity_arrays)
-  
-  res2 = data.frame(entity = entities)
-  rownames(res2) = 1:nrow(res2)
-  
-  counts = t(sapply(res2$entity, function(entity){
-            sapply(.ghEnv$cache$nmsp_list, function(nmsp){
-              fullarnm = paste(nmsp, entity, sep = ".")
-              ifelse(fullarnm %in% colnames(res), res[, fullarnm], NA)
-            })
-            }))
-  
-  res2 = cbind(res2, counts)  
-  res2
 }
