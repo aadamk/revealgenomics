@@ -91,6 +91,17 @@ convert_factors_to_char = function(dfx){
   dfx
 }
 
+#' Pretty print a large vector of strings, integers etc. 
+#' @export
+pretty_print = function(vec) {
+  ifelse(length(vec) <= 7,
+         paste(vec, collapse = ", "),
+         paste(pretty_print(head(vec, 2)),
+               "...(", length(vec)-4, " other)... ",
+               pretty_print(tail(vec, 2)),
+               sep = ""))}
+
+
 ############################################################
 # Helper functions for SciDB array operations
 ############################################################

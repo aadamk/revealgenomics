@@ -163,11 +163,23 @@ get_int64fields = function(arrayname){
   int64_fields
 }
 
+get_entity_data_class = function(entity){
+  .ghEnv$meta$L$array[[entity]]$data_class
+}
+
+
 #' @export
-get_entity_names = function(){
+get_entity_names = function(data_class = NULL){
   varnames = names(.ghEnv$meta)
   varnames = varnames[varnames != "L"]
-  sapply(varnames, function(nm){as.character(.ghEnv$meta[nm])})
+  entities = sapply(varnames, function(nm){as.character(.ghEnv$meta[nm])})
+  if (!is.null(data_class)) {
+    matches = sapply(entities, function(entity) {
+      ifelse(get_entity_data_class(entity) == data_class, TRUE, FALSE)
+    })
+    entities = entities[matches]
+  }
+  entities
 }
 
 get_entity_class = function(entity) { 
@@ -365,12 +377,26 @@ register_genelist_gene = function(df, only_test = FALSE){
 }
 
 #' @export
-register_feature = function(df, only_test = FALSE){
+register_feature = function(df, register_gene_synonyms = FALSE, only_test = FALSE){
   uniq = c("name", "featureset_id", "feature_type")
   test_register_feature(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = .ghEnv$meta$arrFeature
-    register_tuple_return_id(df, arrayname, uniq)
+    fid = register_tuple_return_id(df, arrayname, uniq)
+    gene_ftrs = df[df$feature_type == 'gene', ]
+    if (register_gene_synonyms & nrow(gene_ftrs) > 0){
+      df_syn = data.frame(synonym = gene_ftrs$name, 
+                          feature_id = fid,
+                          featureset_id = unique(gene_ftrs$featureset_id),
+                          source = "register_feature",
+                          stringsAsFactors = F)
+      ftr_syn_id = register_feature_synonym(df = df_syn)
+      output = list(feature_id = fid,
+             feature_synonym_id = ftr_syn_id)
+    } else {
+      output = fid
+    }
+    output
   } # end of if (!only_test)
 }
 
@@ -682,7 +708,8 @@ register_info = function(df, idname, arrayname){
   }
 }
 
-register_feature_synonym = function(df, uniq, only_test = FALSE){
+register_feature_synonym = function(df, only_test = FALSE){
+  uniq = c('feature_id', 'source', 'synonym')
   test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = .ghEnv$meta$arrFeatureSynonym
@@ -1045,7 +1072,13 @@ get_copynumbersubset = function(copynumbersubset_id = NULL, dataset_version = NU
 #' @export
 get_featuresets= function(featureset_id = NULL){
   get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrFeatureset, 
-                                      id = featureset_id)
+                                         id = featureset_id)
+}
+
+get_feature_synonym = function(feature_synonym_id = NULL){
+  get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrFeatureSynonym, 
+                                         id = feature_synonym_id, 
+                                         infoArray = FALSE)
 }
 
 get_unversioned_public_metadata_entity = function(arrayname, id, infoArray = TRUE){
@@ -2168,3 +2201,37 @@ get_entity_count = function(){
   counts
 }
 
+get_entity_count_v2 = function(skip_measurement_data = TRUE){
+  all_entities = get_entity_names()
+  if (skip_measurement_data) {
+    msrmnt_entities = get_entity_names(data_class = 'measurementdata')
+    entities = all_entities[!(all_entities %in% msrmnt_entities)]
+  } else {
+    entities = all_entities
+  }
+  entity_arrays = unlist(
+    sapply(entities, function(entity) {
+      paste(.ghEnv$meta$L$array[[entity]]$namespace, entity, sep = ".")
+    }))
+  queries = paste("op_count(", entity_arrays, ")", sep = "")
+  qq = queries[1]
+  for (query in queries[2:length(queries)]){
+    qq = paste("join(", qq, ", ", query, ")", sep = "" )
+  }
+  res = iquery(.ghEnv$db, qq, return = T)
+  
+  colnames(res) = c('i', entity_arrays)
+  
+  res2 = data.frame(entity = entities)
+  rownames(res2) = 1:nrow(res2)
+  
+  counts = t(sapply(res2$entity, function(entity){
+            sapply(.ghEnv$cache$nmsp_list, function(nmsp){
+              fullarnm = paste(nmsp, entity, sep = ".")
+              ifelse(fullarnm %in% colnames(res), res[, fullarnm], NA)
+            })
+            }))
+  
+  res2 = cbind(res2, counts)  
+  res2
+}

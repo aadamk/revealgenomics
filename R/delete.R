@@ -106,7 +106,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
     versioned_selection_query = formulate_versioned_selection_query(entity = entity, 
                                                                     base_selection_query = base_selection_query, 
                                                                     dataset_version = dataset_version)
-    cat("Deleting entries for ids ", paste(sort(id), collapse = ", "), " from ", arr, " entity\n", sep = "")
+    cat("Deleting entries for ids ", pretty_print(sort(id)), " from ", arr, " entity\n", sep = "")
     qq = paste("delete(", arr, ", ", versioned_selection_query, ")", sep = "")
     print(qq)
     iquery(.ghEnv$db, qq)
