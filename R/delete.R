@@ -282,8 +282,8 @@ get_dataset_subelements <- function(datasetID, datasetVersion) {
   dataset_subelements[[.ghEnv$meta$arrBiosample]] <- try(search_biosamples(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
   dataset_subelements[[.ghEnv$meta$arrRnaquantificationset]] <- try(search_rnaquantificationset(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
   dataset_subelements[[.ghEnv$meta$arrVariantset]] <- try(search_variantsets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[.ghEnv$meta$arrExperimentSet]] <- try(search_experimentsets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
   dataset_subelements[[.ghEnv$meta$arrCopyNumberSet]] <- try(search_copynumbersets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrCopyNumberSubSet]] <- try(search_copynumbersubsets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
   ############################################################
   ## TODO:
   ##  - Update this to be programmatic!  Use the list of metadata elements that have DATASET as a search_by_entity 
