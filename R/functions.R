@@ -591,6 +591,29 @@ register_variantset = function(df, dataset_version = NULL, only_test = FALSE){
   } # end of if (!only_test)
 }
 
+
+#' @export
+register_experimentset = function(df, dataset_version = NULL, only_test = FALSE){
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
+                                            uniq = c('dataset_id', 'name'), 
+                                            df, dataset_version, only_test)
+}
+
+register_versioned_secure_metadata_entity = function(entity, uniq, df, 
+                                            dataset_version, only_test){
+  test_register_versioned_secure_metadata_entity(entity, df, uniq, 
+                                                 silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    if (is.null(dataset_version)) {
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+    }
+    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
+    arrayname = paste(namespace, ".", entity, sep = "")
+    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
+  } # end of if (!only_test)
+}
+
 #' @export
 register_rnaquantificationset = function(df, dataset_version = NULL, only_test = FALSE){
   uniq = c("dataset_id", "name")
@@ -623,33 +646,11 @@ register_fusionset = function(df, dataset_version = NULL, only_test = FALSE){
 
 #' @export
 register_copynumberset = function(df, dataset_version = NULL, only_test = FALSE){
-  uniq = c('dataset_id', 'name')
-  test_register_copynumberset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    if (is.null(dataset_version)) {
-      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-    }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrCopyNumberSet, sep = "")
-    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
-  } # end of if (!only_test)
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
+                                            uniq = c('dataset_id', 'experimentset_id', 'name'), 
+                                            df, dataset_version, only_test)
 }
 
-#' @export
-register_copynumbersubset = function(df, dataset_version = NULL, only_test = FALSE){
-  uniq = c('dataset_id', 'copynumberset_id', 'name')
-  test_register_copynumbersubset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    if (is.null(dataset_version)) {
-      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-    }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrCopyNumberSubSet, sep = "")
-    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
-  } # end of if (!only_test)
-}
 
 #' @export
 register_variant = function(df, dataset_version = NULL, only_test = FALSE){
@@ -1036,6 +1037,26 @@ get_rnaquantificationsets = function(rnaquantificationset_id = NULL, dataset_ver
 }
 
 #' @export
+get_experimentset = function(experimentset_id = NULL, dataset_version = NULL, all_versions = FALSE){
+  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
+                                       id = experimentset_id, 
+                                       dataset_version, all_versions)
+}
+
+get_versioned_secure_metadata_entity = function(entity, id, 
+                                                dataset_version, 
+                                                all_versions){
+  check_args_get(id = id, dataset_version, all_versions)
+  if (!is.null(id)) { # Need to look up specific ID
+    df = select_from_1d_entity(entitynm = entity, id = id, 
+                               dataset_version = dataset_version)
+  } else { # Need to gather info across namespaces
+    df = merge_across_namespaces(arrayname = entity)
+  }
+  if (!all_versions) return(latest_version(df)) else return(df)
+}
+
+#' @export
 get_variantsets = function(variantset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   check_args_get(id = variantset_id, dataset_version, all_versions)
   if (!is.null(variantset_id)) { # Need to look up specific ID
@@ -1059,26 +1080,10 @@ get_fusionset = function(fusionset_id = NULL, dataset_version = NULL, all_versio
 
 #' @export
 get_copynumberset = function(copynumberset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_get(id = copynumberset_id, dataset_version, all_versions)
-  if (!is.null(copynumberset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrCopyNumberSet, id = copynumberset_id, dataset_version = dataset_version)
-  } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrCopyNumberSet)
-  }
-  if (!all_versions) return(latest_version(df)) else return(df)
+  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
+                                       id = copynumberset_id, 
+                                       dataset_version, all_versions)
 }
-
-#' @export
-get_copynumbersubset = function(copynumbersubset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_get(id = copynumbersubset_id, dataset_version, all_versions)
-  if (!is.null(copynumbersubset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrCopyNumberSubSet, id = copynumbersubset_id, dataset_version = dataset_version)
-  } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrCopyNumberSubSet)
-  }
-  if (!all_versions) return(latest_version(df)) else return(df)
-}
-
 
 #' @export
 get_featuresets= function(featureset_id = NULL){
@@ -1424,17 +1429,23 @@ search_fusionsets = function(dataset_id = NULL, dataset_version = NULL, all_vers
 
 #' @export
 search_copynumbersets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrCopyNumberSet, dataset_id, dataset_version = dataset_version)
-  if (!all_versions) return(latest_version(df)) else return(df)
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
+                                          dataset_id, dataset_version, all_versions)
 }
 
 #' @export
-search_copynumbersubsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
+search_experimentsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
+                                          dataset_id, dataset_version, all_versions)
+}
+
+search_versioned_secure_metadata_entity = function(entity, dataset_id, dataset_version, all_versions) {
   check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrCopyNumberSubSet, dataset_id, dataset_version = dataset_version)
+  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
+                                                  dataset_version = dataset_version)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
+
 
 #' @export
 search_rnaquantification = function(rnaquantificationset = NULL,
@@ -1891,7 +1902,6 @@ register_expression_matrix = function(filepath,
     joinBack1 = store(.ghEnv$db, joinBack1, temp=TRUE)
 
     # Verify with
-    # head(subset(joinBack1, tuple_no == 0))
     scidb_array_head(.ghEnv$db$between(srcArray = joinBack1, lowCoord = "0, NULL, NULL, NULL", highCoord = "0, NULL, NULL, NULL"))
 
     cat("Number of features in study that matched with SciDB ID:\n")
@@ -1986,13 +1996,13 @@ register_expression_matrix = function(filepath,
 }
 
 #' @export
-register_copynumber_seg = function(copynumberset, only_test = FALSE){
-  test_register_copynumber_seg(copynumberset)
+register_copynumber_seg = function(experimentset, only_test = FALSE){
+  test_register_copynumber_seg(experimentset)
   if (!only_test) {
-    dataset_id = copynumberset$dataset_id
-    b = search_biosamples(dataset_id = dataset_id, dataset_version = copynumberset$dataset_version)
+    dataset_id = experimentset$dataset_id
+    b = search_biosamples(dataset_id = dataset_id, dataset_version = experimentset$dataset_version)
 
-    xx = read.delim(copynumberset$filepath)
+    xx = read.delim(experimentset$file_path)
     xx$biosample_id = b[match(xx$ID, b$name), ]$biosample_id
     stopifnot(!any(is.na(xx$biosample_id)))
     xx$ID = NULL
@@ -2001,37 +2011,44 @@ register_copynumber_seg = function(copynumberset, only_test = FALSE){
     colnames(xx) = gsub("loc.end",   "end",   colnames(xx))
     colnames(xx) = gsub("[.]", "_", colnames(xx))
 
-    xx$copynumberset_id = copynumberset$copynumberset_id
-    xx$dataset_version = copynumberset$dataset_version
+    xx$experimentset_id = experimentset$experimentset_id
+    xx$dataset_version = experimentset$dataset_version
 
-    arrayname = paste(find_namespace(id = copynumberset$copynumberset_id, entitynm = .ghEnv$meta$arrCopyNumberSet),
+    arrayname = paste(find_namespace(id = experimentset$experimentset_id, 
+                                     entitynm = .ghEnv$meta$arrExperimentSet),
                       .ghEnv$meta$arrCopynumber_seg, sep = ".")
 
-    cat("Inserting", nrow(xx), "entries into array:", arrayname, "at version", copynumberset$dataset_version, "\n")
+    cat("Inserting", nrow(xx), "entries into array:", arrayname, "at version", experimentset$dataset_version, "\n")
     register_tuple(df = xx,
-                   ids_int64_conv = c('start', 'end', 'dataset_version', 'copynumberset_id', 'biosample_id'),
+                   ids_int64_conv = c('start', 'end', 'dataset_version', 'experimentset_id', 'biosample_id'),
                    arrayname = arrayname)
   } # end of if (!only_test)
 }
 
 #' @export
-register_copynumber_matrix_file = function(copynumberSubSet, dataset_version, only_test = FALSE){
-  test_register_copnyumber_matrix_file(copynumberSubSet, dataset_version)
+register_copynumber_matrix_file = function(copynumberset, dataset_version, featureset_id, 
+                                           only_test = FALSE){
+  test_register_copnyumber_matrix_file(copynumberset, dataset_version)
   if (!only_test) {
-    dataset_id = copynumberSubSet$dataset_id
-    dataset_version = copynumberSubSet$dataset_version
+    dataset_id = copynumberset$dataset_id
+    dataset_version = copynumberset$dataset_version
     b = search_biosamples(dataset_id = dataset_id, dataset_version = dataset_version)
 
-    xx = read.delim(copynumberSubSet$filepath)
+    xx = read.delim(copynumberset$file_path)
     matched_biosample_id = b[match(tail(colnames(xx), -1), b$name), ]$biosample_id
-    stopifnot(all(!is.na(matched_biosample_id)))
+    if (!(all(!is.na(matched_biosample_id)))) {
+      stop("Found biosamples in .mat file that are not previously registered on system")
+    }
     colnames(xx) = c(colnames(xx)[1], matched_biosample_id)
 
-    ff = search_features(featureset_id = 1) # TODO: Assign automatically
-    ff_genes = ff[ff$feature_type == 'gene', ]
+    ff = search_features(featureset_id = featureset_id, feature_type = 'gene')
 
-    matched_feature_id = ff_genes[match(xx$Gene, ff_genes$name), ]$feature_id
-    stopifnot(all(!is.na(matched_feature_id)))
+    matched_feature_id = ff[match(xx$Gene, ff$name), ]$feature_id
+    if (!(all(!is.na(matched_feature_id)))) {
+      stop("Found features in .mat file that are not previously 
+           registered within specified featureset_id: ", 
+           featureset_id)
+    }
     xx$Gene = matched_feature_id
     colnames(xx) = gsub("^Gene$", "feature_id", colnames(xx))
     head(xx[1:5, 1:5])
@@ -2040,12 +2057,15 @@ register_copynumber_matrix_file = function(copynumberSubSet, dataset_version, on
     stopifnot(nrow(xx2) == nrow(xx)*(ncol(xx)-1))
 
     xx2$dataset_version = dataset_version
-    xx2$copynumbersubset_id = copynumberSubSet$copynumbersubset_id
+    xx2$copynumberset_id = copynumberset$copynumberset_id
 
-    namespace = find_namespace(id = copynumberSubSet$copynumbersubset_id, entitynm = .ghEnv$meta$arrCopyNumberSubSet)
+    namespace = find_namespace(id = copynumberset$copynumberset_id, 
+                               entitynm = .ghEnv$meta$arrCopyNumberSet)
     arrayname = paste(namespace, .ghEnv$meta$arrCopynumber_mat, sep = ".")
     cat("Inserting", nrow(xx2), "entries into", arrayname, "at version", dataset_version, "\n")
-    register_tuple(df = xx2, ids_int64_conv = get_idname(.ghEnv$meta$arrCopynumber_mat), arrayname = arrayname)
+    register_tuple(df = xx2, 
+                   ids_int64_conv = get_idname(.ghEnv$meta$arrCopynumber_mat), 
+                   arrayname = arrayname)
   } # end of if (!only_test)
 }
 

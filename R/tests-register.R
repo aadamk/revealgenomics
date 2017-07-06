@@ -70,6 +70,13 @@ test_register_dataset = function(df, uniq, dataset_version, silent = TRUE){
   if (dataset_version != 1) stop("to increment dataset versions, use the function `increment_dataset_version()`")
 }
 
+test_register_versioned_secure_metadata_entity = function(entity, df, uniq, silent = TRUE){
+  test_dataframe_formatting(df)
+  test_mandatory_fields(df, arrayname = entity, silent = silent)
+  test_unique_fields(df, uniq)
+  if(length(unique(df$dataset_id))!=1) stop(tolower(entity), " to be registered must belong to a single dataset/study")
+}
+
 test_register_individual = function(df, uniq, silent = TRUE){
   test_dataframe_formatting(df)
   test_mandatory_fields(df, arrayname = .ghEnv$meta$arrIndividuals, silent = silent)
@@ -154,13 +161,6 @@ test_register_copynumberset = function(df, uniq, silent = TRUE){
   if(length(unique(df$dataset_id))!=1) stop("CopyNumberSet to be registered must belong to a single dataset/study")
 }
 
-test_register_copynumbersubset = function(df, uniq, silent = TRUE){
-  test_dataframe_formatting(df)
-  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrCopyNumberSubSet, silent = silent)
-  test_unique_fields(df, uniq)
-  if(length(unique(df$dataset_id))!=1) stop("CopyNumberSubset to be registered must belong to a single dataset/study")
-}
-
 test_register_expression_matrix = function(filepath,
                                            rnaquantificationset_id,
                                            featureset_id,
@@ -177,14 +177,14 @@ test_register_variant = function(df){
   test_mandatory_fields(df, arrayname = .ghEnv$meta$arrVariant)
 }
 
-test_register_copynumber_seg = function(copynumberset){
-  stopifnot(nrow(copynumberset) == 1)
-  stopifnot("filepath" %in% colnames(copynumberset))
+test_register_copynumber_seg = function(experimentset){
+  stopifnot(nrow(experimentset) == 1)
+  stopifnot("file_path" %in% colnames(experimentset))
 }
 
-test_register_copnyumber_matrix_file = function(copynumberSubSet, dataset_version){
-  stopifnot(nrow(copynumberSubSet) == 1)
-  stopifnot("filepath" %in% colnames(copynumberSubSet))
+test_register_copnyumber_matrix_file = function(copynumberset, dataset_version){
+  stopifnot(nrow(copynumberset) == 1)
+  stopifnot("file_path" %in% colnames(copynumberset))
 }
 
 test_register_fusion_data = function(df, fusionset){

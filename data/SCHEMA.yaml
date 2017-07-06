@@ -116,7 +116,8 @@ array:
     namespace: 
       - public
       - collaboration
-    attributes: 
+    attributes:
+      dataset_id: int64
       name: string
       description: string
       molecule: string
@@ -148,8 +149,9 @@ array:
       - public
       - collaboration
     attributes: 
+      dataset_id: int64
+      biosample_id: int64
       experimentset_id: int64
-      individual_id: int64
       name: string
       created: string
       updated: string
@@ -167,6 +169,7 @@ array:
     search_by_entity: DATASET
     delete_by_entity: EXPERIMENT
     infoArray: TRUE
+    compression_on: FALSE
   # RNAQUANTIFICATIONSET
   RNAQUANTIFICATIONSET:
     data_class:
@@ -392,7 +395,7 @@ array:
       - collaboration
     attributes: 
       dataset_id: int64
-      referenceset_id: int64
+      experimentset_id: int64
       name: string
       description: string
       created: string
@@ -410,35 +413,6 @@ array:
         overlap: 0
     search_by_entity: DATASET
     delete_by_entity: COPYNUMBERSET
-    infoArray: TRUE
-    compression_on: FALSE
-  # COPYNUMBERSUBSET
-  COPYNUMBERSUBSET:
-    data_class:
-      metadata
-    namespace: 
-      - public
-      - collaboration
-    attributes: 
-      dataset_id: int64
-      copynumberset_id: int64
-      name: string
-      description: string
-      created: string
-      updated: string
-    dims: 
-      copynumbersubset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-      dataset_version:
-        start: 0
-        end: Inf
-        chunk_interval: 1
-        overlap: 0
-    search_by_entity: DATASET
-    delete_by_entity: COPYNUMBERSUBSET
     infoArray: TRUE
     compression_on: FALSE
   # COPYNUMBER_SEG
@@ -462,7 +436,7 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
-      copynumberset_id:
+      experimentset_id:
         start: 0
         end: Inf
         chunk_interval: 1
@@ -498,7 +472,7 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
-      copynumbersubset_id:
+      copynumberset_id:
         start: 0
         end: Inf
         chunk_interval: 1
@@ -513,8 +487,8 @@ array:
         end: Inf
         chunk_interval: 100000
         overlap: 0
-    search_by_entity: COPYNUMBERSUBSET
-    delete_by_entity: COPYNUMBERSUBSET
+    search_by_entity: COPYNUMBERSET
+    delete_by_entity: COPYNUMBERSET
     infoArray: FALSE
     compression_on: TRUE
           
