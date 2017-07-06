@@ -424,3 +424,57 @@ search_copynumber_mats_scidb = function(arrayname, copynumberset_id, biosample_i
   
   iquery(.ghEnv$db, left_query, return = TRUE)
 }
+
+#' @export
+search_copynumber_seg = function(experimentset, biosample = NULL){
+  if (!is.null(experimentset)) {experimentset_id = experimentset$experimentset_id} else {
+    stop("experimentset must be supplied"); experimentset_id = NULL
+  }
+  if (length(unique(experimentset$dataset_version)) != 1) {
+    stop("multiple dataset versions in supplied experimentset");
+  }
+  dataset_version = unique(experimentset$dataset_version)
+  if (!is.null(biosample)) {
+    stopifnot(length(unique(biosample$dataset_version))==1)
+    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of experimentset and biosample must be same")
+  }
+  namespace = find_namespace(id = experimentset_id,
+                             entitynm = .ghEnv$meta$arrExperimentSet,
+                             dflookup = get_experimentset_lookup())
+  cat("Found namespace: ", namespace, "\n")
+  arrayname = paste(namespace, .ghEnv$meta$arrCopynumber_seg, sep = ".")
+  if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
+
+  if (exists('debug_trace')) cat("retrieving CopyNumber_seg data from server\n")
+  res = search_copynumber_segs_scidb(arrayname,
+                                     experimentset_id,
+                                     biosample_id,
+                                     dataset_version = dataset_version)
+  res
+}
+
+search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_id = NULL, dataset_version){
+  if (is.null(dataset_version)) stop("dataset_version must be supplied")
+  if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
+  
+  if (is.null(experimentset_id)) stop("experimentset_id must be supplied")
+  if (length(experimentset_id) != 1) stop("can handle only one experimentset_id at a time")
+  
+  left_query = paste("between(", arrayname,
+                     ", ", dataset_version, ", ", experimentset_id, ", null, null",
+                     ", ", dataset_version, ", ", experimentset_id, ", null, null)", sep = "")
+  
+  if (!is.null(biosample_id)){
+    if (length(biosample_id) == 1) {
+      left_query = paste("between(", left_query,
+                         ", null, null, ", biosample_id, ", null",
+                         ", null, null, ", biosample_id, ", null)", sep = "")
+    } else {
+      filter_expr = formulate_base_selection_query('BIOSAMPLE', id = biosample_id)
+      left_query = paste("filter(", left_query,
+                         ", ", filter_expr, ")", sep = "")
+    }
+  }
+  
+  iquery(.ghEnv$db, left_query, return = TRUE)
+}
