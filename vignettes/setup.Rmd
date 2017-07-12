@@ -115,8 +115,10 @@ First the dependencies
 ```{sh}
 # Ubuntu
 sudo apt-get install libxml2-dev
-# Centos
+# Centos 6
 sudo yum install libxml2-dev # need the Centos equivalent here (auto-prompted by R roxgen2 install below)
+# Centos 7
+sudo yum install libxml2-devel # need the Centos equivalent here (auto-prompted by R roxgen2 install below)
 ```
 
 Next, install the following R packages from CRAN
