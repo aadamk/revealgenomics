@@ -122,15 +122,27 @@ sudo yum install libxml2-dev # need the Centos equivalent here (auto-prompted by
 sudo yum install libxml2-devel # need the Centos equivalent here (auto-prompted by R roxgen2 install below)
 ```
 
-LibPqxx-devel
+LibPqxx-devel (prompted by R RPostgreSQL install)
 ```{sh}
 yum install postgresql93-devel.x86_64
 ```
+
+Libcurl-devel (prompted by R devtools install)
+```{sh}
+yum install libcurl-devel
+```
+
 Next, install the following R packages from CRAN
 ```{sh}
 sudo R
 # Then run
-install.packages(c('roxygen2', 'tidyr', 'RPostgreSQL')); 
+install.packages(c('roxygen2', 
+                   'tidyr', 
+                   'RPostgreSQL', 
+                   'devtools',
+                   'yaml',
+                   'knitr',
+                   'reshape2')); 
 source("http://bioconductor.org/biocLite.R"); 
 biocLite(c("Biobase")); 
 ```
