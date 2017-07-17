@@ -1240,6 +1240,10 @@ search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
   names(ont_ids) = ont$term
   if (exact_match){
     res = ont_ids[terms]
+    if (any(is.na(res)) & !updateCache) {
+      cat("Updating ontology cache\n")
+      search_ontology(terms, exact_match = exact_match, updateCache = TRUE)
+    }
     names(res) = terms
     as.integer(res)
   } else {
