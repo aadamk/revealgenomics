@@ -13,6 +13,7 @@ Depends:
     yaml,
     reshape2,
     Biobase,
+    jsonlite,
     scidb
 License: file LICENSE
 LazyData: TRUE
