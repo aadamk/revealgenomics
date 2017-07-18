@@ -3,6 +3,7 @@
 export(.ghEnv)
 export(build_reference_gene_set)
 export(delete_entity)
+export(delete_project)
 export(drop_na_columns)
 export(get_biosamples)
 export(get_copynumberset)
