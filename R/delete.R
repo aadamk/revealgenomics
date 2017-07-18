@@ -188,11 +188,11 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
 ###############################################################################
 
 #' @export
-delete_project <- function(projectID) {
+delete_project <- function(project_id) {
   ##---------------=
-  ## If there is more than one projectID, or it is not a valid ID, then give an error.
+  ## If there is more than one project_id, or it is not a valid ID, then give an error.
   ##---------------=
-  if (!length(projectID) == 1) {
+  if (!length(project_id) == 1) {
     stop("You can only specify one project ID at a time to 'delete_project()'.")
   }
   ## Note, incorrect projectIDs will be caught by the call to "search_datasets()".
@@ -201,7 +201,7 @@ delete_project <- function(projectID) {
   ##---------------=
   ## Get the datasets under this project.
   ##---------------=
-  datasets <- search_datasets(project_id = projectID)
+  datasets <- search_datasets(project_id = project_id)
   
   datasetStructures.lst <- list()
   
@@ -211,7 +211,7 @@ delete_project <- function(projectID) {
     datasets <-  datasets[order(datasets[,"dataset_id"], -datasets[,"dataset_version"]), ]
     
     datasetNames <- apply(datasets[, c("dataset_id", "dataset_version")],  MARGIN = 1,  FUN = function(x) { paste(x, collapse = "_ver")})
-    cat("Project ", projectID, " consists of DATASET(S):  \t", paste(datasetNames, collapse=", "), "\n\n", sep="")
+    cat("Project ", project_id, " consists of DATASET(S):  \t", paste(datasetNames, collapse=", "), "\n\n", sep="")
     
     
     
@@ -227,7 +227,7 @@ delete_project <- function(projectID) {
     }
   } else {
     ## If there are no datasests, then indicate that there are no datasets underneath.
-    cat("Project", projectID, "contains no datasets. \n\n")
+    cat("Project", project_id, "contains no datasets. \n\n")
   }
   
   
@@ -241,13 +241,13 @@ delete_project <- function(projectID) {
   ## If the user said to procede, then delete the datasets.
   ##---------------=
   if(charmatch(tolower(userResponse), c("yes", "no")) == 1) {
-    cat("Deleting project ", projectID, "... \n",  sep="")
+    cat("Deleting project ", project_id, "... \n",  sep="")
     
     if (length(datasetStructures.lst) > 0) {
       ## Delete all of the datasets and their sub-elements.
       for (i in 1:length(datasetStructures.lst)) {
         nextDatasetStructure <- datasetStructures.lst[[i]]
-        delete_dataset(datasetID = attr(nextDatasetStructure, "datasetID"),
+        delete_dataset(dataset_id = attr(nextDatasetStructure, "dataset_id"),
                        datasetVersion = attr(nextDatasetStructure, "datasetVersion"),
                        datasetStructure = nextDatasetStructure)
       }
@@ -255,17 +255,17 @@ delete_project <- function(projectID) {
     
     ## Now delete the actual project ID.
     delete_entity(entity = "PROJECT", 
-                  id = projectID)
+                  id = project_id)
     
   } else {
     ## Don't delete the project.
-    cat("Project ", projectID, " was NOT deleted. \n",  sep="")
+    cat("Project ", project_id, " was NOT deleted. \n",  sep="")
   }
   
 }
 
 
-get_dataset_subelements <- function(datasetID, datasetVersion) {
+get_dataset_subelements <- function(dataset_id, datasetVersion) {
   ## DEBUG: A flag for whether to surpess the errors for searching for entities
   ## that might not be there.  This should be coded concretely one way or the
   ## other.
@@ -278,12 +278,12 @@ get_dataset_subelements <- function(datasetID, datasetVersion) {
   ##  be able to do it programatically in the future.
   ##---------------=
   dataset_subelements <- list()
-  dataset_subelements[[.ghEnv$meta$arrIndividuals]] <- try(search_individuals(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrBiosample]] <- try(search_biosamples(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrRnaquantificationset]] <- try(search_rnaquantificationset(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrVariantset]] <- try(search_variantsets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrExperimentSet]] <- try(search_experimentsets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrCopyNumberSet]] <- try(search_copynumbersets(dataset_id = datasetID, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[.ghEnv$meta$arrIndividuals]] <- try(search_individuals(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[.ghEnv$meta$arrBiosample]] <- try(search_biosamples(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[.ghEnv$meta$arrRnaquantificationset]] <- try(search_rnaquantificationset(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[.ghEnv$meta$arrVariantset]] <- try(search_variantsets(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[.ghEnv$meta$arrExperimentSet]] <- try(search_experimentsets(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
+  dataset_subelements[[.ghEnv$meta$arrCopyNumberSet]] <- try(search_copynumbersets(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
   ############################################################
   ## TODO:
   ##  - Update this to be programmatic!  Use the list of metadata elements that have DATASET as a search_by_entity 
@@ -298,10 +298,10 @@ get_dataset_subelements <- function(datasetID, datasetVersion) {
       dataset_subelements[[next.name]] <- NA 
   } 
   
-  ## And add the datasetID and datasetVersion as attributes for this datasetStructure object,
+  ## And add the dataset_id and datasetVersion as attributes for this datasetStructure object,
   ##  so that they do not conflict with the other information types, but are still embedded 
   ##  in the dataset object.
-  attr(dataset_subelements, which = "datasetID") <- datasetID
+  attr(dataset_subelements, which = "dataset_id") <- dataset_id
   attr(dataset_subelements, which = "datasetVersion") <- datasetVersion
   
   
@@ -318,7 +318,7 @@ get_dataset_subelements <- function(datasetID, datasetVersion) {
 
 
 
-print_dataset_subelements <- function(datasetID, datasetVersion, print.nonexistant.metadata = FALSE) {
+print_dataset_subelements <- function(dataset_id, datasetVersion, print.nonexistant.metadata = FALSE) {
   
   ## Note that "print.nonexistent.metadata" is just an option to explicitly state which types of 
   ##  information have been searched but do not exist for this dataset.  It is FALSE by default.
@@ -326,12 +326,12 @@ print_dataset_subelements <- function(datasetID, datasetVersion, print.nonexista
   ##---------------=
   ## Get the dataset's subelements
   ##---------------=
-  dataset_subelements <- get_dataset_subelements(datasetID, datasetVersion)
+  dataset_subelements <- get_dataset_subelements(dataset_id, datasetVersion)
   
   ##---------------=
   ## Print to the screen the lists of elements that will be deleted.
   ##---------------=
-  cat("Summary of dataset = ", datasetID, " (version = ", datasetVersion, "):  \n", sep="")
+  cat("Summary of dataset = ", dataset_id, " (version = ", datasetVersion, "):  \n", sep="")
   max_char_length <- max(nchar(names(dataset_subelements)))
   for(next.subelement in names(dataset_subelements)) {
     
@@ -364,17 +364,17 @@ print_dataset_subelements <- function(datasetID, datasetVersion, print.nonexista
 ##  dataset, but for the moment it will only delete the metadata.  It will
 ##  eventually delete the actual measurement data as well.
 ##-----------------------------------------------------------------------------=
-delete_dataset <- function(datasetID, datasetVersion, datasetStructure = NULL) {
+delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) {
   
   ## Get the list of sub-entities.
   ## If the dataset's structure is provided, then use that structure, otherwise call
   ##  the function to get the dataset's sub-structure.
   if (is.null(datasetStructure)) {
-    datasetStructure <- get_dataset_subelements(datasetID, datasetVersion)
+    datasetStructure <- get_dataset_subelements(dataset_id, datasetVersion)
   } else {
     ## If the dataset structure was provided, verify that it is the same as is being 
-    ##  specified by the datasetID and datasetVersion.
-    stopifnot( attr(datasetStructure, "datasetID")==datasetID 
+    ##  specified by the dataset_id and datasetVersion.
+    stopifnot( attr(datasetStructure, "dataset_id")==dataset_id 
                & attr(datasetStructure, "datasetVersion")==datasetVersion )
   }
   
@@ -453,7 +453,7 @@ delete_dataset <- function(datasetID, datasetVersion, datasetStructure = NULL) {
   ## Delete the dataset_id itself from the DATASET metadata table.
   ##-----------------=
   delete_entity(entity = "DATASET", 
-                id = datasetID, 
+                id = dataset_id, 
                 dataset_version = datasetVersion, 
                 delete_by_entity = "DATASET")
   
