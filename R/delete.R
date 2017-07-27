@@ -189,6 +189,7 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
 
 #' @export
 delete_project <- function(project_id) {
+  asdf = 1
   ##---------------=
   ## If there is more than one project_id, or it is not a valid ID, then give an error.
   ##---------------=
@@ -424,14 +425,23 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
   ##-----------------=
   for (next.metadata.name in names(datasetStructure)) {
     next.metadata.ids.mat <- datasetStructure[[next.metadata.name]]
-    
+
     ## Get the name for the column that contains the IDs for this metadata type.
-    column.name <- get_base_idname(next.metadata.name)  
+    column.name <- get_base_idname(next.metadata.name)
+
+    # for (next.row in 1:nrow(next.metadata.ids.mat) ) {
+    #   delete_entity(entity = next.metadata.name,
+    #                 id = next.metadata.ids.mat[next.row, column.name],
+    #                 dataset_version = next.metadata.ids.mat[next.row, "dataset_version"],
+    #                 delete_by_entity = next.metadata.name)
+    # }
     
-    for (next.row in 1:nrow(next.metadata.ids.mat) ) {
-      delete_entity(entity = next.metadata.name, 
-                    id = next.metadata.ids.mat[next.row, column.name], 
-                    dataset_version = next.metadata.ids.mat[next.row, "dataset_version"], 
+    ## Delete all of the entries for this metadata type (in a 
+    ##  single delete_entity() call).
+    if (nrow(next.metadata.ids.mat) > 0) {
+      delete_entity(entity = next.metadata.name,
+                    id = next.metadata.ids.mat[, column.name],
+                    dataset_version = datasetVersion,
                     delete_by_entity = next.metadata.name)
     }
   }
@@ -440,12 +450,11 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
   ## TODO:
   ##  - Instead of deleting individually (looping), delete all metadata at once.
   ############################################################
-  ## TRY THIS IMPLEMENTATION NEXT TIME WHEN THE PACKAGE HAS BEEN BUILT:
-  #
-  #   delete_entity(entity = next.metadata.name, 
-  #                 id = next.metadata.ids.mat[, column.name], 
-  #                 dataset_version = datasetVersion, 
-  #                 delete_by_entity = next.metadata.name)
+  # TRY THIS IMPLEMENTATION NEXT TIME WHEN THE PACKAGE HAS BEEN BUILT:
+  # delete_entity(entity = next.metadata.name,
+  #               id = next.metadata.ids.mat[, column.name],
+  #               dataset_version = datasetVersion,
+  #               delete_by_entity = next.metadata.name)
   
   
   
