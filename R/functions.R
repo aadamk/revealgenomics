@@ -13,18 +13,48 @@
 #
 
 #' @export
-gh_connect = function(username, password, host = NULL, port = 8083, protocol = "https"){
-  # SciDB connection and R API
-  if (is.null(host)) {
-    .ghEnv$db = scidbconnect(username = username, password = password, port = port, protocol = protocol)
+gh_connect = function(username, password, host = NULL, port = NULL, protocol = "https"){
+  # SciDB connection and R API --
+  
+  # Attempt 1. 
+  err1 = tryCatch({
+    if (is.null(host) & is.null(port)) {
+      # If user did not specify host and port, try default host for scidbconnect at port 8083
+      .ghEnv$db = scidbconnect(username = username, password = password, port = 8083, protocol = protocol)
+    } else {
+      # If user specified host and port, try user supplied parameters
+      .ghEnv$db = scidbconnect(host = host, username = username, password = password, port = port, protocol = protocol)
+    }
+    }, error = function(e) {return(e)}
+  )
+  
+  # If previous attempts did not work, maybe port 8083 was forwarded (hard-coded to /shim below)
+  if ("error" %in% class(err1) & is.null(host) & is.null(port)){
+    err2 = tryCatch({ 
+      .ghEnv$db = scidbconnect(protocol = protocol, 
+                                host = '127.0.0.1/shim/', , 
+                                port = NULL,  
+                                username = username, 
+                                password = password) 
+      }, error = function(e) {return(e)}
+      )
+  } else if ("error" %in% class(err1)) {
+    err2 = tryCatch({stop("could not connect via user supplied parameters")}, 
+                    error = function(e) {return(e)}
+                    )
   } else {
-    .ghEnv$db = scidbconnect(host = host, username = username, password = password, port = port, protocol = protocol)
+    err2 = FALSE
   }
+  
 
-  .ghEnv$cache$nmsp_list = iquery(.ghEnv$db, "list('namespaces')", schema = "<name:string NOT NULL> [No=0:1,2,0]", return = T)$name
-  .ghEnv$cache$nmsp_list = .ghEnv$cache$nmsp_list[.ghEnv$cache$nmsp_list %in% c('public', 'clinical', 'collaboration')]
-
-  # return(.ghEnv)
+  if ("error" %in% class(err2)) {
+    print(err1);
+    print(err2);
+    .ghEnv$db = NULL
+  } else {
+    .ghEnv$cache$nmsp_list = iquery(.ghEnv$db, "list('namespaces')", schema = "<name:string NOT NULL> [No=0:1,2,0]", return = T)$name
+    .ghEnv$cache$nmsp_list = .ghEnv$cache$nmsp_list[.ghEnv$cache$nmsp_list %in% c('public', 'clinical', 'collaboration')]
+  }
 }
 
 entity_lookup = function(entityName, updateCache = FALSE){
