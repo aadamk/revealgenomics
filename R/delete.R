@@ -173,18 +173,13 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
     iquery(.ghEnv$db, qq)
   }
 }
+
+
 ###############################################################################
-## NEXT STEPS / ELEMENTS STILL REMAINING TO IMPLEMENT:
+## NEXT STEPS / ELEMENTS STILL REMAINING TO IMPLEMENT (for delete_project()):
 ## 
-##  - Call the actual "delete_entity()" function for each of the elements within
-##    a dataset (as specified within the list of returned objects)
-##      - Note: Will have to figure out how to programmatically identify the
-##        type of entity that each object is, since this is necessary for the 
-##        "delete_entity()" function.
-##  - Call the function that deletes actual data entries associated with a
-##    given dataset once Kriti implements that function.
-##  - Process the user input project_ID to verify that it is only a single ID,
-##    and that it exists.
+##  - Add the programmatic identification of which fields to use in the 
+##    "get_dataset_subelements()" function.
 ###############################################################################
 
 #' @export
@@ -309,15 +304,6 @@ get_dataset_subelements <- function(dataset_id, datasetVersion) {
 }
 
 
-
-## IDEA: Might be able to eventually create a table that lists all of the types of metadata
-##  that will need to be accessed.  It will give the name (ex: "arrIndividuals"), 
-##  entity-name (ex: "INDIVIDUAL"), the lookup function (ex: "search_individuals"),
-##  the ID column name (ex: "individual_id"), and the parent object? (ex: the dataset ID or project ID?)
-
-
-
-
 print_dataset_subelements <- function(dataset_id, datasetVersion, print.nonexistant.metadata = FALSE) {
   
   ## Note that "print.nonexistent.metadata" is just an option to explicitly state which types of 
@@ -395,7 +381,7 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
   measurementsInfo.mat <- entityInfo.mat[entityInfo.mat$class=="measurementdata", ]
   
   ## For each of measurement types, delete any associated measurement data if it exists.
-  for (i in nrow(measurementsInfo.mat)) {
+  for (i in 1:nrow(measurementsInfo.mat)) {
     next.entity <- as.character( measurementsInfo.mat$entity[i] )
     next.parent.entity <- as.character( measurementsInfo.mat$delete_by_entity[i] )
     
@@ -424,30 +410,19 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
   ##-----------------=
   for (next.metadata.name in names(datasetStructure)) {
     next.metadata.ids.mat <- datasetStructure[[next.metadata.name]]
-    
+
     ## Get the name for the column that contains the IDs for this metadata type.
-    column.name <- get_base_idname(next.metadata.name)  
-    
-    for (next.row in 1:nrow(next.metadata.ids.mat) ) {
-      delete_entity(entity = next.metadata.name, 
-                    id = next.metadata.ids.mat[next.row, column.name], 
-                    dataset_version = next.metadata.ids.mat[next.row, "dataset_version"], 
+    column.name <- get_base_idname(next.metadata.name)
+
+    ## Delete all of the entries for this metadata type (in a 
+    ##  single delete_entity() call).
+    if (nrow(next.metadata.ids.mat) > 0) {
+      delete_entity(entity = next.metadata.name,
+                    id = next.metadata.ids.mat[, column.name],
+                    dataset_version = datasetVersion,
                     delete_by_entity = next.metadata.name)
     }
   }
-  
-  ############################################################
-  ## TODO:
-  ##  - Instead of deleting individually (looping), delete all metadata at once.
-  ############################################################
-  ## TRY THIS IMPLEMENTATION NEXT TIME WHEN THE PACKAGE HAS BEEN BUILT:
-  #
-  #   delete_entity(entity = next.metadata.name, 
-  #                 id = next.metadata.ids.mat[, column.name], 
-  #                 dataset_version = datasetVersion, 
-  #                 delete_by_entity = next.metadata.name)
-  
-  
   
   ##-----------------=
   ## Delete the dataset_id itself from the DATASET metadata table.
@@ -456,47 +431,6 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
                 id = dataset_id, 
                 dataset_version = datasetVersion, 
                 delete_by_entity = "DATASET")
-  
-  
-  
-  ############ ((Below is no longer needed.  It was the layout for deleting items explicitly.))  #######################
-  #   for (next.metadata.name in names(datasetStructure)) {
-  #     next.metadata.object <- datasetStructure[[next.metadata.name]]
-  #     
-  #    
-  #     
-  #     if (!is.na(next.metadata.object)) {
-  #       ## Get the list of object IDs.
-  #       
-  #       ## Delete each of the measurements based on their ID, dataset ID, and dataset version.
-  #       
-  #       ## Now delete the metadata entity.
-  #       delete_entity(entity = next.metadata.name, ids = )
-  #     }
-  #     
-  #     
-  #     ######################################
-  #     ##### FINISH!!!! ###############
-  #     ######################################
-  #     nextIDs <- next.metadata.name[, 1]#### THE NAME OF THE COLUMN THAT HOLDS THE IDS IN THIS DATAFRAME!!!!! ######] 
-  #     ######################################
-  #     ##### FINISH!!!! ###############
-  #     ######################################
-  #     
-  #     
-  #     
-  #   }
-  #   
-  #   
-  #   ## NOTE: Currently there is no list of child-entities attached to a higher
-  #   ##  level entity. So for now, this will have to be done manually by calling
-  #   ##  each of the search functions that could possibly exist at this level.
-  #   delete_entity(entity = 'INDIVIDUAL', ids = i$individual_id[1:2], dataset_version = 1)
-  #   
-  #   ## Delete each of the sub-entities.
-  #   
-  #   ## Delete this dataset.
-  #   delete_entity(entity = 'INDIVIDUAL', ids = i$individual_id[1:2], dataset_version = 1)
 }
 
 

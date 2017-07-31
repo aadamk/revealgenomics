@@ -44,6 +44,11 @@ i2 = search_individuals(dataset_id = d$dataset_id)
 print(head(i2))
 
 
+## [EJS (7/27/17)]
+## Now delete the entire project
+delete_project(project_id = p$project_id)
+
+
 
 
 
