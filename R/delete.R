@@ -381,7 +381,7 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
   measurementsInfo.mat <- entityInfo.mat[entityInfo.mat$class=="measurementdata", ]
   
   ## For each of measurement types, delete any associated measurement data if it exists.
-  for (i in nrow(measurementsInfo.mat)) {
+  for (i in 1:nrow(measurementsInfo.mat)) {
     next.entity <- as.character( measurementsInfo.mat$entity[i] )
     next.parent.entity <- as.character( measurementsInfo.mat$delete_by_entity[i] )
     
