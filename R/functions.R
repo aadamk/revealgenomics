@@ -480,7 +480,11 @@ update_mandatory_and_info_fields = function(df, arrayname){
   if (any(is.na(df[, idname]))) stop("Dimensions: ", paste(idname, collapse = ", "), " should not have null values at upload time!")
   int64_fields = get_int64fields(arrayname)
   infoArray = get_infoArray(arrayname)
-  update_tuple(df, ids_int64_conv = c(idname, int64_fields), arrayname)
+  update_tuple(df[, c(get_idname(arrayname),
+                      mandatory_fields()[[strip_namespace(arrayname)]], 
+                      'created', 'updated')], 
+               ids_int64_conv = c(idname, int64_fields), 
+               arrayname)
   if(infoArray){
     delete_info_fields(fullarrayname = arrayname,
                        id = df[, get_base_idname(arrayname)],
