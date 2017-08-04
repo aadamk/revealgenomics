@@ -170,22 +170,11 @@ pushd /home/$USER/coding/downloads/scidb4gh/; R --slave -e "library(roxygen2); r
 
 # Package setup and usage
 
-Password (just for demo purposes)
-
-```{sh}
-vi ~/ga4gh-config.R
-# Put in the following there
-#######
-CODEPATH = '~/coding/jnj/sow2/load'
-rootpassword="Paradigm4"
-#######
-```
-
 Now let us get to using the package:
 
 ```{R}
 library(scidb4gh)
-gh_connect('root', 'Paradigm4')
+gh_connect('root', ROOTPASSWORD)
 init_db(arrays_to_init = 'ONTOLOGY')           # CAUTION: To be used with care by DB admin only
 init_db(arrays_to_init = get_entity_names())   # EXTREME CAUTION: To be used with extreme care by DB admin only
 ```

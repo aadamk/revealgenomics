@@ -1,4 +1,4 @@
-#' JNJ SciDB Toolbox for R
+#' GA4GH inspired and SciDB backed R API for genomic data 
 #'
 #' Available package options (you can override the defaults with the \code{options} function):
 #'
