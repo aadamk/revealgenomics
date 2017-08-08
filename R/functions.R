@@ -700,8 +700,10 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE){
     df = as.data.frame(df)
     if (is.null(dataset_version)) {
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      if (is.null(dataset_version)) stop("Expected non-null dataset_version at this point")
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
+    df$dataset_version = dataset_version
     namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
     arrayname = paste(namespace, ".", .ghEnv$meta$arrVariant, sep = "")
 

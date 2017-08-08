@@ -4,7 +4,7 @@
 \name{scidb4gh}
 \alias{scidb4gh}
 \alias{scidb4gh-package}
-\title{JNJ SciDB Toolbox for R}
+\title{GA4GH inspired and SciDB backed R API for genomic data}
 \description{
 Available package options (you can override the defaults with the \code{options} function):
 }
