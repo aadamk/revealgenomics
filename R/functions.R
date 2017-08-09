@@ -657,6 +657,14 @@ register_experimentset = function(df, dataset_version = NULL, only_test = FALSE)
                                             df, dataset_version, only_test)
 }
 
+#' @export
+register_experiment = function(df, dataset_version = NULL, only_test = FALSE){
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperiment, 
+                                            uniq = c('experimentset_id', 'measurement_entity', 
+                                                     'measurementset_id', 'biosample_id'), 
+                                            df, dataset_version, only_test)
+}
+
 register_versioned_secure_metadata_entity = function(entity, uniq, df, 
                                             dataset_version, only_test){
   test_register_versioned_secure_metadata_entity(entity, df, uniq, 
@@ -941,6 +949,13 @@ get_rnaquantificationsets = function(rnaquantificationset_id = NULL, dataset_ver
 get_experimentset = function(experimentset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
                                        id = experimentset_id, 
+                                       dataset_version, all_versions)
+}
+
+#' @export
+get_experiment = function(experiment_id = NULL, dataset_version = NULL, all_versions = FALSE){
+  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperiment, 
+                                       id = experiment_id, 
                                        dataset_version, all_versions)
 }
 

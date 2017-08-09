@@ -150,9 +150,11 @@ array:
       - collaboration
     attributes: 
       dataset_id: int64
-      biosample_id: int64
       experimentset_id: int64
-      name: string
+      measurement_entity: string
+      measurementset_id: int64
+      measurementset_name: string
+      biosample_id: int64
       created: string
       updated: string
     dims: 
@@ -451,8 +453,8 @@ array:
         end: Inf
         chunk_interval: 10000
         overlap: 0
-    search_by_entity: COPYNUMBERSET
-    delete_by_entity: COPYNUMBERSET
+    search_by_entity: EXPERIMENTSET
+    delete_by_entity: EXPERIMENTSET
     infoArray: FALSE
     compression_on: TRUE
   #COPYNUMBER_MAT
