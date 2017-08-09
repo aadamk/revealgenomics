@@ -600,20 +600,38 @@ register_tuple_return_id = function(df,
   return(df[, idname])
 }
 
-update_lookup_array = function(id, arrayname){
+update_lookup_array = function(new_id, arrayname){
+  URI_414_ERROR_THRESH = 700
   name = strip_namespace(arrayname)
   namespace = get_namespace(arrayname)
-
+  
   lookuparr = paste(name, "_LOOKUP", sep = "")
   a = scidb(.ghEnv$db, lookuparr)
-
-  qq = sprintf("build(<%s:int64, namespace: string>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
-               get_base_idname(arrayname), length(id), paste(id, namespace, sep=",", collapse="), ("))
-  qq = paste("redimension(", qq, ", ", schema(a), ")", sep = "")
-  qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
-  cat("inserting id-s:", id, "into array", lookuparr, "\n")
-  # cat("query:", qq, "\n")
-  iquery(.ghEnv$db, qq)
+  
+  if (length(new_id) <= URI_414_ERROR_THRESH) {
+    cat("inserting id-s:", pretty_print(new_id), "into array", lookuparr, "\n")
+    
+    qq = sprintf("build(<%s:int64, namespace: string>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
+                 get_base_idname(arrayname), length(new_id), paste(new_id, namespace, sep=",", collapse="), ("))
+    qq = paste("redimension(", qq, ", ", schema(a), ")", sep = "")
+    qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
+    # cat("query:", qq, "\n")
+    iquery(.ghEnv$db, qq)
+  } else { # alternate upload path when URI can be too long
+    cat("inserting id-s:", pretty_print(new_id), "into array", lookuparr, " - via upload\n")
+    
+    new_id_df = data.frame(new_id = new_id,
+                           namespace = namespace, 
+                           stringsAsFactors = FALSE)
+    colnames(new_id_df)[which(colnames(new_id_df) == 'new_id')] = 
+                                            get_base_idname(arrayname)
+    uploaded = as.scidb(.ghEnv$db, new_id_df)
+    uploaded = convert_attr_double_to_int64(arr = uploaded, attrname = get_base_idname(arrayname))
+    qq = paste("redimension(", uploaded@name, ", ", schema(a), ")", sep = "")
+    qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
+    # cat("query:", qq, "\n")
+    iquery(.ghEnv$db, qq)
+  }
 }
 
 #' @export
