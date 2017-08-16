@@ -56,11 +56,17 @@ test_return_carriage_in_df = function(df){
   }
 }
 
+#' Test that all ontology entries are non-null
+#' 
+#' @param df     data frame on which this test will be run
+#' @param suffix suffix for ontology columns. Default: "_" or "_term". 
 test_non_null_ontology_elements = function(df, suffix = c("_", "_term")) {
-  ont_cols = colnames(df)[grep("_$|_term$", colnames(df))]
+  ont_cols = colnames(df)[grep(paste(suffix, "$", sep = "", collapse = "|"), 
+                               colnames(df))]
   if (length(ont_cols) >= 1) {
     dfx = df[, ont_cols]
-    if (class(dfx) == 'data.frame') {
+    if (length(ont_cols) > 1) {
+      if (class(dfx) != 'data.frame') stop("Expected data.frame class here")
       if (nrow(dfx) > 1) {
         check_for_null = apply(apply(dfx, 2, is.na), 2, any)
       } else if (nrow(dfx) == 1) {
@@ -68,10 +74,14 @@ test_non_null_ontology_elements = function(df, suffix = c("_", "_term")) {
       } else {
         stop("Zero row DF should not exist here")
       }
-    } else if (class(dfx) %in% c('integer', 'numeric')) {
-      check_for_null = is.na(dfx)
+    } else if (length(ont_cols) == 1) {
+      if (!(class(dfx) %in% c('integer', 'numeric'))) {
+        stop("Expected integer or numeric class here")
+      }
+      check_for_null = any(is.na(dfx))
+      names(check_for_null) = ont_cols
     } else {
-      stop("Expected data frame or integer values here")
+      stop("Expected length of ontology columns greater than 1 here")
     }
     if (any(check_for_null)) {
       stop("Found null element in ontology fields: ", 

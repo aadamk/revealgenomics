@@ -75,7 +75,7 @@ pretty_print = function(vec) {
   ifelse(length(vec) <= 7,
          paste(vec, collapse = ", "),
          paste(pretty_print(head(vec, 2)),
-               "...(", length(vec)-4, " other)... ",
+               "...(Total: ", length(vec), ")... ",
                pretty_print(tail(vec, 2)),
                sep = ""))}
 
