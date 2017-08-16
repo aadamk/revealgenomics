@@ -170,83 +170,6 @@ scidb_exists_array = function(arrayName) {
   !is.null(tryCatch({iquery(.ghEnv$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
 }
 
-is_entity_secured = function(entitynm){
-  entitynm = strip_namespace(entitynm)
-  ifelse(length(.ghEnv$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
-}
-
-is_entity_versioned = function(entitynm){
-  "dataset_version" %in% get_idname(entitynm)
-}
-
-get_idname = function(arrayname){
-  local_arrnm = strip_namespace(arrayname)
-  idname = .ghEnv$meta$L$array[[local_arrnm]]$dims
-  if (class(idname) == "character") return(idname) else return(names(idname))
-}
-
-get_base_idname = function(arrayname){
-  dims = get_idname(arrayname)
-  dims[!(dims %in% "dataset_version")]
-}
-
-get_int64fields = function(arrayname){
-  local_arrnm = strip_namespace(arrayname)
-  attr_types = unlist(.ghEnv$meta$L$array[[local_arrnm]]$attributes)
-  int64_fields = names(attr_types[which(!(attr_types %in% 
-                                            c('string', 'datetime', 'int32', 'double', 'bool')))])
-  stopifnot(all(unique(attr_types[int64_fields]) %in% c("int64", "numeric")))
-  int64_fields
-}
-
-get_entity_data_class = function(entity){
-  .ghEnv$meta$L$array[[entity]]$data_class
-}
-
-
-#' @export
-get_entity_names = function(data_class = NULL){
-  varnames = names(.ghEnv$meta)
-  varnames = varnames[varnames != "L"]
-  entities = sapply(varnames, function(nm){as.character(.ghEnv$meta[nm])})
-  if (!is.null(data_class)) {
-    matches = sapply(entities, function(entity) {
-      ifelse(get_entity_data_class(entity) == data_class, TRUE, FALSE)
-    })
-    entities = entities[matches]
-  }
-  entities
-}
-
-get_entity_class = function(entity) { 
-  stopifnot(entity %in% get_entity_names())
-  .ghEnv$meta$L$array[[entity]]$data_class 
-}
-
-get_search_by_entity = function(entity) { 
-  entity = strip_namespace(entity)
-  stopifnot(entity %in% get_entity_names())
-  .ghEnv$meta$L$array[[entity]]$search_by_entity 
-}
-
-get_delete_by_entity = function(entity) { 
-  entity = strip_namespace(entity)
-  stopifnot(entity %in% get_entity_names())
-  .ghEnv$meta$L$array[[entity]]$delete_by_entity 
-}
-
-#' @export
-get_entity_info = function(){
-  df1 = data.frame(entity = get_entity_names())
-  df1$class =            sapply(get_entity_names(), function(entity) get_entity_class(entity))
-  df1$measurementdata_subclass = sapply(get_entity_names(), function(entity) .ghEnv$meta$L$array[[entity]]$measurementdata_subclass)
-  df1$search_by_entity = sapply(get_entity_names(), function(entity) get_search_by_entity(entity))
-  df1$delete_by_entity = sapply(get_entity_names(), function(entity) get_delete_by_entity(entity))
-  df1 = data.frame(apply(df1, 2, function(col) {sapply(col, function(elem) {ifelse (is.null(elem), NA, elem)})}))
-  rownames(df1) = NULL
-  df1
-}
-
 get_max_id = function(arrayname){
   if (is_entity_secured(arrayname)) { # Lookup array must exist
     max = iquery(.ghEnv$db,
@@ -308,7 +231,7 @@ register_tuple = function(df, ids_int64_conv, arrayname){
 register_project = function(df,
                             namespace,
                             only_test = FALSE){
-  uniq = 'name'
+  uniq = unique_fields()[[.ghEnv$meta$arrProject]]
   test_register_project(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = paste(namespace, ".", .ghEnv$meta$arrProject, sep = "")
@@ -321,8 +244,8 @@ register_dataset = function(df,
                             dataset_version = 1,
                             only_test = FALSE
 ){
-  uniq = c('project_id', 'name')
-
+  uniq = unique_fields()[[.ghEnv$meta$arrDataset]]
+  
   test_register_dataset(df, uniq, dataset_version, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     namespace = find_namespace(id = unique(df$project_id), entitynm=.ghEnv$meta$arrProject)
@@ -342,7 +265,7 @@ find_namespace = function(id, entitynm, dflookup = NULL){
 
 #' @export
 register_ontology_term = function(df, only_test = FALSE){
-  uniq = "term"
+  uniq = unique_fields()[[.ghEnv$meta$arrOntology]]
   test_register_ontology(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = .ghEnv$meta$arrOntology
@@ -354,33 +277,13 @@ register_ontology_term = function(df, only_test = FALSE){
 register_individual = function(df,
                                dataset_version = NULL,
                                only_test = FALSE){
-  uniq = c('dataset_id', 'name')
-  test_register_individual(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    if (is.null(dataset_version)) {
-      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-    }
-    namespace = find_namespace(id = unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrIndividuals, sep = "")
-    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
-  } # end of if (!only_test)
-}
-
-#' @export
-register_featureset = function(df, only_test = FALSE){
-  uniq = 'name'
-  test_register_featureset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    arrayname = .ghEnv$meta$arrFeatureset
-    register_tuple_return_id(df,
-                           arrayname, uniq)
-  } # end of if (!only_test)
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
+                                            df, dataset_version, only_test)
 }
 
 #' @export
 register_referenceset = function(df, only_test = FALSE){
-  uniq = 'name'
+  uniq = unique_fields()[[.ghEnv$meta$arrReferenceset]]
   test_register_referenceset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = .ghEnv$meta$arrReferenceset
@@ -391,7 +294,7 @@ register_referenceset = function(df, only_test = FALSE){
 
 #' @export
 register_genelist = function(df, only_test = FALSE){
-  uniq = c('name', 'owner')
+  uniq = unique_fields()[[.ghEnv$meta$arrGenelist]]
   df$owner = iquery(.ghEnv$db, query = "show_user()", return = TRUE)$name
   test_register_genelist(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
@@ -403,7 +306,7 @@ register_genelist = function(df, only_test = FALSE){
 
 #' @export
 register_genelist_gene = function(df, only_test = FALSE){
-  uniq = c('genelist_id', 'gene_symbol')
+  uniq = unique_fields()[[.ghEnv$meta$arrGenelist_gene]]
   test_register_genelist_gene(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = .ghEnv$meta$arrGenelist_gene
@@ -413,8 +316,28 @@ register_genelist_gene = function(df, only_test = FALSE){
 }
 
 #' @export
+register_featureset = function(df, only_test = FALSE){
+  uniq = unique_fields()[[.ghEnv$meta$arrFeatureset]]
+  test_register_featureset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = .ghEnv$meta$arrFeatureset
+    register_tuple_return_id(df,
+                             arrayname, uniq)
+  } # end of if (!only_test)
+}
+
+register_feature_synonym = function(df, only_test = FALSE){
+  uniq = unique_fields()[[.ghEnv$meta$arrFeatureSynonym]]
+  test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = .ghEnv$meta$arrFeatureSynonym
+    register_tuple_return_id(df, arrayname, uniq)
+  } # end of if (!only_test)
+}
+
+#' @export
 register_feature = function(df, register_gene_synonyms = TRUE, only_test = FALSE){
-  uniq = c("name", "featureset_id", "feature_type")
+  uniq = unique_fields()[[.ghEnv$meta$arrFeature]]
   test_register_feature(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = .ghEnv$meta$arrFeature
@@ -441,17 +364,8 @@ register_feature = function(df, register_gene_synonyms = TRUE, only_test = FALSE
 register_biosample = function(df,
                               dataset_version = NULL,
                               only_test = FALSE){
-  uniq = c('dataset_id', 'name')
-  test_register_biosample(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    if (is.null(dataset_version)) {
-      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-    }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrBiosample, sep = "")
-    register_tuple_return_id(df, arrayname, uniq, dataset_version)
-  } # end of if (!only_test)
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
+                                            df, dataset_version, only_test)
 }
 
 # finds matches of entries in dataframe to be uploaded with entries previously registered in database based on user provided unique fields
@@ -636,39 +550,34 @@ update_lookup_array = function(new_id, arrayname){
 
 #' @export
 register_variantset = function(df, dataset_version = NULL, only_test = FALSE){
-  uniq = c('dataset_id', 'name')
-  test_register_variantset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    if (is.null(dataset_version)) {
-      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-    }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrVariantset, sep = "")
-    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
-  } # end of if (!only_test)
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
+                                            df, dataset_version, only_test)
 }
 
 
 #' @export
 register_experimentset = function(df, dataset_version = NULL, only_test = FALSE){
+  test_register_experimentset(df, silent = ifelse(only_test, FALSE, TRUE))
   register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
-                                            uniq = c('dataset_id', 'name'), 
                                             df, dataset_version, only_test)
 }
 
 #' @export
 register_experiment = function(df, dataset_version = NULL, only_test = FALSE){
   register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperiment, 
-                                            uniq = c('experimentset_id', 'measurement_entity', 
-                                                     'measurementset_id', 'biosample_id'), 
                                             df, dataset_version, only_test)
 }
 
-register_versioned_secure_metadata_entity = function(entity, uniq, df, 
+register_versioned_secure_metadata_entity = function(entity, df, 
                                             dataset_version, only_test){
-  test_register_versioned_secure_metadata_entity(entity, df, uniq, 
+  uniq = unique_fields()[[entity]]
+  if (is.null(uniq)) stop("unique fields need to be defined for entity: ", 
+                          entity, " in SCHEMA.yaml file")
+  # Common tests
+  test_register_versioned_secure_metadata_entity(entity = entity, 
+                                                 df, uniq, 
                                                  silent = ifelse(only_test, FALSE, TRUE))
+  
   if (!only_test) {
     if (is.null(dataset_version)) {
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
@@ -682,41 +591,21 @@ register_versioned_secure_metadata_entity = function(entity, uniq, df,
 
 #' @export
 register_rnaquantificationset = function(df, dataset_version = NULL, only_test = FALSE){
-  uniq = c("dataset_id", "name")
-  test_register_rnaquantificationset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    if (is.null(dataset_version)) {
-      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-    }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrRnaquantificationset, sep = "")
-    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
-  } # end of if (!only_test)
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrRnaquantificationset, 
+                                            df, dataset_version, only_test)
 }
 
 #' @export
 register_fusionset = function(df, dataset_version = NULL, only_test = FALSE){
-  uniq = c('dataset_id', 'name')
-  test_register_fusionset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    if (is.null(dataset_version)) {
-      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
-      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
-    }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset)
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrFusionset, sep = "")
-    register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version)
-  } # end of if (!only_test)
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrFusionset, 
+                                            df, dataset_version, only_test)
 }
 
 #' @export
 register_copynumberset = function(df, dataset_version = NULL, only_test = FALSE){
   register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
-                                            uniq = c('dataset_id', 'experimentset_id', 'name'), 
                                             df, dataset_version, only_test)
 }
-
 
 #' @export
 register_variant = function(df, dataset_version = NULL, only_test = FALSE){
@@ -778,33 +667,9 @@ register_info = function(df, idname, arrayname){
   }
 }
 
-register_feature_synonym = function(df, only_test = FALSE){
-  uniq = c('feature_id', 'source', 'synonym')
-  test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
-  if (!only_test) {
-    arrayname = .ghEnv$meta$arrFeatureSynonym
-    register_tuple_return_id(df, arrayname, uniq)
-  } # end of if (!only_test)
-}
-
-
 count_unique_calls = function(variants){
   v = variants
   nrow(v[duplicated(v[, c('biosample_id', 'CHROM', 'POS')]), ])
-}
-
-get_mandatory_fields_for_register_entity = function(arrayname){
-  attrs = names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)
-  attrs = attrs[!(attrs %in% c('created', 'updated'))]
-  attrs
-}
-
-#' @export
-mandatory_fields = function(){
-  entitynames = get_entity_names()
-  l1 = sapply(entitynames, function(entitynm){get_mandatory_fields_for_register_entity(entitynm)})
-  names(l1) = entitynames
-  l1
 }
 
 join_ontology_terms = function(df){

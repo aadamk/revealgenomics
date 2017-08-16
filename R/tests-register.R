@@ -97,25 +97,80 @@ test_register_dataset = function(df, uniq, dataset_version, silent = TRUE){
   if (dataset_version != 1) stop("to increment dataset versions, use the function `increment_dataset_version()`")
 }
 
+######################################################
+# Versioned secure metadata entities
+
 test_register_versioned_secure_metadata_entity = function(entity, df, uniq, silent = TRUE){
+  if (is.null(uniq)) uniq = unique_fields()[[entity]]
+  if (is.null(uniq)) stop("unique fields need to be defined for entity: ", 
+                          entity, " in SCHEMA.yaml file")
   run_tests_dataframe(entity = entity, df, uniq, silent)
   if(length(unique(df$dataset_id))!=1) stop(tolower(entity), " to be registered must belong to a single dataset/study")
 }
 
 test_register_individual = function(df, uniq, silent = TRUE){
-  test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
-                                                 df, uniq, silent)
+  # Add additional tests here -->
+  
+  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
+  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
+  #                                                df, uniq, silent)
 }
 
 test_register_biosample = function(df, uniq, silent = TRUE){
-  test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
-                                                 df, uniq, silent)
+  # Add additional tests here -->
+  
+  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
+  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
+  #                                                df, uniq, silent)
 }
 
 test_register_rnaquantificationset = function(df, uniq, silent = TRUE){
-  test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrRnaquantificationset, 
-                                                 df, uniq, silent)
+  # Add additional tests here -->
+  
+  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
+  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrRnaquantificationset, 
+  #                                                df, uniq, silent)
 }
+
+test_register_experimentset = function(df, silent = TRUE){
+  # Additional tests
+  entity_df = get_entity_info()
+  entity_df = entity_df[entity_df$class == 'measurementdata', ]
+  entity_nm_upload = as.character(unique(df$measurement_entity))
+  
+  if (!(all(entity_nm_upload %in% as.character(entity_df$entity)))) {
+    cat("Unexpected measurement entity: \n")
+    print(entity_nm_upload[!(entity_nm_upload %in% as.character(entity_df$entity))])
+    stop("Allowed measurement entities: ", pretty_print(entity_df$entity))
+  }
+}
+
+test_register_variantset = function(df, uniq, silent = TRUE){
+  # Add additional tests here -->
+  
+  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
+  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
+  #                                                df, uniq, silent)
+}
+
+test_register_fusionset = function(df, uniq, silent = TRUE){
+  # Add additional tests here -->
+  
+  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
+  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrFusionset, 
+  #                                                df, uniq, silent)
+}
+
+test_register_copynumberset = function(df, uniq, silent = TRUE){
+  # Add additional tests here -->
+  
+  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
+  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
+  #                                                df, uniq, silent)
+}
+
+######################################################
+# public metadata entities (not versioned by dataset_version)
 
 test_register_ontology = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrOntology, df, uniq, silent)
@@ -145,20 +200,8 @@ test_register_feature_synonym = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrFeatureSynonym, df, uniq, silent)
 }
 
-test_register_variantset = function(df, uniq, silent = TRUE){
-  test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
-                                                 df, uniq, silent)
-}
-
-test_register_fusionset = function(df, uniq, silent = TRUE){
-  test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrFusionset, 
-                                                 df, uniq, silent)
-}
-
-test_register_copynumberset = function(df, uniq, silent = TRUE){
-  test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
-                                                 df, uniq, silent)
-}
+######################################################
+# measurementdata entities
 
 test_register_expression_matrix = function(filepath,
                                            rnaquantificationset_id,
