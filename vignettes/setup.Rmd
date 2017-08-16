@@ -159,7 +159,7 @@ Finally the API install (assuming the directory choice described above):
 ```{sh}
 # Scenario 1
 # When user `scidb` has sudo privileges
-USER=scidb
+USER=ksen
 pushd /home/$USER/coding/downloads/scidb4gh/; R --slave -e "library(roxygen2); roxygenize()" && cd .. && sudo R CMD build scidb4gh && sudo R CMD INSTALL scidb4gh_0.1.tar.gz ; popd
 
 # Scenario 2
