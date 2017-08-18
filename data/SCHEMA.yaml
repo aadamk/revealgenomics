@@ -164,7 +164,7 @@ array:
       dataset_id: int64
       experimentset_id: int64
       measurementset_id: int64
-      measurementset_name: string
+      measurement_entity: string
       biosample_id: int64
       created: string
       updated: string
@@ -181,6 +181,7 @@ array:
         overlap: 0
     unique_fields:
       - experimentset_id
+      - measurement_entity
       - measurementset_id
       - biosample_id
     search_by_entity: DATASET
@@ -196,6 +197,7 @@ array:
       - collaboration
     attributes: 
       dataset_id: int64
+      experimentset_id: int64
       name: string
       description: string
 #      file_path: string
@@ -264,6 +266,7 @@ array:
       - collaboration
     attributes: 
       dataset_id: int64
+      experimentset_id: int64
       referenceset_id: int64
       name: string
       description: string
@@ -342,6 +345,7 @@ array:
       - collaboration
     attributes: 
       dataset_id: int64
+      experimentset_id: int64
       name: string
       description: string
       created: string

@@ -90,6 +90,7 @@ test_non_null_ontology_elements = function(df, suffix = c("_", "_term")) {
   }
 }
 
+#' Run tests on data frame 
 run_tests_dataframe = function(entity, df, uniq, silent) {
   test_dataframe_formatting(df)
   test_mandatory_fields(df, arrayname = entity, silent = silent)
@@ -116,6 +117,10 @@ test_register_versioned_secure_metadata_entity = function(entity, df, uniq, sile
                           entity, " in SCHEMA.yaml file")
   run_tests_dataframe(entity = entity, df, uniq, silent)
   if(length(unique(df$dataset_id))!=1) stop(tolower(entity), " to be registered must belong to a single dataset/study")
+  if ("dataset_version" %in% colnames(df)) {
+    stop("dataset_version should not be a column in dataframe to be uploaded. 
+         dataset_version is to be supplied as a parameter to the register_", tolower(entity), "() function")
+  }
 }
 
 test_register_individual = function(df, uniq, silent = TRUE){
