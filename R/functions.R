@@ -601,7 +601,7 @@ register_tuple_return_id = function(df,
 }
 
 update_lookup_array = function(new_id, arrayname){
-  URI_414_ERROR_THRESH = 700
+  URI_414_ERROR_THRESH = 400
   name = strip_namespace(arrayname)
   namespace = get_namespace(arrayname)
   
