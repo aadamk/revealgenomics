@@ -13,28 +13,6 @@
 #
 
 ############################################################
-# BEGIN: Helper functions for using YAML schema object
-yaml_to_dim_str = function(dims){
-  dim_str = paste(
-    names(dims), "=",
-    sapply(dims, function(x) {paste(x$start, ":",
-                                    ifelse(x$end == Inf, "*", x$end), ",", x$chunk_interval, ",",
-                                    x$overlap, sep = "")}),
-    sep = "", collapse = ", ")
-  dim_str
-}
-
-yaml_to_attr_string = function(attributes, compression_on = FALSE){
-  if (!compression_on) { 
-    paste(names(attributes), ":", attributes, collapse=" , ") 
-  } else {
-    paste(names(attributes), ":", attributes, "COMPRESSION 'zlib'", collapse=" , ") 
-  }
-}
-# END: Helper functions for using YAML schema object
-############################################################
-
-############################################################
 # Helper functions for dataframe / text manipulation
 ############################################################
 
@@ -97,7 +75,7 @@ pretty_print = function(vec) {
   ifelse(length(vec) <= 7,
          paste(vec, collapse = ", "),
          paste(pretty_print(head(vec, 2)),
-               "...(", length(vec)-4, " other)... ",
+               "...(Total: ", length(vec), ")... ",
                pretty_print(tail(vec, 2)),
                sep = ""))}
 

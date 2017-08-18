@@ -17,6 +17,8 @@ array:
         end: Inf
         chunk_interval: 1000
         overlap: 0
+    unique_fields:
+      - name
     search_by_entity: 
     delete_by_entity: PROJECT
     infoArray: TRUE
@@ -44,6 +46,9 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    unique_fields:
+      - project_id
+      - name
     search_by_entity: PROJECT
     delete_by_entity: DATASET
     infoArray: TRUE
@@ -74,6 +79,9 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    unique_fields:
+      - dataset_id
+      - name
     search_by_entity: DATASET
     delete_by_entity: INDIVIDUAL
     infoArray: TRUE
@@ -105,6 +113,9 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    unique_fields:
+      - dataset_id
+      - name
     search_by_entity: DATASET
     delete_by_entity: BIOSAMPLE
     infoArray: TRUE
@@ -121,9 +132,7 @@ array:
       name: string
       description: string
       molecule: string
-      sequencing_center: string
-      platform_unit: string
-      run_time: string
+      measurement_entity: string
       created: string
       updated: string
     dims: 
@@ -137,12 +146,15 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    unique_fields:
+      - dataset_id
+      - name
     search_by_entity: DATASET
     delete_by_entity: EXPERIMENTSET
     infoArray: TRUE
     compression_on: FALSE
-  # EXPERIMENT
-  EXPERIMENT:
+  # MEASUREMENT
+  MEASUREMENT:
     data_class:
       metadata
     namespace: 
@@ -151,14 +163,13 @@ array:
     attributes: 
       dataset_id: int64
       experimentset_id: int64
-      measurement_entity: string
       measurementset_id: int64
-      measurementset_name: string
+      measurement_entity: string
       biosample_id: int64
       created: string
       updated: string
     dims: 
-      experiment_id:
+      measurement_id:
         start: 0
         end: Inf
         chunk_interval: 1000
@@ -168,8 +179,13 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    unique_fields:
+      - experimentset_id
+      - measurement_entity
+      - measurementset_id
+      - biosample_id
     search_by_entity: DATASET
-    delete_by_entity: EXPERIMENT
+    delete_by_entity: MEASUREMENT
     infoArray: TRUE
     compression_on: FALSE
   # RNAQUANTIFICATIONSET
@@ -181,6 +197,7 @@ array:
       - collaboration
     attributes: 
       dataset_id: int64
+      experimentset_id: int64
       name: string
       description: string
 #      file_path: string
@@ -197,6 +214,9 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    unique_fields:
+      - dataset_id
+      - name
     search_by_entity: DATASET
     delete_by_entity: RNAQUANTIFICATIONSET
     infoArray: TRUE
@@ -246,6 +266,7 @@ array:
       - collaboration
     attributes: 
       dataset_id: int64
+      experimentset_id: int64
       referenceset_id: int64
       name: string
       description: string
@@ -262,6 +283,9 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    unique_fields:
+      - dataset_id
+      - name
     search_by_entity: DATASET
     delete_by_entity: VARIANTSET
     infoArray: TRUE
@@ -321,6 +345,7 @@ array:
       - collaboration
     attributes: 
       dataset_id: int64
+      experimentset_id: int64
       name: string
       description: string
       created: string
@@ -336,6 +361,9 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    unique_fields:
+      - dataset_id
+      - name
     search_by_entity: DATASET
     delete_by_entity: FUSIONSET
     infoArray: TRUE
@@ -413,6 +441,10 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+    unique_fields:
+      - dataset_id
+      - experimentset_id
+      - name
     search_by_entity: DATASET
     delete_by_entity: COPYNUMBERSET
     infoArray: TRUE
@@ -507,6 +539,8 @@ array:
       created: string
       updated: string
     dims: ontology_id
+    unique_fields:
+      - term
     search_by_entity: 
     delete_by_entity: ONTOLOGY
     infoArray: FALSE
@@ -525,6 +559,8 @@ array:
       created: string
       updated: string
     dims: featureset_id
+    unique_fields:
+      - name
     search_by_entity: 
     delete_by_entity: FEATURESET
     infoArray: TRUE
@@ -570,6 +606,10 @@ array:
       created: string
       updated: string
     dims: feature_synonym_id
+    unique_fields:
+      - feature_id
+      - source
+      - synonym
     search_by_entity: FEATURESET
     delete_by_entity: FEATURE_SYNONYM
     infoArray: FALSE
@@ -587,6 +627,9 @@ array:
       created: string
       updated: string
     dims: genelist_id
+    unique_fields:
+      - name
+      - owner
     search_by_entity: 
     delete_by_entity: GENELIST
     infoArray: FALSE
@@ -603,6 +646,9 @@ array:
       created: string
       updated: string
     dims: genelist_gene_id
+    unique_fields:
+      - genelist_id
+      - gene_symbol
     search_by_entity: GENELIST
     delete_by_entity: GENELIST_GENE
     infoArray: FALSE
@@ -624,6 +670,8 @@ array:
       created: string
       updated: string
     dims: referenceset_id
+    unique_fields:
+      - name
     search_by_entity: 
     delete_by_entity: REFERENCESET
     infoArray: TRUE

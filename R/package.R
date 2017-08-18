@@ -46,7 +46,7 @@ NULL
 .ghEnv$meta$arrCopynumber_seg = 'COPYNUMBER_SEG'
 .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
 .ghEnv$meta$arrExperimentSet = 'EXPERIMENTSET'
-.ghEnv$meta$arrExperiment = 'EXPERIMENT'
+.ghEnv$meta$arrMeasurement = 'MEASUREMENT'
 
 # Prepare variables for the cache
 .ghEnv$cache$ontology_ref = NULL
