@@ -749,17 +749,18 @@ select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_v
   join_info_ontology_and_unpivot(qq, arrayname = entitynm, namespace=namespace)
 }
 
-merge_across_namespaces = function(arrayname){
+merge_across_namespaces = function(arrayname, mandatory_fields_only = FALSE){
   arrayname = strip_namespace(arrayname)
   
   # public namespace first
   qq = arrayname
-  df = join_info_ontology_and_unpivot(qq, arrayname)
+  df = join_info_ontology_and_unpivot(qq, arrayname, mandatory_fields_only = mandatory_fields_only)
   for (namespace in .ghEnv$cache$nmsp_list){
     if (namespace != 'public'){
       cat("--DEBUG--: joining with data from namespace:", namespace, "\n")
       fullnm = paste(namespace, ".", arrayname, sep = "")
-      dfx = join_info_ontology_and_unpivot(fullnm, arrayname, namespace = namespace)
+      dfx = join_info_ontology_and_unpivot(fullnm, arrayname, namespace = namespace, 
+                                           mandatory_fields_only = mandatory_fields_only)
       if (nrow(dfx) > 0) {
         l = list(df,
                  dfx)
@@ -772,37 +773,30 @@ merge_across_namespaces = function(arrayname){
 }
 
 #' @export
-get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions = TRUE){
-  check_args_get(id = dataset_id, dataset_version, all_versions)
-  if (!is.null(dataset_id)) { # Need to look up specific project ID
-    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrDataset, id = dataset_id, dataset_version = dataset_version)
-  } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrDataset)
-  }
-  if (!all_versions) return(latest_version(df)) else return(df)
+get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions = TRUE, mandatory_fields_only = FALSE){
+  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrDataset,
+                                       id = dataset_id, 
+                                       dataset_version = dataset_version, 
+                                       all_versions = all_versions, 
+                                       mandatory_fields_only = mandatory_fields_only)
 }
 
 #' @export
-get_individuals = function(individual_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_get(id = individual_id, dataset_version, all_versions)
-  if (!is.null(individual_id)) { # Need to look up specific individual ID
-    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrIndividuals, id = individual_id, dataset_version = dataset_version)
-  } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrIndividuals)
-  }
-  if (!all_versions) return(latest_version(df)) else return(df)
+get_individuals = function(individual_id = NULL, dataset_version = NULL, all_versions = FALSE, mandatory_fields_only = FALSE){
+  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals,
+                                       id = individual_id, 
+                                       dataset_version = dataset_version, 
+                                       all_versions = all_versions, 
+                                       mandatory_fields_only = mandatory_fields_only)
 }
 
 #' @export
-get_biosamples = function(biosample_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_get(id = biosample_id, dataset_version, all_versions)
-  
-  if (!is.null(biosample_id)) { # Need to look up specific biosample ID
-    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrBiosample, id = biosample_id, dataset_version = dataset_version)
-  } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrBiosample)
-  }
-  if (!all_versions) return(latest_version(df)) else return(df)
+get_biosamples = function(biosample_id = NULL, dataset_version = NULL, all_versions = FALSE, mandatory_fields_only = FALSE){
+  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample,
+                                       id = biosample_id, 
+                                       dataset_version = dataset_version, 
+                                       all_versions = all_versions, 
+                                       mandatory_fields_only = mandatory_fields_only)
 }
 
 check_args_get = function(id, dataset_version, all_versions){
@@ -812,96 +806,57 @@ check_args_get = function(id, dataset_version, all_versions){
 
 #' @export
 get_rnaquantificationsets = function(rnaquantificationset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_get(id = rnaquantificationset_id, dataset_version, all_versions)
-  if (!is.null(rnaquantificationset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrRnaquantificationset, id = rnaquantificationset_id, dataset_version = dataset_version)
-  } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrRnaquantificationset)
-  }
-  if (!all_versions) return(latest_version(df)) else return(df)
+  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrRnaquantificationset,
+                                       id = rnaquantificationset_id, 
+                                       dataset_version = dataset_version, 
+                                       all_versions = all_versions)
 }
 
 #' @export
-get_experimentset = function(experimentset_id = NULL, dataset_version = NULL, all_versions = FALSE){
+get_experimentset = function(experimentset_id = NULL, dataset_version = NULL, all_versions = FALSE, mandatory_fields_only = FALSE){
   get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
                                        id = experimentset_id, 
-                                       dataset_version, all_versions)
+                                       dataset_version, all_versions, 
+                                       mandatory_fields_only = mandatory_fields_only)
 }
 
-#' @export
-get_measurement = function(measurement_id = NULL, dataset_version = NULL, all_versions = TRUE){
-  msrmt = get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
-                                       id = measurement_id, 
-                                       dataset_version, all_versions)
-  
-  # Merge with datasets info to join in study category
-  d = get_datasets()
-  if (all(!is.na(d$`study category`))) stop("Seems all datasets were categorized already. Should delete the next line")
-  d[is.na(d$`study category`), ]$`study category` = "Heme"
-  msrmt2 = merge(msrmt, 
-                 d[, c('dataset_id', 'dataset_version', 'study category')], 
-                 by = c('dataset_id', 'dataset_version'))
-  if (nrow(msrmt2) != nrow(msrmt)) stop("Some measurements did not belong to specific dataset_id-s")
-  msrmt2
-}
-
-#' @export
-get_experiment = function() {
-  msrmt = get_measurement()
-  
-  zz = msrmt[, c('dataset_id', 'dataset_version', 'experimentset_id', 'measurement_entity', 'biosample_id', 'study category')]
-  head(zz)
-  zz = zz[!duplicated(zz), ]
-  
-  # Merge with ExperimentSet info to join in experiment sub-type
-  expsets = get_experimentset()
-  experiments = merge(zz, 
-                      expsets[, c('experimentset_id', 'name')], 
-                      by = 'experimentset_id')
-  
-  experiments
-}
 
 get_versioned_secure_metadata_entity = function(entity, id, 
                                                 dataset_version, 
-                                                all_versions){
+                                                all_versions, 
+                                                mandatory_fields_only = FALSE){
   check_args_get(id = id, dataset_version, all_versions)
   if (!is.null(id)) { # Need to look up specific ID
     df = select_from_1d_entity(entitynm = entity, id = id, 
                                dataset_version = dataset_version)
   } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = entity)
+    df = merge_across_namespaces(arrayname = entity, mandatory_fields_only = mandatory_fields_only)
   }
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
 #' @export
 get_variantsets = function(variantset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_get(id = variantset_id, dataset_version, all_versions)
-  if (!is.null(variantset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrVariantset, id = variantset_id, dataset_version = dataset_version)
-  } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrVariantset)
-  }
-  if (!all_versions) return(latest_version(df)) else return(df)
+  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
+                                       id = variantset_id, 
+                                       dataset_version = dataset_version, 
+                                       all_versions = all_versions)
 }
 
 #' @export
 get_fusionset = function(fusionset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_get(id = fusionset_id, dataset_version, all_versions)
-  if (!is.null(fusionset_id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = .ghEnv$meta$arrFusionset, id = fusionset_id, dataset_version = dataset_version)
-  } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = .ghEnv$meta$arrFusionset)
-  }
-  if (!all_versions) return(latest_version(df)) else return(df)
+  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrFusionset, 
+                                       id = fusionset_id, 
+                                       dataset_version = dataset_version, 
+                                       all_versions = all_versions)
 }
 
 #' @export
 get_copynumberset = function(copynumberset_id = NULL, dataset_version = NULL, all_versions = FALSE){
   get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
                                        id = copynumberset_id, 
-                                       dataset_version, all_versions)
+                                       dataset_version = dataset_version, 
+                                       all_versions = all_versions)
 }
 
 #' @export
@@ -1334,25 +1289,24 @@ get_rnaquantification_counts = function(rnaquantificationset_id = NULL){
   return(c)
 }
 
-join_info_ontology_and_unpivot = function(qq, arrayname, namespace = 'public'){
+join_info_ontology_and_unpivot = function(qq, arrayname, namespace = 'public', mandatory_fields_only = FALSE){
   unpivot = TRUE
   idname = get_idname(arrayname)
   
+  qq1 = qq
   # Join INFO array
-  if (exists('debug_trace')) {t1 = proc.time()}
-  if (FALSE){ # TODO: See why search_individuals(dataset_id = 1) is so slow; the two options here did not make a difference
-    qq1 = paste("cross_join(", qq, " as A, ", namespace, ".", arrayname, "_INFO as B, A.", idname, ", B.", idname, ")", sep = "")
-  } else if (FALSE) { cat("== Swapping order of cross join between ARRAY_INFO and select(ARRAY, ..)\n")
-    qq1 = paste("cross_join(", namespace, ".", arrayname, "_INFO as A, ", qq, " as B, A.", idname, ", B.", idname, ")", sep = "")
-  } else {
-    qq1 = paste("equi_join(", qq, ", ", namespace, ".", arrayname, "_INFO, 'left_names=", paste(idname, collapse = ","), "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')", sep = "")
+  if (!mandatory_fields_only) {
+    if (exists('debug_trace')) {t1 = proc.time()}
+    if (FALSE){ # TODO: See why search_individuals(dataset_id = 1) is so slow; the two options here did not make a difference
+      qq1 = paste("cross_join(", qq1, " as A, ", namespace, ".", arrayname, "_INFO as B, A.", idname, ", B.", idname, ")", sep = "")
+    } else if (FALSE) { cat("== Swapping order of cross join between ARRAY_INFO and select(ARRAY, ..)\n")
+      qq1 = paste("cross_join(", namespace, ".", arrayname, "_INFO as A, ", qq1, " as B, A.", idname, ", B.", idname, ")", sep = "")
+    } else {
+      qq1 = paste("equi_join(", qq1, ", ", namespace, ".", arrayname, "_INFO, 'left_names=", paste(idname, collapse = ","), "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')", sep = "")
+    }
   }
   x2 = iquery(.ghEnv$db, qq1, return = TRUE)
-  # # TODO: BEGIN: Remove this when bit64 integration is removed from SciDBR package
-  # int64_cols = which(sapply(x2, class) == "integer64")
-  # x2[, int64_cols] = sapply(int64_cols, FUN=function(i){as.integer(x2[, i])})
-  # # TODO: END: Remove this when bit64 integration is removed from SciDBR package
-  
+
   if (exists('debug_trace')) {cat("join with info:\n"); print( proc.time()-t1 )}
   
   if (nrow(x2) > 0 & sum(colnames(x2) %in% c("key", "val")) == 2 & unpivot){ # If key val pairs exist and need to be unpivoted
@@ -1361,7 +1315,7 @@ join_info_ontology_and_unpivot = function(qq, arrayname, namespace = 'public'){
     if (exists('debug_trace')) {cat("unpivot:\n"); print( proc.time()-t1 )}
   } else {
     if (nrow(x2) > 0) {
-      x3 = x2[, c(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims,
+      x3 = x2[, c(idname,
                   names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes))]
     } else {
       x3 = x2[, names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)]

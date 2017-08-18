@@ -74,3 +74,97 @@ register_measurements = function(dataset_id, dataset_version) {
   }
 }
 
+#' @export
+get_measurement = function(measurement_id = NULL, dataset_version = NULL, all_versions = TRUE, mandatory_fields_only = FALSE){
+  msrmt = get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
+                                               id = measurement_id, 
+                                               dataset_version, all_versions, 
+                                               mandatory_fields_only = mandatory_fields_only)
+  
+  # Merge with datasets info to join in study category
+  d = get_datasets()
+  if (all(!is.na(d$`study category`))) stop("Seems all datasets were categorized already. Should delete the next line")
+  d[is.na(d$`study category`), ]$`study category` = "Heme"
+  msrmt2 = merge(msrmt, 
+                 d[, c('dataset_id', 'dataset_version', 'study category')], 
+                 by = c('dataset_id', 'dataset_version'))
+  if (nrow(msrmt2) != nrow(msrmt)) stop("Some measurements did not belong to specific dataset_id-s")
+  msrmt2
+}
+
+get_experiment_v1 = function(mandatory_fields_only = FALSE) {
+  msrmt = get_measurement(mandatory_fields_only = mandatory_fields_only)
+  
+  zz = msrmt[, c('dataset_id', 'dataset_version', 'experimentset_id', 'measurement_entity', 'biosample_id', 'study category')]
+  head(zz)
+  zz = zz[!duplicated(zz), ]
+  
+  # Merge with ExperimentSet info to join in experiment sub-type
+  expsets = get_experimentset(mandatory_fields_only = mandatory_fields_only)
+  experiments = merge(zz, 
+                      expsets[, c('experimentset_id', 'name')], 
+                      by = 'experimentset_id')
+  
+  experiments
+}
+
+get_experiment_by_namespace = function(nmsp, info_key = 'study category') {
+  qq = paste("equi_join(", 
+             "grouped_aggregate(", nmsp, ".MEASUREMENT, ", 
+             "count(*),", 
+             "dataset_id, dataset_version, experimentset_id, measurement_entity, biosample_id) as X, ", 
+             "filter(", nmsp, ".DATASET_INFO, key='", info_key, "'),",
+             "'left_names=dataset_id,dataset_version',",
+             "'right_names=dataset_id,dataset_version')", 
+             sep = "")
+  
+  qq2 = paste("equi_join(", 
+              qq, ", ", 
+              "project(
+              apply(", nmsp, ".EXPERIMENTSET, experimentset_id_, experimentset_id), 
+              experimentset_id_, name), ", 
+              "'left_names=experimentset_id,dataset_version', ", 
+              "'right_names=experimentset_id_,dataset_version')")
+  
+  xx = iquery(.ghEnv$db, 
+              qq2, 
+              return = T)
+  stopifnot(unique(xx$key) == info_key)
+  xx$key = NULL
+  colnames(xx)[which(colnames(xx) == 'val')] = info_key
+  xx
+}
+
+#' @export
+#' retrieve all the experiments available to logged in user
+#' 
+#' joins Measurement, Dataset (for study category field), and ExperimentSet arrays
+#' to return experiment information to user
+#' 
+#' @example 
+#' experiments = get_experiment()
+#' cat("Categorization of experiments by major type\n")
+#' table(experiments$measurement_entity)
+#' cat("Categorization of experiments by sub type\n")
+#' table(paste(experiments$measurement_entity, experiments$name, sep = ": "))
+#' cat("Categorization of experiments by sub type\n")
+#' table(experiments$`study category`)
+#' 
+get_experiment = function() {
+  namespaces = .ghEnv$cache$nmsp_list
+  
+  init = TRUE
+  for (nmsp in namespaces) {
+    cat("Experiments for namespace:", nmsp, "\n")
+    dfi = get_experiment_by_namespace(nmsp)
+    if (init){
+      dfx = dfi
+      init = FALSE
+    } else {
+      dfx = rbind(dfx, dfi)
+    }
+  }
+  dfi
+}
+
+
