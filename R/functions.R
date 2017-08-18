@@ -574,8 +574,8 @@ register_experimentset = function(df, dataset_version = NULL, only_test = FALSE)
 }
 
 #' @export
-register_experiment = function(df, dataset_version = NULL, only_test = FALSE){
-  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperiment, 
+register_measurement = function(df, dataset_version = NULL, only_test = FALSE){
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
                                             df, dataset_version, only_test)
 }
 
@@ -829,10 +829,37 @@ get_experimentset = function(experimentset_id = NULL, dataset_version = NULL, al
 }
 
 #' @export
-get_experiment = function(experiment_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperiment, 
-                                       id = experiment_id, 
+get_measurement = function(measurement_id = NULL, dataset_version = NULL, all_versions = TRUE){
+  msrmt = get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
+                                       id = measurement_id, 
                                        dataset_version, all_versions)
+  
+  # Merge with datasets info to join in study category
+  d = get_datasets()
+  if (all(!is.na(d$`study category`))) stop("Seems all datasets were categorized already. Should delete the next line")
+  d[is.na(d$`study category`), ]$`study category` = "Heme"
+  msrmt2 = merge(msrmt, 
+                 d[, c('dataset_id', 'dataset_version', 'study category')], 
+                 by = c('dataset_id', 'dataset_version'))
+  if (nrow(msrmt2) != nrow(msrmt)) stop("Some measurements did not belong to specific dataset_id-s")
+  msrmt2
+}
+
+#' @export
+get_experiment = function() {
+  msrmt = get_measurement()
+  
+  zz = msrmt[, c('dataset_id', 'dataset_version', 'experimentset_id', 'measurement_entity', 'biosample_id', 'study category')]
+  head(zz)
+  zz = zz[!duplicated(zz), ]
+  
+  # Merge with ExperimentSet info to join in experiment sub-type
+  expsets = get_experimentset()
+  experiments = merge(zz, 
+                      expsets[, c('experimentset_id', 'name')], 
+                      by = 'experimentset_id')
+  
+  experiments
 }
 
 get_versioned_secure_metadata_entity = function(entity, id, 

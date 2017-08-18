@@ -153,8 +153,8 @@ array:
     delete_by_entity: EXPERIMENTSET
     infoArray: TRUE
     compression_on: FALSE
-  # EXPERIMENT
-  EXPERIMENT:
+  # MEASUREMENT
+  MEASUREMENT:
     data_class:
       metadata
     namespace: 
@@ -169,7 +169,7 @@ array:
       created: string
       updated: string
     dims: 
-      experiment_id:
+      measurement_id:
         start: 0
         end: Inf
         chunk_interval: 1000
@@ -185,7 +185,7 @@ array:
       - measurementset_id
       - biosample_id
     search_by_entity: DATASET
-    delete_by_entity: EXPERIMENT
+    delete_by_entity: MEASUREMENT
     infoArray: TRUE
     compression_on: FALSE
   # RNAQUANTIFICATIONSET
