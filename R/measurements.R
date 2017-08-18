@@ -135,7 +135,6 @@ get_experiment_by_namespace = function(nmsp, info_key = 'study category') {
   xx
 }
 
-#' @export
 #' retrieve all the experiments available to logged in user
 #' 
 #' joins Measurement, Dataset (for study category field), and ExperimentSet arrays
@@ -150,6 +149,7 @@ get_experiment_by_namespace = function(nmsp, info_key = 'study category') {
 #' cat("Categorization of experiments by sub type\n")
 #' table(experiments$`study category`)
 #' 
+#' @export
 get_experiment = function() {
   namespaces = .ghEnv$cache$nmsp_list
   
