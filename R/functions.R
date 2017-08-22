@@ -637,7 +637,13 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE){
     
     ids_int64_conv = ids_int64_conv[(ids_int64_conv != "variant_id")]
     cat("Uploading\n")
-    if (nrow(df) < 100000) {x1 = as.scidb(.ghEnv$db, df)} else {x1 = as.scidb(.ghEnv$db, df, chunk_size=nrow(df))}
+    non_info_cols = c(get_idname(strip_namespace(arrayname)), 
+                      mandatory_fields()[[strip_namespace(arrayname)]])
+    if (nrow(df) < 100000) {
+      x1 = as.scidb(.ghEnv$db, df[, non_info_cols])
+    } else {
+      x1 = as.scidb(.ghEnv$db, df[, non_info_cols], chunk_size=nrow(df))
+    }
     
     x = x1
     for (idnm in ids_int64_conv){
@@ -656,8 +662,7 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE){
     
     cat("Now registering info fields\n")
     register_info(df = prep_df_fields(df2,
-                                      mandatory_fields = c(get_mandatory_fields_for_register_entity(arrayname),
-                                                           get_idname(arrayname))),
+                                      mandatory_fields = non_info_cols),
                   idname = get_idname(arrayname), arrayname = arrayname)
   } # end of if (!only_test)
 }
@@ -953,7 +958,7 @@ form_selector_query_2d_array = function(arrayname, dim1, dim1_selected_ids, dim2
   else # mostly non-contiguous tickers, use `cross_join`
   {
     # Formulate the cross_join query
-    idname = get_base_idname(fullnm)
+    idname = get_base_idname(arrayname)
     diminfo = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims
     upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
                      idname, length(dim1_selected_ids), paste(dim1_selected_ids, sep=",", collapse="), ("))

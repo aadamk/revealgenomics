@@ -83,8 +83,9 @@ get_measurement = function(measurement_id = NULL, dataset_version = NULL, all_ve
   
   # Merge with datasets info to join in study category
   d = get_datasets()
-  if (all(!is.na(d$`study category`))) stop("Seems all datasets were categorized already. Should delete the next line")
-  d[is.na(d$`study category`), ]$`study category` = "Heme"
+  if (any(is.na(d$`study category`))) {
+    d[which(is.na(d$`study category`)), ]$`study category` = "unknown"
+  }
   msrmt2 = merge(msrmt, 
                  d[, c('dataset_id', 'dataset_version', 'study category')], 
                  by = c('dataset_id', 'dataset_version'))
@@ -140,7 +141,7 @@ get_experiment_by_namespace = function(nmsp, info_key = 'study category') {
 #' joins Measurement, Dataset (for study category field), and ExperimentSet arrays
 #' to return experiment information to user
 #' 
-#' @example 
+#' @examples 
 #' experiments = get_experiment()
 #' cat("Categorization of experiments by major type\n")
 #' table(experiments$measurement_entity)
@@ -164,7 +165,7 @@ get_experiment = function() {
       dfx = rbind(dfx, dfi)
     }
   }
-  dfi
+  dfx
 }
 
 
