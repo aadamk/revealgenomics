@@ -232,6 +232,28 @@ test_register_variant = function(df){
   test_dataframe_formatting(df)
   if(length(unique(df$dataset_id))!=1) stop("Variants to be registered must belong to a single dataset/study")
   test_mandatory_fields(df, arrayname = .ghEnv$meta$arrVariant)
+
+  stopifnot(c('variantset_id', 'biosample_id', 'feature_id', 'expression')
+            %in% colnames(df))
+  
+  check_entity_exists_at_id(entity = 'VARIANTSET',
+                            id = sort(unique(df$variantset_id)))
+  check_entity_exists_at_id(entity = 'BIOSAMPLE',
+                            id = sort(unique(df$biosample_id)))
+  check_entity_exists_at_id(entity = 'FEATURE',
+                            id = sort(unique(df$feature_id)))
+}
+
+test_register_expression_dataframe = function(df1) {
+  stopifnot(c('rnaquantificationset_id', 'biosample_id', 'feature_id', 'expression')
+            %in% colnames(df1))
+  
+  check_entity_exists_at_id(entity = 'RNAQUANTIFICATIONSET',
+                            id = sort(unique(df1$rnaquantificationset_id)))
+  check_entity_exists_at_id(entity = 'BIOSAMPLE',
+                            id = sort(unique(df1$biosample_id)))
+  check_entity_exists_at_id(entity = 'FEATURE',
+                            id = sort(unique(df1$feature_id)))
 }
 
 test_register_copynumber_seg = function(experimentset){

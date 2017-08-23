@@ -10,3 +10,13 @@ get_experiment()
 joins Measurement, Dataset (for study category field), and ExperimentSet arrays
 to return experiment information to user
 }
+\examples{
+experiments = get_experiment()
+cat("Categorization of experiments by major type\\n")
+table(experiments$measurement_entity)
+cat("Categorization of experiments by sub type\\n")
+table(paste(experiments$measurement_entity, experiments$name, sep = ": "))
+cat("Categorization of experiments by sub type\\n")
+table(experiments$`study category`)
+
+}

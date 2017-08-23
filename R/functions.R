@@ -1366,10 +1366,10 @@ check_entity_exists_at_id = function(entity, id, ...){
     returned_ids = unique(sort(df1[, get_base_idname(entity)]))
     missing_ids = req_ids[which(!(req_ids %in% returned_ids))]
     if (is_entity_versioned(entity)) {
-      stop(cat("No entries for entity", entity, "at ids:", paste(missing_ids, collapse = ", "), 
+      stop(cat("No entries for entity", entity, "at ids:", pretty_print(missing_ids), 
                "at specified version", sep = " "))
     } else {
-      stop(cat("No entries for entity", entity, "at ids:", paste(missing_ids, collapse = ", "),
+      stop(cat("No entries for entity", entity, "at ids:", pretty_print(missing_ids),
                sep = " ")) 
     }
   } else {
@@ -1379,22 +1379,13 @@ check_entity_exists_at_id = function(entity, id, ...){
 
 #' @export
 register_expression_dataframe = function(df1, dataset_version){
-  stopifnot(c('rnaquantificationset_id', 'biosample_id', 'feature_id', 'expression')
-            %in% colnames(df1))
+  test_register_expression_dataframe(df1)
   
-  check_entity_exists_at_id(entity = 'RNAQUANTIFICATIONSET',
-                            id = sort(unique(df1$rnaquantificationset_id)))
-  check_entity_exists_at_id(entity = 'BIOSAMPLE',
-                            id = sort(unique(df1$rnaquantificationset_id)))
-  #   check_entity_exists_at_id(entity = 'FEATURE',
-  #                             id = sort(unique(df1$feature_id)))
-  
-  
-  namespace_to_insert = unique(find_namespace(id = unique(df_expr$rnaquantificationset_id), 
+  namespace_to_insert = unique(find_namespace(id = unique(df1$rnaquantificationset_id), 
                                               entitynm = .ghEnv$meta$arrRnaquantificationset))
   if (length(namespace_to_insert) != 1) stop("Error: Trying to insert expression data into multiple namespaces")
   
-  adf_expr0 = as.scidb(.ghEnv$db, df_expr, chunk_size=nrow(df_expr), name = "temp_df")
+  adf_expr0 = as.scidb(.ghEnv$db, df1, chunk_size=nrow(df1), name = "temp_df")
   
   adf_expr = convert_attr_double_to_int64(arr = adf_expr0, attrname = "rnaquantificationset_id")
   adf_expr = convert_attr_double_to_int64(arr = adf_expr, attrname = "biosample_id")
@@ -1408,7 +1399,7 @@ register_expression_dataframe = function(df1, dataset_version){
   subarr = .ghEnv$db$redimension(adf_expr, R(schema(scidb(.ghEnv$db, .ghEnv$meta$arrRnaquantification))))
   
   fullnm = paste(namespace_to_insert, .ghEnv$meta$arrRnaquantification, sep = ".")
-  cat("inserting data for", nrow(df_expr), "expression values into", fullnm, "array \n")
+  cat("inserting data for", nrow(df1), "expression values into", fullnm, "array \n")
   iquery(.ghEnv$db, paste("insert(", subarr@name, ", ", fullnm, ")"))
   .ghEnv$db$remove("temp_df")
 }
