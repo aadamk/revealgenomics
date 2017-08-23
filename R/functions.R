@@ -525,18 +525,10 @@ update_lookup_array = function(new_id, arrayname){
   if (length(new_id) <= URI_414_ERROR_THRESH) {
     cat("inserting id-s:", pretty_print(new_id), "into array", lookuparr, "\n")
     
-    # qq = sprintf("build(<%s:int64, namespace: string>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
-    #              get_base_idname(arrayname), length(new_id), 
-    #               paste(new_id, namespace, sep=",", collapse="), ("))
-    # qq = sprintf("build(<%s:int64, namespace: string>[idx=1:%d,100000,0],'[(%s)]', true)",
-    #              get_base_idname(arrayname), length(new_id), 
-    #              paste(new_id, 
-    #                    paste("\\'", namespace, "\\'", sep = ""), 
-    #                    sep=",", collapse="),("))
     qq = sprintf("apply(build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true), namespace, %s)",
                  get_base_idname(arrayname), 
                  length(new_id), 
-                 paste(new_id, collapse="), ("), 
+                 paste(new_id, collapse="),("), 
                  paste("'", namespace, "'", sep = ""))
     qq = paste("redimension(", qq, ", ", schema(a), ")", sep = "")
     qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
@@ -952,7 +944,6 @@ form_selector_query_2d_array = function(arrayname, dim1, dim1_selected_ids, dim2
   {
     cb_pts =  paste( sapply(seq(length(breaks)-1), function(i) sprintf("%d, %s, %d, %s", sorted[breaks[i]+1], dim2_selected_ids,
                                                                        sorted[breaks[i+1]], dim2_selected_ids)), collapse=" , ")
-    #    rt_array=sprintf("build(<dateLo:int64, rowLo: int64, tickerLo: int64, dateHi: int64, rowHi: int64, tickerHi: int64>[idx=1:%d,100000,0],'{1}[%s]',true)", length(breaks)-1, cb_pts)
     query=sprintf("cross_between_(%s, %s)", arrayname, cb_pts)
   }
   else # mostly non-contiguous tickers, use `cross_join`
@@ -960,8 +951,11 @@ form_selector_query_2d_array = function(arrayname, dim1, dim1_selected_ids, dim2
     # Formulate the cross_join query
     idname = get_base_idname(arrayname)
     diminfo = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims
-    upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
-                     idname, length(dim1_selected_ids), paste(dim1_selected_ids, sep=",", collapse="), ("))
+    upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
+                     idname, 
+                     length(dim1_selected_ids), 
+                     paste(dim1_selected_ids, sep=",", collapse="),(")
+                     )
     apply_dim2 = paste("apply(", upload, ", ", dim2, ", ", dim2_selected_ids, ")", sep = "")
     redim = paste("redimension(", apply_dim2, ", <idx:int64>[", idname, "])", sep = "")
     
@@ -991,7 +985,6 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
   else if (length(breaks) >2 & length(breaks) <= THRESH_K + 2) # few sets of contiguous tickers; use `cross_between`
   {
     cb_pts =  paste( sapply(seq(length(breaks)-1), function(i) sprintf("%d, %d", sorted[breaks[i]+1], sorted[breaks[i+1]])), collapse=" , ")
-    #    rt_array=sprintf("build(<dateLo:int64, rowLo: int64, tickerLo: int64, dateHi: int64, rowHi: int64, tickerHi: int64>[idx=1:%d,100000,0],'{1}[%s]',true)", length(breaks)-1, cb_pts)
     query=sprintf("cross_between_(%s, %s)", arrayname, cb_pts)
   }
   else # mostly non-contiguous tickers, use `cross_join`
@@ -999,8 +992,10 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
     # Formulate the cross_join query
     diminfo = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims
     if (class(diminfo) == "character") chunksize = 1000000 else stop("code not covered")
-    upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'{1}[(%s)]', true)",
-                     idname, length(selected_ids), paste(selected_ids, sep=",", collapse="), ("))
+    upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
+                     idname, 
+                     length(selected_ids), 
+                     paste(selected_ids, sep=",", collapse="),("))
     redim = paste("redimension(", upload, ", <idx:int64>[", idname,"=0:*,", as.integer(chunksize), ",0])", sep = "")
     
     query= paste("project(cross_join(",
