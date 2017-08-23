@@ -240,8 +240,8 @@ test_register_variant = function(df){
                             id = sort(unique(df$variantset_id)))
   check_entity_exists_at_id(entity = 'BIOSAMPLE',
                             id = sort(unique(df$biosample_id)))
-  check_entity_exists_at_id(entity = 'FEATURE',
-                            id = sort(unique(df$feature_id)))
+  # check_entity_exists_at_id(entity = 'FEATURE',
+  #                           id = sort(unique(df$feature_id)))
 }
 
 test_register_expression_dataframe = function(df1) {
@@ -252,8 +252,8 @@ test_register_expression_dataframe = function(df1) {
                             id = sort(unique(df1$rnaquantificationset_id)))
   check_entity_exists_at_id(entity = 'BIOSAMPLE',
                             id = sort(unique(df1$biosample_id)))
-  check_entity_exists_at_id(entity = 'FEATURE',
-                            id = sort(unique(df1$feature_id)))
+  # check_entity_exists_at_id(entity = 'FEATURE',
+  #                           id = sort(unique(df1$feature_id)))
 }
 
 test_register_copynumber_seg = function(experimentset){
