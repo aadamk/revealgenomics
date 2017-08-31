@@ -13,7 +13,10 @@
 #
 
 formulate_base_selection_query = function(fullarrayname, id){
-  THRESH_K = 100
+  # this limit is based on the number of operands that SciDB can handle in an expression 
+  # https://paradigm4.atlassian.net/browse/SDB-5801
+  THRESH_K = 397  
+  
   sorted=sort(id)
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
   idname = get_base_idname(fullarrayname)
