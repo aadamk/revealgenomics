@@ -263,37 +263,73 @@ delete_project <- function(project_id) {
 }
 
 
-get_dataset_subelements <- function(dataset_id, datasetVersion) {
-  ## DEBUG: A flag for whether to surpess the errors for searching for entities
+## This is a function that should go into the "functions.R" file and be an 
+##  internal function.  It will be used in the get_dataset_subelements() 
+##  function as a way of programmatically identifying all metadata elements
+##  within a given dataset, so that they can be deleted.  It is based on
+##  Kriti's "get_entity()" function.
+search_entity = function(entity, id, ...){
+  
+  ## Get the table of entities, and how to search for them.
+  entity_parents_table <- get_entity_info()
+  entity_idx <- match(toupper(entity), 
+                      entity_parents_table$entity)
+  
+  ## Verify that the given entity can be searched for.
+  if (is.na(entity_parents_table$search_by_entity[entity_idx])) {
+    ## If it is not a valid element to search by, stop and give an error message.
+    stop(paste0("Searching for entity == '", entity, "' is not supported!"))
+    
+  } else {
+    ## Find the proper search function.
+    fn_name = paste("search_", tolower(entity), sep = "")
+    f = NULL
+    try({f = get(fn_name)}, silent = TRUE)
+    if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
+    # if (entity == 'ONTOLOGY') {
+    #   f(id, updateCache = TRUE, ...)
+    # } else if (entity == 'FEATURE') {
+    #   f(id, fromCache =  FALSE, ...)
+    # } else { 
+    #   f(id, ...) 
+    # }
+    f(id, ...) 
+  }
+}
+
+
+
+get_dataset_subelements <- function(dataset_id, datasetVersion, ...) {
+  ## DEBUG: A flag for whether to supress the errors for searching for entities
   ## that might not be there.  This should be coded concretely one way or the
   ## other.
   SEARCH_SILENTLY <- TRUE  
   
-  ##---------------=
-  ## Get all of the sub-elements of this dataset.
-  ##
-  ## For now, this will have to be done explicitly, but hopefully will
-  ##  be able to do it programatically in the future.
-  ##---------------=
+  ##---------------------=
+  ## Programmatic retrieval of the elements in the dataset.
+  ##---------------------=
   dataset_subelements <- list()
-  dataset_subelements[[.ghEnv$meta$arrIndividuals]] <- try(search_individuals(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrBiosample]] <- try(search_biosamples(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrRnaquantificationset]] <- try(search_rnaquantificationset(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrVariantset]] <- try(search_variantsets(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrExperimentSet]] <- try(search_experimentsets(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  dataset_subelements[[.ghEnv$meta$arrCopyNumberSet]] <- try(search_copynumbersets(dataset_id = dataset_id, dataset_version = datasetVersion), silent = SEARCH_SILENTLY)
-  ############################################################
-  ## TODO:
-  ##  - Update this to be programmatic!  Use the list of metadata elements that have DATASET as a search_by_entity 
-  ##    from the get_entity_info() function.
-  ############################################################
-  
+  ## Get the matrix specifying the database schema to determine what
+  ##  child tables exist for the each dataset.
+  db_schema <- get_entity_info()
+
+
+  entities_to_search <- db_schema[(db_schema$search_by_entity == 'DATASET')
+                                  & !is.na(db_schema$search_by_entity), ]$entity
+
+  for (next.entity in as.character(entities_to_search)) {
+    dataset_subelements[[next.entity]] <- try(search_entity(entity = next.entity, id = dataset_id, dataset_version = datasetVersion, ...), silent = SEARCH_SILENTLY)
+  }
   
   
   ## Now set each of the fields to NULL that did not return any values (i.e. that produced a try-error).
   for (next.name in names(dataset_subelements)) {
-    if (class(dataset_subelements[[next.name]]) == "try-error")
+    if (class(dataset_subelements[[next.name]]) == "try-error") {
       dataset_subelements[[next.name]] <- NA 
+      if (!SEARCH_SILENTLY) {
+        cat(" ** WARNING -- Searching for entity='", next.name, "' produced an error! \n", sep="")
+      }
+    }
   } 
   
   ## And add the dataset_id and datasetVersion as attributes for this datasetStructure object,
@@ -324,24 +360,35 @@ print_dataset_subelements <- function(dataset_id, datasetVersion, print.nonexist
   max_char_length <- max(nchar(names(dataset_subelements)))
   for(next.subelement in names(dataset_subelements)) {
     
+    if (is.data.frame(dataset_subelements[[next.subelement]])) {
     
-    if ( nrow(dataset_subelements[[next.subelement]]) == 0) {
-      ## Then there were no data of this type in the given dataset.
+      if ( nrow(dataset_subelements[[next.subelement]]) == 0) {
+        ## Then there were no data of this type in the given dataset.
+        
+        if (print.nonexistant.metadata) {
+          ## Then we will print out that there was no metadata of this type.
+          cat("\t", formatC(paste0(next.subelement, " ids: "), width = -(max_char_length + 5)), "\t<NA> \n", sep="")
+        }
+      } else {
+        ## There are elements of this metadata type located in this dataset, so print them out.
+        cat("\t", formatC(paste0(next.subelement, " ids: "), width = -(max_char_length + 5)), "\t", sep="")
+        
+        ## Get the name for the column which will contain these IDs.
+        base_idname <- get_base_idname(next.subelement)
+        
+        ## The object ids appear to be in the first column in each entity matrix.  
+        ids_vec <- dataset_subelements[[next.subelement]][, base_idname]
+        cat(convert_to_id_ranges(ids_vec), "\n")
+      }
       
+    } else {
+     
+      ## Then the search_entity function for this variable had created an error, or was
+      ##  otherwise unable to complete the search.
       if (print.nonexistant.metadata) {
         ## Then we will print out that there was no metadata of this type.
-        cat("\t", formatC(paste0(next.subelement, " ids: "), width = -(max_char_length + 5)), "\t<NA> \n", sep="")
+        cat("\t", formatC(paste0(next.subelement, " ids: "), width = -(max_char_length + 5)), "\t<Could not search for this metadata type.> \n", sep="")
       }
-    } else {
-      ## There are elements of this metadata type located in this dataset, so print them out.
-      cat("\t", formatC(paste0(next.subelement, " ids: "), width = -(max_char_length + 5)), "\t", sep="")
-      
-      ## Get the name for the column which will contain these IDs.
-      base_idname <- get_base_idname(next.subelement)
-      
-      ## The object ids appear to be in the first column in each entity matrix.  
-      ids_vec <- dataset_subelements[[next.subelement]][, base_idname]
-      cat(convert_to_id_ranges(ids_vec), "\n")
     }
   }
   return(dataset_subelements)
@@ -370,7 +417,7 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
   
   
   ##---------------------------------------=
-  ## For each type of dataset entities, delete the the actual measurements, 
+  ## For each type of dataset entities, delete the actual measurements, 
   ##  then delete the metadata.  Note that the metadata field name is the 
   ##  actual entity name as well.
   ##---------------------------------------=
