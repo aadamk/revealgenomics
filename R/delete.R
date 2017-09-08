@@ -263,42 +263,6 @@ delete_project <- function(project_id) {
 }
 
 
-## This is a function that should go into the "functions.R" file and be an 
-##  internal function.  It will be used in the get_dataset_subelements() 
-##  function as a way of programmatically identifying all metadata elements
-##  within a given dataset, so that they can be deleted.  It is based on
-##  Kriti's "get_entity()" function.
-search_entity = function(entity, id, ...){
-  
-  ## Get the table of entities, and how to search for them.
-  entity_parents_table <- get_entity_info()
-  entity_idx <- match(toupper(entity), 
-                      entity_parents_table$entity)
-  
-  ## Verify that the given entity can be searched for.
-  if (is.na(entity_parents_table$search_by_entity[entity_idx])) {
-    ## If it is not a valid element to search by, stop and give an error message.
-    stop(paste0("Searching for entity == '", entity, "' is not supported!"))
-    
-  } else {
-    ## Find the proper search function.
-    fn_name = paste("search_", tolower(entity), sep = "")
-    f = NULL
-    try({f = get(fn_name)}, silent = TRUE)
-    if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
-    # if (entity == 'ONTOLOGY') {
-    #   f(id, updateCache = TRUE, ...)
-    # } else if (entity == 'FEATURE') {
-    #   f(id, fromCache =  FALSE, ...)
-    # } else { 
-    #   f(id, ...) 
-    # }
-    f(id, ...) 
-  }
-}
-
-
-
 get_dataset_subelements <- function(dataset_id, datasetVersion, ...) {
   ## DEBUG: A flag for whether to supress the errors for searching for entities
   ## that might not be there.  This should be coded concretely one way or the
