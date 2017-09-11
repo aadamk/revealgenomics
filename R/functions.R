@@ -1258,6 +1258,12 @@ search_experimentsets = function(dataset_id = NULL, dataset_version = NULL, all_
                                           dataset_id, dataset_version, all_versions)
 }
 
+#' @export
+search_measurements = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
+                                          dataset_id, dataset_version, all_versions)
+}
+
 search_versioned_secure_metadata_entity = function(entity, dataset_id, dataset_version, all_versions) {
   check_args_search(dataset_version, all_versions)
   df = find_nmsp_filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 

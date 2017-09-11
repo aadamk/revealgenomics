@@ -131,7 +131,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
       if (newcount == 0){ # there are no entities at this level
         arrLookup = paste(entity, "_LOOKUP", sep = "")
         qq = paste("delete(", arrLookup, ", ", base_selection_query, ")", sep = "")
-        cat("Deleting entries for ids ", paste(sort(id), collapse = ", "), " from lookup array: ", arrLookup, "\n", sep = "")
+        cat("Deleting entries for ids ", pretty_print(sort(id)), " from lookup array: ", arrLookup, "\n", sep = "")
         print(qq)
         iquery(.ghEnv$db, qq)
         updatedcache = entity_lookup(entityName = entity, updateCache = TRUE)
