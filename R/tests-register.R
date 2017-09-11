@@ -233,7 +233,7 @@ test_register_variant = function(df){
   if(length(unique(df$dataset_id))!=1) stop("Variants to be registered must belong to a single dataset/study")
   test_mandatory_fields(df, arrayname = .ghEnv$meta$arrVariant)
 
-  stopifnot(c('variantset_id', 'biosample_id', 'feature_id', 'expression')
+  stopifnot(c('variantset_id', 'biosample_id', 'feature_id')
             %in% colnames(df))
   
   check_entity_exists_at_id(entity = 'VARIANTSET',
