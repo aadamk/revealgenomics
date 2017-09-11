@@ -13,9 +13,23 @@
 #
 
 #' @export
-gh_connect = function(username, password, host = NULL, port = NULL, protocol = "https"){
+gh_connect = function(username, password = NULL, host = NULL, port = NULL, protocol = "https"){
   # SciDB connection and R API --
   
+  # ask for password interactively if none supplied
+  # https://github.com/Paradigm4/SciDBR/issues/154#issuecomment-327989402
+  if (is.null(password)) {
+    if (rstudioapi::isAvailable()) { # In RStudio, 
+      password = rstudioapi::askForPassword("Password")
+    } else { # in base R
+      password = getpwd()
+    } # Rscripts and knitr not yet supported
+  }
+  
+  if (is.null(password)) { # if still null password
+    stop("Password cannot be null")
+  }
+    
   # Attempt 1. 
   err1 = tryCatch({
     if (is.null(host) & is.null(port)) {
