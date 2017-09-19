@@ -127,7 +127,7 @@ merge_aux_info_from_df = function(master_df, aux_df, aux_info_colname, by.x, by.
     if (verbose_merge) cat("Debug output: ")
     if (verbose_merge) if (nrow(mydf) > 1) {cat("..(", nrow(mydf), ")", sep = "")}
     if (nrow(mydf) > 0) {
-      mydf[, by.y] = NULL
+      # mydf[, by.y] = NULL
       toJSON(mydf)
     } else {
       toJSON(NULL)
