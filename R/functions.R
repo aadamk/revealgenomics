@@ -193,7 +193,9 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE){
 }
 
 update_ontology_cache = function(){
-  .ghEnv$cache$dfOntology = iquery(.ghEnv$db, .ghEnv$meta$arrOntology, return = TRUE)
+  zz = iquery(.ghEnv$db, .ghEnv$meta$arrOntology, return = TRUE)
+  zz = zz[order(zz[, get_idname(.ghEnv$meta$arrOntology)]), ]
+  .ghEnv$cache$dfOntology = zz
 }
 
 get_feature_synonym_from_cache = function(updateCache = FALSE){
