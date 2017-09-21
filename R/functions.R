@@ -1148,10 +1148,10 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
 
 #' @export
 search_individuals = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_search(dataset_version, all_versions)
-  i = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrIndividuals, dataset_id, dataset_version = dataset_version)
-  if (!all_versions) return(latest_version(i)) else return(i)
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
+                                          dataset_id, dataset_version, all_versions)
 }
+
 
 check_args_search = function(dataset_version, all_versions){
   if (!is.null(dataset_version) & all_versions==TRUE) stop("Cannot specify specific dataset_version, and also set all_versions = TRUE")
@@ -1197,9 +1197,9 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname, dataset_id, dat
 
 #' @export
 search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrBiosample, dataset_id, dataset_version = dataset_version)
-  if (!all_versions) return(latest_version(df)) else return(df)
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
+                                          dataset_id, dataset_version, all_versions)
+  
 }
 
 #' @export
@@ -1229,23 +1229,22 @@ search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE){
 
 #' @export
 search_rnaquantificationset = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrRnaquantificationset, dataset_id, dataset_version = dataset_version)
-  if (!all_versions) return(latest_version(df)) else return(df)
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrRnaquantificationset, 
+                                          dataset_id, dataset_version, all_versions)
 }
 
 #' @export
 search_variantsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrVariantset, dataset_id, dataset_version = dataset_version)
-  if (!all_versions) return(latest_version(df)) else return(df)
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
+                                          dataset_id, dataset_version, all_versions)
+  
 }
 
 #' @export
 search_fusionsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
-  check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = .ghEnv$meta$arrFusionset, dataset_id, dataset_version = dataset_version)
-  if (!all_versions) return(latest_version(df)) else return(df)
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrFusionset, 
+                                          dataset_id, dataset_version, all_versions)
+  
 }
 
 #' @export
@@ -1270,6 +1269,10 @@ search_versioned_secure_metadata_entity = function(entity, dataset_id, dataset_v
   check_args_search(dataset_version, all_versions)
   df = find_nmsp_filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
                                                   dataset_version = dataset_version)
+  
+  # reorder the output by the dimensions
+  # from https://stackoverflow.com/questions/17310998/sort-a-dataframe-in-r-by-a-dynamic-set-of-columns-named-in-another-data-frame
+  df = df[do.call(order, df[get_idname(entity)]), ] 
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
@@ -1371,12 +1374,6 @@ join_info_ontology_and_unpivot = function(qq, arrayname, namespace = 'public', m
     }
   }
   
-  # Join ontology terms
-  #   if (is.null(.ghEnv$cache$dfOntology)) { # when ontology has not been downloaded
-  #     if (exists('debug_trace')) {t1 = proc.time()}
-  #     .ghEnv$cache$dfOntology = iquery(.ghEnv$db, .ghEnv$meta$arrOntology, return = TRUE)
-  #     if (exists('debug_trace')) {cat("download arrOntology:\n"); print( proc.time()-t1 )}
-  #   }
   join_ontology_terms(df = x3)
 }
 
