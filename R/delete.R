@@ -49,7 +49,9 @@ formulate_versioned_selection_query = function(entity, base_selection_query, dat
 }
 
 #' @export
-delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = NULL){
+delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = NULL, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   if (is.null(delete_by_entity)) {
     delete_by_entity = get_delete_by_entity(entity)
   } else {
@@ -76,9 +78,10 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
   # First check that entity exists at this id
   if (is_entity_versioned(entitynm = entity)){
     status = try(check_entity_exists_at_id(entity = delete_by_entity, id = id, 
-                                           dataset_version = dataset_version, all_versions = F))
+                                           dataset_version = dataset_version, all_versions = F,
+                                           con = con))
   } else {
-    status = try(check_entity_exists_at_id(entity = delete_by_entity, id = id))
+    status = try(check_entity_exists_at_id(entity = delete_by_entity, id = id, con = con))
   }
 
   if (class(status) == 'try-error') {
@@ -88,7 +91,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
   
   # Find the correct namespace
   if (is_entity_secured(entity)) {
-    namespaces = find_namespace(id = id, entitynm = delete_by_entity)
+    namespaces = find_namespace(id = id, entitynm = delete_by_entity, con = con)
     nmsp = unique(namespaces)
   } else { nmsp = 'public' }
   if (length(nmsp) != 1) stop("Can run delete only at one namespace at a time")
@@ -103,7 +106,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
     qq = paste("delete(", arr, ", ", get_base_idname(delete_by_entity), " = ",  
                id, " AND dataset_version = ", dataset_version, ")", sep = "")
     print(qq)
-    iquery(.ghEnv$db, qq)
+    iquery(con$db, qq)
   } else {
     base_selection_query  = formulate_base_selection_query(fullarrayname = arr, id = id)
     versioned_selection_query = formulate_versioned_selection_query(entity = entity, 
@@ -112,13 +115,13 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
     cat("Deleting entries for ids ", pretty_print(sort(id)), " from ", arr, " entity\n", sep = "")
     qq = paste("delete(", arr, ", ", versioned_selection_query, ")", sep = "")
     print(qq)
-    iquery(.ghEnv$db, qq)
+    iquery(con$db, qq)
   }
   
   # Clear out the info array
   infoArray = .ghEnv$meta$L$array[[entity]]$infoArray
   if (infoArray){
-    delete_info_fields(fullarrayname = arr, id = id, dataset_version = dataset_version)
+    delete_info_fields(fullarrayname = arr, id = id, dataset_version = dataset_version, con = con)
   }
   
   # Clear out the lookup array if required
@@ -127,20 +130,20 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
       # Check if there are no remaining entities at this ID at any version
       qcount = paste("op_count(filter(", arr, ", ",
                      base_selection_query, "))" )
-      newcount = iquery(.ghEnv$db, qcount, return = TRUE)$count
+      newcount = iquery(con$db, qcount, return = TRUE)$count
       if (newcount == 0){ # there are no entities at this level
         arrLookup = paste(entity, "_LOOKUP", sep = "")
         qq = paste("delete(", arrLookup, ", ", base_selection_query, ")", sep = "")
         cat("Deleting entries for ids ", pretty_print(sort(id)), " from lookup array: ", arrLookup, "\n", sep = "")
         print(qq)
-        iquery(.ghEnv$db, qq)
-        updatedcache = entity_lookup(entityName = entity, updateCache = TRUE)
+        iquery(con$db, qq)
+        updatedcache = entity_lookup(entityName = entity, updateCache = TRUE, con = con)
       }
     } # end of: if (is_entity_secured(entity))
   } # end of: if ( get_entity_class(entity = entity) != 'measurementdata' )
 }
 
-delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_entity = NULL){
+delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_entity = NULL, con = NULL){
   entity = strip_namespace(fullarrayname)
   if (is.null(delete_by_entity)) {
     delete_by_entity = get_delete_by_entity(entity)
@@ -162,7 +165,7 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
     qq = paste("delete(", arrInfo, ", ", get_base_idname(delete_by_entity), " = ",  
                id, " AND dataset_version = ", dataset_version, ")", sep = "")
     print(qq)
-    iquery(.ghEnv$db, qq)
+    iquery(con$db, qq)
   } else {
     base_selection_query = formulate_base_selection_query(fullarrayname = fullarrayname, 
                                                           id = id)  
@@ -173,20 +176,13 @@ delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_enti
     qq = paste("delete(", arrInfo, ", ", versioned_selection_query, ")", sep = "")
     cat("Deleting entries for ids ", pretty_print(sort(id)), " from info array: ", arrInfo, "\n", sep = "")
     print(qq)
-    iquery(.ghEnv$db, qq)
+    iquery(con$db, qq)
   }
 }
 
 
-###############################################################################
-## NEXT STEPS / ELEMENTS STILL REMAINING TO IMPLEMENT (for delete_project()):
-## 
-##  - Add the programmatic identification of which fields to use in the 
-##    "get_dataset_subelements()" function.
-###############################################################################
-
 #' @export
-delete_project <- function(project_id) {
+delete_project <- function(project_id, con = NULL) {
   ##---------------=
   ## If there is more than one project_id, or it is not a valid ID, then give an error.
   ##---------------=
@@ -199,7 +195,7 @@ delete_project <- function(project_id) {
   ##---------------=
   ## Get the datasets under this project.
   ##---------------=
-  datasets <- search_datasets(project_id = project_id)
+  datasets <- search_datasets(project_id = project_id, con = con)
   
   datasetStructures.lst <- list()
   
@@ -221,7 +217,7 @@ delete_project <- function(project_id) {
       nextDataset <- datasets[i, "dataset_id"]
       nextDatasetVersion <- datasets[i, "dataset_version"]
       # nextDatasetName <- paste0(nextDataset, "_v", nextDatasetVersion)
-      datasetStructures.lst[[ datasetNames[i] ]] <- print_dataset_subelements(nextDataset, nextDatasetVersion)
+      datasetStructures.lst[[ datasetNames[i] ]] <- print_dataset_subelements(nextDataset, nextDatasetVersion, con = con)
     }
   } else {
     ## If there are no datasests, then indicate that there are no datasets underneath.
@@ -247,13 +243,15 @@ delete_project <- function(project_id) {
         nextDatasetStructure <- datasetStructures.lst[[i]]
         delete_dataset(dataset_id = attr(nextDatasetStructure, "dataset_id"),
                        datasetVersion = attr(nextDatasetStructure, "datasetVersion"),
-                       datasetStructure = nextDatasetStructure)
+                       datasetStructure = nextDatasetStructure, 
+                       con = con)
       }
     }
     
     ## Now delete the actual project ID.
     delete_entity(entity = "PROJECT", 
-                  id = project_id)
+                  id = project_id,
+                  con = con)
     
   } else {
     ## Don't delete the project.
@@ -263,7 +261,7 @@ delete_project <- function(project_id) {
 }
 
 
-get_dataset_subelements <- function(dataset_id, datasetVersion, ...) {
+get_dataset_subelements <- function(dataset_id, datasetVersion, con = NULL, ...) {
   ## DEBUG: A flag for whether to supress the errors for searching for entities
   ## that might not be there.  This should be coded concretely one way or the
   ## other.
@@ -282,7 +280,8 @@ get_dataset_subelements <- function(dataset_id, datasetVersion, ...) {
                                   & !is.na(db_schema$search_by_entity), ]$entity
 
   for (next.entity in as.character(entities_to_search)) {
-    dataset_subelements[[next.entity]] <- try(search_entity(entity = next.entity, id = dataset_id, dataset_version = datasetVersion, ...), silent = SEARCH_SILENTLY)
+    dataset_subelements[[next.entity]] <- try(search_entity(entity = next.entity, id = dataset_id, 
+                                                            dataset_version = datasetVersion, con = con, ...), silent = SEARCH_SILENTLY)
   }
   
   
@@ -307,7 +306,7 @@ get_dataset_subelements <- function(dataset_id, datasetVersion, ...) {
 }
 
 
-print_dataset_subelements <- function(dataset_id, datasetVersion, print.nonexistant.metadata = FALSE) {
+print_dataset_subelements <- function(dataset_id, datasetVersion, print.nonexistant.metadata = FALSE, con = NULL) {
   
   ## Note that "print.nonexistent.metadata" is just an option to explicitly state which types of 
   ##  information have been searched but do not exist for this dataset.  It is FALSE by default.
@@ -315,7 +314,7 @@ print_dataset_subelements <- function(dataset_id, datasetVersion, print.nonexist
   ##---------------=
   ## Get the dataset's subelements
   ##---------------=
-  dataset_subelements <- get_dataset_subelements(dataset_id, datasetVersion)
+  dataset_subelements <- get_dataset_subelements(dataset_id, datasetVersion, con = con)
   
   ##---------------=
   ## Print to the screen the lists of elements that will be deleted.
@@ -364,13 +363,13 @@ print_dataset_subelements <- function(dataset_id, datasetVersion, print.nonexist
 ##  dataset, but for the moment it will only delete the metadata.  It will
 ##  eventually delete the actual measurement data as well.
 ##-----------------------------------------------------------------------------=
-delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) {
+delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL, con = NULL) {
   
   ## Get the list of sub-entities.
   ## If the dataset's structure is provided, then use that structure, otherwise call
   ##  the function to get the dataset's sub-structure.
   if (is.null(datasetStructure)) {
-    datasetStructure <- get_dataset_subelements(dataset_id, datasetVersion)
+    datasetStructure <- get_dataset_subelements(dataset_id, datasetVersion, con = con)
   } else {
     ## If the dataset structure was provided, verify that it is the same as is being 
     ##  specified by the dataset_id and datasetVersion.
@@ -413,7 +412,8 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
           delete_entity(entity = next.entity, 
                         id = next.entity.ids[next.row, column.name], 
                         dataset_version = next.entity.ids[next.row, "dataset_version"],  
-                        delete_by_entity = next.parent.entity)
+                        delete_by_entity = next.parent.entity, 
+                        con = con)
         }
       }
     }
@@ -434,7 +434,8 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
       delete_entity(entity = next.metadata.name,
                     id = next.metadata.ids.mat[, column.name],
                     dataset_version = datasetVersion,
-                    delete_by_entity = next.metadata.name)
+                    delete_by_entity = next.metadata.name,
+                    con = con)
     }
   }
   
@@ -444,7 +445,8 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL) 
   delete_entity(entity = "DATASET", 
                 id = dataset_id, 
                 dataset_version = datasetVersion, 
-                delete_by_entity = "DATASET")
+                delete_by_entity = "DATASET", 
+                con = con)
 }
 
 

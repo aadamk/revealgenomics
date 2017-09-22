@@ -23,9 +23,10 @@
 #' init_db(arrays = get_entity_names()) # Warning! This reinitializes all the arrays
 #' }
 #' @export
-init_db = function(arrays_to_init){
-  # if (is.null(arrays_to_init)) arrays_to_init = get_entity_names()
-  db = .ghEnv$db
+init_db = function(arrays_to_init, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
+  db = con$db
   L = .ghEnv$meta$L
   
   arrays_to_init = arrays_to_init[arrays_to_init %in% names(L$array)]

@@ -3,7 +3,9 @@
 ############################################################
 
 # maintain a cache of `dataset_id, dataset_version`, and to retrieve the lookup
-get_dataset_version_lookup = function(updateCache = FALSE){
+get_dataset_version_lookup = function(updateCache = FALSE, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   str = 'DATASET_VERSION'
   if (updateCache | is.null(.ghEnv$cache$lookup[[str]])){
     namespaces = .ghEnv$cache$nmsp_list
@@ -11,16 +13,15 @@ get_dataset_version_lookup = function(updateCache = FALSE){
     if (length(namespaces) > 1)  {
       for (nmsp in namespaces[namespaces != 'public']) qq = paste("merge(", qq, ", ", nmsp, ".DATASET)", sep = "")
     }
-    # qq2 = paste("project(apply(", qq, ", dataset_id, dataset_id, dataset_version, dataset_version), dataset_id, dataset_version)", sep = "")
-    df = iquery(.ghEnv$db, qq, return = T)
+    df = iquery(con$db, qq, return = T)
     .ghEnv$cache$lookup[[str]] = df[, c('dataset_id', 'dataset_version')]
   }
   return(.ghEnv$cache$lookup[[str]])
 }
 
 # Find the current maximum `dataset_version` for a user specified `dataset_id`
-get_dataset_max_version = function(dataset_id, updateCache = FALSE){
-  df = get_dataset_version_lookup(updateCache)
+get_dataset_max_version = function(dataset_id, updateCache = FALSE, con = NULL){
+  df = get_dataset_version_lookup(updateCache, con = con)
   if (!(dataset_id %in% df$dataset_id)) {stop("Either this dataset_id does not exist or you do not have access to it")}
   df = df[df$dataset_id == dataset_id, ]
   max(df$dataset_version)

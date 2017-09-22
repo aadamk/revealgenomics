@@ -7,7 +7,9 @@
 #' information into the MEASUREMENT entity (at this point, this is called the EXPERIMENT entity,
 #' but the name should be changed. A MEASUREMENT combines both the Experiment and the 
 #' Pipeline information) 
-register_measurements = function(dataset_id, dataset_version) {
+register_measurements = function(dataset_id, dataset_version, con = NULL) {
+  con = use_ghEnv_if_null(con)
+  
   df_info = get_entity_info()
   df_info_msrmt = df_info[df_info$class == 'measurementdata',]
   df_info_msrmt$entity = as.character(df_info_msrmt$entity)
@@ -24,7 +26,7 @@ register_measurements = function(dataset_id, dataset_version) {
     msrmt_set_nm = df_info_msrmt[idx, ]$search_by_entity
     msrmt_set_idnm = scidb4gh:::get_base_idname(msrmt_set_nm)
     t1 = proc.time()
-    res = iquery(.ghEnv$db,
+    res = iquery(con$db,
                  paste("aggregate(filter(", msrmt_array, 
                                   ", dataset_id = ", dataset_id, " AND dataset_version = ", dataset_version, ")", 
                        ", count(*), biosample_id, ", 
@@ -109,7 +111,9 @@ get_experiment_v1 = function(mandatory_fields_only = FALSE) {
   experiments
 }
 
-get_experiment_by_namespace = function(nmsp, info_key = 'study category') {
+get_experiment_by_namespace = function(nmsp, info_key = 'study category', con = NULL) {
+  con = use_ghEnv_if_null(con)
+  
   qq = paste("equi_join(", 
              "grouped_aggregate(", nmsp, ".MEASUREMENT, ", 
              "count(*),", 
@@ -127,7 +131,7 @@ get_experiment_by_namespace = function(nmsp, info_key = 'study category') {
               "'left_names=experimentset_id,dataset_version', ", 
               "'right_names=experimentset_id_,dataset_version')")
   
-  xx = iquery(.ghEnv$db, 
+  xx = iquery(con$db, 
               qq2, 
               return = T)
   stopifnot(unique(xx$key) == info_key)
@@ -151,13 +155,13 @@ get_experiment_by_namespace = function(nmsp, info_key = 'study category') {
 #' table(experiments$`study category`)
 #' 
 #' @export
-get_experiment = function() {
+get_experiment = function(con = NULL) {
   namespaces = .ghEnv$cache$nmsp_list
   
   init = TRUE
   for (nmsp in namespaces) {
     cat("Experiments for namespace:", nmsp, "\n")
-    dfi = get_experiment_by_namespace(nmsp)
+    dfi = get_experiment_by_namespace(nmsp, con = con)
     if (init){
       dfx = dfi
       init = FALSE

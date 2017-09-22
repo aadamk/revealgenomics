@@ -84,21 +84,30 @@ pretty_print = function(vec) {
 # Helper functions for SciDB array operations
 ############################################################
 #' @export
-scidb_exists_array = function(arrayName) {
-  !is.null(tryCatch({iquery(.ghEnv$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
+scidb_exists_array = function(arrayName, con = NULL) {
+  con = use_ghEnv_if_null(con)
+  
+  !is.null(tryCatch({iquery(con$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
 }
 
-convert_attr_double_to_int64 = function(arr, attrname){
+convert_attr_double_to_int64 = function(arr, attrname, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   attrnames = schema(arr, "attributes")$name
   randString = "for_int64_conversion"
-  arr = scidb_attribute_rename(arr, old = attrname, new = randString)
-  arr = .ghEnv$db$apply(srcArray = arr, newAttr = R(attrname), expression = int64(R(randString)))
-  arr = .ghEnv$db$project(arr, R(paste(attrnames, collapse = ", ")))
-  arr
+  arr = scidb_attribute_rename(arr, old = attrname, new = randString, con = con)
+  # arr = con$db$apply(srcArray = arr, newAttr = R(attrname), expression = int64(R(randString)))
+  qq = paste0("apply(", arr@name, ", ", attrname, ", int64(", randString, "))")
+  # arr = con$db$project(arr, R(paste(attrnames, collapse = ", ")))
+  qq = paste0("project(", qq, ", ", paste(attrnames, collapse = ","), ")")
+  arr = scidb(con$db, qq)
 }
 
+
 #' @export
-scidb_attribute_rename = function(arr, old, new){
+scidb_attribute_rename = function(arr, old, new, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   attrs = schema(arr, what = "attributes")
   attrnames = attrs$name
   stopifnot(old %in% attrnames)
@@ -114,19 +123,22 @@ scidb_attribute_rename = function(arr, old, new){
   dim_schema = gsub("<.*> *", "", schema(arr)) # TODO : build up from scratch
   newSchema = paste("<", attr_schema, ">", dim_schema)
   
-  arr = .ghEnv$db$cast(srcArray = arr, schemaArray = R(newSchema))
-  arr
+  # arr = con$db$cast(srcArray = arr, schemaArray = R(newSchema))
+  # arr
+  scidb(con$db, paste0("cast(", arr@name, ", ",  newSchema, ")"))
 }
 
 #' @export
-scidb_array_count = function(array){
+scidb_array_count = function(array, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   qq = paste("op_count(", array@name, ")", sep = "")
-  # scidb(.ghEnv$db, qq)
-  iquery(.ghEnv$db, qq, schema="<count:uint64> [i=0:0]", return = T)$count
+  iquery(con$db, qq, schema="<count:uint64> [i=0:0]", return = T)$count
 }
 
 #' @export
-scidb_array_head= function(array, n = 5){
-  as.R(.ghEnv$db$limit(array, R(n)))
+scidb_array_head= function(array, n = 5, con = NULL){
+  con = use_ghEnv_if_null(con)
+  as.R(con$db$limit(array, R(n)))
 }
 

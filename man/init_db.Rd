@@ -4,7 +4,7 @@
 \alias{init_db}
 \title{Function to (potentially delete and) initialize arrays in GA4GH respository}
 \usage{
-init_db(arrays_to_init)
+init_db(arrays_to_init, con = NULL)
 }
 \description{
 The function requires that you are connected to SciDB.

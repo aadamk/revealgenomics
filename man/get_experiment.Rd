@@ -4,7 +4,7 @@
 \alias{get_experiment}
 \title{retrieve all the experiments available to logged in user}
 \usage{
-get_experiment()
+get_experiment(con = NULL)
 }
 \description{
 joins Measurement, Dataset (for study category field), and ExperimentSet arrays

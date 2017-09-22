@@ -16,7 +16,8 @@
 search_rnaquantification = function(rnaquantificationset = NULL,
                                     biosample = NULL,
                                     feature = NULL,
-                                    formExpressionSet = TRUE){
+                                    formExpressionSet = TRUE,
+                                    con = NULL){
   if (!is.null(rnaquantificationset)) {rnaquantificationset_id = rnaquantificationset$rnaquantificationset_id} else {
     stop("rnaquantificationset must be supplied"); rnaquantificationset_id = NULL
   }
@@ -30,7 +31,8 @@ search_rnaquantification = function(rnaquantificationset = NULL,
   }
   namespace = find_namespace(id = rnaquantificationset_id,
                              entitynm = .ghEnv$meta$arrRnaquantificationset,
-                             dflookup = get_rnaquantificationset_lookup())
+                             dflookup = get_rnaquantificationset_lookup(con = con),
+                             con = con)
   arrayname = paste(namespace, .ghEnv$meta$arrRnaquantification, sep = ".")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
   if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
@@ -40,7 +42,8 @@ search_rnaquantification = function(rnaquantificationset = NULL,
                                        rnaquantificationset_id,
                                        biosample_id,
                                        feature_id,
-                                       dataset_version = dataset_version)
+                                       dataset_version = dataset_version,
+                                       con = con)
   if (nrow(res) == 0) return(NULL)
   if (!formExpressionSet) return(res)
   
@@ -49,9 +52,9 @@ search_rnaquantification = function(rnaquantificationset = NULL,
     biosample_id = unique(res$biosample_id)
     if (FALSE) { # avoiding this path right now (might be useful when the download of all accessible biosamples is prohibitive)
       cat("query the server for matching biosamples\n")
-      biosample = get_biosamples(biosample_id)
+      biosample = get_biosamples(biosample_id, con = con)
     } else{
-      biosample_ref = get_biosamples_from_cache()
+      biosample_ref = get_biosamples_from_cache(con = con)
       biosample = biosample_ref[biosample_ref$biosample_id %in% biosample_id, ]
       biosample = drop_na_columns(biosample)
     }
@@ -62,9 +65,9 @@ search_rnaquantification = function(rnaquantificationset = NULL,
     feature_id = unique(res$feature_id)
     if (FALSE) { # avoiding this path for now (the download of all features registered on the system is not expected to be too time-consuming)
       cat("query the server for matching features\n")
-      feature = get_features(feature_id)
+      feature = get_features(feature_id, con = con)
     } else{
-      feature_ref = get_feature_from_cache()
+      feature_ref = get_feature_from_cache(con = con)
       
       feature = feature_ref[feature_ref$feature_id %in% feature_id, ]
       feature = drop_na_columns(feature)
@@ -85,8 +88,10 @@ search_rnaquantification_scidb = function(arrayname,
                                           rnaquantificationset_id,
                                           biosample_id,
                                           feature_id,
-                                          dataset_version){
-  tt = scidb(.ghEnv$db, arrayname)
+                                          dataset_version,
+                                          con = NULL){
+  con = use_ghEnv_if_null(con)
+  tt = scidb(con$db, arrayname)
   
   if (is.null(dataset_version)) dataset_version = "NULL"
   if (length(dataset_version) != 1) {stop("cannot specify one dataset_version at a time")}
@@ -105,7 +110,7 @@ search_rnaquantification_scidb = function(arrayname,
                  ", ", biosample_id,
                  ", ", feature_id,
                  ")", sep="")
-      res = iquery(.ghEnv$db, qq, return = T)
+      res = iquery(con$db, qq, return = T)
     }
     else {
       selector = merge(
@@ -117,7 +122,7 @@ search_rnaquantification_scidb = function(arrayname,
       if (TRUE){ # Return data using join
         selector$flag = TRUE
         # t1 = proc.time()
-        xx = as.scidb(.ghEnv$db, selector)
+        xx = as.scidb(con$db, selector)
         # print(proc.time()-t1)
         qq2 = paste("apply(", xx@name, ",
                     dataset_version_, int64(dataset_version),
@@ -146,7 +151,7 @@ search_rnaquantification_scidb = function(arrayname,
                    qq, ",",
                    qq2, ")")
         qq = paste("project(", qq, ", expression_count)")
-        res = iquery(.ghEnv$db, qq, return = T)
+        res = iquery(con$db, qq, return = T)
       } else { # Return data using cross_between_
         stop("Code needs to be added here to support inclusion of `dataset_version` in expression matrix schema")
         df = selector[order(selector$rnaquantificationset_id, selector$biosample_id, selector$feature_id), ]
@@ -158,24 +163,24 @@ search_rnaquantification_scidb = function(arrayname,
           sqq = paste(sqq, si, sep=ifelse(is.null(sqq), "", ", "))
         }
         qq = paste("cross_between_(", qq, ", ", sqq, ")")
-        res = iquery(.ghEnv$db, qq, return = T)
+        res = iquery(con$db, qq, return = T)
       }
     }
   } else if (!is.null(rnaquantificationset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected rqs and bs, not f
     selected_names = c('rnaquantificationset_id', 'biosample_id')
     val1 = rnaquantificationset_id
     val2 = biosample_id
-    res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version)
+    res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
   } else if (is.null(rnaquantificationset_id) & !is.null(biosample_id) & !is.null(feature_id)) { # user selected bs and f, not rqs
     selected_names = c('biosample_id', 'feature_id')
     val1 = biosample_id
     val2 = feature_id
-    res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version)
+    res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
   } else if (!is.null(rnaquantificationset_id) & is.null(biosample_id) & !is.null(feature_id)) { # user selected rqs and f, not bs
     selected_names = c('rnaquantificationset_id', 'feature_id')
     val1 = rnaquantificationset_id
     val2 = feature_id
-    res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version)
+    res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
   } else if (!is.null(rnaquantificationset_id) & is.null(biosample_id) & is.null(feature_id)) { # user selected rqs only
     if (exists('debug_trace')) cat("Only RNAQuantificationSet is selected.\n")
     if (length(rnaquantificationset_id) == 1){
@@ -183,7 +188,7 @@ search_rnaquantification_scidb = function(arrayname,
     } else {
       stop("code for multiple rnaquantificationset_id to be added. Alternatively, call the search function by individual rnaquantificationset_id.")
     }
-    res = iquery(.ghEnv$db, qq, return = TRUE)
+    res = iquery(con$db, qq, return = TRUE)
   } else if (is.null(rnaquantificationset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected bs only
     stop("Only biosample is selected. Downloaded data could be quite large. Consider downselecting by RNAQuantificationSet_id or feature_id. ")
   }
@@ -195,7 +200,7 @@ search_rnaquantification_scidb = function(arrayname,
 
 
 #' @export
-search_variants = function(variantset, biosample = NULL, feature = NULL){
+search_variants = function(variantset, biosample = NULL, feature = NULL, con = NULL){
   if (!is.null(variantset)) {variantset_id = variantset$variantset_id} else {
     stop("variantset must be supplied"); variantset_id = NULL
   }
@@ -209,7 +214,8 @@ search_variants = function(variantset, biosample = NULL, feature = NULL){
   }
   namespace = find_namespace(id = variantset_id,
                              entitynm = .ghEnv$meta$arrVariantset,
-                             dflookup = get_variantset_lookup())
+                             dflookup = get_variantset_lookup(con = con), 
+                             con = con)
   cat("Found namespace: ", namespace, "\n")
   arrayname = paste(namespace, .ghEnv$meta$arrVariant, sep = ".")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
@@ -220,12 +226,15 @@ search_variants = function(variantset, biosample = NULL, feature = NULL){
                               variantset_id,
                               biosample_id,
                               feature_id,
-                              dataset_version = dataset_version)
+                              dataset_version = dataset_version, 
+                              con = con)
   res
 }
 
 
-search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, feature_id = NULL, dataset_version){
+search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, feature_id = NULL, dataset_version, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
@@ -279,14 +288,15 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
     }
   }
   
-  xx = join_info_ontology_and_unpivot(qq = left_query, arrayname = strip_namespace(arrayname), namespace = get_namespace(arrayname))
+  xx = join_info_ontology_and_unpivot(qq = left_query, arrayname = strip_namespace(arrayname), namespace = get_namespace(arrayname),
+                                      con = con)
   xx
 }
 
 
 
 #' @export
-search_fusion = function(fusionset, biosample = NULL, feature = NULL){
+search_fusion = function(fusionset, biosample = NULL, feature = NULL, con = NULL){
   if (!is.null(fusionset)) {fusionset_id = fusionset$fusionset_id} else {
     stop("fusionset must be supplied"); fusionset_id = NULL
   }
@@ -300,7 +310,8 @@ search_fusion = function(fusionset, biosample = NULL, feature = NULL){
   }
   namespace = find_namespace(id = fusionset_id,
                              entitynm = .ghEnv$meta$arrFusionset,
-                             dflookup = get_fusionset_lookup())
+                             dflookup = get_fusionset_lookup(con = con), 
+                             con = con)
   cat("Found namespace: ", namespace, "\n")
   arrayname = paste(namespace, .ghEnv$meta$arrFusion, sep = ".")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
@@ -311,11 +322,14 @@ search_fusion = function(fusionset, biosample = NULL, feature = NULL){
                              fusionset_id,
                              biosample_id,
                              feature_id,
-                             dataset_version = dataset_version)
+                             dataset_version = dataset_version, 
+                             con = con)
   res
 }
 
-search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, feature_id = NULL, dataset_version){
+search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, feature_id = NULL, dataset_version, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
@@ -353,12 +367,12 @@ search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, fe
     }
   }
   
-  iquery(.ghEnv$db, left_query, return = TRUE)
+  iquery(con$db, left_query, return = TRUE)
 }
 
 
 #' @export
-search_copynumber_mat = function(copynumberset, biosample = NULL, feature = NULL){
+search_copynumber_mat = function(copynumberset, biosample = NULL, feature = NULL, con = NULL){
   if (!is.null(copynumberset)) {copynumberset_id = copynumberset$copynumberset_id} else {
     stop("copynumberset must be supplied"); copynumberset_id = NULL
   }
@@ -372,7 +386,8 @@ search_copynumber_mat = function(copynumberset, biosample = NULL, feature = NULL
   }
   namespace = find_namespace(id = copynumberset_id,
                              entitynm = .ghEnv$meta$arrCopyNumberSet,
-                             dflookup = get_copynumberset_lookup())
+                             dflookup = get_copynumberset_lookup(con = con), 
+                             con = con)
   cat("Found namespace: ", namespace, "\n")
   arrayname = paste(namespace, .ghEnv$meta$arrCopynumber_mat, sep = ".")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
@@ -383,11 +398,15 @@ search_copynumber_mat = function(copynumberset, biosample = NULL, feature = NULL
                              copynumberset_id,
                              biosample_id,
                              feature_id,
-                             dataset_version = dataset_version)
+                             dataset_version = dataset_version, 
+                             con = con)
   res
 }
 
-search_copynumber_mats_scidb = function(arrayname, copynumberset_id, biosample_id = NULL, feature_id = NULL, dataset_version){
+search_copynumber_mats_scidb = function(arrayname, copynumberset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
+                                        con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
@@ -422,11 +441,11 @@ search_copynumber_mats_scidb = function(arrayname, copynumberset_id, biosample_i
     }
   }
   
-  iquery(.ghEnv$db, left_query, return = TRUE)
+  iquery(con$db, left_query, return = TRUE)
 }
 
 #' @export
-search_copynumber_seg = function(experimentset, biosample = NULL){
+search_copynumber_seg = function(experimentset, biosample = NULL, con = NULL){
   if (!is.null(experimentset)) {experimentset_id = experimentset$experimentset_id} else {
     stop("experimentset must be supplied"); experimentset_id = NULL
   }
@@ -440,7 +459,8 @@ search_copynumber_seg = function(experimentset, biosample = NULL){
   }
   namespace = find_namespace(id = experimentset_id,
                              entitynm = .ghEnv$meta$arrExperimentSet,
-                             dflookup = get_experimentset_lookup())
+                             dflookup = get_experimentset_lookup(con = con), 
+                             con = con)
   cat("Found namespace: ", namespace, "\n")
   arrayname = paste(namespace, .ghEnv$meta$arrCopynumber_seg, sep = ".")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
@@ -449,11 +469,14 @@ search_copynumber_seg = function(experimentset, biosample = NULL){
   res = search_copynumber_segs_scidb(arrayname,
                                      experimentset_id,
                                      biosample_id,
-                                     dataset_version = dataset_version)
+                                     dataset_version = dataset_version, 
+                                     con = con)
   res
 }
 
-search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_id = NULL, dataset_version){
+search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_id = NULL, dataset_version, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
@@ -476,5 +499,5 @@ search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_i
     }
   }
   
-  iquery(.ghEnv$db, left_query, return = TRUE)
+  iquery(con$db, left_query, return = TRUE)
 }

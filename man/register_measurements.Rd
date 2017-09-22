@@ -4,7 +4,7 @@
 \alias{register_measurements}
 \title{register all measurements for a specific dataset}
 \usage{
-register_measurements(dataset_id, dataset_version)
+register_measurements(dataset_id, dataset_version, con = NULL)
 }
 \description{
 Work in progress
