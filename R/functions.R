@@ -286,10 +286,12 @@ update_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
     x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
   }
   x = scidb_attribute_rename(arr = x, old = "updated", new = "updated_old", con = con)
-  x = con$db$apply(srcArray = x, newAttr = "updated", expression = "string(now())")
-  x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
+  # x = con$db$apply(srcArray = x, newAttr = "updated", expression = "string(now())")
+  qq = paste0("apply(", x@name, ", updated, string(now()))")
+  # x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
+  qq = paste0("redimension(", qq, ", ", schema(scidb(con$db, arrayname)), ")")
   
-  query = paste("insert(", x@name, ", ", arrayname, ")", sep="")
+  query = paste("insert(", qq, ", ", arrayname, ")", sep="")
   iquery(con$db, query)
 }
 
@@ -302,11 +304,14 @@ register_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
   for (idnm in ids_int64_conv){
     x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
   }
-  x = con$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
-  x = con$db$apply(srcArray = x, newAttr = "updated", expression = "created")
-  x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
+  # x = con$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
+  qq = paste0("apply(", x@name, ", created, string(now))")
+  # x = con$db$apply(srcArray = x, newAttr = "updated", expression = "created")
+  qq = paste0("apply(", qq, "updated, created)")
+  # x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
+  qq = paste0("redimension(", qq, ", ", schema(scidb(con$db, arrayname)), ")")
   
-  query = paste("insert(", x@name, ", ", arrayname, ")", sep="")
+  query = paste("insert(", qq, ", ", arrayname, ")", sep="")
   iquery(con$db, query)
 }
 
@@ -763,11 +768,14 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE, con =
     for (idnm in ids_int64_conv){
       x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
     }
-    x = con$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
-    x = con$db$apply(srcArray = x, newAttr = "updated", expression = "created")
-    x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
+    # x = con$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
+    qq = paste0("apply(", x@name, ", created, string(now))")
+    # x = con$db$apply(srcArray = x, newAttr = "updated", expression = "created")
+    qq = paste0("apply(", qq, "updated, created)")
+    # x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
+    qq = paste0("redimension(", qq, ", ", schema(scidb(con$db, arrayname)), ")")
     
-    query = paste("insert(", x@name, ", ", arrayname, ")", sep="")
+    query = paste("insert(", qq, ", ", arrayname, ")", sep="")
     cat("Redimension and insert\n")
     iquery(con$db, query)
     
@@ -1439,11 +1447,13 @@ get_rnaquantification_counts = function(rnaquantificationset_id = NULL, con = NU
   if (is.null(rnaquantificationset_id)){
     # public first
     x = scidb(con$db, .ghEnv$meta$arrRnaquantification)
-    c = as.R(con$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
+    # c = as.R(con$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
+    c = iquery(con$db, paste0("aggregate(", x@name, ", count(*), rnaquantificationset_id, dataset_version"), return = TRUE)
     for (nmsp in .ghEnv$cache$nmsp_list){
       if (nmsp != 'public'){
         x = scidb(con$db, paste(nmsp, .ghEnv$meta$arrRnaquantification, sep = "."))
-        c1 = as.R(con$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
+        # c1 = as.R(con$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
+        c1 = iquery(con$db, paste0("aggregate(", x@name, ", count(*), rnaquantificationset_id, dataset_version"), return = TRUE)
         c = rbind(c, c1)
       }
     }
@@ -1553,18 +1563,19 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   adf_expr = convert_attr_double_to_int64(arr = adf_expr0, attrname = "rnaquantificationset_id", con = con)
   adf_expr = convert_attr_double_to_int64(arr = adf_expr, attrname = "biosample_id", con = con)
   adf_expr = convert_attr_double_to_int64(arr = adf_expr, attrname = "feature_id", con = con)
-  adf_expr = scidb(con$db, paste("apply(", 
-                                    adf_expr@name, 
-                                    ", expression_count, float(expression),
-                                    dataset_version, ", dataset_version, ")", 
-                                    sep = ""))
+  qq2 = paste0("apply(", 
+                    adf_expr@name, 
+                    ", expression_count, float(expression),
+                    dataset_version, ", dataset_version, ")")
   
-  subarr = con$db$redimension(adf_expr, R(schema(scidb(con$db, .ghEnv$meta$arrRnaquantification))))
+  # subarr = con$db$redimension(adf_expr, R(schema(scidb(con$db, .ghEnv$meta$arrRnaquantification))))
+  qq2 = paste0("redimension(", qq2, ", ", schema(scidb(con$db, .ghEnv$meta$arrRnaquantification)), ")")
   
   fullnm = paste(namespace_to_insert, .ghEnv$meta$arrRnaquantification, sep = ".")
   cat("inserting data for", nrow(df1), "expression values into", fullnm, "array \n")
-  iquery(con$db, paste("insert(", subarr@name, ", ", fullnm, ")"))
-  con$db$remove("temp_df")
+  iquery(con$db, paste("insert(", qq2, ", ", fullnm, ")"))
+  # con$db$remove("temp_df")
+  iquery(con$db, "remove(temp_df)")
 }
 
 #' @export
@@ -1624,66 +1635,70 @@ register_expression_matrix = function(filepath,
     query = paste("aio_input('", filepath, "',
                   'num_attributes=" , length(colnames(x)), "',
                   'split_on_dimension=1')")
-    t1 = scidb(con$db, query)
-    t1 = con$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, NULL", highCoord = R(paste("NULL, NULL, NULL,", length(colnames(x))-1)))
-    t1 = store(con$db, t1, temp=TRUE)
+    # t1 = scidb(con$db, query)
+    # t1 = con$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, NULL", highCoord = R(paste("NULL, NULL, NULL,", length(colnames(x))-1)))
+    t0 = scidb(con$db, paste0("between(", query, ", NULL, NULL, NULL, NULL, NULL, NULL, NULL, ", length(colnames(x))-1, ")")) 
+    t1 = store(con$db, t0, temp=TRUE)
     
     # ================================
     ## Step 1. Join the SciDB feature ID
     
     # first form the list of features in current table
-    # featurelist_curr = subset(t1, attribute_no == 0)
-    featurelist_curr = con$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, 0", highCoord = "NULL, NULL, NULL, 0")
-    cat(paste("number of feature_id-s in the current expression count table:", scidb_array_count(featurelist_curr)-1, "\n"))
+    # featurelist_curr = con$db$between(srcArray = t1, lowCoord = "NULL, NULL, NULL, 0", highCoord = "NULL, NULL, NULL, 0")
+    featurelist_curr = scidb(con$db, paste0("filter(", t1@name, ", attribute_no = 0)"))
+    cat(paste("number of feature_id-s in the current expression count table:", scidb_array_count(featurelist_curr, con = con)-1, "\n"))
     FEATUREKEY = scidb(con$db, arr_feature)
-    cat(paste("number of feature_id-s in the SciDB feature ID list:", scidb_array_count(FEATUREKEY), "\n"))
+    cat(paste("number of feature_id-s in the SciDB feature ID list:", scidb_array_count(FEATUREKEY, con = con), "\n"))
     
-    sel_features = con$db$filter(FEATUREKEY, R(paste("feature_type='", feature_type, "' AND featureset_id = ", featureset_id, sep = "")))
+    # sel_features = con$db$filter(FEATUREKEY, R(paste("feature_type='", feature_type, "' AND featureset_id = ", featureset_id, sep = "")))
+    sel_features = scidb(con$db, paste0("filter(", FEATUREKEY@name, ", ", 
+                                                "feature_type='", feature_type, "' AND featureset_id = ", featureset_id, ")"))
     cat(paste("number of feature_id-s in the SciDB feature ID list for transcript type: '", feature_type,
-              "' and featureset_id: '", featureset_id, "' is:", scidb_array_count(sel_features), "\n", sep = ""))
+              "' and featureset_id: '", featureset_id, "' is:", scidb_array_count(sel_features, con = con), "\n", sep = ""))
     
-    ff = con$db$project(srcArray = sel_features, selectedAttr = "name")
+    # ff = con$db$project(srcArray = sel_features, selectedAttr = "name")
+    ff = scidb(con$db, paste0("project(", sel_features@name, ", name)"))
     
-    joinFeatureName = scidb(con$db,
-                            paste("equi_join(",
-                                  ff@name, ", ",
-                                  featurelist_curr@name, ", ",
-                                  "'left_names=name', 'right_names=a', 'keep_dimensions=1')")
-    )
-    joinFeatureName = con$db$redimension(srcArray = joinFeatureName,
-                                            "<feature_id :int64>
-                                            [tuple_no=0:*,10000000,0,dst_instance_id=0:63,1,0,src_instance_id=0:63,1,0]")
+    qq2 = paste0("equi_join(",
+                      ff@name, ", ",
+                      featurelist_curr@name, ", ",
+                      "'left_names=name', 'right_names=a', 'keep_dimensions=1')")
+    
+    qq2 = paste0("redimension(", qq2, 
+                              ", <feature_id :int64>[tuple_no=0:*,10000000,0,dst_instance_id=0:63,1,0,src_instance_id=0:63,1,0])")
     
     joinBack1 = scidb(con$db,
                       paste("cross_join(",
                             t1@name, " as X, ",
-                            joinFeatureName@name, " as Y, ",
+                            qq2, " as Y, ",
                             "X.tuple_no, Y.tuple_no, X.dst_instance_id, Y.dst_instance_id, X.src_instance_id, Y.src_instance_id)", sep = ""))
     joinBack1@name
     
     joinBack1 = store(con$db, joinBack1, temp=TRUE)
     
     # Verify with
-    scidb_array_head(con$db$between(srcArray = joinBack1, lowCoord = "0, NULL, NULL, NULL", highCoord = "0, NULL, NULL, NULL"))
+    # scidb_array_head(con$db$between(srcArray = joinBack1, lowCoord = "0, NULL, NULL, NULL", highCoord = "0, NULL, NULL, NULL"))
     
     cat("Number of features in study that matched with SciDB ID:\n")
     countFeatures = scidb_array_count(joinBack1) / ncol(x)
     print(countFeatures)
     
-    stopifnot(countFeatures == (scidb_array_count(featurelist_curr)-1))
+    stopifnot(countFeatures == (scidb_array_count(featurelist_curr, con = con)-1))
     # ================================
     ## Step 2. Join the SciDB patient ID
     # first form the list of patients in current table
     
-    patientlist_curr = con$db$between(t1, lowCoord = "0, 0, NULL, 1", highCoord = "0, 0, NULL, NULL")
+    # patientlist_curr = con$db$between(t1, lowCoord = "0, 0, NULL, 1", highCoord = "0, 0, NULL, NULL")
+    patientlist_curr = scidb(con$db, paste0("between(", t1@name, ", 0, 0, NULL, 1, 0, 0, NULL, NULL)"))
     # Check that the "public_id"_"spectrum_id" is unique enough, otherwise we have to consider the suffix "BM", "PB"
     stopifnot(length(unique(as.R(patientlist_curr)$a)) == (ncol(x)-1))
     
-    scidb_array_head(patientlist_curr)
+    scidb_array_head(patientlist_curr, con = con)
     
-    cat(paste("number of biosamples in the expression count table:", scidb_array_count(patientlist_curr), "\n"))
-    PATIENTKEY = scidb(con$db, arr_biosample)
-    PATIENTKEY = con$db$filter(PATIENTKEY, R(paste('dataset_id=', dataset_id)))
+    cat(paste("number of biosamples in the expression count table:", scidb_array_count(patientlist_curr, con = con), "\n"))
+    # PATIENTKEY = scidb(con$db, arr_biosample)
+    # PATIENTKEY = con$db$filter(PATIENTKEY, R(paste('dataset_id=', dataset_id)))
+    PATIENTKEY = scidb(con$db, paste0("filter(", arr_biosample, ", dataset_id = ", dataset_id, ")"))
     cat(paste("number of biosamples registered in database in selected namespace:" , scidb_array_count(PATIENTKEY), "\n"))
     
     
@@ -1701,7 +1716,8 @@ register_expression_matrix = function(filepath,
     
     
     # Verify
-    x1 = as.R(con$db$project(PATIENTKEY, "name"))
+    # x1 = as.R(con$db$project(PATIENTKEY, "name"))
+    x1 = iquery(con$db, paste0("project(", PATIENTKEY@name, ", name)"), return = T)
     x2 = as.R(patientlist_curr)
     
     stopifnot(countMatches == sum(x2$a %in% x1$name))
@@ -1710,21 +1726,23 @@ register_expression_matrix = function(filepath,
     # tt = x2$public_id %in% x1$PUBLIC_ID
     # print(x2$public_id[which(!tt)])
     
-    joinPatientName = con$db$redimension(joinPatientName,
-                                            R(paste("<biosample_id:int64>
-                                                    [attribute_no=0:", countMatches+1, ",",countMatches+2, ",0]", sep = "")))
+    # joinPatientName = con$db$redimension(joinPatientName,
+    #                                      R(paste("<biosample_id:int64>
+    #                                                 [attribute_no=0:", countMatches+1, ",",countMatches+2, ",0]", sep = "")))
+    qq3 = paste0("redimension(", joinPatientName@name,
+                              "<biosample_id:int64>[attribute_no=0:", countMatches+1, ",",countMatches+2, ",0])")
     
     joinBack2 = scidb(con$db,
-                      paste("cross_join(",
+                      paste0("cross_join(",
                             joinBack1@name, " as X, ",
-                            joinPatientName@name, "as Y, ",
-                            "X.attribute_no, Y.attribute_no)", sep = ""))
+                            qq3, "as Y, ",
+                            "X.attribute_no, Y.attribute_no)"))
     joinBack2@name
     
     joinBack2 = store(con$db, joinBack2, temp=TRUE)
     
     # Verify with
-    scidb_array_head(con$db$filter(joinBack2, "tuple_no = 0"))
+    # scidb_array_head(con$db$filter(joinBack2, "tuple_no = 0"))
     
     cat("Number of expression level values in current array:\n")
     countExpressions = scidb_array_count(joinBack2)
@@ -1743,12 +1761,14 @@ register_expression_matrix = function(filepath,
     )
     
     # Need to insert the expression matrix table into one big array
-    insertable = con$db$redimension(gct_table,
-                                       R(scidb::schema(scidb(con$db, arrayname)))) # TODO: would be good to not have this resolution clash
+    # insertable = con$db$redimension(gct_table,
+    #                                 R(scidb::schema(scidb(con$db, arrayname)))) 
+    insertable_qq = paste0("redimension(", gct_table@name, ", ",
+                                    schema(scidb(con$db, arrayname)), ")") # TODO: would be good to not have this resolution clash
     
-    if (scidb_exists_array(arrayname)) {
+    if (scidb_exists_array(arrayname, con = con)) {
       cat(paste("Inserting expression matrix data into", arrayname, "at dataset_version", dataset_version, "\n"))
-      iquery(con$db, paste("insert(", insertable@name, ", ", arrayname, ")"))
+      iquery(con$db, paste("insert(", insertable_qq, ", ", arrayname, ")"))
     } else {
       stop("expression array does not exist")
     }

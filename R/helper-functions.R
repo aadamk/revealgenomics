@@ -139,6 +139,7 @@ scidb_array_count = function(array, con = NULL){
 #' @export
 scidb_array_head= function(array, n = 5, con = NULL){
   con = use_ghEnv_if_null(con)
-  as.R(con$db$limit(array, R(n)))
+  # as.R(con$db$limit(array, R(n)))
+  iquery(con$db, paste0("limit(", array@name, ", ", n, ")"), return = TRUE)
 }
 
