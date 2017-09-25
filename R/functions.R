@@ -233,7 +233,7 @@ update_ontology_cache = function(con = NULL){
   con = use_ghEnv_if_null(con)
   
   zz = iquery(con$db, .ghEnv$meta$arrOntology, return = TRUE)
-  zz = zz[order(zz[, get_idname(.ghEnv$meta$arrOntology)]), ]
+  if (nrow(zz) > 1) zz = zz[order(zz[, get_idname(.ghEnv$meta$arrOntology)]), ]
   .ghEnv$cache$dfOntology = zz
 }
 
@@ -305,9 +305,9 @@ register_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
     x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
   }
   # x = con$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
-  qq = paste0("apply(", x@name, ", created, string(now))")
+  qq = paste0("apply(", x@name, ", created, string(now()))")
   # x = con$db$apply(srcArray = x, newAttr = "updated", expression = "created")
-  qq = paste0("apply(", qq, "updated, created)")
+  qq = paste0("apply(", qq, ", updated, created)")
   # x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
   qq = paste0("redimension(", qq, ", ", schema(scidb(con$db, arrayname)), ")")
   
@@ -664,8 +664,8 @@ update_lookup_array = function(new_id, arrayname, con = NULL){
                            stringsAsFactors = FALSE)
     colnames(new_id_df)[which(colnames(new_id_df) == 'new_id')] = 
       get_base_idname(arrayname)
-    uploaded = as.scidb(con$db, new_id_df)
-    uploaded = convert_attr_double_to_int64(arr = uploaded, attrname = get_base_idname(arrayname), con = con)
+    uploaded_v0 = as.scidb(con$db, new_id_df)
+    uploaded = convert_attr_double_to_int64(arr = uploaded_v0, attrname = get_base_idname(arrayname), con = con)
     qq = paste("redimension(", uploaded@name, ", ", schema(a), ")", sep = "")
     qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
     # cat("query:", qq, "\n")
@@ -769,11 +769,11 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE, con =
       x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
     }
     # x = con$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
-    qq = paste0("apply(", x@name, ", created, string(now))")
+    # qq = paste0("apply(", x@name, ", created, string(now()))")
     # x = con$db$apply(srcArray = x, newAttr = "updated", expression = "created")
-    qq = paste0("apply(", qq, "updated, created)")
+    # qq = paste0("apply(", qq, ", updated, created)")
     # x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
-    qq = paste0("redimension(", qq, ", ", schema(scidb(con$db, arrayname)), ")")
+    qq = paste0("redimension(", x@name, ", ", schema(scidb(con$db, arrayname)), ")")
     
     query = paste("insert(", qq, ", ", arrayname, ")", sep="")
     cat("Redimension and insert\n")
@@ -1730,7 +1730,7 @@ register_expression_matrix = function(filepath,
     #                                      R(paste("<biosample_id:int64>
     #                                                 [attribute_no=0:", countMatches+1, ",",countMatches+2, ",0]", sep = "")))
     qq3 = paste0("redimension(", joinPatientName@name,
-                              "<biosample_id:int64>[attribute_no=0:", countMatches+1, ",",countMatches+2, ",0])")
+                              ", <biosample_id:int64>[attribute_no=0:", countMatches+1, ",",countMatches+2, ",0])")
     
     joinBack2 = scidb(con$db,
                       paste0("cross_join(",

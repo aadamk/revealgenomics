@@ -547,7 +547,12 @@ array:
       source_version: string
       created: string
       updated: string
-    dims: ontology_id
+    dims: 
+      ontology_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
     unique_fields:
       - term
     search_by_entity: 
@@ -567,7 +572,12 @@ array:
       source_uri: string
       created: string
       updated: string
-    dims: featureset_id
+    dims: 
+      featureset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
     unique_fields:
       - name
     search_by_entity: 
@@ -597,7 +607,12 @@ array:
       - name
       - featureset_id
       - feature_type
-    dims: feature_id
+    dims: 
+      feature_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10000
+        overlap: 0
     search_by_entity: FEATURESET
     delete_by_entity: FEATURE
     infoArray: TRUE
@@ -616,7 +631,12 @@ array:
       source: string
       created: string
       updated: string
-    dims: feature_synonym_id
+    dims: 
+      feature_synonym_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
     unique_fields:
       - feature_id
       - source
@@ -637,7 +657,12 @@ array:
       owner: string
       created: string
       updated: string
-    dims: genelist_id
+    dims: 
+      genelist_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
     unique_fields:
       - name
       - owner
@@ -656,7 +681,12 @@ array:
       gene_symbol: string
       created: string
       updated: string
-    dims: genelist_gene_id
+    dims: 
+      genelist_gene_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
     unique_fields:
       - genelist_id
       - gene_symbol
@@ -680,7 +710,12 @@ array:
       is_derived: bool
       created: string
       updated: string
-    dims: referenceset_id
+    dims: 
+      referenceset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
     unique_fields:
       - name
     search_by_entity: 
