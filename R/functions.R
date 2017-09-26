@@ -96,7 +96,7 @@ gh_connect2 = function(username, password = NULL, host = NULL, port = NULL, prot
 use_ghEnv_if_null = function(con) {
   if (is.null(con)) {
     con$db = .ghEnv$db
-    con$cache$nmps_list = .ghEnv$cache$nmsp_list
+    con$cache$nmsp_list = .ghEnv$cache$nmsp_list
   }
   return(con)
 }
