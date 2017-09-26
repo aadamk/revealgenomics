@@ -156,7 +156,9 @@ get_experiment_by_namespace = function(nmsp, info_key = 'study category', con = 
 #' 
 #' @export
 get_experiment = function(con = NULL) {
-  namespaces = .ghEnv$cache$nmsp_list
+  con = use_ghEnv_if_null(con)
+  
+  namespaces = con$cache$nmsp_list
   
   init = TRUE
   for (nmsp in namespaces) {

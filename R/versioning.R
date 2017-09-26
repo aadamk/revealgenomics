@@ -8,7 +8,7 @@ get_dataset_version_lookup = function(updateCache = FALSE, con = NULL){
   
   str = 'DATASET_VERSION'
   if (updateCache | is.null(.ghEnv$cache$lookup[[str]])){
-    namespaces = .ghEnv$cache$nmsp_list
+    namespaces = con$cache$nmsp_list
     qq = "public.DATASET"
     if (length(namespaces) > 1)  {
       for (nmsp in namespaces[namespaces != 'public']) qq = paste("merge(", qq, ", ", nmsp, ".DATASET)", sep = "")

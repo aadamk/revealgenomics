@@ -69,13 +69,14 @@ gh_connect = function(username, password = NULL, host = NULL, port = NULL, proto
     con$db = NULL
   } else {
     all_nmsp = iquery(con$db, "list('namespaces')", schema = "<name:string NOT NULL> [No=0:1,2,0]", return = T)$name
-    .ghEnv$cache$nmsp_list = all_nmsp[all_nmsp %in% c('public', 'clinical', 'collaboration')]
+    con$cache$nmsp_list = all_nmsp[all_nmsp %in% c('public', 'clinical', 'collaboration')]
   }
   
-  # Store a copy of the db object in .ghEnv
-  # Multi-session programs like Shiny need to explicitly delete this after gh_connect()
+  # Store a copy of connection object in .ghEnv
+  # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
   if (TRUE) {
     .ghEnv$db = con$db
+    .ghEnv$cache$nmsp_list = con$cache$nmsp_list
   }
   return(con)
 }
@@ -84,6 +85,7 @@ gh_connect = function(username, password = NULL, host = NULL, port = NULL, proto
 gh_connect2 = function(username, password = NULL, host = NULL, port = NULL, protocol = "https") {
   con = gh_connect(username, password, host, port, protocol)
   .ghEnv$db = NULL
+  .ghEnv$cache$nmsp_list = NA
   return(con)
 }
 
@@ -92,7 +94,10 @@ gh_connect2 = function(username, password = NULL, host = NULL, port = NULL, prot
 # }
 # 
 use_ghEnv_if_null = function(con) {
-  if (is.null(con)) con$db = .ghEnv$db
+  if (is.null(con)) {
+    con$db = .ghEnv$db
+    con$cache$nmps_list = .ghEnv$cache$nmsp_list
+  }
   return(con)
 }
 
@@ -830,14 +835,15 @@ get_projects = function(project_id = NULL, con = NULL){
 }
 
 select_from_1d_entity = function(entitynm, id, dataset_version = NULL, con = NULL){
+  con = use_ghEnv_if_null(con)
   namespace = find_namespace(id, entitynm, entity_lookup(entityName = entitynm), con = con)
   if (is.null(namespace)) namespace = NA # to handle the case of no entry in lookup array at all
   if (any(is.na(namespace))) {
     cat("trying to download lookup array once again, to see if there has been a recent update\n")
     namespace = update_lookup_and_find_namespace_again(entitynm, id, con = con)
   }
-  if (any(!(namespace %in% .ghEnv$cache$nmsp_list))) {
-    stop("user probably does have acecss to id-s: ", paste(id[which(!(namespace %in% .ghEnv$cache$nmsp_list))], collapse = ", "))
+  if (any(!(namespace %in% con$cache$nmsp_list))) {
+    stop("user probably does have acecss to id-s: ", paste(id[which(!(namespace %in% con$cache$nmsp_list))], collapse = ", "))
   }
   names(id) = namespace
   df0 = data.frame()
@@ -882,12 +888,14 @@ select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_v
 }
 
 merge_across_namespaces = function(arrayname, mandatory_fields_only = FALSE, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   arrayname = strip_namespace(arrayname)
   
   # public namespace first
   qq = arrayname
   df = join_info_ontology_and_unpivot(qq, arrayname, mandatory_fields_only = mandatory_fields_only, con = con)
-  for (namespace in .ghEnv$cache$nmsp_list){
+  for (namespace in con$cache$nmsp_list){
     if (namespace != 'public'){
       cat("--DEBUG--: joining with data from namespace:", namespace, "\n")
       fullnm = paste(namespace, ".", arrayname, sep = "")
@@ -1225,6 +1233,8 @@ search_genelist_gene = function(genelist_id, con = NULL){
 
 #' @export
 search_datasets = function(project_id = NULL, dataset_version = NULL, all_versions = TRUE, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   check_args_search(dataset_version, all_versions)
   arrayname = .ghEnv$meta$arrDataset
   
@@ -1237,7 +1247,7 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
       namespace = find_namespace(id = project_id, entitynm = .ghEnv$meta$arrProject, dflookup = get_project_lookup(updateCache = TRUE),
                                  con = con)
     }
-    if (!(namespace %in% .ghEnv$cache$nmsp_list)) {stop("user does not have permission to access data for project_id: ", project_id,
+    if (!(namespace %in% con$cache$nmsp_list)) {stop("user does not have permission to access data for project_id: ", project_id,
                                                         "or project does not exist")}
     fullnm = paste(namespace, ".", qq, sep = "")
     if (is.null(dataset_version)) {
@@ -1282,6 +1292,8 @@ latest_version = function(df){
 }
 
 find_nmsp_filter_on_dataset_id_and_version = function(arrayname, dataset_id, dataset_version, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
   qq = arrayname
   if (!is.null(dataset_id)) {
     namespace = find_namespace(id = dataset_id, entitynm = .ghEnv$meta$arrDataset, dflookup = get_dataset_lookup(con = con))
@@ -1290,7 +1302,7 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname, dataset_id, dat
       cat("trying to download lookup array once again, to see if there has been a recent update")
       namespace = update_lookup_and_find_namespace_again(entitynm = .ghEnv$meta$arrDataset, id = dataset_id, con = con)
     }
-    if (!(namespace %in% .ghEnv$cache$nmsp_list)) {stop("user does not have permission to access data for dataset_id: ", dataset_id)}
+    if (!(namespace %in% con$cache$nmsp_list)) {stop("user does not have permission to access data for dataset_id: ", dataset_id)}
     fullnm = paste(namespace, ".", qq, sep = "")
     if (is.null(dataset_version)) {
       qq = paste("filter(", fullnm, ", ", "dataset_id = ", dataset_id, ")", sep="")
@@ -1449,7 +1461,7 @@ get_rnaquantification_counts = function(rnaquantificationset_id = NULL, con = NU
     x = scidb(con$db, .ghEnv$meta$arrRnaquantification)
     # c = as.R(con$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
     c = iquery(con$db, paste0("aggregate(", x@name, ", count(*), rnaquantificationset_id, dataset_version"), return = TRUE)
-    for (nmsp in .ghEnv$cache$nmsp_list){
+    for (nmsp in con$cache$nmsp_list){
       if (nmsp != 'public'){
         x = scidb(con$db, paste(nmsp, .ghEnv$meta$arrRnaquantification, sep = "."))
         # c1 = as.R(con$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
@@ -1976,14 +1988,14 @@ get_entity_count_old = function(con = NULL){
                .ghEnv$meta$arrFusionset,
                .ghEnv$meta$arrCopyNumberSet, 
                .ghEnv$meta$arrExperimentSet)
-  if (length(.ghEnv$cache$nmsp_list) == 1){
-    nmsp = .ghEnv$cache$nmsp_list
+  if (length(con$cache$nmsp_list) == 1){
+    nmsp = con$cache$nmsp_list
     queries = sapply(entities, function(entity){paste("op_count(", nmsp, ".", entity, ")", sep = "")})
   }
-  else if (length(.ghEnv$cache$nmsp_list) == 2){
+  else if (length(con$cache$nmsp_list) == 2){
     queries = sapply(entities, FUN = function(entity) {
       paste("join(",
-            paste(sapply(.ghEnv$cache$nmsp_list, function(nmsp){paste("op_count(", nmsp, ".", entity, ")", sep = "")}), collapse=", "),
+            paste(sapply(con$cache$nmsp_list, function(nmsp){paste("op_count(", nmsp, ".", entity, ")", sep = "")}), collapse=", "),
             ")", sep = "")
     })
   } else {
@@ -1994,7 +2006,7 @@ get_entity_count_old = function(con = NULL){
     qq = paste("join(", qq, ", ", query, ")", sep = "" )
   }
   attrs = paste(
-    sapply(entities, FUN=function(entity) {paste(entity, "_", .ghEnv$cache$nmsp_list, sep = "")}),
+    sapply(entities, FUN=function(entity) {paste(entity, "_", con$cache$nmsp_list, sep = "")}),
     ":uint64",
     sep = "",
     collapse = ", ")
@@ -2003,14 +2015,14 @@ get_entity_count_old = function(con = NULL){
                schema = res_schema, return = T)
   colnames(res) = gsub("X_", "", colnames(res))
   
-  xx = sapply(entities, FUN=function(entity) {res[, paste(entity, .ghEnv$cache$nmsp_list, sep = "_")]})
+  xx = sapply(entities, FUN=function(entity) {res[, paste(entity, con$cache$nmsp_list, sep = "_")]})
   
   counts = data.frame(entity = entities)
-  if (length(.ghEnv$cache$nmsp_list) == 1){
-    counts[, .ghEnv$cache$nmsp_list] = as.integer(xx)
+  if (length(con$cache$nmsp_list) == 1){
+    counts[, con$cache$nmsp_list] = as.integer(xx)
   } else {
     rownum = 1
-    for (nmsp in .ghEnv$cache$nmsp_list){
+    for (nmsp in con$cache$nmsp_list){
       counts[, nmsp] = as.integer(xx[rownum,])
       rownum = rownum + 1
     }
@@ -2049,7 +2061,7 @@ get_entity_count = function(new_function = FALSE, skip_measurement_data = TRUE, 
     rownames(res2) = 1:nrow(res2)
     
     counts = t(sapply(res2$entity, function(entity){
-      sapply(.ghEnv$cache$nmsp_list, function(nmsp){
+      sapply(con$cache$nmsp_list, function(nmsp){
         fullarnm = paste(nmsp, entity, sep = ".")
         ifelse(fullarnm %in% colnames(res), res[, fullarnm], NA)
       })
