@@ -93,7 +93,7 @@ scidb_exists_array = function(arrayName, con = NULL) {
 convert_attr_double_to_int64 = function(arr, attrname, con = NULL){
   con = use_ghEnv_if_null(con)
   
-  attrnames = schema(arr, "attributes")$name
+  attrnames = scidb::schema(arr, "attributes")$name
   randString = "for_int64_conversion"
   arr = scidb_attribute_rename(arr, old = attrname, new = randString, con = con)
   # arr = con$db$apply(srcArray = arr, newAttr = R(attrname), expression = int64(R(randString)))
@@ -108,19 +108,19 @@ convert_attr_double_to_int64 = function(arr, attrname, con = NULL){
 scidb_attribute_rename = function(arr, old, new, con = NULL){
   con = use_ghEnv_if_null(con)
   
-  attrs = schema(arr, what = "attributes")
+  attrs = scidb::schema(arr, what = "attributes")
   attrnames = attrs$name
   stopifnot(old %in% attrnames)
   
   attrs[match(old, attrnames), "name"] = new
-  # dims = schema(arr, "dimensions")
+  # dims = scidb::schema(arr, "dimensions")
   
   attr_schema = paste(
     paste(
       paste(attrs$name, attrs$type, sep = ": "),
       ifelse(attrs$nullable, "", "NOT NULL"), sep = " "),
     collapse = ", ")
-  dim_schema = gsub("<.*> *", "", schema(arr)) # TODO : build up from scratch
+  dim_schema = gsub("<.*> *", "", scidb::schema(arr)) # TODO : build up from scratch
   newSchema = paste("<", attr_schema, ">", dim_schema)
   
   # arr = con$db$cast(srcArray = arr, schemaArray = R(newSchema))

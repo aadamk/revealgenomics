@@ -291,10 +291,8 @@ update_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
     x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
   }
   x = scidb_attribute_rename(arr = x, old = "updated", new = "updated_old", con = con)
-  # x = con$db$apply(srcArray = x, newAttr = "updated", expression = "string(now())")
   qq = paste0("apply(", x@name, ", updated, string(now()))")
-  # x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
-  qq = paste0("redimension(", qq, ", ", schema(scidb(con$db, arrayname)), ")")
+  qq = paste0("redimension(", qq, ", ", scidb::schema(scidb(con$db, arrayname)), ")")
   
   query = paste("insert(", qq, ", ", arrayname, ")", sep="")
   iquery(con$db, query)
@@ -309,12 +307,9 @@ register_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
   for (idnm in ids_int64_conv){
     x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
   }
-  # x = con$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
   qq = paste0("apply(", x@name, ", created, string(now()))")
-  # x = con$db$apply(srcArray = x, newAttr = "updated", expression = "created")
   qq = paste0("apply(", qq, ", updated, created)")
-  # x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
-  qq = paste0("redimension(", qq, ", ", schema(scidb(con$db, arrayname)), ")")
+  qq = paste0("redimension(", qq, ", ", scidb::schema(scidb(con$db, arrayname)), ")")
   
   query = paste("insert(", qq, ", ", arrayname, ")", sep="")
   iquery(con$db, query)
@@ -657,7 +652,7 @@ update_lookup_array = function(new_id, arrayname, con = NULL){
                  length(new_id), 
                  paste(new_id, collapse="),("), 
                  paste("'", namespace, "'", sep = ""))
-    qq = paste("redimension(", qq, ", ", schema(a), ")", sep = "")
+    qq = paste("redimension(", qq, ", ", scidb::schema(a), ")", sep = "")
     qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
     # cat("query:", qq, "\n")
     iquery(con$db, qq)
@@ -671,7 +666,7 @@ update_lookup_array = function(new_id, arrayname, con = NULL){
       get_base_idname(arrayname)
     uploaded_v0 = as.scidb(con$db, new_id_df)
     uploaded = convert_attr_double_to_int64(arr = uploaded_v0, attrname = get_base_idname(arrayname), con = con)
-    qq = paste("redimension(", uploaded@name, ", ", schema(a), ")", sep = "")
+    qq = paste("redimension(", uploaded@name, ", ", scidb::schema(a), ")", sep = "")
     qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
     # cat("query:", qq, "\n")
     iquery(con$db, qq)
@@ -773,12 +768,7 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE, con =
     for (idnm in ids_int64_conv){
       x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
     }
-    # x = con$db$apply(srcArray = x, newAttr = "created", expression = "string(now())")
-    # qq = paste0("apply(", x@name, ", created, string(now()))")
-    # x = con$db$apply(srcArray = x, newAttr = "updated", expression = "created")
-    # qq = paste0("apply(", qq, ", updated, created)")
-    # x = con$db$redimension(srcArray = x, schemaArray = R(schema(scidb(con$db, arrayname))))
-    qq = paste0("redimension(", x@name, ", ", schema(scidb(con$db, arrayname)), ")")
+    qq = paste0("redimension(", x@name, ", ", scidb::schema(scidb(con$db, arrayname)), ")")
     
     query = paste("insert(", qq, ", ", arrayname, ")", sep="")
     cat("Redimension and insert\n")
@@ -836,7 +826,9 @@ get_projects = function(project_id = NULL, con = NULL){
 
 select_from_1d_entity = function(entitynm, id, dataset_version = NULL, con = NULL){
   con = use_ghEnv_if_null(con)
-  namespace = find_namespace(id, entitynm, entity_lookup(entityName = entitynm), con = con)
+  namespace = find_namespace(id, entitynm, 
+                             entity_lookup(entityName = entitynm, con = con), 
+                             con = con)
   if (is.null(namespace)) namespace = NA # to handle the case of no entry in lookup array at all
   if (any(is.na(namespace))) {
     cat("trying to download lookup array once again, to see if there has been a recent update\n")
@@ -865,7 +857,7 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL, con = NUL
 
 update_lookup_and_find_namespace_again = function(entitynm, id, con = NULL){
   cat("updating lookup array for entity:", entitynm, "\n")
-  .ghEnv$cache$lookup[[entitynm]] = entity_lookup(entityName = entitynm, updateCache = TRUE)
+  .ghEnv$cache$lookup[[entitynm]] = entity_lookup(entityName = entitynm, updateCache = TRUE, con = con)
   namespace = find_namespace(id, entitynm, .ghEnv$cache$lookup[[entitynm]], con = con)
   if (any(is.na(namespace))) stop(entitynm, " at id: ",
                                   paste(id[which(is.na(namespace))], collapse = ", "),
@@ -1426,14 +1418,14 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
   }
   xx1
   
-  dims0 = schema(tt, "dimensions")$name
+  dims0 = scidb::schema(tt, "dimensions")$name
   selectpos = which(dims0 %in% selected_names)
   stopifnot(dims0[selectpos] == selected_names)
   # dims0[selectpos]
-  cs = schema(tt, "dimensions")$chunk
-  diminfo = data.frame(start = schema(tt, "dimensions")$start,
-                       end = schema(tt, "dimensions")$end, stringsAsFactors = FALSE)
-  ovlp = schema(tt, "dimensions")$overlap
+  cs = scidb::schema(tt, "dimensions")$chunk
+  diminfo = data.frame(start = scidb::schema(tt, "dimensions")$start,
+                       end = scidb::schema(tt, "dimensions")$end, stringsAsFactors = FALSE)
+  ovlp = scidb::schema(tt, "dimensions")$overlap
   # selected_names
   # selectpos
   # fn = function(i) {paste(dims0[i], "=", diminfo$start[i], ":", diminfo$end[i], ",", cs[i], ",", ovlp[i], sep = "" )}
@@ -1447,7 +1439,7 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
   qq = paste("cross_join(",
              qq, " as A,",
              qq2, " as B,", subq, ")", sep="")
-  qq = paste("project(", qq, ", ", schema(tt, "attributes")$name, ")")
+  qq = paste("project(", qq, ", ", scidb::schema(tt, "attributes")$name, ")")
   
   iquery(con$db, qq, return = T)
 }
@@ -1580,8 +1572,7 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
                     ", expression_count, float(expression),
                     dataset_version, ", dataset_version, ")")
   
-  # subarr = con$db$redimension(adf_expr, R(schema(scidb(con$db, .ghEnv$meta$arrRnaquantification))))
-  qq2 = paste0("redimension(", qq2, ", ", schema(scidb(con$db, .ghEnv$meta$arrRnaquantification)), ")")
+  qq2 = paste0("redimension(", qq2, ", ", scidb::schema(scidb(con$db, .ghEnv$meta$arrRnaquantification)), ")")
   
   fullnm = paste(namespace_to_insert, .ghEnv$meta$arrRnaquantification, sep = ".")
   cat("inserting data for", nrow(df1), "expression values into", fullnm, "array \n")
@@ -1773,10 +1764,8 @@ register_expression_matrix = function(filepath,
     )
     
     # Need to insert the expression matrix table into one big array
-    # insertable = con$db$redimension(gct_table,
-    #                                 R(scidb::schema(scidb(con$db, arrayname)))) 
     insertable_qq = paste0("redimension(", gct_table@name, ", ",
-                                    schema(scidb(con$db, arrayname)), ")") # TODO: would be good to not have this resolution clash
+                                    scidb::schema(scidb(con$db, arrayname)), ")") # TODO: would be good to not have this resolution clash
     
     if (scidb_exists_array(arrayname, con = con)) {
       cat(paste("Inserting expression matrix data into", arrayname, "at dataset_version", dataset_version, "\n"))

@@ -142,11 +142,7 @@ search_rnaquantification_scidb = function(arrayname,
                     >
                     [tuple_no,dst_instance_id,src_instance_id] )")
         qq2 = paste("redimension(", qq2, ", <flag:bool>[", yaml_to_dim_str(.ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims), "])")
-        # head(scidb(qq2))
-        # dimschema = gsub("<.*>([A-Z]*)", "\\1", schema(tt))
-        # newschema = paste("<flag:bool>", dimschema)
-        # xx = redimension(xx, newschema)
-        
+
         qq = paste("join(",
                    qq, ",",
                    qq2, ")")
