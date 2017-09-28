@@ -113,3 +113,70 @@ dao_get_dataset = function(con){
   dao_get_entity(entity = 'DATASET', con = con)
 }
 
+#' @export
+dao_get_biosample = function(con){
+  dao_get_entity(entity = 'BIOSAMPLE', con = con)
+}
+
+#' @export
+#' 
+#' @param biosample_cache Reference dataframe containing all biosamples available to the user (retrieved by `dao_get_biosample(con = con)`)
+dao_search_rnaquantification = function(rnaquantificationset, feature, biosample_ref, 
+                                        dataset_lookup_ref, con) {
+  rqs_id = unique(rnaquantificationset$rnaquantificationset_id)
+  stopifnot(length(rqs_id)==1)
+  
+  dataset_version = unique(rnaquantificationset$dataset_version)
+  stopifnot(length(dataset_version) == 1)
+  
+  dataset_id = unique(rnaquantificationset$dataset_id)
+  stopifnot(length(dataset_id) == 1)
+  
+  namespace = dataset_lookup_ref[dataset_lookup_ref$dataset_id == dataset_id, ]$namespace
+  stopifnot(namespace %in% con$cache$nmsp_list)
+  
+  
+  ftr_id = unique(feature$feature_id)
+  
+  arr0 = paste0(namespace, ".", .ghEnv$meta$arrRnaquantification)
+  
+  qq = paste0("filter(", arr0, ", rnaquantificationset_id = ", rqs_id, ")")
+  
+  K_THRESH = 500
+  if (length(ftr_id) <= K_THRESH) {
+    path = "filter_features"
+  } else {
+    path = "build_literal_and_cross_join_features"
+  }
+  if (path == 'filter_features') {
+    expr = paste0("feature_id=", ftr_id, collapse = " OR ")
+    qq2 = paste0("filter(", qq, ", ", expr, ")")
+  } else if (path == "build_literal_and_cross_join_features") {
+    expr = paste0(ftr_id, collapse = ",")
+    qq2a = paste0("build(<feature_id:int64>[i=1:", length(ftr_id), "], '[",
+                  expr, "]', true)")
+    qq2b = paste0("redimension(
+                     apply(", qq2a, ", 
+                          flag, int32(1)), <flag:int32>[feature_id=0:*:0:",
+                                .ghEnv$meta$L$array$FEATURE$dims$feature_id$chunk_interval,
+                                                                      "])")
+    qq2c = paste0("cross_join(", qq, " as X,",
+                               qq2b, " as Y, X.feature_id, Y.feature_id)")
+    qq2 = paste0("project(", qq2c, ",", 
+                 paste0(names(.ghEnv$meta$L$array$RNAQUANTIFICATION$attributes), collapse = ","),
+                        ")")
+
+  }
+  
+  res = iquery(con$db, query = qq2, return = TRUE)
+
+  # Retrieved biosamples
+  biosample_id = unique(res$biosample_id)
+  biosample = biosample_ref[biosample_ref$biosample_id %in% biosample_id, ]
+  
+  # Retrieved features
+  feature_id = unique(res$feature_id)
+  feature_sel = feature[feature$feature_id %in% feature_id, ]
+  
+  return(scidb4gh:::formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature))
+}

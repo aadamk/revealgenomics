@@ -207,7 +207,7 @@ get_biosamples_from_cache = function(updateCache = FALSE, con = NULL){
 
 update_biosample_cache = function(con = NULL){
   con = use_ghEnv_if_null(con)
-  .ghEnv$cache$biosample_ref = get_biosamples(con = con)
+  .ghEnv$cache$biosample_ref = dao_get_biosample(con = con)
 }
 
 get_ontology_from_cache = function(updateCache = FALSE, con = NULL){

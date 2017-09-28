@@ -2,9 +2,11 @@
 
 export(.ghEnv)
 export(build_reference_gene_set)
+export(dao_get_biosample)
 export(dao_get_dataset)
 export(dao_get_measurementset)
 export(dao_get_project)
+export(dao_search_rnaquantification)
 export(delete_entity)
 export(delete_project)
 export(drop_na_columns)
