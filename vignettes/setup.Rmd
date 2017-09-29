@@ -84,12 +84,11 @@ Next follow [instructions](https://github.com/Paradigm4/dev_tools)
 for installing dev_tools. Then load the following libraries:
 
 ```{sh}
-LIBS_TO_INSTALL="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between limit summarize"
-ALL="10.0.20.185 10.0.20.186 10.0.20.187 10.0.20.184"
 # Using dev_tools
 # Assuming that dev_tools is already installed
-LIBS_TO_INSTALL="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between limit summarize"
-for lib in $LIBS_TO_INSTALL; 
+LIBS_TO_INSTALL_16_9="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between limit summarize"
+LIBS_TO_INSTALL_17_1="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between"
+for lib in $LIBS_TO_INSTALL_{scidb_version}; 
   do
   echo $lib
   iquery -aq "install_github('Paradigm4/$lib')"
@@ -112,7 +111,9 @@ sudo service shimsvc restart
 
 First the dependencies
 
-LibXML
+## LibXML 
+
+- required by R package `roxygen2` -- only if you are building this package on the target machine
 ```{sh}
 # Ubuntu
 sudo apt-get install libxml2-dev
@@ -122,12 +123,18 @@ sudo yum install libxml2-dev # need the Centos equivalent here (auto-prompted by
 sudo yum install libxml2-devel # need the Centos equivalent here (auto-prompted by R roxgen2 install below)
 ```
 
-LibPqxx-devel (prompted by R RPostgreSQL install)
+## LibPqxx-devel 
+
+- required if you need to read some data from Postgres and then load into this API
+    + prompted by R RPostgreSQL install
 ```{sh}
 yum install postgresql93-devel.x86_64
 ```
 
-Libcurl-devel (prompted by R devtools install)
+## Libcurl-devel 
+
+- was prompted by R devtools install (on a centos system)
+
 ```{sh}
 yum install libcurl-devel
 ```
@@ -153,8 +160,19 @@ we show how to install via devtools:
 sudo R --slave -e "devtools::install_github('Paradigm4/scidbr')"
 ```
 
+## This API's R package
 
-Finally the API install (assuming the directory choice described above):
+This API's R package can be installed in two ways:
+
+### If you are just using the package
+
+```{sh}
+sudo R --slave -e "devtools::install_github('Paradigm4/scidb4gh')"
+```
+
+### If you are working on package development on the target machine 
+
+(assuming the directory choice described above):
 
 ```{sh}
 # Scenario 1
@@ -175,6 +193,12 @@ Now let us get to using the package:
 ```{R}
 library(scidb4gh)
 gh_connect('root', ROOTPASSWORD)
+```
+
+# CAUTION: Intitializing arrays here
+
+![Caution](http://findicons.com/files/icons/2787/beautiful_flat_icons/128/caution.png)
+```{R}
 init_db(arrays_to_init = 'ONTOLOGY')           # CAUTION: To be used with care by DB admin only
 init_db(arrays_to_init = get_entity_names())   # EXTREME CAUTION: To be used with extreme care by DB admin only
 ```
