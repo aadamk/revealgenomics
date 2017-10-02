@@ -291,8 +291,20 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
 
 
 
+#' Search Fusion data
+#' 
+#' @param dataset_lookup_ref If supplied by user, look up namespace using dataset_id, AND from a user 
+#'                           supplied reference table 
+#'                           (required in multi-user Shiny app).
+#'                           If not supplied by user,  look up namespace using fusionset_id, AND using fusionset_lookup embedded in .ghEnv environment variable 
+#'                           (not OK to use in multi-user shiny app)
+#' @param inferSchemaOnQuery optimization flag (default: TRUE. if FALSE, uses schema hand-baked in internal code. 
+#'                           Use with caution until schema is automatically inferred from YAML file)
 #' @export
-search_fusion = function(fusionset, biosample = NULL, feature = NULL, con = NULL){
+search_fusion = function(fusionset, biosample = NULL, feature = NULL, 
+                         dataset_lookup_ref = NULL,
+                         inferSchemaOnQuery = TRUE, 
+                         con = NULL){
   if (!is.null(fusionset)) {fusionset_id = fusionset$fusionset_id} else {
     stop("fusionset must be supplied"); fusionset_id = NULL
   }
@@ -304,10 +316,19 @@ search_fusion = function(fusionset, biosample = NULL, feature = NULL, con = NULL
     stopifnot(length(unique(biosample$dataset_version))==1)
     if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of fusionset and biosample must be same")
   }
-  namespace = find_namespace(id = fusionset_id,
-                             entitynm = .ghEnv$meta$arrFusionset,
-                             dflookup = get_fusionset_lookup(con = con), 
-                             con = con)
+  
+  if (!is.null(dataset_lookup_ref)) { # Look up namespace using dataset_id, AND from a user supplied reference table
+    dataset_id = unique(fusionset$dataset_id)
+    stopifnot(length(dataset_id) == 1)
+    
+    namespace = dataset_lookup_ref[dataset_lookup_ref$dataset_id == dataset_id, ]$namespace
+  } else { # Look up namespace using fusionset_id, AND using fusionset_lookup embedded in .ghEnv environment variable 
+           # (not OK to use in multi-user shiny app)
+    namespace = find_namespace(id = fusionset_id,
+                               entitynm = .ghEnv$meta$arrFusionset,
+                               dflookup = get_fusionset_lookup(con = con), 
+                               con = con)
+  }
   cat("Found namespace: ", namespace, "\n")
   arrayname = paste(namespace, .ghEnv$meta$arrFusion, sep = ".")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
@@ -319,11 +340,14 @@ search_fusion = function(fusionset, biosample = NULL, feature = NULL, con = NULL
                              biosample_id,
                              feature_id,
                              dataset_version = dataset_version, 
+                             inferSchemaOnQuery = inferSchemaOnQuery,
                              con = con)
   res
 }
 
-search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, feature_id = NULL, dataset_version, con = NULL){
+search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
+                                inferSchemaOnQuery = TRUE, 
+                                con = NULL){
   con = use_ghEnv_if_null(con)
   
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
@@ -363,7 +387,26 @@ search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, fe
     }
   }
   
-  iquery(con$db, left_query, return = TRUE)
+  if (inferSchemaOnQuery) {
+    iquery(con$db, left_query, return = TRUE)
+  } else {
+    schema_ret = "<feature_id_left:int64 COMPRESSION 'zlib',
+    feature_id_right:int64 COMPRESSION 'zlib',
+    gene_left:string COMPRESSION 'zlib',
+    reference_name_left:string COMPRESSION 'zlib',
+    pos_left:int64 COMPRESSION 'zlib',
+    gene_right:string COMPRESSION 'zlib',
+    reference_name_right:string COMPRESSION 'zlib',
+    pos_right:int64 COMPRESSION 'zlib',
+    num_spanning_reads:int32 COMPRESSION 'zlib',
+    num_mate_pairs:int32 COMPRESSION 'zlib',
+    num_mate_pairs_fusion:int32 COMPRESSION 'zlib',
+    quality_score:double COMPRESSION 'zlib',
+    sample_name_unabbreviated:string COMPRESSION 'zlib'> 
+    [dataset_version=0:*:0:1; fusionset_id=0:*:0:1; biosample_id=0:*:0:100; fusion_id=0:*:0:100]"
+    
+    iquery(con$db, left_query, schema = schema_ret, return = TRUE)
+  }
 }
 
 

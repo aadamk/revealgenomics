@@ -118,9 +118,11 @@ dao_get_biosample = function(con){
   dao_get_entity(entity = 'BIOSAMPLE', con = con)
 }
 
-#' @export
+#' Faster implementation of `search_rnaquantification` for UI development
 #' 
-#' @param biosample_cache Reference dataframe containing all biosamples available to the user (retrieved by `dao_get_biosample(con = con)`)
+#' @param biosample_ref Reference dataframe containing all biosamples available to the user (retrieved by `dao_get_biosample(con = con)`)
+#' 
+#' @export
 dao_search_rnaquantification = function(rnaquantificationset, feature, biosample_ref, 
                                         dataset_lookup_ref, con) {
   rqs_id = unique(rnaquantificationset$rnaquantificationset_id)

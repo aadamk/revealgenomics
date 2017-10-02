@@ -77,14 +77,16 @@ register_measurements = function(dataset_id, dataset_version, con = NULL) {
 }
 
 #' @export
-get_measurement = function(measurement_id = NULL, dataset_version = NULL, all_versions = TRUE, mandatory_fields_only = FALSE){
+get_measurement = function(measurement_id = NULL, dataset_version = NULL, 
+                           all_versions = TRUE, mandatory_fields_only = FALSE, con = NULL){
   msrmt = get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
                                                id = measurement_id, 
                                                dataset_version, all_versions, 
-                                               mandatory_fields_only = mandatory_fields_only)
+                                               mandatory_fields_only = mandatory_fields_only, 
+                                               con = con)
   
   # Merge with datasets info to join in study category
-  d = get_datasets()
+  d = get_datasets(con = con)
   if (any(is.na(d$`study category`))) {
     d[which(is.na(d$`study category`)), ]$`study category` = "unknown"
   }
