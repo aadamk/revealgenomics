@@ -36,7 +36,7 @@ dao_get_measurementset = function(con){
 
     cnv = iquery(con$db,
                  "apply(project(public.COPYNUMBERSET, name, dataset_id),
-                 entity, 'COPYNUMBER', id, copynumberset_id)", return = TRUE)
+                 entity, 'COPYNUMBER_MAT', id, copynumberset_id)", return = TRUE)
     if (nrow(cnv) == 0) cnv = list()
     # res = rqs
   } else if (length(nmsp_list) == 2) {
@@ -51,7 +51,7 @@ dao_get_measurementset = function(con){
                     entity, 'FUSION', id, fusionset_id)",            return = TRUE)
     cnv = iquery(con$db, 
                  "apply(merge(project(public.COPYNUMBERSET, name, dataset_id),           project(collaboration.COPYNUMBERSET, name, dataset_id)),
-                    entity, 'COPYNUMBER', id, copynumberset_id)", return = TRUE)
+                    entity, 'COPYNUMBER_MAT', id, copynumberset_id)", return = TRUE)
   } else { stop("More scidb4gh namespaces than expected") }
   
   res = rbindlist(list(rqs, var, fus, cnv), fill = TRUE)
