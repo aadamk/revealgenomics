@@ -1411,12 +1411,13 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
   colnames(selector) = selected_names_all
   selector$flag = TRUE
   
-  xx = as.scidb(con$db, selector)
+  xx = as.scidb(con$db, selector, 
+                types = c(rep("int64", length(selected_names_all)), 'bool'))
   xx1 = xx
-  for (attr in selected_names_all){
-    xx1 = convert_attr_double_to_int64(arr = xx1, attrname = attr, con = con)
-  }
-  xx1
+  # for (attr in selected_names_all){
+  #   xx1 = convert_attr_double_to_int64(arr = xx1, attrname = attr, con = con)
+  # }
+  # xx1
   
   dims0 = scidb::schema(tt, "dimensions")$name
   selectpos = which(dims0 %in% selected_names)
@@ -1426,11 +1427,9 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
   diminfo = data.frame(start = scidb::schema(tt, "dimensions")$start,
                        end = scidb::schema(tt, "dimensions")$end, stringsAsFactors = FALSE)
   ovlp = scidb::schema(tt, "dimensions")$overlap
-  # selected_names
-  # selectpos
-  # fn = function(i) {paste(dims0[i], "=", diminfo$start[i], ":", diminfo$end[i], ",", cs[i], ",", ovlp[i], sep = "" )}
-  fn = function(dimname) {yaml_to_dim_str(.ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims[dimname])}
-  newdim = paste(sapply(selected_names_all, FUN = fn), collapse = ",")
+  # fn = function(dimname) {yaml_to_dim_str(.ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims[dimname])}
+  # newdim = paste(sapply(selected_names_all, FUN = fn), collapse = ",")
+  newdim = paste(selected_names_all, collapse = ",")
   newsch = paste("<flag:bool>[", newdim, "]", sep="")
   # xx1 = con$db$redimension(xx1, R(newsch))
   qq2 = paste0("redimension(", xx1@name, ", ", newsch, ")") 
