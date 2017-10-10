@@ -17,7 +17,13 @@ search_rnaquantification = function(rnaquantificationset = NULL,
                                     biosample = NULL,
                                     feature = NULL,
                                     formExpressionSet = TRUE,
+                                    formDataModel = FALSE, 
                                     con = NULL){
+  if (formDataModel) {
+    if (!formExpressionSet) {
+      stop("to form custom data model, you also need to set `formExpressionSet = TRUE # TRUE by default`")
+    }
+  }
   if (!is.null(rnaquantificationset)) {rnaquantificationset_id = rnaquantificationset$rnaquantificationset_id} else {
     stop("rnaquantificationset must be supplied"); rnaquantificationset_id = NULL
   }
@@ -74,7 +80,17 @@ search_rnaquantification = function(rnaquantificationset = NULL,
     }
   }
   
-  return(formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature))
+  expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature)
+  
+  if (!formDataModel) return(expressionSet)
+  
+  # Form custom data model
+  es = expressionSetObject$new(NULL, NULL, NULL)
+  es$setExpressionMatrix(expressionMatrix = exprs(expressionSet))
+  es$setFeatureData(featureData = expressionSet@featureData@data)
+  es$setPhenotypeData(phenotypeData = expressionSet@phenoData@data)
+  
+  return(es)
 }
 
 formulate_list_expression_set = function(expr_df, dataset_version, rnaquantificationset, biosample, feature){

@@ -15,6 +15,9 @@ Depends:
     Biobase,
     jsonlite,
     scidb
+Imports:
+    R6,
+    reshape
 License: file LICENSE
 LazyData: TRUE
 Suggests: testthat,
