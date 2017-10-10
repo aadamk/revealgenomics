@@ -12,7 +12,9 @@
 # END_COPYRIGHT
 #
 
-#Variant access object 
+#' Variant access object 
+#' 
+#' @export
 expressionSetObject <- R6::R6Class("expressionSetObject",
                                public = list(
                                  
