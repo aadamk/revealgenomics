@@ -102,8 +102,6 @@ use_ghEnv_if_null = function(con) {
 }
 
 #' Report logged in user
-#' 
-#' @export
 get_logged_in_user = function(con = NULL) {
   con = use_ghEnv_if_null(con)
   attr(con$db, "connection")$username
@@ -398,23 +396,87 @@ register_referenceset = function(df, only_test = FALSE, con = NULL){
   } # end of if (!only_test)
 }
 
+#' Register genelist
+#' 
+#' Preferred method of registering genelist-s is to 
+#' provide one genelist_name and genelist_description
+#' at a time.
+#' 
+#' Alternatively, you can supply a data.frame with [name, description] 
+#' of one or more genelist(s)
+#' 
+#' @param genelist_name the name of the geneliest
+#' @param genelist_description the description for the genelist
+#' @param isPublic bool to denote if the genelist is public
+#' @param df (optional) a data-frame containing [name, description] of the genelist
+#' 
 #' @export
-register_genelist = function(df, only_test = FALSE, con = NULL){
+register_genelist = function(genelist_name = NULL, 
+                             genelist_description = NULL, 
+                             isPublic = TRUE, 
+                             df = NULL, 
+                             only_test = FALSE, con = NULL){
   con = use_ghEnv_if_null(con)
+
+  if (!is.null(df) & 
+      (!is.null(genelist_name) | !is.null(genelist_description))) {
+    stop("Cannot supply both df and [genelist_name, genelist_description]. 
+         Use one method for using this function")
+  }
+  
+  df1 = df
+  if (is.null(df1)) {
+    df1 = data.frame(name = genelist_name, 
+                   description = genelist_description,
+                   public = isPublic,
+                   stringsAsFactors = FALSE)
+  }
+  
+  df1$owner = get_logged_in_user(con = con)
   
   uniq = unique_fields()[[.ghEnv$meta$arrGenelist]]
-  df$owner = iquery(con$db, query = "show_user()", return = TRUE)$name
-  test_register_genelist(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  test_register_genelist(df1, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = .ghEnv$meta$arrGenelist
-    register_tuple_return_id(df,
+    register_tuple_return_id(df1,
                              arrayname, uniq, con = con)
   } # end of if (!only_test)
 }
 
+#' Register gene symbols in a gene-list
+#' 
+#' Preferred method of registering gene symbols in a genelist is to 
+#' provide the target genelist_id and the symbols to be registered
+#' (one genelist at a time)
+#' 
+#' Alternatively, one can supply a data.frame with [genelist_id, gene_symbol] 
+#'  
+#' @param genelist_id the id of the genelist (returned by `register_genelist()`)
+#' @param gene_symbols the gene-symbols to be stored in a gene-list (e.g. `c('TSPAN6', 'KCNIP2', 'CFAP58', 'GOT1', 'CPN1', 'PSIP1P1')`)
+#' @param df (optional) a data-frame containing [genelist_id, gene_symbol]
+#'
+#' @examples 
+#' register_genelist_gene(genelist_id = 11, # must already exist in `genelist` table
+#'                        gene_symbols = c('TSPAN6', 'KCNIP2'))
+#'                        
 #' @export
-register_genelist_gene = function(df, only_test = FALSE, con = NULL){
+register_genelist_gene = function(genelist_id = NULL, 
+                                  gene_symbols = NULL, 
+                                  df = NULL, 
+                                  only_test = FALSE, con = NULL){
   uniq = unique_fields()[[.ghEnv$meta$arrGenelist_gene]]
+  if (!is.null(df) & 
+      (!is.null(genelist_id) | !is.null(gene_symbols))) {
+    stop("Cannot supply both df and [genelist_id, gene_symbols]. 
+         Use one method for using this function")
+  }
+
+  if (is.null(df)) {
+    df = data.frame(genelist_id = genelist_id, 
+                    gene_symbol = gene_symbols, 
+                    stringsAsFactors = FALSE)
+  }
+  
   test_register_genelist_gene(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = .ghEnv$meta$arrGenelist_gene
@@ -630,7 +692,7 @@ register_tuple_return_id = function(df,
   if (length(nonmatching_idx) > 0 ) {
     cat("---", length(nonmatching_idx), "rows need to be registered from total of", nrow(df), "rows provided by user\n")
     # if (length(nonmatching_idx) != nrow(df)) {stop("Need to check code here")}
-    new_id = get_max_id(arrayname) + 1:nrow(df[nonmatching_idx, ])
+    new_id = get_max_id(arrayname, con = con) + 1:nrow(df[nonmatching_idx, ])
     df[nonmatching_idx, get_base_idname(arrayname)] = new_id
     
     updateLookup = ifelse(length(namespaces_for_entity) > 1, TRUE, FALSE) # Lookup array must exist if entity exists in multiple namespaces
@@ -1056,11 +1118,16 @@ get_referenceset = function(referenceset_id = NULL, con = NULL){
 }
 
 #' @export
-get_genelist = function(genelist_id = NULL, con = NULL){
-  get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrGenelist, 
+get_genelist = function(genelist_id = NULL, con = NULL) {
+  gl = get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrGenelist, 
                                          id = genelist_id,
                                          infoArray = FALSE,
                                          con = con)
+  if (get_logged_in_user(con = con) %in% c('scidbadmin', 'root')) {
+    return(gl)
+  } else {
+    return(gl[gl$public | gl$owner == get_logged_in_user(con = con), ])
+  }
 }
 
 
@@ -1224,17 +1291,35 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
 }
 
 #' @export
-search_genelist_gene = function(genelist_id, con = NULL){
+search_genelist_gene = function(genelist = NULL, 
+                                genelist_id = NULL, con = NULL){
   con = use_ghEnv_if_null(con)
   
   arrayname = .ghEnv$meta$arrGenelist_gene
+  
+  if (!is.null(genelist) & !is.null(genelist_id)) {
+    stop("Use only one method for searching. Preferred method is using genelist")
+  }
+  
+  # API level security (TODO: replace with pscan() operator)
+  if (is.null(genelist_id)) {
+    genelist_id = genelist$genelist_id
+  } else {
+    genelist = get_genelist(genelist_id = genelist_id)
+  }
+  if (!genelist$public & 
+      !(get_logged_in_user(con = con) %in% c('root', 'scidbadmin', genelist$owner))) {
+    stop("Do not have permissions to search genelist_id: ", genelist_id)
+  }
   
   qq = arrayname
   if (length(genelist_id)==1){
     qq = paste("filter(", qq, ", genelist_id = ", genelist_id, ")", sep="")
   } else {stop("Not covered yet")}
   
-  iquery(con$db, qq, return = TRUE)
+  res = iquery(con$db, qq, return = TRUE)
+  
+  
 }
 
 #' @export
