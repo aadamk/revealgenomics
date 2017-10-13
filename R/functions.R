@@ -101,6 +101,14 @@ use_ghEnv_if_null = function(con) {
   return(con)
 }
 
+#' Report logged in user
+#' 
+#' @export
+get_logged_in_user = function(con = NULL) {
+  con = use_ghEnv_if_null(con)
+  attr(con$db, "connection")$username
+}
+
 entity_lookup = function(entityName, updateCache = FALSE, con = NULL){
   con = use_ghEnv_if_null(con)
   
@@ -916,6 +924,12 @@ get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions 
   )
 }
 
+#' Retrieve individuals
+#' 
+#' get_ENTITY can be used to retrive
+#' - one individual (e.g. `individual_id = 33`)
+#' - more than one individual (e.g. `individual_id = c(33, 44)`)
+#' - all individuals visible to user (e.g. `get_individuals()`)
 #' @export
 get_individuals = function(individual_id = NULL, dataset_version = NULL, all_versions = FALSE, mandatory_fields_only = FALSE, con = NULL){
   get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals,
@@ -1263,6 +1277,10 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
+#' Search individuals by dataset
+#' 
+#' `search_individuals()` can be used to retrive
+#' all individuals in a particular dataset
 #' @export
 search_individuals = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
   search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
