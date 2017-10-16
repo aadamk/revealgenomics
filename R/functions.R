@@ -1119,10 +1119,27 @@ get_referenceset = function(referenceset_id = NULL, con = NULL){
 
 #' @export
 get_genelist = function(genelist_id = NULL, con = NULL) {
-  gl = get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrGenelist, 
-                                         id = genelist_id,
-                                         infoArray = FALSE,
-                                         con = con)
+  # gl = get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrGenelist, 
+  #                                        id = genelist_id,
+  #                                        infoArray = FALSE,
+  #                                        con = con)
+  con = use_ghEnv_if_null(con)
+  
+  if (is.null(genelist_id)) {
+    left_arr = 'GENELIST'
+  } else {
+    condition = formulate_base_selection_query(fullarrayname = 'public.GENELIST', id = genelist_id)
+    left_arr = paste0("filter(GENELIST,", condition, ")")
+  }
+  right_arr = 'GENELIST_GENE'
+  gl = iquery(con$db, paste0("equi_join(", left_arr, ", 
+                                 grouped_aggregate(", right_arr, ", count(*) AS gene_count, genelist_id), 
+                                 'left_names=genelist_id', 'right_names=genelist_id', 
+                                 'keep_dimensions=true',
+                                 'left_outer=true')"), 
+              return = T)
+  gl = gl[, grep('instance_id|value_no', colnames(gl), invert = TRUE)]
+  
   if (get_logged_in_user(con = con) %in% c('scidbadmin', 'root')) {
     return(gl)
   } else {

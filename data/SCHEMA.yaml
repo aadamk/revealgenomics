@@ -679,7 +679,9 @@ array:
       - public
     attributes:
       genelist_id: int64
+      gene_symbol_id: int64
       gene_symbol: string
+      full_name: string
       created: string
       updated: string
     dims: 

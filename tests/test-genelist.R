@@ -31,17 +31,30 @@ stopifnot(nrow(get_genelist()) >= 2)
 stopifnot(nrow(get_genelist(id1)) == 0)
 
 # Register gene symbols in a genelist
+
+allgenes = iquery(.ghEnv$db,
+                        "GENE_SYMBOL", return = TRUE)
 gh_connect(username = "secure_user", password = secure_password)
-id_s1 = register_genelist_gene(genelist_id = id1, # must exist in `genelist` table
-            gene_symbols = c('TSPAN6', 'KCNIP2'))
+
+
+
+symbols = c('TSPAN6', 'KCNIP2')
+id_s1 = register_genelist_gene(df = data.frame(genelist_id = id1, 
+                                               allgenes[match(symbols, allgenes$gene_symbol), ],
+                                               stringsAsFactors = FALSE))
+                                
 
 gh_connect(username = "public_user", password = public_password)
-id_s2 = register_genelist_gene(genelist_id = id2, # must exist in `genelist` table
-                       gene_symbols = c('EGFR', 'KRAS', 'CFAP58', 'GOT1', 'CPN1', 'PSIP1P1'))
+symbols = c('EGFR', 'KRAS', 'CFAP58', 'GOT1', 'CPN1', 'PSIP1P1')
+id_s2 = register_genelist_gene(df = data.frame(genelist_id = id2, # must exist in `genelist` table
+                                               allgenes[match(symbols, allgenes$gene_symbol), ],
+                                               stringsAsFactors = FALSE))
 
 gh_connect(username = "secure_user", password = secure_password)
-id_s3 = register_genelist_gene(genelist_id = id3, # must exist in `genelist` table
-                       gene_symbols = c('MYC', 'A1BG'))
+symbols = c('MYC', 'A1BG')
+id_s3 = register_genelist_gene(df = data.frame(genelist_id = id3, # must exist in `genelist` table
+                                               allgenes[match(symbols, allgenes$gene_symbol), ],
+                                               stringsAsFactors = FALSE))
 
 # Retrieve gene symbols from gene list
 gh_connect(username = "secure_user", password = secure_password)
@@ -57,3 +70,4 @@ stopifnot(class(try({search_genelist_gene(genelist = get_genelist(genelist_id = 
 
 stopifnot(class(try({search_genelist_gene(genelist_id = id1)}, 
                     silent = TRUE)) == 'try-error')
+
