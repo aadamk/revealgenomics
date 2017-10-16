@@ -124,7 +124,9 @@ dao_get_biosample = function(con){
 #' 
 #' @export
 dao_search_rnaquantification = function(rnaquantificationset, feature, biosample_ref, 
-                                        dataset_lookup_ref, con) {
+                                        dataset_lookup_ref,
+                                        formDataModel = FALSE, 
+                                        con) {
   rqs_id = unique(rnaquantificationset$rnaquantificationset_id)
   stopifnot(length(rqs_id)==1)
   
@@ -180,5 +182,15 @@ dao_search_rnaquantification = function(rnaquantificationset, feature, biosample
   feature_id = unique(res$feature_id)
   feature_sel = feature[feature$feature_id %in% feature_id, ]
   
-  return(scidb4gh:::formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature))
+  expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature)
+  
+  if (!formDataModel) return(expressionSet)
+  
+  # Form custom data model
+  es = expressionSetObject$new(NULL, NULL, NULL)
+  es$setExpressionMatrix(expressionMatrix = exprs(expressionSet))
+  es$setFeatureData(featureData = expressionSet@featureData@data)
+  es$setPhenotypeData(phenotypeData = expressionSet@phenoData@data)
+  
+  return(es)
 }
