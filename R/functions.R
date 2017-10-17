@@ -228,8 +228,6 @@ get_ontology_from_cache = function(updateCache = FALSE, con = NULL){
 
 #' @export
 get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
   dfOntology = get_ontology_from_cache(updateCache, con = con)
   if (!is.null(ontology_id)){
     matches = match(ontology_id, dfOntology$ontology_id)
@@ -370,8 +368,15 @@ register_ontology_term = function(df, only_test = FALSE, con = NULL){
   test_register_ontology(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = .ghEnv$meta$arrOntology
-    register_tuple_return_id(df, arrayname, uniq, con = con)
+    ids = register_tuple_return_id(df, arrayname, uniq, con = con)
+    
+    # force update the ontology
+    update_ontology_cache(con = con)
+    
+    return(ids)
   } # end of if (!only_test)
+  
+  
 }
 
 #' @export
