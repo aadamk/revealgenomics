@@ -400,7 +400,7 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL, 
     
     ## See if this next measurement data type is associated with this dataset.
     next.entity.ids <- datasetStructure[[ next.parent.entity ]]
-    if ( ! is.null( next.entity.ids )) {
+    if ( !is.null( next.entity.ids ) & !is.na( next.entity.ids ) )  {
       if (nrow(next.entity.ids) > 0) {
         ## Then there is measurement data associated with this measurement type in this dataset.
         ## So, delete this entire type of measurement data for this dataset.  Loop through and 
@@ -430,12 +430,14 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL, 
 
     ## Delete all of the entries for this metadata type (in a 
     ##  single delete_entity() call).
-    if (nrow(next.metadata.ids.mat) > 0) {
-      delete_entity(entity = next.metadata.name,
-                    id = next.metadata.ids.mat[, column.name],
-                    dataset_version = datasetVersion,
-                    delete_by_entity = next.metadata.name,
-                    con = con)
+    if ( !is.null( next.metadata.ids.mat ) & !is.na( next.metadata.ids.mat ) )  {
+      if (nrow(next.metadata.ids.mat) > 0) {
+        delete_entity(entity = next.metadata.name,
+                      id = next.metadata.ids.mat[, column.name],
+                      dataset_version = datasetVersion,
+                      delete_by_entity = next.metadata.name,
+                      con = con)
+      }
     }
   }
   
