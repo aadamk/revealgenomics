@@ -228,36 +228,32 @@ delete_project <- function(project_id, con = NULL) {
   
   ##---------------=
   ## Ask the user to confirm that they want to delete this project.
-  ##---------------=
-  userResponse <- readline(prompt = "Do you want to continue deleting this project? (yes/no): \n  ")
-  
-  ##---------------=
   ## If the user said to procede, then delete the datasets.
   ##---------------=
-  if(charmatch(tolower(userResponse), c("yes", "no")) == 1) {
-    cat("Deleting project ", project_id, "... \n",  sep="")
-    
-    if (length(datasetStructures.lst) > 0) {
-      ## Delete all of the datasets and their sub-elements.
-      for (i in 1:length(datasetStructures.lst)) {
-        nextDatasetStructure <- datasetStructures.lst[[i]]
-        delete_dataset(dataset_id = attr(nextDatasetStructure, "dataset_id"),
-                       datasetVersion = attr(nextDatasetStructure, "datasetVersion"),
-                       datasetStructure = nextDatasetStructure, 
-                       con = con)
-      }
-    }
-    
-    ## Now delete the actual project ID.
-    delete_entity(entity = "PROJECT", 
-                  id = project_id,
-                  con = con)
-    
-  } else {
-    ## Don't delete the project.
-    cat("Project ", project_id, " was NOT deleted. \n",  sep="")
+  userResponse <- NA
+  while(is.na(userResponse) | nchar(userResponse) == 0) { 
+    userResponse <- readline(prompt = "Do you want to continue deleting this project? (yes/no): \n  ")
+    switch(tolower(userResponse), 
+           "yes" = {  
+             cat("Deleting project ", project_id, "... \n", sep = "")
+             if (length(datasetStructures.lst) > 0) {
+               ## Delete all of the datasets and their sub-elements.
+               for (i in 1:length(datasetStructures.lst)) {
+                 nextDatasetStructure <- datasetStructures.lst[[i]]
+                 delete_dataset(dataset_id = attr(nextDatasetStructure, "dataset_id"),
+                                datasetVersion = attr(nextDatasetStructure, "datasetVersion"),
+                                datasetStructure = nextDatasetStructure, 
+                                con = con)
+               }
+             }
+             ## Now delete the actual project ID.
+             delete_entity(entity = "PROJECT", 
+                           id = project_id,
+                           con = con)
+             },
+           "no" = {  message("Project ", project_id, " was NOT deleted. \n", sep = "") },
+           { message("Please respond with yes or no"); userResponse <- NA })
   }
-  
 }
 
 
@@ -400,7 +396,7 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL, 
     
     ## See if this next measurement data type is associated with this dataset.
     next.entity.ids <- datasetStructure[[ next.parent.entity ]]
-    if ( !is.null( next.entity.ids ) & !is.na( next.entity.ids ) )  {
+    if ( !all(is.null( next.entity.ids )) & !all(is.na( next.entity.ids )) )  {
       if (nrow(next.entity.ids) > 0) {
         ## Then there is measurement data associated with this measurement type in this dataset.
         ## So, delete this entire type of measurement data for this dataset.  Loop through and 
@@ -430,7 +426,7 @@ delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL, 
 
     ## Delete all of the entries for this metadata type (in a 
     ##  single delete_entity() call).
-    if ( !is.null( next.metadata.ids.mat ) & !is.na( next.metadata.ids.mat ) )  {
+    if ( !all(is.null( next.metadata.ids.mat )) & !all(is.na( next.metadata.ids.mat )) )  {
       if (nrow(next.metadata.ids.mat) > 0) {
         delete_entity(entity = next.metadata.name,
                       id = next.metadata.ids.mat[, column.name],
