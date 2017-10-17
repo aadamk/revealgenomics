@@ -191,7 +191,12 @@ delete_project <- function(project_id, con = NULL) {
   }
   ## Note, incorrect projectIDs will be caught by the call to "search_datasets()".
 
-  
+  projectExists = try({check_entity_exists_at_id(entity = 'PROJECT', id = project_id)},
+                      silent = TRUE)
+  if (class(projectExists) == 'try-error') {
+    cat("Project ", project_id, " does not exist. Nothing to delete.\n")
+    return(invisible(NULL))
+  }
   ##---------------=
   ## Get the datasets under this project.
   ##---------------=
