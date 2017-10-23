@@ -12,7 +12,7 @@
 # END_COPYRIGHT
 #
 
-#' Variant access object 
+#' ExpressionSet access object 
 #' 
 #' @export
 expressionSetObject <- R6::R6Class("expressionSetObject",
