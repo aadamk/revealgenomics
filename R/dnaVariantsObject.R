@@ -70,6 +70,21 @@ oncoPrintSimple <- function(M, sort=TRUE) {
   axis(2, at=(ngenes:1)-.5, labels=rownames(alts), las=2);
 }
 
+# #' @export
+# dnaVariantsObject_scidb4gh = function(variantData, 
+#                                           featureData, 
+#                                           sampleData){
+#   # move prep code here
+#   
+#   xx = dnaVariantsObject$new(   
+#     variantData=variantData,       
+#     featureData=featureData,        
+#     sampleData=sampleData,
+#     scidb4gh = TRUE
+#   )
+#   xx$clone()
+# }
+
 
 
 #' Variant access object 
@@ -81,11 +96,13 @@ dnaVariantsObject <- R6::R6Class("dnaVariantsObject",
                                variantData=NULL,
                                featureData=NULL,
                                sampleData=NULL,
+                               scidb4gh=FALSE,
                                
-                               initialize = function(variantData, featureData,sampleData) {
+                               initialize = function(variantData, featureData,sampleData, scidb4gh=FALSE) {
                                  self$variantData <- variantData
                                  self$featureData <- featureData
                                  self$sampleData<-sampleData
+                                 self$scidb4gh<-scidb4gh
                                },
                                
                                # Object Getters/Setters
@@ -111,7 +128,7 @@ dnaVariantsObject <- R6::R6Class("dnaVariantsObject",
                                #########################
                                # Object Methods
                                getGeneCount = function() {
-                                 length(unique(self$variantData$entrez_gene_id))	
+                                 nrow(self$getGenes())
                                },
                                getRowCount = function() {
                                  nrow(self$variantData)	
@@ -121,11 +138,16 @@ dnaVariantsObject <- R6::R6Class("dnaVariantsObject",
                                  mydat=self$variantData
                                  igenes=as.data.table(self$featureData) #a data frame of gene annotations
                                  mydat=as.data.table(mydat)
-                                 mydat$entrez_gene_id=as.character(mydat$entrez_gene_id)
-                                 igenes$value=as.character(igenes$value)
-                                 mydat$entrez_gene_id=as.character(mydat$entrez_gene_id)
-                                 mydat=merge(mydat,igenes,by.x="entrez_gene_id",by.y="value",all.x=TRUE)
-                                 # mydat[,by="sample_name",attribute_sampleLoad := length(classification),]
+                                 if (!self$scidb4gh) {
+                                   mydat$entrez_gene_id=as.character(mydat$entrez_gene_id)
+                                   igenes$value=as.character(igenes$value)
+                                   mydat=merge(mydat,igenes,by.x="entrez_gene_id",by.y="value",all.x=TRUE)
+                                   # mydat[,by="sample_name",attribute_sampleLoad := length(classification),]
+                                 } else {
+                                   mydat=merge(mydat,
+                                               igenes[, which(colnames(igenes) != "gene_symbol"), with = FALSE], # this was already merged in prep phase
+                                               by.x="feature_id", by.y="feature_id",all.x=TRUE)
+                                 }
                                  mydat 
                                },
                                #returns vector of unique sample names
@@ -136,13 +158,23 @@ dnaVariantsObject <- R6::R6Class("dnaVariantsObject",
                                  unique(self$sampleData$sample_id)	
                                },
                                getGenes=function(){
-                                 unique(self$variantData$entrez_gene_id)
+                                 if (self$scidb4gh) {
+                                   gene.symbol.variable = 'value'
+                                 } else {
+                                   gene.symbol.variable = 'entrez_gene_id'
+                                 }
+                                 
+                                 unique(self$variantData[, gene.symbol.variable, with = FALSE])
                                },
                                geneFrequency=function(){
                                  df=self$getTable()
                                  sampleinfo=self$sampleData
                                  df=as.data.table(df)
-                                 classifier=c("label","name","entrez_gene_id")
+                                 if (!self$scidb4gh) {
+                                   classifier=c("label","name","entrez_gene_id")
+                                 } else {
+                                   classifier=c("feature_id", "gene_symbol")
+                                 }
                                  subsetTotal=length(sampleinfo$sample_id)
                                  stotal=length(sampleinfo$sample_id)
                                  df[,by=classifier,list(
@@ -155,14 +187,27 @@ dnaVariantsObject <- R6::R6Class("dnaVariantsObject",
                                    Mean_subject_allele_frequency=as.double(sprintf("%.2f",mean(as.numeric(allele_fraction))))
                                  )  
                                  ][order(No_unique_variants)]		
-                                 
                                },
                                #Data matrix of mutations
                                mutationMatrix=function(customgenes=NULL){
                                  df=self$getTable()
-                                 df$label=factor(df$label)
+                                 if (!self$scidb4gh) {
+                                   df$label=factor(df$label)
+                                 } else {
+                                   df$feature_id = factor(df$feature_id)
+                                 }
                                  df$sample_name=factor(df$sample_name)
-                                 mat=as.matrix(dcast.data.table(df,label~sample_name,value.var="classification",drop=F,fun.aggregate=function(x) paste(unique(x),collapse=";")   ))
+                                 if (!self$scidb4gh) {
+                                   mat=as.matrix(dcast.data.table(df,
+                                                                label~sample_name,
+                                                                value.var="classification",
+                                                                drop=F,fun.aggregate=function(x) paste(unique(x),collapse=";")   ))
+                                 } else {
+                                   mat=as.matrix(dcast.data.table(df,
+                                                                  feature_id~sample_name,
+                                                                  value.var="classification",
+                                                                  drop=F,fun.aggregate=function(x) paste(unique(x),collapse=";")   ))
+                                 }
                                  mat[is.na(mat)] = ""
                                  rownames(mat) = mat[, 1]
                                  mat = mat[, -1]
@@ -213,7 +258,7 @@ dnaVariantsObject <- R6::R6Class("dnaVariantsObject",
                                  data=self$getTable()
                                  data=as.data.table(data)
                                  classifier=c("sample_name","sample_id")
-                                 old=		data[,by="sample_name",list(altered_genes=length(unique(entrez_gene_id)))]
+                                 # old=		data[,by="sample_name",list(altered_genes=length(unique(entrez_gene_id)))] # not used subsequently
                                  data$ref_alt=paste0(data$reference_allele,">",data$variant_allele)
                                  data$vclass="unknown"
                                  data$gene=data$label
