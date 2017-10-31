@@ -3,12 +3,12 @@
 \docType{data}
 \name{expressionSetObject}
 \alias{expressionSetObject}
-\title{Variant access object}
+\title{ExpressionSet access object}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
 expressionSetObject
 }
 \description{
-Variant access object
+ExpressionSet access object
 }
 \keyword{datasets}
