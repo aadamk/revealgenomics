@@ -19,45 +19,50 @@ dao_get_measurementset = function(con){
   nmsp_list = con$cache$nmsp_list
   
   if (length(nmsp_list) == 1) {
-    rqs = iquery(con$db, 
-                 "apply(project(public.RNAQUANTIFICATIONSET, name, dataset_id, experimentset_id),
-                 entity, 'RNAQUANTIFICATION', id, rnaquantificationset_id)", return = TRUE)
-    if (nrow(rqs) == 0) rqs = list()
-    
-    var = iquery(con$db,
-                 "apply(project(public.VARIANTSET, name, dataset_id),
-                 entity, 'VARIANT', id, variantset_id)",           return = TRUE)
-    if (nrow(var) == 0) var = list()
-    
-    fus = iquery(con$db,
-                 "apply(project(public.FUSIONSET, name, dataset_id),
-                 entity, 'FUSION', id, fusionset_id)",            return = TRUE)
-    if (nrow(fus) == 0) fus = list()
-
-    cnv = iquery(con$db,
-                 "apply(project(public.COPYNUMBERSET, name, dataset_id),
-                 entity, 'COPYNUMBER_MAT', id, copynumberset_id)", return = TRUE)
-    if (nrow(cnv) == 0) cnv = list()
-    # res = rqs
+    rqs_query = "public.RNAQUANTIFICATIONSET"
+    vst_query = "public.VARIANTSET"
+    fst_query = "public.FUSIONSET"
+    cst_query = "public.COPYNUMBERSET"
   } else if (length(nmsp_list) == 2) {
-    rqs = iquery(con$db, 
-                 "apply(project(merge(public.RNAQUANTIFICATIONSET, collaboration.RNAQUANTIFICATIONSET), name, dataset_id, experimentset_id),
-                    entity, 'RNAQUANTIFICATION', id, rnaquantificationset_id)", return = TRUE)
-    var = iquery(con$db, 
-                 "apply(project(merge(public.VARIANTSET, collaboration.VARIANTSET), name, dataset_id, experimentset_id),
-                    entity, 'VARIANT', id, variantset_id)",           return = TRUE)
-    fus = iquery(con$db, 
-                 "apply(merge(project(public.FUSIONSET, name, dataset_id),           project(collaboration.FUSIONSET, name, dataset_id)),
-                    entity, 'FUSION', id, fusionset_id)",            return = TRUE)
-    cnv = iquery(con$db, 
-                 "apply(merge(project(public.COPYNUMBERSET, name, dataset_id),           project(collaboration.COPYNUMBERSET, name, dataset_id)),
-                    entity, 'COPYNUMBER_MAT', id, copynumberset_id)", return = TRUE)
+    rqs_query = "merge(public.RNAQUANTIFICATIONSET, collaboration.RNAQUANTIFICATIONSET)"
+    vst_query = "merge(public.VARIANTSET, collaboration.VARIANTSET)"
+    fst_query = "merge(public.FUSIONSET, collaboration.FUSIONSET)"
+    cst_query = "merge(public.COPYNUMBERSET, collaboration.COPYNUMBERSET)"
   } else { stop("More scidb4gh namespaces than expected") }
+  
+  rqs = iquery(con$db, paste0(
+                "apply(
+                  project(
+                    ", rqs_query, ", 
+                    name, dataset_id, experimentset_id),
+                  entity, 'RNAQUANTIFICATION', id, rnaquantificationset_id)"), return = TRUE)
+  var = iquery(con$db, paste0(
+                 "apply(
+                   project(
+                     ", vst_query, ", 
+                     name, dataset_id, experimentset_id),
+                   entity, 'VARIANT', id, variantset_id)"),           return = TRUE)
+  fus = iquery(con$db, paste0(
+                 "apply(
+                   project(
+                     ", fst_query, ", 
+                     name, dataset_id, experimentset_id),
+                   entity, 'FUSION', id, fusionset_id)"),            return = TRUE)
+  cnv = iquery(con$db, paste0(
+                 "apply(
+                   project(
+                     ", cst_query, ", 
+                     name, dataset_id, experimentset_id),
+                   entity, 'COPYNUMBER_MAT', id, copynumberset_id)"), return = TRUE)
+  if (nrow(rqs) == 0) rqs = list()
+  if (nrow(var) == 0) var = list()
+  if (nrow(fus) == 0) fus = list()
+  if (nrow(cnv) == 0) cnv = list()
   
   res = rbindlist(list(rqs, var, fus, cnv), fill = TRUE)
   res = data.frame(res)
   allcols = colnames(res)
-  cols1 = c('dataset_id', 'dataset_version', 'entity', 'id', 'name')
+  cols1 = c('dataset_id', 'dataset_version', 'experimentset_id', 'entity', 'id', 'name')
   othercols = allcols[!(allcols %in% cols1)]
   
   res[, c(cols1, othercols)]
@@ -161,9 +166,7 @@ dao_search_rnaquantification = function(rnaquantificationset, feature, biosample
                   expr, "]', true)")
     qq2b = paste0("redimension(
                      apply(", qq2a, ", 
-                          flag, int32(1)), <flag:int32>[feature_id=0:*:0:",
-                                .ghEnv$meta$L$array$FEATURE$dims$feature_id$chunk_interval,
-                                                                      "])")
+                          flag, int32(1)), <flag:int32>[feature_id])")
     qq2c = paste0("cross_join(", qq, " as X,",
                                qq2b, " as Y, X.feature_id, Y.feature_id)")
     qq2 = paste0("project(", qq2c, ",", 
