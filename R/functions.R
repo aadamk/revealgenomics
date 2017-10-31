@@ -769,6 +769,12 @@ register_measurement = function(df, dataset_version = NULL, only_test = FALSE, c
                                             df, dataset_version, only_test, con = con)
 }
 
+#' @export
+register_measurementset = function(df, dataset_version = NULL, only_test = FALSE, con = NULL){
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
+                                            df, dataset_version, only_test, con = con)
+}
+
 register_versioned_secure_metadata_entity = function(entity, df, 
                                                      dataset_version, only_test, con = NULL){
   con = use_ghEnv_if_null(con)
@@ -1408,7 +1414,10 @@ latest_version = function(df){
   drop_na_columns(as.data.frame(df))
 }
 
-find_nmsp_filter_on_dataset_id_and_version = function(arrayname, dataset_id, dataset_version, con = NULL){
+find_nmsp_filter_on_dataset_id_and_version = function(arrayname, 
+                                                      dataset_id, 
+                                                      dataset_version, 
+                                                      con = NULL){
   con = use_ghEnv_if_null(con)
   
   qq = arrayname
@@ -1507,15 +1516,35 @@ search_experimentsets = function(dataset_id = NULL, dataset_version = NULL, all_
 }
 
 #' @export
-search_measurements = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE){
+search_measurements = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
   search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
-                                          dataset_id, dataset_version, all_versions)
+                                          dataset_id, dataset_version, all_versions, con = con)
 }
 
-search_versioned_secure_metadata_entity = function(entity, dataset_id, dataset_version, all_versions, con = NULL) {
+#' @export
+search_measurementsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
+  # TODO: use generic function 1search_versioned_secure_metadata_entity()
+  # after adding a flag to only download mandatory fields
+  con = use_ghEnv_if_null(con)
+  arr = paste0(con$cache$nmsp_list, ".MEASUREMENTSET")
+  if (length(arr) == 2) arr = paste0("merge(", 
+                                               arr[1], ",", 
+                                               arr[2], ")")
+  
+  qq = paste0("filter(", arr, ", dataset_id=", dataset_id, ")")
+  if (!is.null(dataset_version)) qq = paste0("filter(", qq, ", dataset_version=", dataset_version, ")")
+  iquery(con$db, qq, return = TRUE)
+}
+
+search_versioned_secure_metadata_entity = function(entity, 
+                                                   dataset_id, 
+                                                   dataset_version, 
+                                                   all_versions, 
+                                                   con = NULL) {
   check_args_search(dataset_version, all_versions)
   df = find_nmsp_filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
-                                                  dataset_version = dataset_version, con = con)
+                                                  dataset_version = dataset_version, 
+                                                  con = con)
   
   # reorder the output by the dimensions
   # from https://stackoverflow.com/questions/17310998/sort-a-dataframe-in-r-by-a-dynamic-set-of-columns-named-in-another-data-frame
