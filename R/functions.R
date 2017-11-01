@@ -112,7 +112,7 @@ entity_lookup = function(entityName, updateCache = FALSE, con = NULL){
   
   if (updateCache | is.null(.ghEnv$cache$lookup[[entityName]])){
     .ghEnv$cache$lookup[[entityName]] = iquery(con$db, paste(entityName, "_LOOKUP", sep = ""),
-                                               schema = paste("<namespace:string> [", get_idname(entityName), "=0:*]", sep = ""),
+                                               schema = paste("<namespace:string> [", get_base_idname(entityName), "=0:*]", sep = ""),
                                                return = T)
   }
   return(.ghEnv$cache$lookup[[entityName]])
