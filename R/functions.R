@@ -107,6 +107,24 @@ get_logged_in_user = function(con = NULL) {
   attr(con$db, "connection")$username
 }
 
+#' formulate merged array query for an entity
+#' 
+#' @examples 
+#' con = gh_connect2(<ACCESS TO ALL DATA>)
+#' formulate_merged_array_query('RNAQUANTIFICATION', con)
+#' # merge(public.RNAQUANTIFICATION, collaboration.RNAQUANTIFICATION, ....)
+#' con = gh_connect2(<ACCESS TO PUBLIC DATA ONLY>)
+#' formulate_merged_array_query('RNAQUANTIFICATION', con)
+#' # public.RNAQUANTIFICATION
+#' @export
+formulate_merged_array = function(entity, con = NULL){
+  con = use_ghEnv_if_null(con)
+  entity_arr = paste0(con$cache$nmsp_list, ".", entity)
+  if (length(entity_arr) >1 ) {
+    entity_arr = paste0("merge(", paste0(entity_arr, collapse = ", "), ")")
+  }
+  entity_arr
+}
 entity_lookup = function(entityName, updateCache = FALSE, con = NULL){
   con = use_ghEnv_if_null(con)
   
@@ -918,7 +936,7 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
     namespace = update_lookup_and_find_namespace_again(entitynm, id, con = con)
   }
   if (any(!(namespace %in% con$cache$nmsp_list))) {
-    stop("user probably does have acecss to id-s: ", paste(id[which(!(namespace %in% con$cache$nmsp_list))], collapse = ", "))
+    stop("Alert! User probably does not have access to id-s: ", paste(id[which(!(namespace %in% con$cache$nmsp_list))], collapse = ", "))
   }
   names(id) = namespace
   df0 = data.frame()
