@@ -187,13 +187,16 @@ dao_search_rnaquantification = function(rnaquantificationset, feature, biosample
   
   expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature)
   
-  if (!formDataModel) return(expressionSet)
-  
-  # Form custom data model
-  es = expressionSetObject$new(NULL, NULL, NULL)
-  es$setExpressionMatrix(expressionMatrix = exprs(expressionSet))
-  es$setFeatureData(featureData = expressionSet@featureData@data)
-  es$setPhenotypeData(phenotypeData = expressionSet@phenoData@data)
-  
-  return(es)
+  if (!formDataModel) {
+    return(expressionSet)
+  } else {
+    stop("Not supported any more. Fron now on, form custom ExpressionSet object using client's custom code")
+    # # Form custom data model
+    # es = expressionSetObject$new(NULL, NULL, NULL)
+    # es$setExpressionMatrix(expressionMatrix = exprs(expressionSet))
+    # es$setFeatureData(featureData = expressionSet@featureData@data)
+    # es$setPhenotypeData(phenotypeData = expressionSet@phenoData@data)
+    # 
+    # return(es)
+  }  
 }
