@@ -34,9 +34,26 @@ yaml_to_attr_string = function(attributes, compression_on = FALSE){
 }
 
 get_mandatory_fields_for_register_entity = function(arrayname){
-  attrs = names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)
+  arrayname_ = strip_namespace(arrayname)
+  attrs = names(.ghEnv$meta$L$array[[arrayname_]]$attributes)
   attrs = attrs[!(attrs %in% c('created', 'updated'))]
   attrs
+  
+  zz = get_entity_info()
+  entity_class = zz[zz$entity == arrayname_, ]$class
+  
+  if (entity_class == 'metadata') {
+    mandatory_fields = attrs
+  } else if (entity_class == 'featuredata') {
+    mandatory_fields = attrs
+  } else if (entity_class == 'measurementdata') {
+    dims = get_idname(arrayname_)
+    dims = dims[!(dims %in% c('dataset_version'))]
+    mandatory_fields = c(dims, attrs)
+  } else {
+    stop("Need to cover this\n")
+  }
+  mandatory_fields
 }
 
 #' @export
