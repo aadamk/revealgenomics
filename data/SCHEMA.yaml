@@ -269,7 +269,7 @@ array:
       - public
       - collaboration
     attributes:
-      expression_count: float
+      value: float
     dims:
       dataset_version:
         start: 0
