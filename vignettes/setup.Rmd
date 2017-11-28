@@ -149,6 +149,7 @@ install.packages(c('roxygen2',
                    'devtools',
                    'yaml',
                    'knitr',
+                   'reshape',
                    'reshape2')); 
 source("http://bioconductor.org/biocLite.R"); 
 biocLite(c("Biobase")); 
