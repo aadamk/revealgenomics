@@ -4,8 +4,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_public
     attributes: 
       name: string
       description: string
@@ -28,8 +27,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
       name: string
       description: string
@@ -60,8 +58,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
       dataset_id: int64
       name: string
@@ -94,8 +91,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
       dataset_id: int64
       name: string
@@ -128,8 +124,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       dataset_id: int64
       name: string
@@ -162,8 +157,7 @@ array:
     data_class:
       metadata
     namespace:
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       dataset_id: int64
       experimentset_id: int64
@@ -194,8 +188,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
       dataset_id: int64
       experimentset_id: int64
@@ -230,8 +223,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
       dataset_id: int64
       experimentset_id: int64
@@ -266,8 +258,7 @@ array:
     measurementdata_subclass:
       rnaquantification
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       value: float
     dims:
@@ -300,8 +291,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
       dataset_id: int64
       experimentset_id: int64
@@ -336,8 +326,7 @@ array:
     measurementdata_subclass:
       variant
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       reference_name: string
       start: int64
@@ -381,8 +370,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
       dataset_id: int64
       experimentset_id: int64
@@ -416,8 +404,7 @@ array:
     measurementdata_subclass:
       variant
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       feature_id_left: int64
       feature_id_right: int64
@@ -462,8 +449,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
       dataset_id: int64
       experimentset_id: int64
@@ -498,8 +484,7 @@ array:
     measurementdata_subclass:
       copynumber_seg
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       reference_name: string
       start: int64
@@ -538,8 +523,7 @@ array:
     measurementdata_subclass:
       copynumber_mat
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       copynumber_val: double
     dims:
@@ -573,7 +557,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
+      - gh_public
     attributes: 
       term: string
       source_name: string
@@ -597,7 +581,7 @@ array:
     data_class:
       featuredata
     namespace: 
-      - public
+      - gh_public
     attributes: 
       referenceset_id: int64
       name: string
@@ -623,7 +607,7 @@ array:
     data_class:
       featuredata
     namespace: 
-      - public
+      - gh_public
     attributes: 
       name: string
       gene_symbol: string
@@ -656,7 +640,7 @@ array:
     data_class: 
       featuredata
     namespace:
-      - public
+      - gh_public
     attributes:
       synonym: string
       feature_id: int64
@@ -683,7 +667,7 @@ array:
     data_class: 
       featuredata
     namespace:
-      - public
+      - gh_public
     attributes:
       name: string
       description: string
@@ -709,7 +693,7 @@ array:
     data_class: 
       featuredata
     namespace:
-      - public
+      - gh_public
     attributes:
       genelist_id: int64
       gene_symbol_id: int64
@@ -735,7 +719,7 @@ array:
     data_class:
       featuredata
     namespace:
-      - public
+      - gh_public
     attributes:
       name: string
       description: string

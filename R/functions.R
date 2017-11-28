@@ -136,33 +136,33 @@ entity_lookup = function(entityName, updateCache = FALSE, con = NULL){
   return(.ghEnv$cache$lookup[[entityName]])
 }
 
-get_project_lookup = function(updateCache = FALSE, con = NULL){
-  entity_lookup(.ghEnv$meta$arrProject, updateCache = updateCache, con = con)
-}
-get_dataset_lookup = function(updateCache = FALSE, con = NULL){
-  entity_lookup(.ghEnv$meta$arrDataset, updateCache = updateCache, con = con)
-}
-get_individuals_lookup = function(updateCache = FALSE, con = NULL){
-  entity_lookup(.ghEnv$meta$arrIndividuals, updateCache = updateCache, con = con)
-}
-get_biosample_lookup = function(updateCache = FALSE, con = NULL){
-  entity_lookup(.ghEnv$meta$arrBiosample, updateCache = updateCache, con = con)
-}
-get_rnaquantificationset_lookup = function(updateCache = FALSE, con = NULL){
-  entity_lookup(.ghEnv$meta$arrRnaquantificationset, updateCache = updateCache, con = con)
-}
-get_variantset_lookup = function(updateCache = FALSE, con = NULL){
-  entity_lookup(.ghEnv$meta$arrVariantset, updateCache = updateCache, con = con)
-}
-get_fusionset_lookup = function(updateCache = FALSE, con = NULL){
-  entity_lookup(.ghEnv$meta$arrFusionset, updateCache = updateCache, con = con)
-}
-get_experimentset_lookup = function(updateCache = FALSE, con = NULL){
-  entity_lookup(.ghEnv$meta$arrExperimentSet, updateCache = updateCache, con = con)
-}
-get_copynumberset_lookup = function(updateCache = FALSE, con = NULL){
-  entity_lookup(.ghEnv$meta$arrCopyNumberSet, updateCache = updateCache, con = con)
-}
+# get_project_lookup = function(updateCache = FALSE, con = NULL){
+#   entity_lookup(.ghEnv$meta$arrProject, updateCache = updateCache, con = con)
+# }
+# get_dataset_lookup = function(updateCache = FALSE, con = NULL){
+#   entity_lookup(.ghEnv$meta$arrDataset, updateCache = updateCache, con = con)
+# }
+# get_individuals_lookup = function(updateCache = FALSE, con = NULL){
+#   entity_lookup(.ghEnv$meta$arrIndividuals, updateCache = updateCache, con = con)
+# }
+# get_biosample_lookup = function(updateCache = FALSE, con = NULL){
+#   entity_lookup(.ghEnv$meta$arrBiosample, updateCache = updateCache, con = con)
+# }
+# get_rnaquantificationset_lookup = function(updateCache = FALSE, con = NULL){
+#   entity_lookup(.ghEnv$meta$arrRnaquantificationset, updateCache = updateCache, con = con)
+# }
+# get_variantset_lookup = function(updateCache = FALSE, con = NULL){
+#   entity_lookup(.ghEnv$meta$arrVariantset, updateCache = updateCache, con = con)
+# }
+# get_fusionset_lookup = function(updateCache = FALSE, con = NULL){
+#   entity_lookup(.ghEnv$meta$arrFusionset, updateCache = updateCache, con = con)
+# }
+# get_experimentset_lookup = function(updateCache = FALSE, con = NULL){
+#   entity_lookup(.ghEnv$meta$arrExperimentSet, updateCache = updateCache, con = con)
+# }
+# get_copynumberset_lookup = function(updateCache = FALSE, con = NULL){
+#   entity_lookup(.ghEnv$meta$arrCopyNumberSet, updateCache = updateCache, con = con)
+# }
 
 get_entity = function(entity, id, ...){
   fn_name = paste("get_", tolower(entity), sep = "")
@@ -256,10 +256,18 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
   }
 }
 
+find_namespace = function(entitynm) {
+  .ghEnv$meta$L$array[[entitynm]]$namespace
+}
+
+full_arrayname = function(entitynm) {
+  paste0(find_namespace(entitynm), ".", entitynm)
+}
+
 update_ontology_cache = function(con = NULL){
   con = use_ghEnv_if_null(con)
   
-  zz = iquery(con$db, .ghEnv$meta$arrOntology, return = TRUE)
+  zz = iquery(con$db, full_arrayname(.ghEnv$meta$arrOntology), return = TRUE)
   if (nrow(zz) > 1) zz = zz[order(zz[, get_idname(.ghEnv$meta$arrOntology)]), ]
   .ghEnv$cache$dfOntology = zz
 }
@@ -339,7 +347,6 @@ register_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
 
 #' @export
 register_project = function(df,
-                            namespace,
                             only_test = FALSE, 
                             con = NULL){
   con = use_ghEnv_if_null(con)
@@ -347,7 +354,7 @@ register_project = function(df,
   uniq = unique_fields()[[.ghEnv$meta$arrProject]]
   test_register_project(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrProject, sep = "")
+    arrayname = full_arrayname(.ghEnv$meta$arrProject)
     register_tuple_return_id(df, arrayname, uniq, con = con)
   } # end of if (!only_test)
 }
@@ -364,13 +371,13 @@ register_dataset = function(df,
   
   test_register_dataset(df, uniq, dataset_version, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    namespace = find_namespace(id = unique(df$project_id), entitynm=.ghEnv$meta$arrProject, con = con)
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrDataset, sep = "")
+    arrayname = full_arrayname(.ghEnv$meta$arrDataset)
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version, con = con)
   } # end of if (!only_test)
 }
 
-find_namespace = function(id, entitynm, dflookup = NULL, con = NULL){
+find_namespace_old = function(id, entitynm, dflookup = NULL, con = NULL){
+  stop("Not needed in secure_scan branch")
   con = use_ghEnv_if_null(con)
   
   if (is.null(dflookup)) { # if need to download the lookup array from scidb
@@ -385,7 +392,7 @@ register_ontology_term = function(df, only_test = FALSE, con = NULL){
   uniq = unique_fields()[[.ghEnv$meta$arrOntology]]
   test_register_ontology(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = .ghEnv$meta$arrOntology
+    arrayname = full_arrayname(.ghEnv$meta$arrOntology)
     ids = register_tuple_return_id(df, arrayname, uniq, con = con)
     
     # force update the ontology
@@ -413,7 +420,7 @@ register_referenceset = function(df, only_test = FALSE, con = NULL){
   uniq = unique_fields()[[.ghEnv$meta$arrReferenceset]]
   test_register_referenceset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = .ghEnv$meta$arrReferenceset
+    arrayname = full_arrayname(.ghEnv$meta$arrReferenceset)
     register_tuple_return_id(df,
                              arrayname, uniq, con = con)
   } # end of if (!only_test)
@@ -513,7 +520,7 @@ register_featureset = function(df, only_test = FALSE, con = NULL){
   uniq = unique_fields()[[.ghEnv$meta$arrFeatureset]]
   test_register_featureset(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = .ghEnv$meta$arrFeatureset
+    arrayname = full_arrayname(.ghEnv$meta$arrFeatureset)
     register_tuple_return_id(df,
                              arrayname, uniq, con = con)
   } # end of if (!only_test)
@@ -525,7 +532,7 @@ register_feature_synonym = function(df, only_test = FALSE, con = NULL){
   uniq = unique_fields()[[.ghEnv$meta$arrFeatureSynonym]]
   test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = .ghEnv$meta$arrFeatureSynonym
+    arrayname = full_arrayname(.ghEnv$meta$arrFeatureSynonym)
     register_tuple_return_id(df, arrayname, uniq, con = con)
   } # end of if (!only_test)
 }
@@ -537,7 +544,7 @@ register_feature = function(df, register_gene_synonyms = TRUE, only_test = FALSE
   uniq = unique_fields()[[.ghEnv$meta$arrFeature]]
   test_register_feature(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = .ghEnv$meta$arrFeature
+    arrayname = full_arrayname(.ghEnv$meta$arrFeature)
     fid = register_tuple_return_id(df, arrayname, uniq, con = con)
     gene_ftrs = df[df$feature_type == 'gene', ]
     if (register_gene_synonyms & nrow(gene_ftrs) > 0){
@@ -810,8 +817,7 @@ register_versioned_secure_metadata_entity = function(entity, df,
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
-    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset, con = con)
-    arrayname = paste(namespace, ".", entity, sep = "")
+    arrayname = full_arrayname(entity)
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version, con = con)
   } # end of if (!only_test)
 }
@@ -840,7 +846,9 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE, con =
   
   test_register_variant(df)
   if (!only_test) {
-    df = df %>% group_by(feature_id, biosample_id) %>% mutate(variant_id = row_number())
+    if (!('per_gene_variant_number' %in% colnames(df))) {
+      df = df %>% group_by(feature_id, biosample_id) %>% mutate(per_gene_variant_number = row_number())
+    }
     df = as.data.frame(df)
     if (is.null(dataset_version)) {
       dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE, con = con)
@@ -848,12 +856,11 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE, con =
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
     df$dataset_version = dataset_version
-    namespace = find_namespace(unique(df$dataset_id), entitynm=.ghEnv$meta$arrDataset, con = con)
-    arrayname = paste(namespace, ".", .ghEnv$meta$arrVariant, sep = "")
+    arrayname = full_arrayname(.ghEnv$meta$arrVariant)
     
     ids_int64_conv = c(get_idname(arrayname), get_int64fields(arrayname))
     
-    ids_int64_conv = ids_int64_conv[(ids_int64_conv != "variant_id")]
+    ids_int64_conv = ids_int64_conv[(ids_int64_conv != "per_gene_variant_number")]
     cat("Uploading\n")
     non_info_cols = c(get_idname(strip_namespace(arrayname)), 
                       mandatory_fields()[[strip_namespace(arrayname)]])
@@ -916,45 +923,23 @@ join_ontology_terms = function(df, con = NULL){
 
 #' @export
 get_projects = function(project_id = NULL, con = NULL){
-  if (!is.null(project_id)) { # Need to look up specific individual ID
-    select_from_1d_entity(entitynm = .ghEnv$meta$arrProject, id = project_id, con = con)
-  } else { # Need to gather info across namespaces
-    merge_across_namespaces(arrayname = .ghEnv$meta$arrProject, con = con)
-  }
+  select_from_1d_entity(entitynm = .ghEnv$meta$arrProject, id = project_id, con = con)
 }
 
+#' internal function for get_METADATA()
+#' 
+#' function to select from metadata entities. Used by 
+#' `get_project()` (does not have dataset_version as a dimension), and
+#' `get_dataset()`, `get_biosamples()` etc. (that have dataset_version as a dimension)
 select_from_1d_entity = function(entitynm, id, dataset_version = NULL, 
                                  mandatory_fields_only = FALSE,
                                  con = NULL){
   con = use_ghEnv_if_null(con)
-  namespace = find_namespace(id, entitynm, 
-                             entity_lookup(entityName = entitynm, con = con), 
-                             con = con)
-  if (is.null(namespace)) namespace = NA # to handle the case of no entry in lookup array at all
-  if (any(is.na(namespace))) {
-    cat("trying to download lookup array once again, to see if there has been a recent update\n")
-    namespace = update_lookup_and_find_namespace_again(entitynm, id, con = con)
-  }
-  if (any(!(namespace %in% con$cache$nmsp_list))) {
-    stop("Alert! User probably does not have access to id-s: ", paste(id[which(!(namespace %in% con$cache$nmsp_list))], collapse = ", "))
-  }
-  names(id) = namespace
-  df0 = data.frame()
-  for (nmsp in unique(namespace)){
-    cat("--DEBUG--: retrieving entities from namespace:", nmsp, "\n")
-    df1 = select_from_1d_entity_by_namespace(namespace = nmsp, entitynm, 
-                                             id = id[which(names(id) == nmsp)], dataset_version = dataset_version, 
-                                             mandatory_fields_only = mandatory_fields_only,
-                                             con = con)
-    if (nrow(df1) > 0){
-      l = list(df0,
-               df1)
-      df0 = rbindlist(l, use.names=TRUE, fill=TRUE)
-    }
-  }
-  df0 = data.frame(df0)
-  # return(df0[match(id, df0[, get_base_idname(entitynm)]), ])
-  return(df0)
+  namespace = find_namespace(entitynm)
+  select_from_1d_entity_by_namespace(namespace = namespace, entitynm, 
+                                     id = id, dataset_version = dataset_version, 
+                                     mandatory_fields_only = mandatory_fields_only,
+                                     con = con)
 }
 
 update_lookup_and_find_namespace_again = function(entitynm, id, con = NULL){
@@ -971,14 +956,18 @@ select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_v
                                               mandatory_fields_only = FALSE,
                                               con = NULL){
   fullnm = paste(namespace, ".", entitynm, sep = "")
-  if (length(get_idname(entitynm)) == 1) {
-    qq = form_selector_query_1d_array(arrayname = fullnm,
-                                      idname = get_base_idname(fullnm),
-                                      selected_ids = id)
+  if (is.null(id)) {
+    qq = full_arrayname(entitynm)
   } else {
-    qq = form_selector_query_2d_array(arrayname = fullnm,
-                                      dim1 = get_base_idname(fullnm), dim1_selected_ids = id,
-                                      dim2 = "dataset_version", dim2_selected_ids = dataset_version)
+    if (length(get_idname(entitynm)) == 1) {
+      qq = form_selector_query_1d_array(arrayname = fullnm,
+                                        idname = get_base_idname(fullnm),
+                                        selected_ids = id)
+    } else {
+      qq = form_selector_query_2d_array(arrayname = fullnm,
+                                        dim1 = get_base_idname(fullnm), dim1_selected_ids = id,
+                                        dim2 = "dataset_version", dim2_selected_ids = dataset_version)
+    }
   }
   join_info_ontology_and_unpivot(qq, arrayname = entitynm, namespace=namespace, 
                                  mandatory_fields_only = mandatory_fields_only,
@@ -986,6 +975,7 @@ select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_v
 }
 
 merge_across_namespaces = function(arrayname, mandatory_fields_only = FALSE, con = NULL){
+  stop("Not needed in secure_scan branch")
   con = use_ghEnv_if_null(con)
   
   arrayname = strip_namespace(arrayname)
@@ -1078,14 +1068,10 @@ get_versioned_secure_metadata_entity = function(entity, id,
                                                 mandatory_fields_only = FALSE,
                                                 con = NULL){
   check_args_get(id = id, dataset_version, all_versions)
-  if (!is.null(id)) { # Need to look up specific ID
-    df = select_from_1d_entity(entitynm = entity, id = id, 
-                               dataset_version = dataset_version, 
-                               mandatory_fields_only = mandatory_fields_only,
-                               con = con)
-  } else { # Need to gather info across namespaces
-    df = merge_across_namespaces(arrayname = entity, mandatory_fields_only = mandatory_fields_only, con = con)
-  }
+  df = select_from_1d_entity(entitynm = entity, id = id, 
+                             dataset_version = dataset_version, 
+                             mandatory_fields_only = mandatory_fields_only,
+                             con = con)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
@@ -1118,13 +1104,13 @@ get_copynumberset = function(copynumberset_id = NULL, dataset_version = NULL, al
 
 #' @export
 get_featuresets= function(featureset_id = NULL, con = NULL){
-  get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrFeatureset, 
+  get_unversioned_public_metadata_entity(arrayname = full_arrayname(.ghEnv$meta$arrFeatureset), 
                                          id = featureset_id,
                                          con = con)
 }
 
 get_feature_synonym = function(feature_synonym_id = NULL, con = NULL){
-  get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrFeatureSynonym, 
+  get_unversioned_public_metadata_entity(arrayname = full_arrayname(.ghEnv$meta$arrFeatureSynonym), 
                                          id = feature_synonym_id, 
                                          infoArray = FALSE,
                                          con = con)
@@ -1142,7 +1128,9 @@ get_unversioned_public_metadata_entity = function(arrayname, id, infoArray = TRU
     qq = form_selector_query_1d_array(arrayname, idname, id)
   }
   if (infoArray) {
-    join_info_ontology_and_unpivot(qq, arrayname, con = con)
+    join_info_ontology_and_unpivot(qq, arrayname, 
+                                   namespace = get_namespace(arrayname),
+                                   con = con)
   } else {
     iquery(con$db, qq, return = TRUE)
   }
@@ -1150,7 +1138,7 @@ get_unversioned_public_metadata_entity = function(arrayname, id, infoArray = TRU
 
 #' @export
 get_referenceset = function(referenceset_id = NULL, con = NULL){
-  get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrReferenceset, 
+  get_unversioned_public_metadata_entity(arrayname = full_arrayname(.ghEnv$meta$arrReferenceset),
                                          id = referenceset_id,
                                          con = NULL)
 }
@@ -1191,13 +1179,13 @@ get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
   con = use_ghEnv_if_null(con)
   
   if (!fromCache | is.null(.ghEnv$cache$feature_ref)){ # work from SciDB directly
-    arrayname = .ghEnv$meta$arrFeature
+    arrayname = full_arrayname(.ghEnv$meta$arrFeature)
     idname = get_idname(arrayname)
     
     qq = arrayname
     if (!is.null(feature_id)) {
       qq = form_selector_query_1d_array(arrayname, idname, feature_id)
-      join_info_ontology_and_unpivot(qq, arrayname)
+      join_info_ontology_and_unpivot(qq, arrayname, namespace = find_namespace(arrayname))
     } else { # FASTER path when all data has to be downloaded
       ftr = iquery(con$db, qq, return = T)
       ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
@@ -1318,7 +1306,7 @@ search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NU
 
 #' @export
 search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_id = NULL, con = NULL){
-  arrayname = .ghEnv$meta$arrFeature
+  arrayname = full_arrayname(.ghEnv$meta$arrFeature)
   
   qq = arrayname
   if (!is.null(featureset_id)){
@@ -1342,7 +1330,8 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
     qq = paste("filter(", qq, ", ", subq, ")", sep="")
   }
   
-  join_info_ontology_and_unpivot(qq, arrayname, con = con)
+  join_info_ontology_and_unpivot(qq, arrayname, 
+                                 namespace = get_namespace(arrayname), con = con)
 }
 
 #' @export
@@ -1449,23 +1438,11 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname,
   
   qq = arrayname
   if (!is.null(dataset_id)) {
-    namespace = find_namespace(id = dataset_id, entitynm = .ghEnv$meta$arrDataset, dflookup = get_dataset_lookup(con = con))
-    if (is.null(namespace)) namespace = NA # to handle the case of no entry in lookup array at all
-    if (any(is.na(namespace))) {
-      cat("trying to download lookup array once again, to see if there has been a recent update")
-      namespace = update_lookup_and_find_namespace_again(entitynm = .ghEnv$meta$arrDataset, id = dataset_id, con = con)
-    }
-    if (!(namespace %in% con$cache$nmsp_list)) {stop("user does not have permission to access data for dataset_id: ", dataset_id)}
-    fullnm = paste(namespace, ".", qq, sep = "")
+    fullnm = full_arrayname(qq)
     if (is.null(dataset_version)) {
-      qq = paste("filter(", fullnm, ", ", "dataset_id = ", dataset_id, ")", sep="")
+      qq = paste0("filter(", fullnm, ", ", "dataset_id = ", dataset_id, ")")
     } else {
-      # TODO: remove condition check after the ordering of dimensions is fixed [entity_id, dataset_version] or [dataset_version, entity_id]
-      if (grep("dataset_version", get_idname(arrayname)) == 2) { # datset_version is 2nd dimension
-        qq = paste("filter(between(", fullnm, ", null,", dataset_version, ", null, ", dataset_version,  "), ", "dataset_id = ", dataset_id, ")", sep="")
-      } else if (grep("dataset_version", get_idname(arrayname)) == 1) { # datset_version is 1st dimension
-        qq = paste("filter(between(", fullnm, ", ", dataset_version, ", null,", dataset_version,  ", null), ", "dataset_id = ", dataset_id, ")", sep="")
-      }
+      qq = paste0("filter(", fullnm, ", dataset_version=", dataset_version, " AND dataset_id = ", dataset_id, ")")
     }
   } else {
     stop(cat("Must specify dataset_id. To retrieve all ", tolower(arrayname), "s, use get_", tolower(arrayname), "s()", sep = ""))
@@ -1473,7 +1450,7 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname,
   
   join_info_ontology_and_unpivot(qq,
                                  arrayname,
-                                 namespace = namespace,
+                                 namespace = find_namespace(arrayname),
                                  con = con)
 }
 
@@ -1563,6 +1540,10 @@ search_measurementsets = function(dataset_id = NULL, dataset_version = NULL, all
   iquery(con$db, qq, return = TRUE)
 }
 
+#' internal function for search_METADATA()
+#' 
+#' internal function for `search_individuals()`, `search_biosamples()` etc.
+#' search of a metadata entry by `dataset_id`
 search_versioned_secure_metadata_entity = function(entity, 
                                                    dataset_id, 
                                                    dataset_version, 
@@ -1718,11 +1699,11 @@ join_info = function(qq, arrayname, namespace = 'public', mandatory_fields_only 
   if (!mandatory_fields_only) {
     if (exists('debug_trace')) {t1 = proc.time()}
     if (FALSE){ # TODO: See why search_individuals(dataset_id = 1) is so slow; the two options here did not make a difference
-      qq1 = paste("cross_join(", qq1, " as A, ", namespace, ".", arrayname, "_INFO as B, A.", idname, ", B.", idname, ")", sep = "")
+      qq1 = paste("cross_join(", qq1, " as A, ", namespace, ".", strip_namespace(arrayname), "_INFO as B, A.", idname, ", B.", idname, ")", sep = "")
     } else if (FALSE) { cat("== Swapping order of cross join between ARRAY_INFO and select(ARRAY, ..)\n")
-      qq1 = paste("cross_join(", namespace, ".", arrayname, "_INFO as A, ", qq1, " as B, A.", idname, ", B.", idname, ")", sep = "")
+      qq1 = paste("cross_join(", namespace, ".", strip_namespace(arrayname), "_INFO as A, ", qq1, " as B, A.", idname, ", B.", idname, ")", sep = "")
     } else {
-      qq1 = paste("equi_join(", qq1, ", ", namespace, ".", arrayname, "_INFO, 'left_names=", paste(idname, collapse = ","), "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')", sep = "")
+      qq1 = paste("equi_join(", qq1, ", ", namespace, ".", strip_namespace(arrayname), "_INFO, 'left_names=", paste(idname, collapse = ","), "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')", sep = "")
     }
   }
   x2 = iquery(con$db, qq1, return = TRUE)
@@ -1862,11 +1843,9 @@ register_expression_matrix = function(filepath,
     dataset_id = rqset$dataset_id
     cat("Specified rnaquantificationset_id belongs to dataset:", dataset_id, "\n")
     
-    arr_feature = .ghEnv$meta$arrFeature
-    namespace = find_namespace(id = rnaquantificationset_id, entitynm = .ghEnv$meta$arrRnaquantificationset, 
-                               dflookup = get_rnaquantificationset_lookup(), con = con)
-    arr_biosample = paste(namespace, .ghEnv$meta$arrBiosample, sep = ".")
-    arrayname = paste(namespace, .ghEnv$meta$arrRnaquantification, sep = ".")
+    arr_feature = full_arrayname(.ghEnv$meta$arrFeature)
+    arr_biosample = full_arrayname(.ghEnv$meta$arrBiosample)
+    arrayname = full_arrayname(.ghEnv$meta$arrRnaquantification)
     cat("======\n")
     cat(paste("Working on expression file:\n\t", filepath, "\n"))
     x = read.delim(file = filepath, nrows = 10)
@@ -2010,7 +1989,7 @@ register_expression_matrix = function(filepath,
     gct_table = scidb(con$db,
                       paste("apply(",
                             joinBack2@name, ", ",
-                            "expression_count, dcast(a, float(null)), ",
+                            "value, dcast(a, float(null)), ",
                             "rnaquantificationset_id, ", rnaquantificationset_id,
                             ", dataset_version, ", dataset_version,
                             ")", sep = "")

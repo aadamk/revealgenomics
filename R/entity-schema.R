@@ -93,8 +93,7 @@ unique_fields = function(){
 }
 
 is_entity_secured = function(entitynm){
-  entitynm = strip_namespace(entitynm)
-  ifelse(length(.ghEnv$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
+  length(grep("public", "gh_public")) == 0
 }
 
 is_entity_versioned = function(entitynm){

@@ -90,12 +90,7 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
   # Now that search_by_entities are proven to exist at specified id-s, delete them
   
   # Find the correct namespace
-  if (is_entity_secured(entity)) {
-    namespaces = find_namespace(id = id, entitynm = delete_by_entity, con = con)
-    nmsp = unique(namespaces)
-  } else { nmsp = 'public' }
-  if (length(nmsp) != 1) stop("Can run delete only at one namespace at a time")
-  arr = paste(nmsp, entity, sep = ".")
+  arr = full_arrayname(entity)
   
   # Delete the mandatory fields array
   if (get_entity_class(entity = entity)  == 'measurementdata') { # Special handling for measurement data class
@@ -123,24 +118,6 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
   if (infoArray){
     delete_info_fields(fullarrayname = arr, id = id, dataset_version = dataset_version, con = con)
   }
-  
-  # Clear out the lookup array if required
-  if ( get_entity_class(entity = entity) != 'measurementdata' ) { # No lookup handling for measurement data class
-    if (is_entity_secured(entity)){
-      # Check if there are no remaining entities at this ID at any version
-      qcount = paste("op_count(filter(", arr, ", ",
-                     base_selection_query, "))" )
-      newcount = iquery(con$db, qcount, return = TRUE)$count
-      if (newcount == 0){ # there are no entities at this level
-        arrLookup = paste(entity, "_LOOKUP", sep = "")
-        qq = paste("delete(", arrLookup, ", ", base_selection_query, ")", sep = "")
-        cat("Deleting entries for ids ", pretty_print(sort(id)), " from lookup array: ", arrLookup, "\n", sep = "")
-        print(qq)
-        iquery(con$db, qq)
-        updatedcache = entity_lookup(entityName = entity, updateCache = TRUE, con = con)
-      }
-    } # end of: if (is_entity_secured(entity))
-  } # end of: if ( get_entity_class(entity = entity) != 'measurementdata' )
 }
 
 delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_entity = NULL, con = NULL){
