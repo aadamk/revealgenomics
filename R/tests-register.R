@@ -231,7 +231,12 @@ test_register_expression_matrix = function(filepath,
 test_register_variant = function(df){
   test_dataframe_formatting(df)
   if(length(unique(df$dataset_id))!=1) stop("Variants to be registered must belong to a single dataset/study")
-  test_mandatory_fields(df, arrayname = .ghEnv$meta$arrVariant)
+  
+  # per_gene_variant_number is a mandatory field that is typically added later
+  # bypass the test as follows
+  df_temp = df
+  df_temp$per_gene_variant_number = -1
+  test_mandatory_fields(df_temp, arrayname = .ghEnv$meta$arrVariant)
 
   stopifnot(c('variantset_id', 'biosample_id', 'feature_id')
             %in% colnames(df))
