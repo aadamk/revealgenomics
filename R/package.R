@@ -51,7 +51,7 @@ NULL
 
 # Prepare variables for the cache
 .ghEnv$cache$ontology_ref = NULL
-# .ghEnv$cache$lookup = list()
+.ghEnv$cache$lookup = list()
 # .ghEnv$cache$lookup[[.ghEnv$meta$arrProject]] = NULL
 # .ghEnv$cache$lookup[[.ghEnv$meta$arrDataset]] = NULL
 # .ghEnv$cache$lookup[[.ghEnv$meta$arrIndividuals]] = NULL

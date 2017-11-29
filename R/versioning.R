@@ -8,11 +8,7 @@ get_dataset_version_lookup = function(updateCache = FALSE, con = NULL){
   
   str = 'DATASET_VERSION'
   if (updateCache | is.null(.ghEnv$cache$lookup[[str]])){
-    namespaces = con$cache$nmsp_list
-    qq = "public.DATASET"
-    if (length(namespaces) > 1)  {
-      for (nmsp in namespaces[namespaces != 'public']) qq = paste("merge(", qq, ", ", nmsp, ".DATASET)", sep = "")
-    }
+    qq = paste0("project(", full_arrayname(.ghEnv$meta$arrDataset), ", name)")
     df = iquery(con$db, qq, return = T)
     .ghEnv$cache$lookup[[str]] = df[, c('dataset_id', 'dataset_version')]
   }
