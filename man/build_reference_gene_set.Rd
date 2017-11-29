@@ -4,8 +4,8 @@
 \alias{build_reference_gene_set}
 \title{Build a reference gene set at user specified FeatureSet id}
 \usage{
-build_reference_gene_set(featureset_id, gene_annotation_file_path,
-  gene_location_file_path, alias_fields = c("hgnc_id", "symbol",
+build_reference_gene_set(featureset_id, gene_annotation_file_path = NULL,
+  gene_location_file_path = NULL, alias_fields = c("hgnc_id", "symbol",
   "alias_symbol", "prev_symbol", "entrez_id", "ensembl_gene_id", "vega_id",
   "ucsc_id", "ena", "refseq_accession", "ccds_id", "uniprot_ids", "pubmed_id",
   "mgd_id", "rgd_id", "cosmic", "omim_id", "mirbase", "homeodb", "snornabase",
