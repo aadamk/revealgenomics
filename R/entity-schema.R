@@ -93,7 +93,7 @@ unique_fields = function(){
 }
 
 is_entity_secured = function(entitynm){
-  length(grep("public", "gh_public")) == 0
+  length(grep("public", find_namespace(entitynm))) == 0
 }
 
 is_entity_versioned = function(entitynm){
