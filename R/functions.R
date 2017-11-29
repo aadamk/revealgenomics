@@ -69,14 +69,12 @@ gh_connect = function(username, password = NULL, host = NULL, port = NULL, proto
     con$db = NULL
   } else {
     all_nmsp = iquery(con$db, "list('namespaces')", schema = "<name:string NOT NULL> [No=0:1,2,0]", return = T)$name
-    con$cache$nmsp_list = all_nmsp[all_nmsp %in% c('public', 'clinical', 'collaboration')]
   }
   
   # Store a copy of connection object in .ghEnv
   # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
   if (TRUE) {
     .ghEnv$db = con$db
-    .ghEnv$cache$nmsp_list = con$cache$nmsp_list
   }
   return(con)
 }
@@ -85,7 +83,6 @@ gh_connect = function(username, password = NULL, host = NULL, port = NULL, proto
 gh_connect2 = function(username, password = NULL, host = NULL, port = NULL, protocol = "https") {
   con = gh_connect(username, password, host, port, protocol)
   .ghEnv$db = NULL
-  .ghEnv$cache$nmsp_list = NA
   return(con)
 }
 
@@ -96,7 +93,6 @@ gh_connect2 = function(username, password = NULL, host = NULL, port = NULL, prot
 use_ghEnv_if_null = function(con) {
   if (is.null(con)) {
     con$db = .ghEnv$db
-    con$cache$nmsp_list = .ghEnv$cache$nmsp_list
   }
   return(con)
 }
@@ -294,18 +290,9 @@ scidb_exists_array = function(arrayName, con = NULL) {
 get_max_id = function(arrayname, con = NULL){
   con = use_ghEnv_if_null(con)
   
-  if (is_entity_secured(arrayname)) { # Lookup array must exist
-    max = iquery(con$db,
-                 paste("aggregate(apply(public.",
-                       strip_namespace(arrayname), "_LOOKUP, id, ",
-                       get_base_idname(arrayname), "), max(id))", sep = ""
-                 ),
-                 return=TRUE)$id_max
-  } else { # Only exists in public namespaces
-    max = iquery(con$db, paste("aggregate(apply(", arrayname,
-                               ", id, ", get_base_idname(arrayname), "), ",
-                               "max(id))", sep=""), return=TRUE)$id_max
-  }
+  max = iquery(con$db, paste("aggregate(apply(", arrayname,
+                             ", id, ", get_base_idname(arrayname), "), ",
+                             "max(id))", sep=""), return=TRUE)$id_max
   if (is.na(max)) max = 0
   return(max)
 }
@@ -974,33 +961,6 @@ select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_v
                                  con = con)
 }
 
-merge_across_namespaces = function(arrayname, mandatory_fields_only = FALSE, con = NULL){
-  stop("Not needed in secure_scan branch")
-  con = use_ghEnv_if_null(con)
-  
-  arrayname = strip_namespace(arrayname)
-  
-  # public namespace first
-  qq = arrayname
-  df = join_info_ontology_and_unpivot(qq, arrayname, mandatory_fields_only = mandatory_fields_only, con = con)
-  for (namespace in con$cache$nmsp_list){
-    if (namespace != 'public'){
-      cat("--DEBUG--: joining with data from namespace:", namespace, "\n")
-      fullnm = paste(namespace, ".", arrayname, sep = "")
-      dfx = join_info_ontology_and_unpivot(fullnm, arrayname, namespace = namespace, 
-                                           mandatory_fields_only = mandatory_fields_only,
-                                           con = con)
-      if (nrow(dfx) > 0) {
-        l = list(df,
-                 dfx)
-        df = rbindlist(l, use.names=TRUE, fill=TRUE)
-      }
-    }
-  }
-  df = as.data.frame(df)
-  if (nrow(df) > 0) {return(df[order(df[, get_base_idname(arrayname)]), ])} else {return(df)}
-}
-
 #' @export
 get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions = TRUE, mandatory_fields_only = FALSE, con = NULL){
   get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrDataset,
@@ -1430,6 +1390,9 @@ latest_version = function(df){
   drop_na_columns(as.data.frame(df))
 }
 
+# For legacy reasons, this function is named find_nmsp_...
+# Before secure_scan(), the namespace was found by a lookup by dataset_id
+# Currently, this function knows the namespace for an entity by entity-type alone
 find_nmsp_filter_on_dataset_id_and_version = function(arrayname, 
                                                       dataset_id, 
                                                       dataset_version, 
@@ -1792,23 +1755,21 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   
   test_register_expression_dataframe(df1)
   
-  namespace_to_insert = unique(find_namespace(id = unique(df1$rnaquantificationset_id), 
-                                              entitynm = .ghEnv$meta$arrRnaquantificationset), con = con)
-  if (length(namespace_to_insert) != 1) stop("Error: Trying to insert expression data into multiple namespaces")
+  df1 = df1[, c('rnaquantificationset_id', 'biosample_id', 'feature_id', 'expression')]
+  adf_expr0 = as.scidb(con$db, 
+                       df1, 
+                       chunk_size=nrow(df1), 
+                       name = "temp_df", 
+                       types = c('int64', 'int64', 'int64', 'float'))
   
-  adf_expr0 = as.scidb(con$db, df1, chunk_size=nrow(df1), name = "temp_df")
-  
-  adf_expr = convert_attr_double_to_int64(arr = adf_expr0, attrname = "rnaquantificationset_id", con = con)
-  adf_expr = convert_attr_double_to_int64(arr = adf_expr, attrname = "biosample_id", con = con)
-  adf_expr = convert_attr_double_to_int64(arr = adf_expr, attrname = "feature_id", con = con)
   qq2 = paste0("apply(", 
-                    adf_expr@name, 
-                    ", expression_count, float(expression),
+               adf_expr0@name, 
+                    ", value, expression,
                     dataset_version, ", dataset_version, ")")
   
-  qq2 = paste0("redimension(", qq2, ", ", scidb::schema(scidb(con$db, .ghEnv$meta$arrRnaquantification)), ")")
+  fullnm = full_arrayname(.ghEnv$meta$arrRnaquantification)
+  qq2 = paste0("redimension(", qq2, ", ", fullnm, ")")
   
-  fullnm = paste(namespace_to_insert, .ghEnv$meta$arrRnaquantification, sep = ".")
   cat("inserting data for", nrow(df1), "expression values into", fullnm, "array \n")
   iquery(con$db, paste("insert(", qq2, ", ", fullnm, ")"))
   # con$db$remove("temp_df")
