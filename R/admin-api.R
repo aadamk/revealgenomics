@@ -203,3 +203,40 @@ set_permissions = function(con = NULL, user_name, dataset_names, allowed)
   max_version = max(iquery(con$db, sprintf("versions(%s)", PERMISSIONS_ARRAY()), return=TRUE)$version_id)
   iquery(con$db, sprintf("remove_versions(%s, %i)", PERMISSIONS_ARRAY(), max_version))
 }
+
+#' grant initial access to a user
+#' 
+#' function to be called while onboarding a user
+#' can only be called by scidbadmin
+#' 
+#' @export
+grant_initial_access = function(con = NULL, user_name) {
+  con = use_ghEnv_if_null(con)
+  if(length(user_name) != 1)
+  {
+    stop("Must specify exactly one user")
+  }
+  user_idx = iquery(con$db, paste0(
+    "project(
+    filter(
+    list('users'),
+    name = '", user_name, "'
+    ),
+    id
+  )"), return=T, only_attributes=T, schema="<id:uint64>[i]"
+  )
+  if(nrow(user_idx) != 1)
+  {
+    stop(paste("Can't find user", user_name))
+  }
+  user_idx = as.numeric(user_idx$id)
+  
+  cat("Grant read access to public namespace\n")
+  iquery(con$db, 
+         paste0("set_role_permissions('", user_name, "', 'namespace', '",
+                scidb4gh:::find_namespace('FEATURE'), "', 'rl')"))
+  cat("Grant list access to secure namespace (required for study level security)\n")
+  iquery(con$db, 
+         paste0("set_role_permissions('", user_name, "', 'namespace', '",
+                scidb4gh:::find_namespace('DATASET'), "', 'l')"))
+}
