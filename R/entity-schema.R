@@ -93,7 +93,10 @@ unique_fields = function(){
 }
 
 is_entity_secured = function(entitynm){
-  length(grep("public", find_namespace(entitynm))) == 0
+  entitynm = strip_namespace(entitynm) # extra QC
+  nmsp = find_namespace(entitynm)
+  if (is.null(nmsp)) stop("unexpected namespace output")
+  length(grep("public", nmsp)) == 0
 }
 
 is_entity_versioned = function(entitynm){
