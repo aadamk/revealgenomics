@@ -224,12 +224,7 @@ search_variants = function(variantset, biosample = NULL, feature = NULL, con = N
     stopifnot(length(unique(biosample$dataset_version))==1)
     if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of variantset and biosample must be same")
   }
-  namespace = find_namespace(id = variantset_id,
-                             entitynm = .ghEnv$meta$arrVariantset,
-                             dflookup = get_variantset_lookup(con = con), 
-                             con = con)
-  cat("Found namespace: ", namespace, "\n")
-  arrayname = paste(namespace, .ghEnv$meta$arrVariant, sep = ".")
+  arrayname = full_arrayname(.ghEnv$meta$arrVariant)
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
   if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
   
