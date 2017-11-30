@@ -2,13 +2,16 @@
 # This function combines duplicate gene names 
 # col1 is the column that is to be retained
 # when col2 is the same as col1, do nothing
+# when col1 is NA, and col2 is not NA, paste col2 into col1
 # When col2 is different from col1, merge into 'column_to_combine_into' 
 # (a '|' separated list of gene names)
 combine_duplicate_column = function(dfx, col1, col2, column_to_combine_into){
   for (i in 1:nrow(dfx)) {
     entry1 = dfx[i, col1]
     entry2 = dfx[i, col2]
-    if (!is.na(entry1) & !is.na(entry2) & entry1 != entry2){
+    if (is.na(entry1) & !is.na(entry2)) {
+      dfx[i, col1] = entry2
+    } else if (!is.na(entry1) & !is.na(entry2) & entry1 != entry2){
       # If `col2` is blank, do nothing
       if (exists('trace_debug')) cat(i, " ", sep = "")
       if (entry2 != "") {
@@ -28,6 +31,7 @@ combine_duplicate_column = function(dfx, col1, col2, column_to_combine_into){
       }
     }
   }
+  
   dfx
 }
 
