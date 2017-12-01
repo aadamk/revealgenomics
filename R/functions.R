@@ -613,10 +613,12 @@ update_mandatory_and_info_fields = function(df, arrayname, con = NULL){
 #' 
 #' Wrapper function that 
 #' (1) registers mandatory fields, 
-#' (2) updates lookup array (based on flag), and 
+#' (2) updates lookup array (based on flag), [always FALSE in secure_scan branch] 
 #' (3) registers flex fields
 register_tuple_update_lookup = function(df, arrayname, updateLookup, con = NULL){
   con = use_ghEnv_if_null(con)
+  
+  if (updateLookup) stop("unexpected in secure_scan branch")
   
   idname = get_idname(arrayname)
   if (any(is.na(df[, idname]))) stop("Dimensions: ", paste(idname, collapse = ", "), " should have had non null values at upload time!")
@@ -626,10 +628,6 @@ register_tuple_update_lookup = function(df, arrayname, updateLookup, con = NULL)
   non_info_cols = c(get_idname(strip_namespace(arrayname)), 
                     mandatory_fields()[[strip_namespace(arrayname)]])
   register_tuple(df = df[, non_info_cols], ids_int64_conv = c(idname, int64_fields), arrayname, con = con)
-  if (updateLookup){
-    new_id = df[, get_base_idname(arrayname)]
-    update_lookup_array(new_id, arrayname, con = con)
-  }
   if(infoArray){
     cat("Registering info for ", nrow(df)," entries in array: ", arrayname, "_INFO\n", sep = "")
     register_info(df, idname, arrayname, con = con)
@@ -649,9 +647,9 @@ register_tuple_return_id = function(df,
   idname = get_idname(arrayname)
   int64_fields = get_int64fields(arrayname)
   
-  mandatory_fields = names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)
-  namespaces_for_entity = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$namespace
-  
+  entitynm = strip_namespace(arrayname)
+  mandatory_fields = mandatory_fields()[[entitynm]]
+
   df = prep_df_fields(df, mandatory_fields)
   
   if (!is.null(dataset_version)) {
@@ -663,7 +661,8 @@ register_tuple_return_id = function(df,
   }
   
   # Find matches by set of unique fields provided by user
-  xx = iquery(con$db, paste("project(", arrayname, ", ", paste(uniq, collapse = ", "), ")", sep = ""), return = TRUE)
+  xx = iquery(con$db, paste("project(", arrayname, ", ", 
+                            paste(uniq[uniq!='dataset_id'], collapse = ", "), ")", sep = ""), return = TRUE)
   matching_entity_ids = find_matches_with_db(df_for_upload = df, df_in_db = xx, unique_fields = uniq)
   nonmatching_idx = which(is.na(matching_entity_ids))
   matching_idx = which(!is.na(matching_entity_ids))
@@ -712,52 +711,13 @@ register_tuple_return_id = function(df,
     new_id = get_max_id(arrayname, con = con) + 1:nrow(df[nonmatching_idx, ])
     df[nonmatching_idx, get_base_idname(arrayname)] = new_id
     
-    updateLookup = ifelse(length(namespaces_for_entity) > 1, TRUE, FALSE) # Lookup array must exist if entity exists in multiple namespaces
-    register_tuple_update_lookup(df = df[nonmatching_idx, ], arrayname = arrayname, updateLookup = updateLookup, con = con)
+    register_tuple_update_lookup(df = df[nonmatching_idx, ], arrayname = arrayname, 
+                                 updateLookup = FALSE, con = con)
   } else {
     cat("--- no completely new entries to register\n")
     new_id = NULL
   }
   return(df[, idname])
-}
-
-update_lookup_array = function(new_id, arrayname, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  URI_414_ERROR_THRESH = 400
-  name = strip_namespace(arrayname)
-  namespace = get_namespace(arrayname)
-  
-  lookuparr = paste(name, "_LOOKUP", sep = "")
-  a = scidb(con$db, lookuparr)
-  
-  if (length(new_id) <= URI_414_ERROR_THRESH) {
-    cat("inserting id-s:", pretty_print(new_id), "into array", lookuparr, "\n")
-    
-    qq = sprintf("apply(build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true), namespace, %s)",
-                 get_base_idname(arrayname), 
-                 length(new_id), 
-                 paste(new_id, collapse="),("), 
-                 paste("'", namespace, "'", sep = ""))
-    qq = paste("redimension(", qq, ", ", scidb::schema(a), ")", sep = "")
-    qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
-    # cat("query:", qq, "\n")
-    iquery(con$db, qq)
-  } else { # alternate upload path when URI can be too long
-    cat("inserting id-s:", pretty_print(new_id), "into array", lookuparr, " - via upload\n")
-    
-    new_id_df = data.frame(new_id = new_id,
-                           namespace = namespace, 
-                           stringsAsFactors = FALSE)
-    colnames(new_id_df)[which(colnames(new_id_df) == 'new_id')] = 
-      get_base_idname(arrayname)
-    uploaded_v0 = as.scidb(con$db, new_id_df)
-    uploaded = convert_attr_double_to_int64(arr = uploaded_v0, attrname = get_base_idname(arrayname), con = con)
-    qq = paste("redimension(", uploaded@name, ", ", scidb::schema(a), ")", sep = "")
-    qq = paste("insert(", qq, ", ", lookuparr, ")", sep = "")
-    # cat("query:", qq, "\n")
-    iquery(con$db, qq)
-  }
 }
 
 #' @export
@@ -867,11 +827,8 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE, con =
     cat("Redimension and insert\n")
     iquery(con$db, query)
     
-    df2 = df
-    df2$dataset_id = NULL
-    
     cat("Now registering info fields\n")
-    register_info(df = prep_df_fields(df2,
+    register_info(df = prep_df_fields(df,
                                       mandatory_fields = non_info_cols),
                   idname = get_idname(arrayname), arrayname = arrayname, 
                   con = con)
@@ -929,16 +886,6 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
                                      con = con)
 }
 
-update_lookup_and_find_namespace_again = function(entitynm, id, con = NULL){
-  cat("updating lookup array for entity:", entitynm, "\n")
-  .ghEnv$cache$lookup[[entitynm]] = entity_lookup(entityName = entitynm, updateCache = TRUE, con = con)
-  namespace = find_namespace(id, entitynm, .ghEnv$cache$lookup[[entitynm]], con = con)
-  if (any(is.na(namespace))) stop(entitynm, " at id: ",
-                                  paste(id[which(is.na(namespace))], collapse = ", "),
-                                  " does not exist\n")
-  return(namespace)
-}
-
 select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_version, 
                                               mandatory_fields_only = FALSE,
                                               con = NULL){
@@ -951,9 +898,9 @@ select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_v
                                         idname = get_base_idname(fullnm),
                                         selected_ids = id)
     } else {
-      qq = form_selector_query_2d_array(arrayname = fullnm,
-                                        dim1 = get_base_idname(fullnm), dim1_selected_ids = id,
-                                        dim2 = "dataset_version", dim2_selected_ids = dataset_version)
+      qq = form_selector_query_secure_array(arrayname = fullnm,
+                                        selected_ids = id,
+                                        dataset_version = dataset_version)
     }
   }
   join_info_ontology_and_unpivot(qq, arrayname = entitynm, namespace=namespace, 
@@ -1166,23 +1113,21 @@ get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
   }
 }
 
-form_selector_query_2d_array = function(arrayname, dim1, dim1_selected_ids, dim2, dim2_selected_ids){
-  dim1_selected_ids = unique(dim1_selected_ids)
-  dim2_selected_ids = ifelse(is.null(dim2_selected_ids), "NULL", dim2_selected_ids)
-  stopifnot(dim2 == "dataset_version" & length(dim2_selected_ids) == 1)
-  sorted=sort(dim1_selected_ids)
+form_selector_query_secure_array = function(arrayname, selected_ids, dataset_version){
+  selected_ids = unique(selected_ids)
+  dataset_version = ifelse(is.null(dataset_version), "NULL", dataset_version)
+  stopifnot(length(dataset_version) == 1)
+  sorted=sort(selected_ids)
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
-  THRESH_K = 15  # limit at which to switch from cross_between_ to cross_join
-  if (length(breaks) == 2) # completely contiguous set of tickers; use `between`
+  THRESH_K = 150  # limit at which to switch from filter to cross_join
+  if (length(breaks) <= THRESH_K) # completely contiguous set of tickers; use `between`
   {
-    query =sprintf("between(%s, %d, %s, %d, %s)", arrayname, sorted[1], dim2_selected_ids,
-                   sorted[length(sorted)], dim2_selected_ids)
-  }
-  else if (length(breaks) >2 & length(breaks) <= THRESH_K + 2) # few sets of contiguous tickers; use `cross_between`
-  {
-    cb_pts =  paste( sapply(seq(length(breaks)-1), function(i) sprintf("%d, %s, %d, %s", sorted[breaks[i]+1], dim2_selected_ids,
-                                                                       sorted[breaks[i+1]], dim2_selected_ids)), collapse=" , ")
-    query=sprintf("cross_between_(%s, %s)", arrayname, cb_pts)
+    subq = formulate_base_selection_query(arrayname, selected_ids)
+    if (dataset_version != "NULL") {
+      subq =  paste0("dataset_version=", dataset_version, 
+                              " AND ", subq)
+    }
+    query =  paste0("filter(", arrayname, ", ", subq, ")")
   }
   else # mostly non-contiguous tickers, use `cross_join`
   {
@@ -1191,11 +1136,11 @@ form_selector_query_2d_array = function(arrayname, dim1, dim1_selected_ids, dim2
     diminfo = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims
     upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
-                     length(dim1_selected_ids), 
-                     paste(dim1_selected_ids, sep=",", collapse="),(")
+                     length(selected_ids), 
+                     paste(selected_ids, sep=",", collapse="),(")
     )
-    apply_dim2 = paste("apply(", upload, ", ", dim2, ", ", dim2_selected_ids, ")", sep = "")
-    redim = paste("redimension(", apply_dim2, ", <idx:int64>[", idname, "])", sep = "")
+    apply_dataset_version = paste("apply(", upload, ", dataset_version, ", dataset_version, ")", sep = "")
+    redim = paste("redimension(", apply_dataset_version, ", <idx:int64>[", idname, "])", sep = "")
     
     query= paste("project(
                  cross_join(",
@@ -1755,17 +1700,18 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   
   test_register_expression_dataframe(df1)
   
-  df1 = df1[, c('rnaquantificationset_id', 'biosample_id', 'feature_id', 'expression')]
+  # df1 = df1[, mandatory_fields()[[.ghEnv$meta$arrRnaquantification]]]
+  df1 = df1[, c('dataset_id', 'rnaquantificationset_id', 'biosample_id', 
+                'feature_id', 'value')]
   adf_expr0 = as.scidb(con$db, 
                        df1, 
                        chunk_size=nrow(df1), 
                        name = "temp_df", 
-                       types = c('int64', 'int64', 'int64', 'float'))
+                       types = c('int64', 'int64', 'int64', 'int64', 'float'))
   
   qq2 = paste0("apply(", 
                adf_expr0@name, 
-                    ", value, expression,
-                    dataset_version, ", dataset_version, ")")
+                    ", dataset_version, ", dataset_version, ")")
   
   fullnm = full_arrayname(.ghEnv$meta$arrRnaquantification)
   qq2 = paste0("redimension(", qq2, ", ", fullnm, ")")
@@ -1952,13 +1898,14 @@ register_expression_matrix = function(filepath,
                             joinBack2@name, ", ",
                             "value, dcast(a, float(null)), ",
                             "rnaquantificationset_id, ", rnaquantificationset_id,
+                            ", dataset_id, ", dataset_id, 
                             ", dataset_version, ", dataset_version,
                             ")", sep = "")
     )
     
     # Need to insert the expression matrix table into one big array
     insertable_qq = paste0("redimension(", gct_table@name, ", ",
-                                    scidb::schema(scidb(con$db, arrayname)), ")") # TODO: would be good to not have this resolution clash
+                                    arrayname, ")") # TODO: would be good to not have this resolution clash
     
     if (scidb_exists_array(arrayname, con = con)) {
       cat(paste("Inserting expression matrix data into", arrayname, "at dataset_version", dataset_version, "\n"))

@@ -35,15 +35,15 @@ array:
       created: string
       updated: string
     dims: 
-      dataset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - project_id
@@ -60,7 +60,6 @@ array:
     namespace: 
       - gh_secure
     attributes: 
-      dataset_id: int64
       name: string
       description: string
       species_: int64
@@ -68,15 +67,20 @@ array:
       created: string
       updated: string
     dims: 
-      individual_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      individual_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -93,7 +97,6 @@ array:
     namespace: 
       - gh_secure
     attributes: 
-      dataset_id: int64
       name: string
       description: string
       disease_: int64
@@ -101,15 +104,20 @@ array:
       created: string
       updated: string
     dims: 
-      biosample_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      biosample_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -126,7 +134,6 @@ array:
     namespace: 
       - gh_secure
     attributes:
-      dataset_id: int64
       name: string
       description: string
       molecule: string
@@ -134,15 +141,20 @@ array:
       created: string
       updated: string
     dims: 
-      experimentset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      experimentset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -159,22 +171,26 @@ array:
     namespace:
       - gh_secure
     attributes:
-      dataset_id: int64
       experimentset_id: int64
       entity: string
       idname: string
       measurementset_id: int64
       name: string
     dims: 
-      measurementset_arr_index:
-        start: 0
-        end: Inf
-        chunk_interval: 1000000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      measurementset_arr_index:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
         overlap: 0
     unique_fields:
       - entity
@@ -190,7 +206,6 @@ array:
     namespace: 
       - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       measurementset_id: int64
       measurement_entity: string
@@ -198,15 +213,20 @@ array:
       created: string
       updated: string
     dims: 
-      measurement_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      measurement_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - experimentset_id
@@ -225,23 +245,26 @@ array:
     namespace: 
       - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       name: string
       description: string
-#      file_path: string
       created: string
       updated: string
     dims: 
-      rnaquantificationset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      rnaquantificationset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -266,6 +289,11 @@ array:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
         overlap: 0
       rnaquantificationset_id:
         start: 0
@@ -293,7 +321,6 @@ array:
     namespace: 
       - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       referenceset_id: int64
       name: string
@@ -301,15 +328,20 @@ array:
       created: string
       updated: string
     dims: 
-      variantset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      variantset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -339,6 +371,11 @@ array:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
         overlap: 0
       variantset_id:
         start: 0
@@ -372,22 +409,26 @@ array:
     namespace: 
       - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       name: string
       description: string
       created: string
       updated: string
     dims: 
-      fusionset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      fusionset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -425,6 +466,11 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
+        overlap: 0
       fusionset_id:
         start: 0
         end: Inf
@@ -451,22 +497,26 @@ array:
     namespace: 
       - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       name: string
       description: string
       created: string
       updated: string
     dims: 
-      copynumberset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      copynumberset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -496,6 +546,11 @@ array:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
         overlap: 0
       experimentset_id:
         start: 0
@@ -531,6 +586,11 @@ array:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
         overlap: 0
       copynumberset_id:
         start: 0

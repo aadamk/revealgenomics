@@ -26,9 +26,9 @@ formulate_base_selection_query = function(fullarrayname, id){
       left = sorted[breaks[i]+1]
       right = sorted[breaks[i+1]]
       if (left == right) {
-        paste("(", idname, "=", right, ")")
+        paste0("(", idname, "=", right, ")")
       } else {
-        sprintf("(%s >= %d AND %s <= %d)", idname, left,
+        sprintf("(%s>=%d AND %s<=%d)", idname, left,
                 idname, right)
       }
     }), collapse=" OR ")

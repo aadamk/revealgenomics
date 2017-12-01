@@ -250,9 +250,9 @@ test_register_variant = function(df){
 }
 
 test_register_expression_dataframe = function(df1) {
-  stopifnot(c('rnaquantificationset_id', 'biosample_id', 'feature_id', 'expression')
-            %in% colnames(df1))
-  
+  test_mandatory_fields(df = df1, arrayname = .ghEnv$meta$arrRnaquantification, 
+                        silent = TRUE)
+
   check_entity_exists_at_id(entity = 'RNAQUANTIFICATIONSET',
                             id = sort(unique(df1$rnaquantificationset_id)))
   check_entity_exists_at_id(entity = 'BIOSAMPLE',

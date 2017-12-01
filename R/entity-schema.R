@@ -33,21 +33,33 @@ yaml_to_attr_string = function(attributes, compression_on = FALSE){
   }
 }
 
+#' mandatory fields (internal function)
+#' 
+#' return mandatory fields while registering an entity
+#' 
+#' 'DATASET': attributes
+#' other secure metadata entities (e.g. 'INDIVIDUAL', 'BIOSAMPLE', 'BIOSAMPLE'): 'dataset_id' and attributes
+#' public metadata entities (e.g. 'ONTOLOGY'): attributes
+#' feature entities: attributes
 get_mandatory_fields_for_register_entity = function(arrayname){
-  arrayname_ = strip_namespace(arrayname)
-  attrs = names(.ghEnv$meta$L$array[[arrayname_]]$attributes)
+  entitynm = strip_namespace(arrayname)
+  attrs = names(.ghEnv$meta$L$array[[entitynm]]$attributes)
   attrs = attrs[!(attrs %in% c('created', 'updated'))]
   attrs
   
   zz = get_entity_info()
-  entity_class = zz[zz$entity == arrayname_, ]$class
+  entity_class = zz[zz$entity == entitynm, ]$class
   
   if (entity_class == 'metadata') {
-    mandatory_fields = attrs
+    if (is_entity_secured(entitynm) & entitynm != .ghEnv$meta$arrDataset) {
+      mandatory_fields = c('dataset_id', attrs)
+    } else {
+      mandatory_fields = attrs
+    }
   } else if (entity_class == 'featuredata') {
     mandatory_fields = attrs
   } else if (entity_class == 'measurementdata') {
-    dims = get_idname(arrayname_)
+    dims = get_idname(entitynm)
     dims = dims[!(dims %in% c('dataset_version'))]
     mandatory_fields = c(dims, attrs)
   } else {
@@ -56,6 +68,15 @@ get_mandatory_fields_for_register_entity = function(arrayname){
   mandatory_fields
 }
 
+#' mandatory fields 
+#' 
+#' return mandatory fields while registering entities
+#' 
+#' 'DATASET': attributes
+#' other secure metadata entities (e.g. 'INDIVIDUAL', 'BIOSAMPLE', 'BIOSAMPLE'): 'dataset_id' and attributes
+#' public metadata entities (e.g. 'ONTOLOGY'): attributes
+#' feature entities: attributes
+#' 
 #' @export
 mandatory_fields = function(){
   entitynames = get_entity_names()
@@ -110,8 +131,14 @@ get_idname = function(arrayname){
 }
 
 get_base_idname = function(arrayname){
-  dims = get_idname(arrayname)
-  dims[!(dims %in% "dataset_version")]
+  entitynm = strip_namespace(arrayname)
+  dims = get_idname(entitynm)
+  
+  if (entitynm != .ghEnv$meta$arrDataset) {
+    dims[!(dims %in% c("dataset_id", "dataset_version"))]
+  } else {
+    dims[!(dims %in% "dataset_version")]
+  }
 }
 
 #' @export
