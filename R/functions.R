@@ -892,6 +892,7 @@ select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_v
   fullnm = paste(namespace, ".", entitynm, sep = "")
   if (is.null(id)) {
     qq = full_arrayname(entitynm)
+    if (is_entity_secured(entitynm)) qq = paste0("secure_scan(", qq, ")")
   } else {
     if (length(get_idname(entitynm)) == 1) {
       qq = form_selector_query_1d_array(arrayname = fullnm,
@@ -1119,21 +1120,20 @@ form_selector_query_secure_array = function(arrayname, selected_ids, dataset_ver
   stopifnot(length(dataset_version) == 1)
   sorted=sort(selected_ids)
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
+  entitynm = strip_namespace(arrayname)
+  if (is_entity_secured(entitynm)) arrayname = paste0("secure_scan(", arrayname, ")")
   THRESH_K = 150  # limit at which to switch from filter to cross_join
-  if (length(breaks) <= THRESH_K) # completely contiguous set of tickers; use `between`
-  {
+  if (length(breaks) <= THRESH_K) { # completely contiguous set of tickers; use `between`
     subq = formulate_base_selection_query(arrayname, selected_ids)
     if (dataset_version != "NULL") {
       subq =  paste0("dataset_version=", dataset_version, 
                               " AND ", subq)
     }
     query =  paste0("filter(", arrayname, ", ", subq, ")")
-  }
-  else # mostly non-contiguous tickers, use `cross_join`
-  {
+  } else { # mostly non-contiguous tickers, use `cross_join`
     # Formulate the cross_join query
-    idname = get_base_idname(arrayname)
-    diminfo = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims
+    idname = get_base_idname(entitynm)
+    diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
     upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
                      length(selected_ids), 
@@ -1149,7 +1149,7 @@ form_selector_query_secure_array = function(arrayname, selected_ids, dataset_ver
                  "A.", idname, ", " ,
                  "B.", idname,
                  "),",
-                 paste(names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes), collapse = ", "),
+                 paste(names(.ghEnv$meta$L$array[[entitynm]]$attributes), collapse = ", "),
                  ")",
                  sep = "")
   }
@@ -1161,6 +1161,8 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
   sorted=sort(selected_ids)
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
   THRESH_K = 15  # limit at which to switch from cross_between_ to cross_join
+  entitynm = strip_namespace(arrayname)
+  if (is_entity_secured(entitynm)) arrayname = paste0("secure_scan(", arrayname, ")")
   if (length(breaks) == 2) # completely contiguous set of tickers; use `between`
   {
     query =sprintf("between(%s, %d, %d)", arrayname, sorted[1], sorted[length(sorted)])
@@ -1173,7 +1175,7 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
   else # mostly non-contiguous tickers, use `cross_join`
   {
     # Formulate the cross_join query
-    diminfo = .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$dims
+    diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
     if (class(diminfo) == "character") chunksize = 1000000 else stop("code not covered")
     upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
@@ -1187,7 +1189,7 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
                  "A.", idname, ", " ,
                  "B.", idname,
                  "),",
-                 paste(names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes), collapse = ", "),
+                 paste(names(.ghEnv$meta$L$array[[entitynm]]$attributes), collapse = ", "),
                  ")",
                  sep = "")
   }
@@ -1601,17 +1603,27 @@ unpivot = function(df1, arrayname) {
 
 join_info = function(qq, arrayname, namespace = 'public', mandatory_fields_only = FALSE, con = NULL) {
   con = use_ghEnv_if_null(con)
+  entitynm = strip_namespace(arrayname)
+  if (is_entity_secured(entitynm)) {
+    info_array = paste0("secure_scan(", namespace, ".", arrayname, "_INFO)")
+  } else {
+    info_array = paste0(                namespace, ".", arrayname, "_INFO" )
+  }
   qq1 = qq
   idname = get_idname(arrayname)
   # Join INFO array
   if (!mandatory_fields_only) {
     if (exists('debug_trace')) {t1 = proc.time()}
     if (FALSE){ # TODO: See why search_individuals(dataset_id = 1) is so slow; the two options here did not make a difference
-      qq1 = paste("cross_join(", qq1, " as A, ", namespace, ".", strip_namespace(arrayname), "_INFO as B, A.", idname, ", B.", idname, ")", sep = "")
+      stop("have not tested secure_scan code-path yet")
+      qq1 = paste("cross_join(", qq1, " as A, ", info_array, " as B, A.", idname, ", B.", idname, ")", sep = "")
     } else if (FALSE) { cat("== Swapping order of cross join between ARRAY_INFO and select(ARRAY, ..)\n")
-      qq1 = paste("cross_join(", namespace, ".", strip_namespace(arrayname), "_INFO as A, ", qq1, " as B, A.", idname, ", B.", idname, ")", sep = "")
+      stop("have not tested secure_scan code-path yet")
+      qq1 = paste("cross_join(", info_array, " as A, ", qq1, " as B, A.", idname, ", B.", idname, ")", sep = "")
     } else {
-      qq1 = paste("equi_join(", qq1, ", ", namespace, ".", strip_namespace(arrayname), "_INFO, 'left_names=", paste(idname, collapse = ","), "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')", sep = "")
+      qq1 = paste0("equi_join(", qq1, ", ", info_array, 
+                  ", 'left_names=", paste(idname, collapse = ","), 
+                  "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')")
     }
   }
   x2 = iquery(con$db, qq1, return = TRUE)
