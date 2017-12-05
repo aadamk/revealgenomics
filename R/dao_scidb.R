@@ -78,14 +78,8 @@ dao_get_entity = function(entity, con){
   
   idname = scidb4gh:::get_idname(arrayname)
   
-  nmsp_list = con$cache$nmsp_list
-  
-  if (length(nmsp_list) == 1) {
-    inner_query = paste0(arrayname, ", ", arrayname, "_INFO")
-  } else if (length(nmsp_list) == 2) {
-    inner_query = paste0("merge(public.", arrayname, ", collaboration.", arrayname, "), 
-                          merge(public.", arrayname, "_INFO, collaboration.", arrayname, "_INFO)")
-  } else { stop("More scidb4gh namespaces than expected") }
+  inner_query = paste0("secure_scan(", full_arrayname(entity), 
+                       "), secure_scan(", full_arrayname(entity), "_INFO)")
   
   qq = paste0("equi_join(", 
                        inner_query, 

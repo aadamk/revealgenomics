@@ -17,13 +17,7 @@ search_rnaquantification = function(rnaquantificationset = NULL,
                                     biosample = NULL,
                                     feature = NULL,
                                     formExpressionSet = TRUE,
-                                    formDataModel = FALSE, 
                                     con = NULL){
-  if (formDataModel) {
-    if (!formExpressionSet) {
-      stop("to form custom data model, you also need to set `formExpressionSet = TRUE # TRUE by default`")
-    }
-  }
   if (!is.null(rnaquantificationset)) {rnaquantificationset_id = rnaquantificationset$rnaquantificationset_id} else {
     stop("rnaquantificationset must be supplied"); rnaquantificationset_id = NULL
   }
@@ -31,17 +25,25 @@ search_rnaquantification = function(rnaquantificationset = NULL,
     stop("multiple dataset versions in supplied rnaquantificationset");
   }
   dataset_version = unique(rnaquantificationset$dataset_version)
+  dataset_id =      unique(rnaquantificationset$dataset_id)
   if (!is.null(biosample)) {
     stopifnot(length(unique(biosample$dataset_version))==1)
     stopifnot(unique(biosample$dataset_version)==dataset_version)
   }
-  namespace = find_namespace(id = rnaquantificationset_id,
-                             entitynm = .ghEnv$meta$arrRnaquantificationset,
-                             dflookup = get_rnaquantificationset_lookup(con = con),
-                             con = con)
-  arrayname = paste(namespace, .ghEnv$meta$arrRnaquantification, sep = ".")
-  if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
-  if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
+  arrayname = full_arrayname(.ghEnv$meta$arrRnaquantification)
+  if (!is.null(biosample)) {
+    biosample_id = biosample$biosample_id
+    if (dataset_id != unique(biosample$dataset_id)) {
+      stop("conflicting dataset_id in rnaquantificationset and biosample") 
+    }
+  } else {
+    biosample_id = NULL
+    }
+  if (!is.null(feature)) {
+    feature_id = feature$feature_id
+  } else {
+    feature_id = NULL
+  }
   
   if (exists('debug_trace')) cat("retrieving expression data from server\n")
   res = search_rnaquantification_scidb(arrayname,
@@ -49,6 +51,7 @@ search_rnaquantification = function(rnaquantificationset = NULL,
                                        biosample_id,
                                        feature_id,
                                        dataset_version = dataset_version,
+                                       dataset_id = dataset_id, 
                                        con = con)
   if (nrow(res) == 0) return(NULL)
   if (!formExpressionSet) return(res)
@@ -82,15 +85,7 @@ search_rnaquantification = function(rnaquantificationset = NULL,
   
   expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature)
   
-  if (!formDataModel) return(expressionSet)
-  
-  # Form custom data model
-  es = expressionSetObject$new(NULL, NULL, NULL)
-  es$setExpressionMatrix(expressionMatrix = exprs(expressionSet))
-  es$setFeatureData(featureData = expressionSet@featureData@data)
-  es$setPhenotypeData(phenotypeData = expressionSet@phenoData@data)
-  
-  return(es)
+  return(expressionSet)
 }
 
 formulate_list_expression_set = function(expr_df, dataset_version, rnaquantificationset, biosample, feature){
@@ -105,6 +100,7 @@ search_rnaquantification_scidb = function(arrayname,
                                           biosample_id,
                                           feature_id,
                                           dataset_version,
+                                          dataset_id,
                                           con = NULL){
   con = use_ghEnv_if_null(con)
   tt = scidb(con$db, arrayname)
@@ -112,7 +108,7 @@ search_rnaquantification_scidb = function(arrayname,
   if (is.null(dataset_version)) dataset_version = "NULL"
   if (length(dataset_version) != 1) {stop("cannot specify one dataset_version at a time")}
   
-  qq = arrayname
+  qq = paste0("secure_scan(", arrayname, ")")
   if (!is.null(rnaquantificationset_id) & !is.null(biosample_id) & !is.null(feature_id)) { # all 3 selections made by user
     if (length(rnaquantificationset_id) == 1 & length(biosample_id) == 1 & length(feature_id) == 1) {
       qq = paste("between(",
@@ -136,33 +132,20 @@ search_rnaquantification_scidb = function(arrayname,
           data.frame(biosample_id = as.integer(biosample_id))),
         data.frame(feature_id = as.integer(feature_id)))
       if (TRUE){ # Return data using join
+        selector$dataset_id = dataset_id
         selector$flag = TRUE
         # t1 = proc.time()
-        xx = as.scidb(con$db, selector)
-        # print(proc.time()-t1)
-        qq2 = paste("apply(", xx@name, ",
-                    dataset_version_, int64(dataset_version),
-                    rnaquantificationset_id_, int64(rnaquantificationset_id),
-                    biosample_id_, int64(biosample_id),
-                    feature_id_, int64(feature_id))")
-        qq2 = paste("cast(", qq2, ", <
-                    dataset_version_old:int32,
-                    rnaquantificationset_id_old:int32,
-                    biosample_id_old:int32,
-                    feature_id_old:int32,
-                    flag:bool,
-                    dataset_version:int64,
-                    rnaquantificationset_id:int64,
-                    biosample_id:int64,
-                    feature_id:int64
-                    >
-                    [tuple_no,dst_instance_id,src_instance_id] )")
-        qq2 = paste("redimension(", qq2, ", <flag:bool>[", yaml_to_dim_str(.ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims), "])")
+        xx = as.scidb(con$db, selector,
+                      types = c(rep('int64', ncol(selector)-1), 'bool'))
+        qq2 = paste("redimension(", xx@name, 
+                    ", <flag:bool>[", 
+                    yaml_to_dim_str(
+                      .ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims), "])")
 
         qq = paste("join(",
                    qq, ",",
                    qq2, ")")
-        qq = paste("project(", qq, ", expression_count)")
+        qq = paste("project(", qq, ", value)")
         res = iquery(con$db, qq, return = T)
       } else { # Return data using cross_between_
         stop("Code needs to be added here to support inclusion of `dataset_version` in expression matrix schema")
@@ -196,7 +179,8 @@ search_rnaquantification_scidb = function(arrayname,
   } else if (!is.null(rnaquantificationset_id) & is.null(biosample_id) & is.null(feature_id)) { # user selected rqs only
     if (exists('debug_trace')) cat("Only RNAQuantificationSet is selected.\n")
     if (length(rnaquantificationset_id) == 1){
-      qq = paste("between(", qq, ",", dataset_version, ",", rnaquantificationset_id, ",NULL,NULL,", dataset_version, ",", rnaquantificationset_id, ",NULL,NULL)", sep = "")
+      qq = paste0("filter(", qq, ", rnaquantificationset_id=", rnaquantificationset_id, 
+                                 " AND dataset_version=", dataset_version, ")")
     } else {
       stop("code for multiple rnaquantificationset_id to be added. Alternatively, call the search function by individual rnaquantificationset_id.")
     }
@@ -248,50 +232,42 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
   if (is.null(variantset_id)) stop("variantset_id must be supplied")
   if (length(variantset_id) != 1) stop("can handle only one variantset_id at a time")
   
-  left_query = paste("between(", arrayname,
-                     ", ", dataset_version, ", ", variantset_id, ", null, null, null",
-                     ", ", dataset_version, ", ", variantset_id, ", null, null, null)", sep = "")
-  right_query = paste("between(", arrayname, "_INFO",
-                      ", ", dataset_version, ", ", variantset_id, ", null, null, null, null",
-                      ", ", dataset_version, ", ", variantset_id, ", null, null, null, null)", sep = "")
+  left_query = paste0("filter(secure_scan(", arrayname, 
+                             "), dataset_version=", dataset_version, 
+                             " AND variantset_id=", variantset_id, ")")
+  right_query = paste0("filter(secure_scan(", arrayname, 
+                      "_INFO), dataset_version=", dataset_version, 
+                              " AND variantset_id=", variantset_id, ")")
   
   if (!is.null(biosample_id)){
     if (length(biosample_id) == 1) {
-      left_query = paste("between(", left_query,
-                         ", null, null, ", biosample_id, ", null, null",
-                         ", null, null, ", biosample_id, ", null, null)", sep = "")
-      right_query = paste("between(", right_query,
-                          ", null, null, ", biosample_id, ", null, null, null",
-                          ", null, null, ", biosample_id, ", null, null, null)", sep = "")
+      left_query = paste0("filter(", left_query,
+                         ", biosample_id=", biosample_id, ")")
+      right_query = paste0("filter(", right_query,
+                          ", biosample_id=", biosample_id, ")")
     } else {
-      left_query = paste("filter(", left_query, 
+      left_query = paste0("filter(", left_query, 
                          ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
                                                               id = biosample_id), ")")
-      right_query = paste("filter(", right_query, 
+      right_query = paste0("filter(", right_query, 
                           ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
                                                                id = biosample_id), ")")
-      # print(left_query)
-      # print(right_query)
     }
   }
   
   if (!is.null(feature_id)){
     if (length(feature_id) == 1) {
-      left_query = paste("between(", left_query,
-                         ", null, null, null, ", feature_id, ", null",
-                         ", null, null, null, ", feature_id, ", null)", sep = "")
-      right_query = paste("between(", right_query,
-                          ", null, null, null, ", feature_id, ", null, null",
-                          ", null, null, null, ", feature_id, ", null, null)", sep = "")
+      left_query = paste0("filter(", left_query,
+                         ", feature_id=", feature_id, ")")
+      right_query = paste0("filter(", right_query,
+                          ", feature_id=", feature_id, ")")
     } else {
-      left_query = paste("filter(", left_query, 
+      left_query = paste0("filter(", left_query, 
                          ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
                                                               id = feature_id), ")")
-      right_query = paste("filter(", right_query, 
+      right_query = paste0("filter(", right_query, 
                           ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
                                                                id = feature_id), ")")
-      # print(left_query)
-      # print(right_query)
     }
   }
   
