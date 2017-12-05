@@ -239,4 +239,17 @@ grant_initial_access = function(con = NULL, user_name) {
   iquery(con$db, 
          paste0("set_role_permissions('", user_name, "', 'namespace', '",
                 scidb4gh:::find_namespace('DATASET'), "', 'l')"))
+  cat("Granting access to publc studies\n")
+  studylist = iquery(con$db, "project(gh_secure.DATASET, public)", return = T)
+  studylist$dataset_version = NULL
+  studylist = unique(studylist)
+  studylist = studylist[studylist$public, ]
+  
+  query = paste0("build(<dataset_id:int64>
+                   [dataset_id_idx=1:",nrow(studylist),"],", 
+                   "'[", paste0(studylist$dataset_id, collapse = ","),"]',true )")
+  query = paste0("apply(", query, ",user_id,", user_idx, ",access, true)")
+  query = paste0("redimension(", query, ", ", PERMISSIONS_ARRAY(), ")")
+  query = paste0("insert(", query, ", ", PERMISSIONS_ARRAY(), ")")
+  iquery(con1$db, query)
 }
