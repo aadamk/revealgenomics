@@ -124,6 +124,15 @@ is_entity_versioned = function(entitynm){
   "dataset_version" %in% get_idname(entitynm)
 }
 
+#' does infoArray exist for given entity
+#' 
+#' flexible fields
+get_entity_infoArrayExists = function(entitynm) {
+  status = .ghEnv$meta$L$array[[entitynm]]$infoArray
+  if (is.null(status)) stop("infoArray status must be present for all entities")
+  status
+}
+
 get_idname = function(arrayname){
   local_arrnm = strip_namespace(arrayname)
   idname = .ghEnv$meta$L$array[[local_arrnm]]$dims

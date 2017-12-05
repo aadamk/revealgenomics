@@ -348,30 +348,23 @@ register_project = function(df,
 
 #' @export
 register_dataset = function(df,
+                            public = FALSE,
                             dataset_version = 1,
                             only_test = FALSE,
                             con = NULL
 ){
   con = use_ghEnv_if_null(con)
   
+  stopifnot(class(public) == 'logical')
+  
   uniq = unique_fields()[[.ghEnv$meta$arrDataset]]
   
+  df$public = public
   test_register_dataset(df, uniq, dataset_version, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = full_arrayname(.ghEnv$meta$arrDataset)
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version, con = con)
   } # end of if (!only_test)
-}
-
-find_namespace_old = function(id, entitynm, dflookup = NULL, con = NULL){
-  stop("Not needed in secure_scan branch")
-  con = use_ghEnv_if_null(con)
-  
-  if (is.null(dflookup)) { # if need to download the lookup array from scidb
-    lookuparr = paste(entitynm, "_LOOKUP", sep = "")
-    dflookup = iquery(con$db, lookuparr, return = T)
-  }
-  dflookup[match(id, dflookup[, get_base_idname(entitynm)]), ]$namespace
 }
 
 #' @export
@@ -880,15 +873,7 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
                                  con = NULL){
   con = use_ghEnv_if_null(con)
   namespace = find_namespace(entitynm)
-  select_from_1d_entity_by_namespace(namespace = namespace, entitynm, 
-                                     id = id, dataset_version = dataset_version, 
-                                     mandatory_fields_only = mandatory_fields_only,
-                                     con = con)
-}
 
-select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_version, 
-                                              mandatory_fields_only = FALSE,
-                                              con = NULL){
   fullnm = paste(namespace, ".", entitynm, sep = "")
   if (is.null(id)) {
     qq = full_arrayname(entitynm)
@@ -900,14 +885,19 @@ select_from_1d_entity_by_namespace = function(namespace, entitynm, id, dataset_v
                                         selected_ids = id)
     } else {
       qq = form_selector_query_secure_array(arrayname = fullnm,
-                                        selected_ids = id,
-                                        dataset_version = dataset_version)
+                                            selected_ids = id,
+                                            dataset_version = dataset_version)
     }
   }
-  join_info_ontology_and_unpivot(qq, arrayname = entitynm, namespace=namespace, 
-                                 mandatory_fields_only = mandatory_fields_only,
-                                 con = con)
+  if (get_entity_infoArrayExists(entitynm)) {
+    join_info_ontology_and_unpivot(qq, arrayname = entitynm, namespace=namespace, 
+                                   mandatory_fields_only = mandatory_fields_only,
+                                   con = con)
+  } else {
+    iquery(con$db, qq, return = TRUE)
+  }
 }
+
 
 #' @export
 get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions = TRUE, mandatory_fields_only = FALSE, con = NULL){
@@ -1012,43 +1002,20 @@ get_copynumberset = function(copynumberset_id = NULL, dataset_version = NULL, al
 
 #' @export
 get_featuresets= function(featureset_id = NULL, con = NULL){
-  get_unversioned_public_metadata_entity(arrayname = full_arrayname(.ghEnv$meta$arrFeatureset), 
-                                         id = featureset_id,
-                                         con = con)
+  select_from_1d_entity(entitynm = .ghEnv$meta$arrFeatureset, 
+                        id = featureset_id, con = con)
 }
 
 get_feature_synonym = function(feature_synonym_id = NULL, con = NULL){
-  get_unversioned_public_metadata_entity(arrayname = full_arrayname(.ghEnv$meta$arrFeatureSynonym), 
-                                         id = feature_synonym_id, 
-                                         infoArray = FALSE,
-                                         con = con)
+  select_from_1d_entity(entitynm = .ghEnv$meta$arrFeatureSynonym, 
+                        id = feature_synonym_id, con = con)
 }
 
-get_unversioned_public_metadata_entity = function(arrayname, id, infoArray = TRUE, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  local_arrnm = strip_namespace(arrayname)
-  idname = get_idname(arrayname)
-  stopifnot(class(idname) == "character")
-  
-  qq = arrayname
-  if (!is.null(id)) {
-    qq = form_selector_query_1d_array(arrayname, idname, id)
-  }
-  if (infoArray) {
-    join_info_ontology_and_unpivot(qq, arrayname, 
-                                   namespace = get_namespace(arrayname),
-                                   con = con)
-  } else {
-    iquery(con$db, qq, return = TRUE)
-  }
-}
 
 #' @export
 get_referenceset = function(referenceset_id = NULL, con = NULL){
-  get_unversioned_public_metadata_entity(arrayname = full_arrayname(.ghEnv$meta$arrReferenceset),
-                                         id = referenceset_id,
-                                         con = NULL)
+  select_from_1d_entity(entitynm = .ghEnv$meta$arrReferenceset, id = 
+                          referenceset_id, con = con)
 }
 
 #' @export
@@ -1124,7 +1091,7 @@ form_selector_query_secure_array = function(arrayname, selected_ids, dataset_ver
   if (is_entity_secured(entitynm)) arrayname = paste0("secure_scan(", arrayname, ")")
   THRESH_K = 150  # limit at which to switch from filter to cross_join
   if (length(breaks) <= THRESH_K) { # completely contiguous set of tickers; use `between`
-    subq = formulate_base_selection_query(arrayname, selected_ids)
+    subq = formulate_base_selection_query(entitynm, selected_ids)
     if (dataset_version != "NULL") {
       subq =  paste0("dataset_version=", dataset_version, 
                               " AND ", subq)
@@ -1348,7 +1315,7 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname,
   
   qq = arrayname
   if (!is.null(dataset_id)) {
-    fullnm = full_arrayname(qq)
+    fullnm = paste0("secure_scan(", full_arrayname(qq), ")")
     if (is.null(dataset_version)) {
       qq = paste0("filter(", fullnm, ", ", "dataset_id = ", dataset_id, ")")
     } else {
@@ -1544,44 +1511,6 @@ get_rnaquantification_counts = function(rnaquantificationset_id = NULL, con = NU
   return(c)
 }
 
-join_info_ontology_and_unpivot_old = function(qq, arrayname, namespace = 'public', mandatory_fields_only = FALSE, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  unpivot = TRUE
-  idname = get_idname(arrayname)
-  
-  qq1 = qq
-  # Join INFO array
-  if (!mandatory_fields_only) {
-    if (exists('debug_trace')) {t1 = proc.time()}
-    if (FALSE){ # TODO: See why search_individuals(dataset_id = 1) is so slow; the two options here did not make a difference
-      qq1 = paste("cross_join(", qq1, " as A, ", namespace, ".", arrayname, "_INFO as B, A.", idname, ", B.", idname, ")", sep = "")
-    } else if (FALSE) { cat("== Swapping order of cross join between ARRAY_INFO and select(ARRAY, ..)\n")
-      qq1 = paste("cross_join(", namespace, ".", arrayname, "_INFO as A, ", qq1, " as B, A.", idname, ", B.", idname, ")", sep = "")
-    } else {
-      qq1 = paste("equi_join(", qq1, ", ", namespace, ".", arrayname, "_INFO, 'left_names=", paste(idname, collapse = ","), "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')", sep = "")
-    }
-  }
-  x2 = iquery(con$db, qq1, return = TRUE)
-
-  if (exists('debug_trace')) {cat("join with info:\n"); print( proc.time()-t1 )}
-  
-  if (nrow(x2) > 0 & sum(colnames(x2) %in% c("key", "val")) == 2 & unpivot){ # If key val pairs exist and need to be unpivoted
-    if (exists('debug_trace')) {t1 = proc.time()}
-    x3 = unpivot_key_value_pairs(df = x2, arrayname = arrayname)
-    if (exists('debug_trace')) {cat("unpivot:\n"); print( proc.time()-t1 )}
-  } else {
-    if (nrow(x2) > 0) {
-      x3 = x2[, c(idname,
-                  names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes))]
-    } else {
-      x3 = x2[, names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)]
-    }
-  }
-  
-  join_ontology_terms(df = x3, con = con)
-}
-
 unpivot = function(df1, arrayname) {
   unpivot = TRUE
   idname = get_idname(arrayname)
@@ -1605,9 +1534,9 @@ join_info = function(qq, arrayname, namespace = 'public', mandatory_fields_only 
   con = use_ghEnv_if_null(con)
   entitynm = strip_namespace(arrayname)
   if (is_entity_secured(entitynm)) {
-    info_array = paste0("secure_scan(", namespace, ".", arrayname, "_INFO)")
+    info_array = paste0("secure_scan(", namespace, ".", entitynm, "_INFO)")
   } else {
-    info_array = paste0(                namespace, ".", arrayname, "_INFO" )
+    info_array = paste0(                namespace, ".", entitynm, "_INFO" )
   }
   qq1 = qq
   idname = get_idname(arrayname)
@@ -1632,38 +1561,11 @@ join_info = function(qq, arrayname, namespace = 'public', mandatory_fields_only 
   x2
 }
 
-join_info_ontology_and_unpivot = function(qq, arrayname, namespace = 'public', mandatory_fields_only = FALSE, con = NULL) {
+join_info_ontology_and_unpivot = function(qq, arrayname, namespace, mandatory_fields_only = FALSE, con = NULL) {
   df1 = join_info(qq, arrayname, namespace, mandatory_fields_only, con)
   df2 = unpivot(df1, arrayname = arrayname)
   join_ontology_terms(df = df2, con = con)
 }
-
-# join_ontology_and_unpivot = function(query, arrayname, namespace = 'public', mandatory_fields_only = FALSE, con = NULL){
-#   con = use_ghEnv_if_null(con)
-#   
-#   unpivot = TRUE
-#   idname = get_idname(arrayname)
-#   
-#   qq1 = qq
-#   # Join INFO array
-#   if (!mandatory_fields_only) {
-#     if (exists('debug_trace')) {t1 = proc.time()}
-#     if (FALSE){ # TODO: See why search_individuals(dataset_id = 1) is so slow; the two options here did not make a difference
-#       qq1 = paste("cross_join(", qq1, " as A, ", namespace, ".", arrayname, "_INFO as B, A.", idname, ", B.", idname, ")", sep = "")
-#     } else if (FALSE) { cat("== Swapping order of cross join between ARRAY_INFO and select(ARRAY, ..)\n")
-#       qq1 = paste("cross_join(", namespace, ".", arrayname, "_INFO as A, ", qq1, " as B, A.", idname, ", B.", idname, ")", sep = "")
-#     } else {
-#       qq1 = paste("equi_join(", qq1, ", ", namespace, ".", arrayname, "_INFO, 'left_names=", paste(idname, collapse = ","), "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')", sep = "")
-#     }
-#   }
-#   x2 = iquery(con$db, qq1, return = TRUE)
-#   
-#   if (exists('debug_trace')) {cat("join with info:\n"); print( proc.time()-t1 )}
-#   
-#   
-#   join_ontology_terms(df = x3, con = con)
-# }
-
 
 unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
   idname = get_idname(arrayname)
@@ -2064,7 +1966,7 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   #############################################
   ## Step 1 # Convert data frame to matrix
   stopifnot(nrow(expr_df) == length(biosample_df$biosample_id) * length(feature_df$feature_id))
-  exprs = acast(expr_df, feature_id~biosample_id, value.var="expression_count")
+  exprs = acast(expr_df, feature_id~biosample_id, value.var="value")
   
   # Convert column name to biosample id name
   selected_bios = as.integer(colnames(exprs))

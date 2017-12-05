@@ -34,6 +34,7 @@ array:
       project_id: int64
       created: string
       updated: string
+      public: bool
     dims: 
       dataset_version:
         start: 0
