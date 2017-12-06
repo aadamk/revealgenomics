@@ -16,43 +16,34 @@
 
 #' @export
 dao_get_measurementset = function(con){
-  nmsp_list = con$cache$nmsp_list
-  
-  if (length(nmsp_list) == 1) {
-    rqs_query = "public.RNAQUANTIFICATIONSET"
-    vst_query = "public.VARIANTSET"
-    fst_query = "public.FUSIONSET"
-    cst_query = "public.COPYNUMBERSET"
-  } else if (length(nmsp_list) == 2) {
-    rqs_query = "merge(public.RNAQUANTIFICATIONSET, collaboration.RNAQUANTIFICATIONSET)"
-    vst_query = "merge(public.VARIANTSET, collaboration.VARIANTSET)"
-    fst_query = "merge(public.FUSIONSET, collaboration.FUSIONSET)"
-    cst_query = "merge(public.COPYNUMBERSET, collaboration.COPYNUMBERSET)"
-  } else { stop("More scidb4gh namespaces than expected") }
-  
+  rqs_query = "secure_scan(gh_secure.RNAQUANTIFICATIONSET)"
+  vst_query = "secure_scan(gh_secure.VARIANTSET)"
+  fst_query = "secure_scan(gh_secure.FUSIONSET)"
+  cst_query = "secure_scan(gh_secure.COPYNUMBERSET)"
+
   rqs = iquery(con$db, paste0(
                 "apply(
                   project(
                     ", rqs_query, ", 
-                    name, dataset_id, experimentset_id),
+                    name, experimentset_id),
                   entity, 'RNAQUANTIFICATION', id, rnaquantificationset_id)"), return = TRUE)
   var = iquery(con$db, paste0(
                  "apply(
                    project(
                      ", vst_query, ", 
-                     name, dataset_id, experimentset_id),
+                     name, experimentset_id),
                    entity, 'VARIANT', id, variantset_id)"),           return = TRUE)
   fus = iquery(con$db, paste0(
                  "apply(
                    project(
                      ", fst_query, ", 
-                     name, dataset_id, experimentset_id),
+                     name, experimentset_id),
                    entity, 'FUSION', id, fusionset_id)"),            return = TRUE)
   cnv = iquery(con$db, paste0(
                  "apply(
                    project(
                      ", cst_query, ", 
-                     name, dataset_id, experimentset_id),
+                     name, experimentset_id),
                    entity, 'COPYNUMBER_MAT', id, copynumberset_id)"), return = TRUE)
   if (nrow(rqs) == 0) rqs = list()
   if (nrow(var) == 0) var = list()
@@ -68,10 +59,11 @@ dao_get_measurementset = function(con){
   res[, c(cols1, othercols)]
 }
 
-#' Faster version of `get_project`
+#' dao code for `get_ENTITY`
 #' 
-#' Instead of running the query per namespace, merge the namespaces into one array at query-time
-#' The code is based off the code at `join_info_ontology_and_unpivot`
+#' after changes in secure_scan branch, no namespace merging is required (This was the 
+#' faster path used here)
+#' We might get rid of this function and call `get_ENTITY()` directly
 dao_get_entity = function(entity, con){
   
   arrayname = entity
@@ -94,9 +86,9 @@ dao_get_entity = function(entity, con){
   } else {
     if (nrow(x2) > 0) {
       x3 = x2[, c(idname,
-                  names(.ghEnv$meta$L$array[[scidb4gh:::strip_namespace(arrayname)]]$attributes))]
+                  names(.ghEnv$meta$L$array[[entity]]$attributes))]
     } else {
-      x3 = x2[, names(.ghEnv$meta$L$array[[scidb4gh:::strip_namespace(arrayname)]]$attributes)]
+      x3 = x2[, names(.ghEnv$meta$L$array[[entity]]$attributes)]
     }
   }
   scidb4gh:::join_ontology_terms(df = x3, con = con)
@@ -124,7 +116,6 @@ dao_get_biosample = function(con){
 #' @export
 dao_search_rnaquantification = function(rnaquantificationset, feature, biosample_ref, 
                                         dataset_lookup_ref,
-                                        formDataModel = FALSE, 
                                         con) {
   rqs_id = unique(rnaquantificationset$rnaquantificationset_id)
   stopifnot(length(rqs_id)==1)
@@ -135,15 +126,11 @@ dao_search_rnaquantification = function(rnaquantificationset, feature, biosample
   dataset_id = unique(rnaquantificationset$dataset_id)
   stopifnot(length(dataset_id) == 1)
   
-  namespace = dataset_lookup_ref[dataset_lookup_ref$dataset_id == dataset_id, ]$namespace
-  stopifnot(namespace %in% con$cache$nmsp_list)
-  
-  
   ftr_id = unique(feature$feature_id)
   
-  arr0 = paste0(namespace, ".", .ghEnv$meta$arrRnaquantification)
+  arr0 = full_arrayname(.ghEnv$meta$arrRnaquantification)
   
-  qq = paste0("filter(", arr0, ", rnaquantificationset_id = ", rqs_id, ")")
+  qq = paste0("filter(secure_scan(", arr0, "), rnaquantificationset_id = ", rqs_id, ")")
   
   K_THRESH = 500
   if (length(ftr_id) <= K_THRESH) {
@@ -181,16 +168,5 @@ dao_search_rnaquantification = function(rnaquantificationset, feature, biosample
   
   expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature)
   
-  if (!formDataModel) {
-    return(expressionSet)
-  } else {
-    stop("Not supported any more. Fron now on, form custom ExpressionSet object using client's custom code")
-    # # Form custom data model
-    # es = expressionSetObject$new(NULL, NULL, NULL)
-    # es$setExpressionMatrix(expressionMatrix = exprs(expressionSet))
-    # es$setFeatureData(featureData = expressionSet@featureData@data)
-    # es$setPhenotypeData(phenotypeData = expressionSet@phenoData@data)
-    # 
-    # return(es)
-  }  
+  return(expressionSet)
 }
