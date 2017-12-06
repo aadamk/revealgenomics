@@ -103,63 +103,6 @@ get_logged_in_user = function(con = NULL) {
   attr(con$db, "connection")$username
 }
 
-#' formulate merged array query for an entity
-#' 
-#' @examples 
-#' con = gh_connect2(<ACCESS TO ALL DATA>)
-#' formulate_merged_array_query('RNAQUANTIFICATION', con)
-#' # merge(public.RNAQUANTIFICATION, collaboration.RNAQUANTIFICATION, ....)
-#' con = gh_connect2(<ACCESS TO PUBLIC DATA ONLY>)
-#' formulate_merged_array_query('RNAQUANTIFICATION', con)
-#' # public.RNAQUANTIFICATION
-#' @export
-formulate_merged_array = function(entity, con = NULL){
-  con = use_ghEnv_if_null(con)
-  entity_arr = paste0(con$cache$nmsp_list, ".", entity)
-  if (length(entity_arr) >1 ) {
-    entity_arr = paste0("merge(", paste0(entity_arr, collapse = ", "), ")")
-  }
-  entity_arr
-}
-entity_lookup = function(entityName, updateCache = FALSE, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  if (updateCache | is.null(.ghEnv$cache$lookup[[entityName]])){
-    .ghEnv$cache$lookup[[entityName]] = iquery(con$db, paste(entityName, "_LOOKUP", sep = ""),
-                                               schema = paste("<namespace:string> [", get_base_idname(entityName), "=0:*]", sep = ""),
-                                               return = T)
-  }
-  return(.ghEnv$cache$lookup[[entityName]])
-}
-
-# get_project_lookup = function(updateCache = FALSE, con = NULL){
-#   entity_lookup(.ghEnv$meta$arrProject, updateCache = updateCache, con = con)
-# }
-# get_dataset_lookup = function(updateCache = FALSE, con = NULL){
-#   entity_lookup(.ghEnv$meta$arrDataset, updateCache = updateCache, con = con)
-# }
-# get_individuals_lookup = function(updateCache = FALSE, con = NULL){
-#   entity_lookup(.ghEnv$meta$arrIndividuals, updateCache = updateCache, con = con)
-# }
-# get_biosample_lookup = function(updateCache = FALSE, con = NULL){
-#   entity_lookup(.ghEnv$meta$arrBiosample, updateCache = updateCache, con = con)
-# }
-# get_rnaquantificationset_lookup = function(updateCache = FALSE, con = NULL){
-#   entity_lookup(.ghEnv$meta$arrRnaquantificationset, updateCache = updateCache, con = con)
-# }
-# get_variantset_lookup = function(updateCache = FALSE, con = NULL){
-#   entity_lookup(.ghEnv$meta$arrVariantset, updateCache = updateCache, con = con)
-# }
-# get_fusionset_lookup = function(updateCache = FALSE, con = NULL){
-#   entity_lookup(.ghEnv$meta$arrFusionset, updateCache = updateCache, con = con)
-# }
-# get_experimentset_lookup = function(updateCache = FALSE, con = NULL){
-#   entity_lookup(.ghEnv$meta$arrExperimentSet, updateCache = updateCache, con = con)
-# }
-# get_copynumberset_lookup = function(updateCache = FALSE, con = NULL){
-#   entity_lookup(.ghEnv$meta$arrCopyNumberSet, updateCache = updateCache, con = con)
-# }
-
 get_entity = function(entity, id, ...){
   fn_name = paste("get_", tolower(entity), sep = "")
   f = NULL
