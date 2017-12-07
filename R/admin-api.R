@@ -251,5 +251,5 @@ grant_initial_access = function(con = NULL, user_name) {
   query = paste0("apply(", query, ",user_id,", user_idx, ",access, true)")
   query = paste0("redimension(", query, ", ", PERMISSIONS_ARRAY(), ")")
   query = paste0("insert(", query, ", ", PERMISSIONS_ARRAY(), ")")
-  iquery(con1$db, query)
+  iquery(con$db, query)
 }
