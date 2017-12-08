@@ -199,6 +199,9 @@ find_namespace = function(entitynm) {
   .ghEnv$meta$L$array[[entitynm]]$namespace
 }
 
+#' full name of array with namespace
+#' 
+#' @export
 full_arrayname = function(entitynm) {
   paste0(find_namespace(entitynm), ".", entitynm)
 }
@@ -390,7 +393,7 @@ register_genelist = function(genelist_name = NULL,
   uniq = unique_fields()[[.ghEnv$meta$arrGenelist]]
   test_register_genelist(df1, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = .ghEnv$meta$arrGenelist
+    arrayname = full_arrayname(.ghEnv$meta$arrGenelist)
     register_tuple_return_id(df1,
                              arrayname, uniq, con = con)
   } # end of if (!only_test)
@@ -432,7 +435,7 @@ register_genelist_gene = function(genelist_id = NULL,
   
   test_register_genelist_gene(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
-    arrayname = .ghEnv$meta$arrGenelist_gene
+    arrayname = full_arrayname(.ghEnv$meta$arrGenelist_gene)
     register_tuple_return_id(df,
                              arrayname, uniq, con = con)
   } # end of if (!only_test)
@@ -963,19 +966,14 @@ get_referenceset = function(referenceset_id = NULL, con = NULL){
 
 #' @export
 get_genelist = function(genelist_id = NULL, con = NULL) {
-  # gl = get_unversioned_public_metadata_entity(arrayname = .ghEnv$meta$arrGenelist, 
-  #                                        id = genelist_id,
-  #                                        infoArray = FALSE,
-  #                                        con = con)
   con = use_ghEnv_if_null(con)
   
-  if (is.null(genelist_id)) {
-    left_arr = 'GENELIST'
-  } else {
-    condition = formulate_base_selection_query(fullarrayname = 'public.GENELIST', id = genelist_id)
-    left_arr = paste0("filter(GENELIST,", condition, ")")
+  left_arr = full_arrayname(.ghEnv$meta$arrGenelist)
+  if (!is.null(genelist_id)) {
+    condition = formulate_base_selection_query(fullarrayname = .ghEnv$meta$arrGenelist, id = genelist_id)
+    left_arr = paste0("filter(", left_arr, "," , condition, ")")
   }
-  right_arr = 'GENELIST_GENE'
+  right_arr = full_arrayname(.ghEnv$meta$arrGenelist_gene)
   gl = iquery(con$db, paste0("equi_join(", left_arr, ", 
                                  grouped_aggregate(", right_arr, ", count(*) AS gene_count, genelist_id), 
                                  'left_names=genelist_id', 'right_names=genelist_id', 
@@ -1156,7 +1154,7 @@ search_genelist_gene = function(genelist = NULL,
                                 genelist_id = NULL, con = NULL){
   con = use_ghEnv_if_null(con)
   
-  arrayname = .ghEnv$meta$arrGenelist_gene
+  arrayname = full_arrayname(.ghEnv$meta$arrGenelist_gene)
   
   if (!is.null(genelist) & !is.null(genelist_id)) {
     stop("Use only one method for searching. Preferred method is using genelist")

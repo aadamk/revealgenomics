@@ -728,7 +728,7 @@ array:
     data_class: 
       featuredata
     namespace:
-      - gh_public
+      - gh_public_rw
     attributes:
       name: string
       description: string
@@ -754,7 +754,7 @@ array:
     data_class: 
       featuredata
     namespace:
-      - gh_public
+      - gh_public_rw
     attributes:
       genelist_id: int64
       gene_symbol_id: int64
