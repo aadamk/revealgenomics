@@ -234,11 +234,15 @@ grant_initial_access = function(con = NULL, user_name) {
   cat("Grant read access to public namespace\n")
   iquery(con$db, 
          paste0("set_role_permissions('", user_name, "', 'namespace', '",
-                scidb4gh:::find_namespace('FEATURE'), "', 'rl')"))
+                      find_namespace('FEATURE'), "', 'rl')"))
+  cat("Grant read, write access to GENELIST namespace\n")
+  iquery(con$db, 
+         paste0("set_role_permissions('", user_name, "', 'namespace', '",
+                      find_namespace(.ghEnv$meta$arrGenelist), "', 'crudl')"))
   cat("Grant list access to secure namespace (required for study level security)\n")
   iquery(con$db, 
          paste0("set_role_permissions('", user_name, "', 'namespace', '",
-                scidb4gh:::find_namespace('DATASET'), "', 'l')"))
+                      find_namespace('DATASET'), "', 'l')"))
   cat("Granting access to publc studies\n")
   studylist = iquery(con$db, "project(gh_secure.DATASET, public)", return = T)
   studylist$dataset_version = NULL
@@ -252,4 +256,15 @@ grant_initial_access = function(con = NULL, user_name) {
   query = paste0("redimension(", query, ", ", PERMISSIONS_ARRAY(), ")")
   query = paste0("insert(", query, ", ", PERMISSIONS_ARRAY(), ")")
   iquery(con$db, query)
+}
+
+#' grant scidbadmin access to studies 1:N
+#' 
+#' workaround till https://github.com/Paradigm4/secure_scan/issues/7 is fixed
+grant_admin_access = function(con, max_study_id) {
+  iquery(con$db, 
+         paste0("insert(
+                  redimension(
+                    apply(build(<user_id:int64>[dataset_id=1:", max_study_id, 
+                               "], 1), access, true), permissions.dataset_id), permissions.dataset_id);"))
 }
