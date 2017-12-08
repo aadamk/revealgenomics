@@ -616,10 +616,18 @@ register_tuple_return_id = function(df,
     cat("**Versioning is ON -- must handle matching entries\n")
     if (!("dataset_version" %in% colnames(df))) stop("Field `dataset_version` must exist in dataframe to be uploaded to versioned entities")
     if (!("dataset_id" %in% colnames(df))) stop("Field `dataset_id` must exist in dataframe to be uploaded to versioned entities")
-    cur_dataset_id = unique(df$dataset_id)
-    if (length(cur_dataset_id) != 1) stop("dataset_id of df to be uploaded should be unique")
-    cur_max_ver_by_entity = max(xx[xx$dataset_id == cur_dataset_id, ]$dataset_version)
+    if (entitynm != .ghEnv$meta$arrDataset) {
+      cur_dataset_id = unique(df$dataset_id)
+      if (length(cur_dataset_id) != 1) stop("dataset_id of df to be uploaded should be unique")
+      cur_max_ver_by_entity = max(xx[xx$dataset_id == cur_dataset_id, ]$dataset_version)
+    } else { # for DATASET
+      cur_project_id = unique(df$project_id)
+      if (length(cur_project_id) != 1) stop("project_id of dataset to be uploaded should be unique")
+      cur_max_ver_by_entity = unique(xx$dataset_version)
+      if (length(cur_max_ver_by_entity) != 1) stop("dataset_version of study to be uploaded should be unique")
+    }
     if (dataset_version > cur_max_ver_by_entity) { # then need to register new versions for the matching entries at same entity_id
+      if (entitynm == .ghEnv$meta$arrDataset) stop("use increment_dataset() for incrementing dataset versions")
       cat("Entity does not have any entry at current version number\n")
       cat("Registering new versions of", nrow(df[matching_idx, ]), "entries into", arrayname, "at version", dataset_version, "\n")
       register_tuple_update_lookup(df = df[matching_idx, ], arrayname = arrayname, updateLookup = FALSE, con = con)
