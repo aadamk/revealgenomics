@@ -723,6 +723,27 @@ array:
     delete_by_entity: FEATURE_SYNONYM
     infoArray: FALSE
     compression_on: FALSE
+  # GENE_SYMBOL
+  GENE_SYMBOL:
+    data_class:
+      featuredata
+    namespace: 
+      - gh_public
+    attributes: 
+      gene_symbol: string
+      full_name: string
+    unique_fields:
+      - gene_symbol
+    dims: 
+      gene_symbol_id:
+        start: 0
+        end: Inf
+        chunk_interval: 65536
+        overlap: 0
+    search_by_entity: 
+    delete_by_entity: GENE_SYMBOL
+    infoArray: FALSE
+    compression_on: FALSE
   # GENELIST
   GENELIST:
     data_class: 

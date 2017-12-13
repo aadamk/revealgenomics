@@ -199,6 +199,10 @@ test_register_referenceset = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrReferenceset, df, uniq, silent)
 }
 
+test_register_gene_symbol = function(df, uniq, silent = TRUE){
+  run_tests_dataframe(entity = .ghEnv$meta$arrGeneSymbol, df, uniq, silent)
+}
+
 test_register_genelist = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrGenelist, df, uniq, silent)
 }

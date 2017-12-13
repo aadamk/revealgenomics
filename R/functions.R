@@ -352,6 +352,23 @@ register_referenceset = function(df, only_test = FALSE, con = NULL){
   } # end of if (!only_test)
 }
 
+#' register gene_symbols
+#' 
+#' @param df data-frame containing gene_symbol and full name
+#' 
+#' @return gene_symbol_id assigned by the data-base
+#' @export
+register_gene_symbol = function(df, only_test = FALSE, con = NULL){
+  uniq = unique_fields()[[.ghEnv$meta$arrGeneSymbol]]
+  test_register_gene_symbol(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = full_arrayname(.ghEnv$meta$arrGeneSymbol)
+    register_tuple_return_id(df,
+                             arrayname, uniq, con = con)
+  } # end of if (!only_test)
+}
+
+
 #' Register genelist
 #' 
 #' Preferred method of registering genelist-s is to 
@@ -970,6 +987,12 @@ get_feature_synonym = function(feature_synonym_id = NULL, con = NULL){
 get_referenceset = function(referenceset_id = NULL, con = NULL){
   select_from_1d_entity(entitynm = .ghEnv$meta$arrReferenceset, id = 
                           referenceset_id, con = con)
+}
+
+#' @export
+get_gene_symbol = function(gene_symbol_id = NULL, con = NULL){
+  select_from_1d_entity(entitynm = .ghEnv$meta$arrGeneSymbol, 
+                        id = gene_symbol_id, con = con)
 }
 
 #' @export

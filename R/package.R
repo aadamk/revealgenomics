@@ -36,6 +36,7 @@ NULL
 .ghEnv$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
 .ghEnv$meta$arrFeatureset = 'FEATURESET'
 .ghEnv$meta$arrReferenceset = 'REFERENCESET'
+.ghEnv$meta$arrGeneSymbol = 'GENE_SYMBOL'
 .ghEnv$meta$arrGenelist = 'GENELIST'
 .ghEnv$meta$arrGenelist_gene = 'GENELIST_GENE'
 .ghEnv$meta$arrVariantset = 'VARIANTSET'
