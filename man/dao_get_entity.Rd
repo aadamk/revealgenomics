@@ -2,11 +2,12 @@
 % Please edit documentation in R/dao_scidb.R
 \name{dao_get_entity}
 \alias{dao_get_entity}
-\title{Faster version of `get_project`}
+\title{dao code for `get_ENTITY`}
 \usage{
 dao_get_entity(entity, con)
 }
 \description{
-Instead of running the query per namespace, merge the namespaces into one array at query-time
-The code is based off the code at `join_info_ontology_and_unpivot`
+after changes in secure_scan branch, no namespace merging is required (This was the 
+faster path used here)
+We might get rid of this function and call `get_ENTITY()` directly
 }

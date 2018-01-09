@@ -33,12 +33,50 @@ yaml_to_attr_string = function(attributes, compression_on = FALSE){
   }
 }
 
+#' mandatory fields (internal function)
+#' 
+#' return mandatory fields while registering an entity
+#' 
+#' 'DATASET': attributes
+#' other secure metadata entities (e.g. 'INDIVIDUAL', 'BIOSAMPLE', 'BIOSAMPLE'): 'dataset_id' and attributes
+#' public metadata entities (e.g. 'ONTOLOGY'): attributes
+#' feature entities: attributes
 get_mandatory_fields_for_register_entity = function(arrayname){
-  attrs = names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)
+  entitynm = strip_namespace(arrayname)
+  attrs = names(.ghEnv$meta$L$array[[entitynm]]$attributes)
   attrs = attrs[!(attrs %in% c('created', 'updated'))]
   attrs
+  
+  zz = get_entity_info()
+  entity_class = zz[zz$entity == entitynm, ]$class
+  
+  if (entity_class == 'metadata') {
+    if (is_entity_secured(entitynm) & entitynm != .ghEnv$meta$arrDataset) {
+      mandatory_fields = c('dataset_id', attrs)
+    } else {
+      mandatory_fields = attrs
+    }
+  } else if (entity_class == 'featuredata') {
+    mandatory_fields = attrs
+  } else if (entity_class == 'measurementdata') {
+    dims = get_idname(entitynm)
+    dims = dims[!(dims %in% c('dataset_version'))]
+    mandatory_fields = c(dims, attrs)
+  } else {
+    stop("Need to cover this\n")
+  }
+  mandatory_fields
 }
 
+#' mandatory fields 
+#' 
+#' return mandatory fields while registering entities
+#' 
+#' 'DATASET': attributes
+#' other secure metadata entities (e.g. 'INDIVIDUAL', 'BIOSAMPLE', 'BIOSAMPLE'): 'dataset_id' and attributes
+#' public metadata entities (e.g. 'ONTOLOGY'): attributes
+#' feature entities: attributes
+#' 
 #' @export
 mandatory_fields = function(){
   entitynames = get_entity_names()
@@ -76,12 +114,23 @@ unique_fields = function(){
 }
 
 is_entity_secured = function(entitynm){
-  entitynm = strip_namespace(entitynm)
-  ifelse(length(.ghEnv$meta$L$array[[entitynm]]$namespace) > 1, TRUE, FALSE)
+  entitynm = strip_namespace(entitynm) # extra QC
+  nmsp = find_namespace(entitynm)
+  if (is.null(nmsp)) stop("unexpected namespace output")
+  length(grep("public", nmsp)) == 0
 }
 
 is_entity_versioned = function(entitynm){
   "dataset_version" %in% get_idname(entitynm)
+}
+
+#' does infoArray exist for given entity
+#' 
+#' flexible fields
+get_entity_infoArrayExists = function(entitynm) {
+  status = .ghEnv$meta$L$array[[entitynm]]$infoArray
+  if (is.null(status)) stop("infoArray status must be present for all entities")
+  status
 }
 
 get_idname = function(arrayname){
@@ -91,8 +140,14 @@ get_idname = function(arrayname){
 }
 
 get_base_idname = function(arrayname){
-  dims = get_idname(arrayname)
-  dims[!(dims %in% "dataset_version")]
+  entitynm = strip_namespace(arrayname)
+  dims = get_idname(entitynm)
+  
+  if (entitynm != .ghEnv$meta$arrDataset) {
+    dims[!(dims %in% c("dataset_id", "dataset_version"))]
+  } else {
+    dims[!(dims %in% "dataset_version")]
+  }
 }
 
 #' @export

@@ -5,7 +5,7 @@
 \title{Faster implementation of `search_rnaquantification` for UI development}
 \usage{
 dao_search_rnaquantification(rnaquantificationset, feature, biosample_ref,
-  dataset_lookup_ref, formDataModel = FALSE, con)
+  dataset_lookup_ref, con)
 }
 \arguments{
 \item{biosample_ref}{Reference dataframe containing all biosamples available to the user (retrieved by `dao_get_biosample(con = con)`)}

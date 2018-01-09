@@ -2,13 +2,16 @@
 # This function combines duplicate gene names 
 # col1 is the column that is to be retained
 # when col2 is the same as col1, do nothing
+# when col1 is NA, and col2 is not NA, paste col2 into col1
 # When col2 is different from col1, merge into 'column_to_combine_into' 
 # (a '|' separated list of gene names)
 combine_duplicate_column = function(dfx, col1, col2, column_to_combine_into){
   for (i in 1:nrow(dfx)) {
     entry1 = dfx[i, col1]
     entry2 = dfx[i, col2]
-    if (!is.na(entry1) & !is.na(entry2) & entry1 != entry2){
+    if (is.na(entry1) & !is.na(entry2)) {
+      dfx[i, col1] = entry2
+    } else if (!is.na(entry1) & !is.na(entry2) & entry1 != entry2){
       # If `col2` is blank, do nothing
       if (exists('trace_debug')) cat(i, " ", sep = "")
       if (entry2 != "") {
@@ -28,6 +31,7 @@ combine_duplicate_column = function(dfx, col1, col2, column_to_combine_into){
       }
     }
   }
+  
   dfx
 }
 
@@ -147,8 +151,8 @@ merge_gene_annotation_and_location = function(gene_annotation_file_path,
 #' 
 #' @export 
 build_reference_gene_set = function( featureset_id,
-                                     gene_annotation_file_path, 
-                                     gene_location_file_path, 
+                                     gene_annotation_file_path = NULL, 
+                                     gene_location_file_path = NULL, 
                                      alias_fields = c('hgnc_id', 'symbol', 'alias_symbol', 'prev_symbol',
                                                       'entrez_id', 'ensembl_gene_id', 'vega_id', 'ucsc_id', 
                                                       'ena', 'refseq_accession', 'ccds_id', 'uniprot_ids', 
@@ -162,6 +166,14 @@ build_reference_gene_set = function( featureset_id,
                                      hierarchy = c('ensembl_gene_id', 'vega_id', 
                                                    'ucsc_id', 'ccds_id', 'gene_symbol', 'hgnc_id')
 ){
+  if (is.null(gene_annotation_file_path)) {
+    gene_annotation_file_path = system.file("extdata", 
+                                            "gene__hugo__hgnc_complete_set.txt.gz", package="scidb4gh")
+  }
+  if (is.null(gene_location_file_path)) {
+    gene_location_file_path = system.file("extdata", 
+                                          "gene__grch38_release85_homosap_gene__newGene.tsv.gz", package="scidb4gh")
+  }
   cat("Reading following files and merging into one dataframe. \nAnnotation: ", gene_annotation_file_path, 
       "\nGene location: ", gene_location_file_path, "\n")
   x12b = merge_gene_annotation_and_location(gene_annotation_file_path = gene_annotation_file_path, 

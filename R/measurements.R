@@ -113,35 +113,6 @@ get_experiment_v1 = function(mandatory_fields_only = FALSE) {
   experiments
 }
 
-get_experiment_by_namespace = function(nmsp, info_key = 'study category', con = NULL) {
-  con = use_ghEnv_if_null(con)
-  
-  qq = paste("equi_join(", 
-             "grouped_aggregate(", nmsp, ".MEASUREMENT, ", 
-             "count(*),", 
-             "dataset_id, dataset_version, experimentset_id, measurement_entity, biosample_id) as X, ", 
-             "filter(", nmsp, ".DATASET_INFO, key='", info_key, "'),",
-             "'left_names=dataset_id,dataset_version',",
-             "'right_names=dataset_id,dataset_version')", 
-             sep = "")
-  
-  qq2 = paste("equi_join(", 
-              qq, ", ", 
-              "project(
-              apply(", nmsp, ".EXPERIMENTSET, experimentset_id_, experimentset_id), 
-              experimentset_id_, name), ", 
-              "'left_names=experimentset_id,dataset_version', ", 
-              "'right_names=experimentset_id_,dataset_version')")
-  
-  xx = iquery(con$db, 
-              qq2, 
-              return = T)
-  stopifnot(unique(xx$key) == info_key)
-  xx$key = NULL
-  colnames(xx)[which(colnames(xx) == 'val')] = info_key
-  xx
-}
-
 #' retrieve all the experiments available to logged in user
 #' 
 #' joins Measurement, Dataset (for study category field), and ExperimentSet arrays
@@ -160,20 +131,33 @@ get_experiment_by_namespace = function(nmsp, info_key = 'study category', con = 
 get_experiment = function(con = NULL) {
   con = use_ghEnv_if_null(con)
   
-  namespaces = con$cache$nmsp_list
+  info_key = 'study category'
+  con = use_ghEnv_if_null(con)
   
-  init = TRUE
-  for (nmsp in namespaces) {
-    cat("Experiments for namespace:", nmsp, "\n")
-    dfi = get_experiment_by_namespace(nmsp, con = con)
-    if (init){
-      dfx = dfi
-      init = FALSE
-    } else {
-      dfx = rbind(dfx, dfi)
-    }
-  }
-  dfx
+  qq = paste("equi_join(", 
+             "grouped_aggregate(secure_scan(", full_arrayname(.ghEnv$meta$arrMeasurement), "), ", 
+             "count(*),", 
+             "dataset_id, dataset_version, experimentset_id, measurement_entity, biosample_id) as X, ", 
+             "filter(secure_scan(", full_arrayname(.ghEnv$meta$arrDataset), "_INFO), key='", info_key, "'),",
+             "'left_names=dataset_id,dataset_version',",
+             "'right_names=dataset_id,dataset_version')", 
+             sep = "")
+  
+  qq2 = paste("equi_join(", 
+              qq, ", ", 
+              "project(
+              apply(secure_scan(", full_arrayname(.ghEnv$meta$arrExperimentSet), "), experimentset_id_, experimentset_id), 
+              experimentset_id_, name), ", 
+              "'left_names=experimentset_id,dataset_version', ", 
+              "'right_names=experimentset_id_,dataset_version')")
+  
+  xx = iquery(con$db, 
+              qq2, 
+              return = T)
+  stopifnot(unique(xx$key) == info_key)
+  xx$key = NULL
+  colnames(xx)[which(colnames(xx) == 'val')] = info_key
+  xx
 }
 
 

@@ -4,8 +4,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_public
     attributes: 
       name: string
       description: string
@@ -28,24 +27,24 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
       name: string
       description: string
       project_id: int64
       created: string
       updated: string
+      public: bool
     dims: 
-      dataset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - project_id
@@ -60,10 +59,8 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
-      dataset_id: int64
       name: string
       description: string
       species_: int64
@@ -71,15 +68,20 @@ array:
       created: string
       updated: string
     dims: 
-      individual_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      individual_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -94,10 +96,8 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
-      dataset_id: int64
       name: string
       description: string
       disease_: int64
@@ -105,15 +105,20 @@ array:
       created: string
       updated: string
     dims: 
-      biosample_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      biosample_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -128,10 +133,8 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
-      dataset_id: int64
       name: string
       description: string
       molecule: string
@@ -139,15 +142,20 @@ array:
       created: string
       updated: string
     dims: 
-      experimentset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      experimentset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -162,25 +170,28 @@ array:
     data_class:
       metadata
     namespace:
-      - public
-      - collaboration
+      - gh_secure
     attributes:
-      dataset_id: int64
       experimentset_id: int64
       entity: string
       idname: string
       measurementset_id: int64
       name: string
     dims: 
-      measurementset_arr_index:
-        start: 0
-        end: Inf
-        chunk_interval: 1000000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      measurementset_arr_index:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
         overlap: 0
     unique_fields:
       - entity
@@ -194,10 +205,8 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       measurementset_id: int64
       measurement_entity: string
@@ -205,15 +214,20 @@ array:
       created: string
       updated: string
     dims: 
-      measurement_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      measurement_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - experimentset_id
@@ -230,26 +244,28 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       name: string
       description: string
-#      file_path: string
       created: string
       updated: string
     dims: 
-      rnaquantificationset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      rnaquantificationset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -266,15 +282,19 @@ array:
     measurementdata_subclass:
       rnaquantification
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
-      expression_count: float
+      value: float
     dims:
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
         overlap: 0
       rnaquantificationset_id:
         start: 0
@@ -300,10 +320,8 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       referenceset_id: int64
       name: string
@@ -311,15 +329,20 @@ array:
       created: string
       updated: string
     dims: 
-      variantset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      variantset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -336,19 +359,24 @@ array:
     measurementdata_subclass:
       variant
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
-      CHROM: string
-      POS: int64
-      ID: string
-      REF: string
-      ALT: string
+      reference_name: string
+      start: int64
+      end: int64
+      id: string
+      reference: string
+      alternate: string
     dims:
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
         overlap: 0
       variantset_id:
         start: 0
@@ -365,7 +393,7 @@ array:
         end: Inf
         chunk_interval: 10000
         overlap: 0
-      variant_id:
+      per_gene_variant_number:
         start: 0
         end: Inf
         chunk_interval: 10000
@@ -380,25 +408,28 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       name: string
       description: string
       created: string
       updated: string
     dims: 
-      fusionset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      fusionset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -415,8 +446,7 @@ array:
     measurementdata_subclass:
       variant
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       feature_id_left: int64
       feature_id_right: int64
@@ -436,6 +466,11 @@ array:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
         overlap: 0
       fusionset_id:
         start: 0
@@ -461,25 +496,28 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes: 
-      dataset_id: int64
       experimentset_id: int64
       name: string
       description: string
       created: string
       updated: string
     dims: 
-      copynumberset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       dataset_version:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      copynumberset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     unique_fields:
       - dataset_id
@@ -497,8 +535,7 @@ array:
     measurementdata_subclass:
       copynumber_seg
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       reference_name: string
       start: int64
@@ -510,6 +547,11 @@ array:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
         overlap: 0
       experimentset_id:
         start: 0
@@ -537,8 +579,7 @@ array:
     measurementdata_subclass:
       copynumber_mat
     namespace: 
-      - public
-      - collaboration
+      - gh_secure
     attributes:
       copynumber_val: double
     dims:
@@ -546,6 +587,11 @@ array:
         start: 0
         end: Inf
         chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10
         overlap: 0
       copynumberset_id:
         start: 0
@@ -572,7 +618,7 @@ array:
     data_class:
       metadata
     namespace: 
-      - public
+      - gh_public
     attributes: 
       term: string
       source_name: string
@@ -596,7 +642,7 @@ array:
     data_class:
       featuredata
     namespace: 
-      - public
+      - gh_public
     attributes: 
       referenceset_id: int64
       name: string
@@ -622,7 +668,7 @@ array:
     data_class:
       featuredata
     namespace: 
-      - public
+      - gh_public
     attributes: 
       name: string
       gene_symbol: string
@@ -655,7 +701,7 @@ array:
     data_class: 
       featuredata
     namespace:
-      - public
+      - gh_public
     attributes:
       synonym: string
       feature_id: int64
@@ -677,12 +723,33 @@ array:
     delete_by_entity: FEATURE_SYNONYM
     infoArray: FALSE
     compression_on: FALSE
+  # GENE_SYMBOL
+  GENE_SYMBOL:
+    data_class:
+      featuredata
+    namespace: 
+      - gh_public
+    attributes: 
+      gene_symbol: string
+      full_name: string
+    unique_fields:
+      - gene_symbol
+    dims: 
+      gene_symbol_id:
+        start: 0
+        end: Inf
+        chunk_interval: 65536
+        overlap: 0
+    search_by_entity: 
+    delete_by_entity: GENE_SYMBOL
+    infoArray: FALSE
+    compression_on: FALSE
   # GENELIST
   GENELIST:
     data_class: 
       featuredata
     namespace:
-      - public
+      - gh_public_rw
     attributes:
       name: string
       description: string
@@ -708,7 +775,7 @@ array:
     data_class: 
       featuredata
     namespace:
-      - public
+      - gh_public_rw
     attributes:
       genelist_id: int64
       gene_symbol_id: int64
@@ -734,7 +801,7 @@ array:
     data_class:
       featuredata
     namespace:
-      - public
+      - gh_public
     attributes:
       name: string
       description: string
