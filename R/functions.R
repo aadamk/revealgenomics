@@ -1822,14 +1822,14 @@ register_copynumber_seg = function(experimentset, only_test = FALSE, con = NULL)
     
     xx$experimentset_id = experimentset$experimentset_id
     xx$dataset_version = experimentset$dataset_version
+    xx$dataset_id = experimentset$dataset_id
     
-    arrayname = paste(find_namespace(id = experimentset$experimentset_id, 
-                                     entitynm = .ghEnv$meta$arrExperimentSet, con = con),
-                      .ghEnv$meta$arrCopynumber_seg, sep = ".")
+    arrayname = full_arrayname(.ghEnv$meta$arrCopynumber_seg)
     
     cat("Inserting", nrow(xx), "entries into array:", arrayname, "at version", experimentset$dataset_version, "\n")
     register_tuple(df = xx,
-                   ids_int64_conv = c('start', 'end', 'dataset_version', 'experimentset_id', 'biosample_id'),
+                   ids_int64_conv = c('start', 'end', 'dataset_version', 
+                                      'experimentset_id', 'biosample_id', 'dataset_id'),
                    arrayname = arrayname, con = con)
   } # end of if (!only_test)
 }
@@ -1867,10 +1867,9 @@ register_copynumber_matrix_file = function(copynumberset, dataset_version, featu
     
     xx2$dataset_version = dataset_version
     xx2$copynumberset_id = copynumberset$copynumberset_id
+    xx2$dataset_id = dataset_id
     
-    namespace = find_namespace(id = copynumberset$copynumberset_id, 
-                               entitynm = .ghEnv$meta$arrCopyNumberSet, con = con)
-    arrayname = paste(namespace, .ghEnv$meta$arrCopynumber_mat, sep = ".")
+    arrayname = full_arrayname(.ghEnv$meta$arrCopynumber_mat)
     cat("Inserting", nrow(xx2), "entries into", arrayname, "at version", dataset_version, "\n")
     register_tuple(df = xx2, 
                    ids_int64_conv = get_idname(.ghEnv$meta$arrCopynumber_mat), 
