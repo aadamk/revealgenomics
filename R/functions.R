@@ -223,7 +223,9 @@ get_feature_synonym_from_cache = function(updateCache = FALSE, con = NULL){
 update_feature_synonym_cache = function(con = NULL){
   con = use_ghEnv_if_null(con)
   
-  .ghEnv$cache$dfFeatureSynonym = iquery(con$db, .ghEnv$meta$arrFeatureSynonym, return = TRUE)
+  .ghEnv$cache$dfFeatureSynonym = iquery(con$db, 
+                                         full_arrayname(.ghEnv$meta$arrFeatureSynonym), 
+                                         return = TRUE)
 }
 
 #' @export
@@ -1982,15 +1984,7 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
 
 #' @export
 update_entity = function(entity, df, con = NULL){
-  if (is_entity_secured(entity)){
-    namespaces = find_namespace(id = df[, get_base_idname(entity)], entitynm = entity, con = con)
-    nmsp = unique(namespaces)
-    if (length(nmsp) != 1) stop("entity to be updated must belong to one namespace only")
-  } else {
-    nmsp = "public"
-  }
-  fullarraynm = paste(nmsp, entity, sep = ".")
-  update_mandatory_and_info_fields(df = df, arrayname = fullarraynm, con = con)
+  update_mandatory_and_info_fields(df = df, arrayname = full_arrayname(entity), con = con)
 }
 
 get_entity_count_old = function(con = NULL){
