@@ -1908,11 +1908,12 @@ register_fusion_data = function(df, fusionset, only_test = FALSE, con = NULL){
     xx$fusionset_id = fusionset_record$fusionset_id
     xx$dataset_version = dataset_version
     
-    nmsp = find_namespace(id = fusionset_record$fusionset_id, entitynm = .ghEnv$meta$arrFusionset, con = con)
-    arrayname = paste(nmsp, .ghEnv$meta$arrFusion, sep = ".")
+    arrayname = full_arrayname(.ghEnv$meta$arrFusion)
     
     xx = xx %>% group_by(biosample_id) %>% mutate(fusion_id = row_number())
     xx = as.data.frame(xx)
+    
+    xx$dataset_id = dataset_id
     
     cat("registering", nrow(xx), "entries of fusion data into array", arrayname, "\n")
     register_tuple(df = xx,
