@@ -1028,13 +1028,17 @@ get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
   con = use_ghEnv_if_null(con)
   
   if (!fromCache | is.null(.ghEnv$cache$feature_ref)){ # work from SciDB directly
-    arrayname = full_arrayname(.ghEnv$meta$arrFeature)
+    entitynm = .ghEnv$meta$arrFeature
+    arrayname = full_arrayname(entitynm)
     idname = get_idname(arrayname)
     
     qq = arrayname
     if (!is.null(feature_id)) {
       qq = form_selector_query_1d_array(arrayname, idname, feature_id)
-      join_info_ontology_and_unpivot(qq, arrayname, namespace = find_namespace(arrayname))
+      join_info_ontology_and_unpivot(qq, 
+                                     arrayname, 
+                                     namespace = find_namespace(entitynm),
+                                     con = con)
     } else { # FASTER path when all data has to be downloaded
       ftr = iquery(con$db, qq, return = T)
       ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
@@ -1117,20 +1121,20 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
   {
     # Formulate the cross_join query
     diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
-    if (class(diminfo) == "character") chunksize = 1000000 else stop("code not covered")
+    if (length(diminfo) != 1) stop("code not covered")
     upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
                      length(selected_ids), 
                      paste(selected_ids, sep=",", collapse="),("))
-    redim = paste("redimension(", upload, ", <idx:int64>[", idname,"=0:*,", as.integer(chunksize), ",0])", sep = "")
+    redim = paste("redimension(", upload, ", <idx:int64>[", idname,"])", sep = "")
     
     query= paste("project(cross_join(",
                  arrayname, " as A, ",
-                 redim, "as B, ",
+                 redim, " as B, ",
                  "A.", idname, ", " ,
                  "B.", idname,
                  "),",
-                 paste(names(.ghEnv$meta$L$array[[entitynm]]$attributes), collapse = ", "),
+                 paste(names(.ghEnv$meta$L$array[[entitynm]]$attributes), collapse = ","),
                  ")",
                  sep = "")
   }

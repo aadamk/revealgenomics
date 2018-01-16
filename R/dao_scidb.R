@@ -114,8 +114,9 @@ dao_get_biosample = function(con){
 #' @param biosample_ref Reference dataframe containing all biosamples available to the user (retrieved by `dao_get_biosample(con = con)`)
 #' 
 #' @export
-dao_search_rnaquantification = function(rnaquantificationset, feature, biosample_ref, 
-                                        dataset_lookup_ref,
+dao_search_rnaquantification = function(rnaquantificationset, 
+                                        biosample_ref, 
+                                        feature = NULL, 
                                         con) {
   rqs_id = unique(rnaquantificationset$rnaquantificationset_id)
   stopifnot(length(rqs_id)==1)
@@ -132,28 +133,43 @@ dao_search_rnaquantification = function(rnaquantificationset, feature, biosample
   
   qq = paste0("filter(secure_scan(", arr0, "), rnaquantificationset_id = ", rqs_id, ")")
   
-  K_THRESH = 500
-  if (length(ftr_id) <= K_THRESH) {
-    path = "filter_features"
-  } else {
-    path = "build_literal_and_cross_join_features"
-  }
-  if (path == 'filter_features') {
-    expr = paste0("feature_id=", ftr_id, collapse = " OR ")
-    qq2 = paste0("filter(", qq, ", ", expr, ")")
-  } else if (path == "build_literal_and_cross_join_features") {
-    expr = paste0(ftr_id, collapse = ",")
-    qq2a = paste0("build(<feature_id:int64>[i=1:", length(ftr_id), "], '[",
-                  expr, "]', true)")
-    qq2b = paste0("redimension(
-                     apply(", qq2a, ", 
-                          flag, int32(1)), <flag:int32>[feature_id])")
-    qq2c = paste0("cross_join(", qq, " as X,",
-                               qq2b, " as Y, X.feature_id, Y.feature_id)")
-    qq2 = paste0("project(", qq2c, ",", 
-                 paste0(names(.ghEnv$meta$L$array$RNAQUANTIFICATION$attributes), collapse = ","),
-                        ")")
-
+  if (!is.null(feature)) {
+    K_THRESH = 500
+    if (length(ftr_id) <= K_THRESH) {
+      path = "filter_features"
+    } else {
+      path = "build_literal_and_cross_join_features"
+    }
+    if (path == 'filter_features') {
+      expr = paste0("feature_id=", ftr_id, collapse = " OR ")
+      qq2 = paste0("filter(", qq, ", ", expr, ")")
+    } else if (path == "build_literal_and_cross_join_features") {
+      expr = paste0(ftr_id, collapse = ",")
+      qq2a = paste0("build(<feature_id:int64>[i=1:", length(ftr_id), "], '[",
+                    expr, "]', true)")
+      qq2b = paste0("redimension(
+                       apply(", qq2a, ", 
+                            flag, int32(1)), <flag:int32>[feature_id])")
+      qq2c = paste0("cross_join(", qq, " as X,",
+                                 qq2b, " as Y, X.feature_id, Y.feature_id)")
+      qq2 = paste0("project(", qq2c, ",", 
+                   paste0(names(.ghEnv$meta$L$array$RNAQUANTIFICATION$attributes), collapse = ","),
+                          ")")
+  
+    }
+  } else { # user has not supplied features; try to download full data
+    cat("Estimating download size: ")
+    download_size = iquery(con$db, 
+                       query = paste0("project(summarize(", qq, "), bytes)"), 
+                       return = TRUE)$bytes
+    cat(download_size/1024/1024, " MB\n")
+    download_limit_mb = 500
+    if (download_size > download_limit_mb * 1024 * 1024) {
+      cat("Trying to download more than", download_limit_mb, "MB at a time! 
+Post an issue at https://github.com/Paradigm4/scidb4gh/issues\n")
+      return(NULL)
+    }
+    qq2 = qq
   }
   
   res = iquery(con$db, query = qq2, return = TRUE)
@@ -164,9 +180,18 @@ dao_search_rnaquantification = function(rnaquantificationset, feature, biosample
   
   # Retrieved features
   feature_id = unique(res$feature_id)
-  feature_sel = feature[feature$feature_id %in% feature_id, ]
-  
-  expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature)
+  if (!is.null(feature)) {
+    feature_sel = feature[feature$feature_id %in% feature_id, ]
+  } else { # user has not supplied features; need to download features from DB
+    cat("Downloading features to form ExpressionSet\n")
+    feature_sel = get_features(feature_id = feature_id, fromCache = FALSE,
+                               con = con)
+  }
+  expressionSet = formulate_list_expression_set(expr_df = res, 
+                                                dataset_version = dataset_version, 
+                                                rnaquantificationset = rnaquantificationset,
+                                                biosample = biosample,
+                                                feature = feature_sel)
   
   return(expressionSet)
 }
