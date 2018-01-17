@@ -87,7 +87,8 @@ for installing dev_tools. Then load the following libraries:
 # Using dev_tools
 # Assuming that dev_tools is already installed
 LIBS_TO_INSTALL_16_9="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between limit summarize"
-LIBS_TO_INSTALL_17_1="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between"
+LIBS_TO_INSTALL_17_1="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between secure_scan"
+LIBS_TO_INSTALL_18_1="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between secure_scan"
 for lib in $LIBS_TO_INSTALL_{scidb_version}; 
   do
   echo $lib
