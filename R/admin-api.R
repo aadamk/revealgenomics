@@ -269,9 +269,11 @@ grant_admin_access = function(con, max_study_id) {
                                "], 1), access, true), permissions.dataset_id), permissions.dataset_id);"))
 }
 
-# use this to switch back to regular scan 
-# workaround to https://github.com/Paradigm4/secure_scan/issues/8; 
-# switch to secure_scan when the issue is resolved
+#' whether to use secure_scan or not
+#' 
+#' use this as a switch to choose between
+#' - secure_scan (apply study-level security on dataset_id; must have permissions.dataset_id array)
+#' - scan (just use regular scan of arrays)
 custom_scan = function() {
-  "scan"
+  "secure_scan"
 }
