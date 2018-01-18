@@ -268,3 +268,10 @@ grant_admin_access = function(con, max_study_id) {
                     apply(build(<user_id:int64>[dataset_id=1:", max_study_id, 
                                "], 1), access, true), permissions.dataset_id), permissions.dataset_id);"))
 }
+
+# use this to switch back to regular scan 
+# workaround to https://github.com/Paradigm4/secure_scan/issues/8; 
+# switch to secure_scan when the issue is resolved
+custom_scan = function() {
+  "scan"
+}

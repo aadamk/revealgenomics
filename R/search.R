@@ -108,7 +108,7 @@ search_rnaquantification_scidb = function(arrayname,
   if (is.null(dataset_version)) dataset_version = "NULL"
   if (length(dataset_version) != 1) {stop("cannot specify one dataset_version at a time")}
   
-  qq = paste0("secure_scan(", arrayname, ")")
+  qq = paste0(custom_scan(), "(", arrayname, ")")
   if (!is.null(rnaquantificationset_id) & !is.null(biosample_id) & !is.null(feature_id)) { # all 3 selections made by user
     if (length(rnaquantificationset_id) == 1 & length(biosample_id) == 1 & length(feature_id) == 1) {
       qq = paste("between(",
@@ -232,10 +232,10 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
   if (is.null(variantset_id)) stop("variantset_id must be supplied")
   if (length(variantset_id) != 1) stop("can handle only one variantset_id at a time")
   
-  left_query = paste0("filter(secure_scan(", arrayname, 
+  left_query = paste0("filter(", custom_scan(), "(", arrayname, 
                              "), dataset_version=", dataset_version, 
                              " AND variantset_id=", variantset_id, ")")
-  right_query = paste0("filter(secure_scan(", arrayname, 
+  right_query = paste0("filter(", custom_scan(), "(", arrayname, 
                       "_INFO), dataset_version=", dataset_version, 
                               " AND variantset_id=", variantset_id, ")")
   

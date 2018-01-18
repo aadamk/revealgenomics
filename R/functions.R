@@ -850,7 +850,9 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
   fullnm = paste(namespace, ".", entitynm, sep = "")
   if (is.null(id)) {
     qq = full_arrayname(entitynm)
-    if (is_entity_secured(entitynm)) qq = paste0("secure_scan(", qq, ")")
+    if (is_entity_secured(entitynm)) {
+      qq = paste0(custom_scan(), "(", qq, ")")
+    }
   } else {
     if (length(get_idname(entitynm)) == 1) {
       qq = form_selector_query_1d_array(arrayname = fullnm,
@@ -1066,7 +1068,9 @@ form_selector_query_secure_array = function(arrayname, selected_ids, dataset_ver
   sorted=sort(selected_ids)
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
   entitynm = strip_namespace(arrayname)
-  if (is_entity_secured(entitynm)) arrayname = paste0("secure_scan(", arrayname, ")")
+  if (is_entity_secured(entitynm)) {
+    arrayname = paste0(custom_scan(), "(", arrayname, ")")
+  }
   THRESH_K = 150  # limit at which to switch from filter to cross_join
   if (length(breaks) <= THRESH_K) { # completely contiguous set of tickers; use `between`
     subq = formulate_base_selection_query(entitynm, selected_ids)
@@ -1107,7 +1111,9 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
   THRESH_K = 15  # limit at which to switch from cross_between_ to cross_join
   entitynm = strip_namespace(arrayname)
-  if (is_entity_secured(entitynm)) arrayname = paste0("secure_scan(", arrayname, ")")
+  if (is_entity_secured(entitynm)) {
+    arrayname = paste0(custom_scan(), "(", arrayname, ")")
+  }
   if (length(breaks) == 2) # completely contiguous set of tickers; use `between`
   {
     query =sprintf("between(%s, %d, %d)", arrayname, sorted[1], sorted[length(sorted)])
@@ -1293,7 +1299,7 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname,
   
   qq = arrayname
   if (!is.null(dataset_id)) {
-    fullnm = paste0("secure_scan(", full_arrayname(qq), ")")
+    fullnm = paste0(custom_scan(), "(", full_arrayname(qq), ")")
     if (is.null(dataset_version)) {
       qq = paste0("filter(", fullnm, ", ", "dataset_id = ", dataset_id, ")")
     } else {
@@ -1512,7 +1518,7 @@ join_info = function(qq, arrayname, namespace = 'public', mandatory_fields_only 
   con = use_ghEnv_if_null(con)
   entitynm = strip_namespace(arrayname)
   if (is_entity_secured(entitynm)) {
-    info_array = paste0("secure_scan(", namespace, ".", entitynm, "_INFO)")
+    info_array = paste0(custom_scan(), "(", namespace, ".", entitynm, "_INFO)")
   } else {
     info_array = paste0(                namespace, ".", entitynm, "_INFO" )
   }
