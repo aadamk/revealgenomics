@@ -16,10 +16,10 @@
 
 #' @export
 dao_get_measurementset = function(con){
-  rqs_query = "secure_scan(gh_secure.RNAQUANTIFICATIONSET)"
-  vst_query = "secure_scan(gh_secure.VARIANTSET)"
-  fst_query = "secure_scan(gh_secure.FUSIONSET)"
-  cst_query = "secure_scan(gh_secure.COPYNUMBERSET)"
+  rqs_query = paste0(custom_scan(), "(gh_secure.RNAQUANTIFICATIONSET)")
+  vst_query = paste0(custom_scan(), "(gh_secure.VARIANTSET)")
+  fst_query = paste0(custom_scan(), "(gh_secure.FUSIONSET)")
+  cst_query = paste0(custom_scan(), "(gh_secure.COPYNUMBERSET)")
 
   rqs = iquery(con$db, paste0(
                 "apply(
@@ -70,8 +70,8 @@ dao_get_entity = function(entity, con){
   
   idname = scidb4gh:::get_idname(arrayname)
   
-  inner_query = paste0("secure_scan(", full_arrayname(entity), 
-                       "), secure_scan(", full_arrayname(entity), "_INFO)")
+  inner_query = paste0(custom_scan(), "(", full_arrayname(entity), 
+                       "), ", custom_scan(), "(", full_arrayname(entity), "_INFO)")
   
   qq = paste0("equi_join(", 
                        inner_query, 
@@ -131,7 +131,7 @@ dao_search_rnaquantification = function(rnaquantificationset,
   
   arr0 = full_arrayname(.ghEnv$meta$arrRnaquantification)
   
-  qq = paste0("filter(secure_scan(", arr0, "), rnaquantificationset_id = ", rqs_id, ")")
+  qq = paste0("filter(", custom_scan(), "(", arr0, "), rnaquantificationset_id = ", rqs_id, ")")
   
   if (!is.null(feature)) {
     K_THRESH = 500

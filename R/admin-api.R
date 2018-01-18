@@ -268,3 +268,12 @@ grant_admin_access = function(con, max_study_id) {
                     apply(build(<user_id:int64>[dataset_id=1:", max_study_id, 
                                "], 1), access, true), permissions.dataset_id), permissions.dataset_id);"))
 }
+
+#' whether to use secure_scan or not
+#' 
+#' use this as a switch to choose between
+#' - secure_scan (apply study-level security on dataset_id; must have permissions.dataset_id array)
+#' - scan (just use regular scan of arrays)
+custom_scan = function() {
+  "secure_scan"
+}
