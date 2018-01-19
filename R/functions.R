@@ -845,9 +845,8 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
                                  mandatory_fields_only = FALSE,
                                  con = NULL){
   con = use_ghEnv_if_null(con)
-  namespace = find_namespace(entitynm)
 
-  fullnm = paste(namespace, ".", entitynm, sep = "")
+  fullnm = full_arrayname(entitynm)
   if (is.null(id)) {
     qq = full_arrayname(entitynm)
     if (is_entity_secured(entitynm)) {
@@ -865,7 +864,7 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
     }
   }
   if (get_entity_infoArrayExists(entitynm)) {
-    join_info_ontology_and_unpivot(qq, arrayname = entitynm, namespace=namespace, 
+    join_info_ontology_and_unpivot(qq, arrayname = entitynm, 
                                    mandatory_fields_only = mandatory_fields_only,
                                    con = con)
   } else {
@@ -1039,7 +1038,6 @@ get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
       qq = form_selector_query_1d_array(arrayname, idname, feature_id)
       join_info_ontology_and_unpivot(qq, 
                                      arrayname, 
-                                     namespace = find_namespace(entitynm),
                                      con = con)
     } else { # FASTER path when all data has to be downloaded
       ftr = iquery(con$db, qq, return = T)
@@ -1189,7 +1187,7 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
   }
   
   join_info_ontology_and_unpivot(qq, arrayname, 
-                                 namespace = get_namespace(arrayname), con = con)
+                                 con = con)
 }
 
 #' @export
@@ -1229,37 +1227,23 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
   con = use_ghEnv_if_null(con)
   
   check_args_search(dataset_version, all_versions)
-  arrayname = .ghEnv$meta$arrDataset
+  entitynm = .ghEnv$meta$arrDataset
   
-  qq = arrayname
   if (!is.null(project_id)) {
-    namespace = find_namespace(id = project_id, entitynm = .ghEnv$meta$arrProject, dflookup = get_project_lookup(), con = con)
-    if (is.null(namespace)) namespace = NA # to handle the case of no entry in lookup array at all
-    if (is.na(namespace)) {
-      cat("trying to download project lookup array once again, to see if there has been a recent update")
-      namespace = find_namespace(id = project_id, entitynm = .ghEnv$meta$arrProject, dflookup = get_project_lookup(updateCache = TRUE),
-                                 con = con)
-    }
-    if (!(namespace %in% con$cache$nmsp_list)) {stop("user does not have permission to access data for project_id: ", project_id,
-                                                        "or project does not exist")}
-    fullnm = paste(namespace, ".", qq, sep = "")
+    fullnm = full_arrayname(entitynm)
     if (is.null(dataset_version)) {
-      qq = paste("filter(", fullnm, ", ", "project_id = ", project_id, ")", sep="")
+      qq = paste0("filter(", fullnm, ", ", "project_id=", project_id, ")")
     } else {
-      # TODO: remove condition check after the ordering of dimensions is fixed [entity_id, dataset_version] or [dataset_version, entity_id]
-      if (grep("dataset_version", get_idname(arrayname)) == 2) { # datset_version is 2nd dimension
-        qq = paste("filter(between(", fullnm, ", null,", dataset_version, ", null, ", dataset_version,  "), ", "project_id = ", project_id, ")", sep="")
-      } else if (grep("dataset_version", get_idname(arrayname)) == 1) { # datset_version is 1st dimension
-        qq = paste("filter(between(", fullnm, ", ", dataset_version, ", null,", dataset_version,  ", null), ", "project_id = ", project_id, ")", sep="")
-      }
+      qq = paste0(
+        "filter(", fullnm, ", ", "project_id=", project_id, 
+                             " AND dataset_version=", dataset_version, ")")
     }
   } else {
     stop(cat("Must specify project_id To retrieve all datasets, use get_datasets()", sep = ""))
   }
   
   df = join_info_ontology_and_unpivot(qq,
-                                      arrayname,
-                                      namespace = namespace,
+                                      entitynm,
                                       con = con)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
@@ -1311,7 +1295,6 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname,
   
   join_info_ontology_and_unpivot(qq,
                                  arrayname,
-                                 namespace = find_namespace(arrayname),
                                  con = con)
 }
 
@@ -1514,13 +1497,13 @@ unpivot = function(df1, arrayname) {
   x3
 }
 
-join_info = function(qq, arrayname, namespace = 'public', mandatory_fields_only = FALSE, con = NULL) {
+join_info = function(qq, arrayname, mandatory_fields_only = FALSE, con = NULL) {
   con = use_ghEnv_if_null(con)
   entitynm = strip_namespace(arrayname)
   if (is_entity_secured(entitynm)) {
-    info_array = paste0(custom_scan(), "(", namespace, ".", entitynm, "_INFO)")
+    info_array = paste0(custom_scan(), "(", full_arrayname(entitynm), "_INFO)")
   } else {
-    info_array = paste0(                namespace, ".", entitynm, "_INFO" )
+    info_array = paste0(                    full_arrayname(entitynm), "_INFO" )
   }
   qq1 = qq
   idname = get_idname(arrayname)
@@ -1545,8 +1528,8 @@ join_info = function(qq, arrayname, namespace = 'public', mandatory_fields_only 
   x2
 }
 
-join_info_ontology_and_unpivot = function(qq, arrayname, namespace, mandatory_fields_only = FALSE, con = NULL) {
-  df1 = join_info(qq, arrayname, namespace, mandatory_fields_only, con)
+join_info_ontology_and_unpivot = function(qq, arrayname, mandatory_fields_only = FALSE, con = NULL) {
+  df1 = join_info(qq, arrayname, mandatory_fields_only, con)
   df2 = unpivot(df1, arrayname = arrayname)
   join_ontology_terms(df = df2, con = con)
 }

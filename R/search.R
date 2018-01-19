@@ -271,7 +271,7 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
     }
   }
   
-  xx = join_info_ontology_and_unpivot(qq = left_query, arrayname = strip_namespace(arrayname), namespace = get_namespace(arrayname),
+  xx = join_info_ontology_and_unpivot(qq = left_query, arrayname = strip_namespace(arrayname), 
                                       con = con)
   xx
 }
