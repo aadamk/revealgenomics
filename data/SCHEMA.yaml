@@ -635,7 +635,8 @@ array:
       - term
     search_by_entity: 
     delete_by_entity: ONTOLOGY
-    infoArray: FALSE
+    infoArray: TRUE
+    infoArray_max_keys: 1000
     compression_on: FALSE
   # FEATURESET
   FEATURESET:

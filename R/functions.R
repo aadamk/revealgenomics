@@ -209,8 +209,21 @@ full_arrayname = function(entitynm) {
 update_ontology_cache = function(con = NULL){
   con = use_ghEnv_if_null(con)
   
-  zz = iquery(con$db, full_arrayname(.ghEnv$meta$arrOntology), return = TRUE)
-  if (nrow(zz) > 1) zz = zz[order(zz[, get_idname(.ghEnv$meta$arrOntology)]), ]
+  entitynm = .ghEnv$meta$arrOntology
+  arraynm =  full_arrayname(entitynm)
+  idname = get_idname(entitynm)
+  qq = paste0("equi_join(", 
+                arraynm, ", ", 
+                arraynm, "_INFO, ",
+                "'left_names=", idname, "', ", 
+                "'right_names=", idname, "', ",
+                "'left_outer=1', 'keep_dimensions=1')"
+              )
+  zz = iquery(con$db, qq, return = TRUE)
+  zz[, 'instance_id'] = NULL
+  zz[, 'value_no'] = NULL
+  zz = unpivot(df1 = zz, arrayname = entitynm)
+  if (nrow(zz) > 1) zz = zz[order(zz[, idname]), ]
   .ghEnv$cache$dfOntology = zz
 }
 
@@ -328,8 +341,6 @@ register_ontology_term = function(df, only_test = FALSE, con = NULL){
     
     return(ids)
   } # end of if (!only_test)
-  
-  
 }
 
 #' @export
