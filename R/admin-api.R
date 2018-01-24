@@ -258,17 +258,6 @@ grant_initial_access = function(con = NULL, user_name) {
   iquery(con$db, query)
 }
 
-#' grant scidbadmin access to studies 1:N
-#' 
-#' workaround till https://github.com/Paradigm4/secure_scan/issues/7 is fixed
-grant_admin_access = function(con, max_study_id) {
-  iquery(con$db, 
-         paste0("insert(
-                  redimension(
-                    apply(build(<user_id:int64>[dataset_id=1:", max_study_id, 
-                               "], 1), access, true), permissions.dataset_id), permissions.dataset_id);"))
-}
-
 #' whether to use secure_scan or not
 #' 
 #' use this as a switch to choose between
@@ -276,4 +265,14 @@ grant_admin_access = function(con, max_study_id) {
 #' - scan (just use regular scan of arrays)
 custom_scan = function() {
   "secure_scan"
+}
+
+#' placeholder to be filled in
+add_user_to_data_loaders = function(con) {
+#  1056  iquery -aq "create_role('scidb4gh_data_loaders')"
+#  1057  iquery -aq "set_role_permissions('scidbgh_data_loaders', 'namespace', 'gh_secure', 'rul')"
+#  1058  iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_secure', 'rul')"
+#  1059  iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public', 'rul')"
+#  1060  iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public_rw', 'rul')"
+#  1061  iquery -aq "add_user_to_role('secure_user', 'scidb4gh_data_loaders')"
 }
