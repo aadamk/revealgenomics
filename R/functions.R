@@ -330,6 +330,7 @@ register_dataset = function(df,
 
 #' @export
 register_ontology_term = function(df, only_test = FALSE, con = NULL){
+  if (!('category' %in% colnames(df))) df$category = 'uncategorized'
   uniq = unique_fields()[[.ghEnv$meta$arrOntology]]
   test_register_ontology(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
@@ -1318,8 +1319,11 @@ search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_vers
 }
 
 #' @export
-search_ontology = function(terms, exact_match = TRUE, updateCache = FALSE, con = NULL){
+search_ontology = function(terms, 
+                           category = 'uncategorized', 
+                           exact_match = TRUE, updateCache = FALSE, con = NULL){
   ont = get_ontology(updateCache = updateCache, con = con)
+  if (!is.null(category)) ont = ont[ont$category == category, ]
   if (nrow(ont) == 0) return(NA)
   ont_ids = ont$ontology_id
   names(ont_ids) = ont$term

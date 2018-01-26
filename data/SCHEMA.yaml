@@ -621,6 +621,7 @@ array:
       - gh_public
     attributes: 
       term: string
+      category: string
       source_name: string
       source_version: string
       created: string
@@ -633,6 +634,7 @@ array:
         overlap: 0
     unique_fields:
       - term
+      - category
     search_by_entity: 
     delete_by_entity: ONTOLOGY
     infoArray: TRUE
