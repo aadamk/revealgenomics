@@ -18,7 +18,7 @@ get_measurementsets = function(measurementset_arr_index = NULL, dataset_version 
                                        id = measurementset_arr_index, 
                                        dataset_version = dataset_version, 
                                        all_versions = all_versions,
-                                       mandatory_fields_only = TRUE,
+                                       mandatory_fields_only = FALSE,
                                        con = con)
 }
 
