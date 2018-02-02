@@ -177,6 +177,10 @@ array:
       idname: string
       measurementset_id: int64
       name: string
+      description: string
+      featureset_id: int64
+      created: string
+      updated: string
     dims: 
       dataset_version:
         start: 0
@@ -194,11 +198,13 @@ array:
         chunk_interval: 1000000
         overlap: 0
     unique_fields:
+      - dataset_id
       - entity
-      - measurementset_id
+      - name
     search_by_entity: DATASET
     delete_by_entity: MEASUREMENTSET
-    infoArray: FALSE
+    infoArray: TRUE
+    infoArray_max_keys: 1000
     compression_on: FALSE
   # MEASUREMENT
   MEASUREMENT:

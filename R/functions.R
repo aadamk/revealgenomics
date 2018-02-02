@@ -721,8 +721,65 @@ register_measurement = function(df, dataset_version = NULL, only_test = FALSE, c
 
 #' @export
 register_measurementset = function(df, dataset_version = NULL, only_test = FALSE, con = NULL){
-  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
+  # Extra tests for MeasurementSet
+  test_register_measurementset(df, silent = ifelse(only_test, FALSE, TRUE))
+
+  #' MMRF and inforMe resgistered rnaquantificationset, variantset etc. -- each was assigned an ID 
+  #' by SciDB. These id-s were stored as `measurementset_id` in the MEASUREMENTSET array
+  #' but that array has an index `measurementset_arr_idx`. This combined array was used in the UI. 
+  #' 
+  #' CHOICE, CASTOR, POLLUX onwards -- we want to deprecate usage of individual *-SET arrays (RNAQ..SET etc.)
+  #' and ask the data loader to fill up MEASUREMENTSET array only. A `measurementset_id` index will
+  #' be assigned by this function, that will be used in subsequent steps to upload the actual file data
+  #' into respective arrays. 
+  #' 
+  #' So the following entries in MEASUREMENTSET array will exist due to old load style
+  #' 
+  #' measurementset_arr_idx    entity    idname                   measurementset_id
+  #' 1                         RNAQ..    rnaquantificationset_id  1
+  #' 2                         RNAQ..    rnaquantificationset_id  2
+  #' 3                         VAR..     variantset_id            1
+  #' (NOTE how there can be common measurementset_id-s among entries)
+  #' 
+  #' .. and the following entries in MEASUREMENTSET array will exist due to new load style
+  #' 
+  #' measurementset_arr_idx    entity    idname                   measurementset_id
+  #' 351                       RNAQ..    rnaquantificationset_id  351
+  #' 352                       RNAQ..    rnaquantificationset_id  352
+  #' 353                       VAR..     variantset_id            353
+  #' (NOTE that `measurementset_arr_idx` and `measurementset_id` now are both identical)
+  msmtset_id_alias = 'measurementset_id'
+  msmtset_idname = get_base_idname(.ghEnv$meta$arrMeasurementSet)
+  if (!(msmtset_id_alias %in% colnames(df))) {
+    flag = TRUE
+    df[, msmtset_id_alias] = -1 
+  } else {
+    flag = FALSE
+  }
+  curr_msmtsets = get_measurementsets(con = con)
+  record = register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
                                             df, dataset_version, only_test, con = con)
+  was_new_id_assigned = max(record[, msmtset_idname]) > max(curr_msmtsets[, msmtset_idname])
+  if (flag & (was_new_id_assigned | dataset_version > 1)) {
+    if (was_new_id_assigned & !(dataset_version > 1)) {
+      cat("Assigning", msmtset_id_alias, "to be same as newly assigned",  msmtset_idname, "\n")
+    }
+    if (!(was_new_id_assigned) & (dataset_version > 1)) {
+      cat("Assigning", msmtset_id_alias, "to be same as previously assigned",  msmtset_idname, 
+          "for dataset_version =", dataset_version, "\n")
+    }
+    if (was_new_id_assigned & (dataset_version > 1)) {
+      cat("Assigning", msmtset_id_alias, "to be same as previously / newly assigned",  msmtset_idname, 
+          "for dataset_version =", dataset_version, "\n")
+    }
+    ids = record[, msmtset_idname]
+    dfx = get_measurementsets(measurementset_arr_index = ids, 
+                              dataset_version = dataset_version, 
+                              con = con)
+    dfx[, msmtset_id_alias] = ids
+    update_entity(entity = .ghEnv$meta$arrMeasurementSet, df = dfx, con = con)
+  }
+  record
 }
 
 register_versioned_secure_metadata_entity = function(entity, df, 
@@ -1404,17 +1461,11 @@ search_measurements = function(dataset_id = NULL, dataset_version = NULL, all_ve
 
 #' @export
 search_measurementsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  # TODO: use generic function search_versioned_secure_metadata_entity()
-  # after adding a flag to only download mandatory fields
-  con = use_ghEnv_if_null(con)
-  arr = paste0(con$cache$nmsp_list, ".MEASUREMENTSET")
-  if (length(arr) == 2) arr = paste0("merge(", 
-                                               arr[1], ",", 
-                                               arr[2], ")")
-  
-  qq = paste0("filter(", arr, ", dataset_id=", dataset_id, ")")
-  if (!is.null(dataset_version)) qq = paste0("filter(", qq, ", dataset_version=", dataset_version, ")")
-  iquery(con$db, qq, return = TRUE)
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
+                                          dataset_id = dataset_id,
+                                          dataset_version = dataset_version,
+                                          all_versions = all_versions,
+                                          con = con)
 }
 
 #' internal function for search_METADATA()

@@ -160,6 +160,24 @@ test_register_experimentset = function(df, silent = TRUE){
   }
 }
 
+test_register_measurementset  = function(df1, silent = TRUE){
+  # Additional tests
+  
+  # BEGIN: Common test with test_.._experimentset
+  entity_df = get_entity_info()
+  entity_df = entity_df[entity_df$class == 'measurementdata', ]
+  entity_nm_upload = as.character(unique(df1$measurement_entity))
+  
+  if (!(all(entity_nm_upload %in% as.character(entity_df$entity)))) {
+    cat("Unexpected measurement entity: \n")
+    print(entity_nm_upload[!(entity_nm_upload %in% as.character(entity_df$entity))])
+    stop("Allowed measurement entities: ", pretty_print(entity_df$entity))
+  }
+  # END: Common test with test_.._experimentset
+  
+  # any other tests
+}
+
 test_register_variantset = function(df, uniq, silent = TRUE){
   # Add additional tests here -->
   
