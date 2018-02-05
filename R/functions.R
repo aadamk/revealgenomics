@@ -1317,7 +1317,7 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
   entitynm = .ghEnv$meta$arrDataset
   
   if (!is.null(project_id)) {
-    fullnm = full_arrayname(entitynm)
+    fullnm = paste0(custom_scan(), "(", full_arrayname(entitynm), ")")
     if (is.null(dataset_version)) {
       qq = paste0("filter(", fullnm, ", ", "project_id=", project_id, ")")
     } else {
