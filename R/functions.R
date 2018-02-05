@@ -1244,7 +1244,7 @@ search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NU
   f1 = syn[syn$synonym %in% synonym, ]
   if (!is.null(id_type)) {f1 = f1[f1$source == id_type, ]}
   if (!is.null(featureset_id)) {f1 = f1[f1$featureset_id == f1$featureset_id, ]}
-  get_features(feature_id = f1$feature_id, fromCache = !updateCache, con = con)
+  get_features(feature_id = unique(f1$feature_id), fromCache = !updateCache, con = con)
 }
 
 #' @export
