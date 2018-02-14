@@ -13,19 +13,19 @@
 #
 
 #' @export
-search_rnaquantification = function(rnaquantificationset = NULL,
+search_rnaquantification = function(measurementset = NULL,
                                     biosample = NULL,
                                     feature = NULL,
                                     formExpressionSet = TRUE,
                                     con = NULL){
-  if (!is.null(rnaquantificationset)) {rnaquantificationset_id = rnaquantificationset$rnaquantificationset_id} else {
-    stop("rnaquantificationset must be supplied"); rnaquantificationset_id = NULL
+  if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
+    stop("measurementset must be supplied"); measurementset_id = NULL
   }
-  if (length(unique(rnaquantificationset$dataset_version)) != 1) {
-    stop("multiple dataset versions in supplied rnaquantificationset");
+  if (length(unique(measurementset$dataset_version)) != 1) {
+    stop("multiple dataset versions in supplied measurementset");
   }
-  dataset_version = unique(rnaquantificationset$dataset_version)
-  dataset_id =      unique(rnaquantificationset$dataset_id)
+  dataset_version = unique(measurementset$dataset_version)
+  dataset_id =      unique(measurementset$dataset_id)
   if (!is.null(biosample)) {
     stopifnot(length(unique(biosample$dataset_version))==1)
     stopifnot(unique(biosample$dataset_version)==dataset_version)
@@ -34,7 +34,7 @@ search_rnaquantification = function(rnaquantificationset = NULL,
   if (!is.null(biosample)) {
     biosample_id = biosample$biosample_id
     if (dataset_id != unique(biosample$dataset_id)) {
-      stop("conflicting dataset_id in rnaquantificationset and biosample") 
+      stop("conflicting dataset_id in measurementset and biosample") 
     }
   } else {
     biosample_id = NULL
@@ -47,7 +47,7 @@ search_rnaquantification = function(rnaquantificationset = NULL,
   
   if (exists('debug_trace')) cat("retrieving expression data from server\n")
   res = search_rnaquantification_scidb(arrayname,
-                                       rnaquantificationset_id,
+                                       measurementset_id,
                                        biosample_id,
                                        feature_id,
                                        dataset_version = dataset_version,
@@ -83,20 +83,20 @@ search_rnaquantification = function(rnaquantificationset = NULL,
     }
   }
   
-  expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, rnaquantificationset, biosample, feature)
+  expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, measurementset, biosample, feature)
   
   return(expressionSet)
 }
 
-formulate_list_expression_set = function(expr_df, dataset_version, rnaquantificationset, biosample, feature){
-  if (nrow(rnaquantificationset) > 1) {stop("currently does not support returning expressionSets for multiple rnaquantification sets")}
+formulate_list_expression_set = function(expr_df, dataset_version, measurementset, biosample, feature){
+  if (nrow(measurementset) > 1) {stop("currently does not support returning expressionSets for multiple rnaquantification sets")}
   if (length(dataset_version) != 1) {stop("currently does not support returning expressionSets for multiple dataset_verions")}
   
   convertToExpressionSet(expr_df, biosample_df = biosample, feature_df = feature)
 }
 
 search_rnaquantification_scidb = function(arrayname,
-                                          rnaquantificationset_id,
+                                          measurementset_id,
                                           biosample_id,
                                           feature_id,
                                           dataset_version,
@@ -109,26 +109,22 @@ search_rnaquantification_scidb = function(arrayname,
   if (length(dataset_version) != 1) {stop("cannot specify one dataset_version at a time")}
   
   qq = paste0(custom_scan(), "(", arrayname, ")")
-  if (!is.null(rnaquantificationset_id) & !is.null(biosample_id) & !is.null(feature_id)) { # all 3 selections made by user
-    if (length(rnaquantificationset_id) == 1 & length(biosample_id) == 1 & length(feature_id) == 1) {
-      qq = paste("between(",
+  if (!is.null(measurementset_id) & !is.null(biosample_id) & !is.null(feature_id)) { # all 3 selections made by user
+    if (length(measurementset_id) == 1 & length(biosample_id) == 1 & length(feature_id) == 1) {
+      qq = paste0("filter(",
                  qq,
-                 ", ", dataset_version,
-                 ", ", rnaquantificationset_id,
-                 ", ", biosample_id,
-                 ", ", feature_id,
-                 ", ", dataset_version,
-                 ", ", rnaquantificationset_id,
-                 ", ", biosample_id,
-                 ", ", feature_id,
-                 ")", sep="")
+                 ", dataset_version =", dataset_version,
+                 " AND measurementset_id =", measurementset_id,
+                 " AND biosample_id = ", biosample_id,
+                 " AND feature_id = ", feature_id,
+                 ")")
       res = iquery(con$db, qq, return = T)
     }
     else {
       selector = merge(
         merge(
           merge(data.frame(dataset_version = as.integer(dataset_version)),
-                data.frame(rnaquantificationset_id = as.integer(rnaquantificationset_id))),
+                data.frame(measurementset_id = as.integer(measurementset_id))),
           data.frame(biosample_id = as.integer(biosample_id))),
         data.frame(feature_id = as.integer(feature_id)))
       if (TRUE){ # Return data using join
@@ -149,7 +145,7 @@ search_rnaquantification_scidb = function(arrayname,
         res = iquery(con$db, qq, return = T)
       } else { # Return data using cross_between_
         stop("Code needs to be added here to support inclusion of `dataset_version` in expression matrix schema")
-        df = selector[order(selector$rnaquantificationset_id, selector$biosample_id, selector$feature_id), ]
+        df = selector[order(selector$measurementset_id, selector$biosample_id, selector$feature_id), ]
         sqq = NULL
         for (nn in 1:nrow(df)){
           row = df[nn, ]
@@ -161,32 +157,32 @@ search_rnaquantification_scidb = function(arrayname,
         res = iquery(con$db, qq, return = T)
       }
     }
-  } else if (!is.null(rnaquantificationset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected rqs and bs, not f
-    selected_names = c('rnaquantificationset_id', 'biosample_id')
-    val1 = rnaquantificationset_id
+  } else if (!is.null(measurementset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected rqs and bs, not f
+    selected_names = c('measurementset_id', 'biosample_id')
+    val1 = measurementset_id
     val2 = biosample_id
     res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
-  } else if (is.null(rnaquantificationset_id) & !is.null(biosample_id) & !is.null(feature_id)) { # user selected bs and f, not rqs
+  } else if (is.null(measurementset_id) & !is.null(biosample_id) & !is.null(feature_id)) { # user selected bs and f, not rqs
     selected_names = c('biosample_id', 'feature_id')
     val1 = biosample_id
     val2 = feature_id
     res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
-  } else if (!is.null(rnaquantificationset_id) & is.null(biosample_id) & !is.null(feature_id)) { # user selected rqs and f, not bs
-    selected_names = c('rnaquantificationset_id', 'feature_id')
-    val1 = rnaquantificationset_id
+  } else if (!is.null(measurementset_id) & is.null(biosample_id) & !is.null(feature_id)) { # user selected rqs and f, not bs
+    selected_names = c('measurementset_id', 'feature_id')
+    val1 = measurementset_id
     val2 = feature_id
     res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
-  } else if (!is.null(rnaquantificationset_id) & is.null(biosample_id) & is.null(feature_id)) { # user selected rqs only
-    if (exists('debug_trace')) cat("Only RNAQuantificationSet is selected.\n")
-    if (length(rnaquantificationset_id) == 1){
-      qq = paste0("filter(", qq, ", rnaquantificationset_id=", rnaquantificationset_id, 
+  } else if (!is.null(measurementset_id) & is.null(biosample_id) & is.null(feature_id)) { # user selected rqs only
+    if (exists('debug_trace')) cat("Only measurementset is selected.\n")
+    if (length(measurementset_id) == 1){
+      qq = paste0("filter(", qq, ", measurementset_id=", measurementset_id, 
                                  " AND dataset_version=", dataset_version, ")")
     } else {
-      stop("code for multiple rnaquantificationset_id to be added. Alternatively, call the search function by individual rnaquantificationset_id.")
+      stop("code for multiple measurementset_id to be added. Alternatively, call the search function by individual measurementset_id.")
     }
     res = iquery(con$db, qq, return = TRUE)
-  } else if (is.null(rnaquantificationset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected bs only
-    stop("Only biosample is selected. Downloaded data could be quite large. Consider downselecting by RNAQuantificationSet_id or feature_id. ")
+  } else if (is.null(measurementset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected bs only
+    stop("Only biosample is selected. Downloaded data could be quite large. Consider downselecting by MeasurementSet_id or feature_id. ")
   }
   res
 }
@@ -280,27 +276,22 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
 
 #' Search Fusion data
 #' 
-#' @param dataset_lookup_ref If supplied by user, look up namespace using dataset_id, AND from a user 
-#'                           supplied reference table 
-#'                           (required in multi-user Shiny app).
-#'                           If not supplied by user,  look up namespace using fusionset_id, AND using fusionset_lookup embedded in .ghEnv environment variable 
-#'                           (not OK to use in multi-user shiny app)
 #' @param inferSchemaOnQuery optimization flag (default: TRUE. if FALSE, uses schema hand-baked in internal code. 
 #'                           Use with caution until schema is automatically inferred from YAML file)
 #' @export
-search_fusion = function(fusionset, biosample = NULL, feature = NULL, 
+search_fusion = function(measurementset, biosample = NULL, feature = NULL, 
                          dataset_lookup_ref = NULL,
                          con = NULL){
-  if (!is.null(fusionset)) {fusionset_id = fusionset$fusionset_id} else {
-    stop("fusionset must be supplied"); fusionset_id = NULL
+  if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
+    stop("measurementset must be supplied"); measurementset_id = NULL
   }
-  if (length(unique(fusionset$dataset_version)) != 1) {
-    stop("multiple dataset versions in supplied fusionset");
+  if (length(unique(measurementset$dataset_version)) != 1) {
+    stop("multiple dataset versions in supplied measurementset");
   }
-  dataset_version = unique(fusionset$dataset_version)
+  dataset_version = unique(measurementset$dataset_version)
   if (!is.null(biosample)) {
     stopifnot(length(unique(biosample$dataset_version))==1)
-    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of fusionset and biosample must be same")
+    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of measurementset and biosample must be same")
   }
   
   arrayname = paste0(custom_scan(), 
@@ -310,7 +301,7 @@ search_fusion = function(fusionset, biosample = NULL, feature = NULL,
   
   if (exists('debug_trace')) cat("retrieving fusion data from server\n")
   res = search_fusions_scidb(arrayname,
-                             fusionset_id,
+                             measurementset_id,
                              biosample_id,
                              feature_id,
                              dataset_version = dataset_version, 
@@ -318,15 +309,15 @@ search_fusion = function(fusionset, biosample = NULL, feature = NULL,
   res
 }
 
-search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
+search_fusions_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
                                 con = NULL){
   con = use_ghEnv_if_null(con)
   
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
-  if (is.null(fusionset_id)) stop("fusionset_id must be supplied")
-  if (length(fusionset_id) != 1) stop("can handle only one fusionset_id at a time")
+  if (is.null(measurementset_id)) stop("measurementset_id must be supplied")
+  if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
   
   left_query = paste0("filter(", arrayname,
                      ", dataset_version=", dataset_version, " AND fusionset_id=", fusionset_id, ")")
@@ -341,7 +332,7 @@ search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, fe
     filter_expr = formulate_base_selection_query(.ghEnv$meta$arrFeature, id = feature_id)
     filter_expr_left = gsub("feature_id", "feature_id_left", filter_expr)
     filter_expr_right = gsub("feature_id", "feature_id_right", filter_expr)
-    
+
     left_query = paste("filter(", left_query,
                        ", (", filter_expr_left, ") OR (", 
                        filter_expr_right, "))", sep = "")

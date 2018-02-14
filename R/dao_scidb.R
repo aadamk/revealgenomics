@@ -16,43 +16,8 @@
 
 #' @export
 dao_get_measurementset = function(con){
-  rqs_query = paste0(custom_scan(), "(gh_secure.RNAQUANTIFICATIONSET)")
-  vst_query = paste0(custom_scan(), "(gh_secure.VARIANTSET)")
-  fst_query = paste0(custom_scan(), "(gh_secure.FUSIONSET)")
-  cst_query = paste0(custom_scan(), "(gh_secure.COPYNUMBERSET)")
-
-  rqs = iquery(con$db, paste0(
-                "apply(
-                  project(
-                    ", rqs_query, ", 
-                    name, experimentset_id),
-                  entity, 'RNAQUANTIFICATION', id, rnaquantificationset_id)"), return = TRUE)
-  var = iquery(con$db, paste0(
-                 "apply(
-                   project(
-                     ", vst_query, ", 
-                     name, experimentset_id),
-                   entity, 'VARIANT', id, variantset_id)"),           return = TRUE)
-  fus = iquery(con$db, paste0(
-                 "apply(
-                   project(
-                     ", fst_query, ", 
-                     name, experimentset_id),
-                   entity, 'FUSION', id, fusionset_id)"),            return = TRUE)
-  cnv = iquery(con$db, paste0(
-                 "apply(
-                   project(
-                     ", cst_query, ", 
-                     name, experimentset_id),
-                   entity, 'COPYNUMBER_MAT', id, copynumberset_id)"), return = TRUE)
-  if (nrow(rqs) == 0) rqs = list()
-  if (nrow(var) == 0) var = list()
-  if (nrow(fus) == 0) fus = list()
-  if (nrow(cnv) == 0) cnv = list()
-  
-  res = rbindlist(list(rqs, var, fus, cnv), fill = TRUE)
-  res = data.frame(res)
-  allcols = colnames(res)
+  res = get_measurementsets(con = con)
+  stop("id and name are potentially not going to be returned by get_measurementsets()")
   cols1 = c('dataset_id', 'dataset_version', 'experimentset_id', 'entity', 'id', 'name')
   othercols = allcols[!(allcols %in% cols1)]
   
@@ -114,24 +79,24 @@ dao_get_biosample = function(con){
 #' @param biosample_ref Reference dataframe containing all biosamples available to the user (retrieved by `dao_get_biosample(con = con)`)
 #' 
 #' @export
-dao_search_rnaquantification = function(rnaquantificationset, 
+dao_search_rnaquantification = function(measurementset, 
                                         biosample_ref, 
                                         feature = NULL, 
                                         con) {
-  rqs_id = unique(rnaquantificationset$rnaquantificationset_id)
+  rqs_id = unique(measurementset$measurementset_id)
   stopifnot(length(rqs_id)==1)
   
-  dataset_version = unique(rnaquantificationset$dataset_version)
+  dataset_version = unique(measurementset$dataset_version)
   stopifnot(length(dataset_version) == 1)
   
-  dataset_id = unique(rnaquantificationset$dataset_id)
+  dataset_id = unique(measurementset$dataset_id)
   stopifnot(length(dataset_id) == 1)
   
   ftr_id = unique(feature$feature_id)
   
   arr0 = full_arrayname(.ghEnv$meta$arrRnaquantification)
   
-  qq = paste0("filter(", custom_scan(), "(", arr0, "), rnaquantificationset_id = ", rqs_id, ")")
+  qq = paste0("filter(", custom_scan(), "(", arr0, "), measurementset_id = ", rqs_id, ")")
   
   if (!is.null(feature)) {
     K_THRESH = 500
@@ -189,7 +154,7 @@ Post an issue at https://github.com/Paradigm4/scidb4gh/issues\n")
   }
   expressionSet = formulate_list_expression_set(expr_df = res, 
                                                 dataset_version = dataset_version, 
-                                                rnaquantificationset = rnaquantificationset,
+                                                measurementset = measurementset,
                                                 biosample = biosample,
                                                 feature = feature_sel)
   

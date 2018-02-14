@@ -725,62 +725,8 @@ register_measurementset = function(df, dataset_version = NULL, only_test = FALSE
   # Extra tests for MeasurementSet
   test_register_measurementset(df, silent = ifelse(only_test, FALSE, TRUE))
 
-  #' MMRF and inforMe resgistered rnaquantificationset, variantset etc. -- each was assigned an ID 
-  #' by SciDB. These id-s were stored as `measurementset_id` in the MEASUREMENTSET array
-  #' but that array has an index `measurementset_arr_idx`. This combined array was used in the UI. 
-  #' 
-  #' CHOICE, CASTOR, POLLUX onwards -- we want to deprecate usage of individual *-SET arrays (RNAQ..SET etc.)
-  #' and ask the data loader to fill up MEASUREMENTSET array only. A `measurementset_id` index will
-  #' be assigned by this function, that will be used in subsequent steps to upload the actual file data
-  #' into respective arrays. 
-  #' 
-  #' So the following entries in MEASUREMENTSET array will exist due to old load style
-  #' 
-  #' measurementset_arr_idx    entity    idname                   measurementset_id
-  #' 1                         RNAQ..    rnaquantificationset_id  1
-  #' 2                         RNAQ..    rnaquantificationset_id  2
-  #' 3                         VAR..     variantset_id            1
-  #' (NOTE how there can be common measurementset_id-s among entries)
-  #' 
-  #' .. and the following entries in MEASUREMENTSET array will exist due to new load style
-  #' 
-  #' measurementset_arr_idx    entity    idname                   measurementset_id
-  #' 351                       RNAQ..    rnaquantificationset_id  351
-  #' 352                       RNAQ..    rnaquantificationset_id  352
-  #' 353                       VAR..     variantset_id            353
-  #' (NOTE that `measurementset_arr_idx` and `measurementset_id` now are both identical)
-  msmtset_id_alias = 'measurementset_id'
-  msmtset_idname = get_base_idname(.ghEnv$meta$arrMeasurementSet)
-  if (!(msmtset_id_alias %in% colnames(df))) {
-    flag = TRUE
-    df[, msmtset_id_alias] = -1 
-  } else {
-    flag = FALSE
-  }
-  curr_msmtsets = get_measurementsets(con = con)
-  record = register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
+  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
                                             df, dataset_version, only_test, con = con)
-  was_new_id_assigned = max(record[, msmtset_idname]) > max(curr_msmtsets[, msmtset_idname])
-  if (flag & (was_new_id_assigned | dataset_version > 1)) {
-    if (was_new_id_assigned & !(dataset_version > 1)) {
-      cat("Assigning", msmtset_id_alias, "to be same as newly assigned",  msmtset_idname, "\n")
-    }
-    if (!(was_new_id_assigned) & (dataset_version > 1)) {
-      cat("Assigning", msmtset_id_alias, "to be same as previously assigned",  msmtset_idname, 
-          "for dataset_version =", dataset_version, "\n")
-    }
-    if (was_new_id_assigned & (dataset_version > 1)) {
-      cat("Assigning", msmtset_id_alias, "to be same as previously / newly assigned",  msmtset_idname, 
-          "for dataset_version =", dataset_version, "\n")
-    }
-    ids = record[, msmtset_idname]
-    dfx = get_measurementsets(measurementset_arr_index = ids, 
-                              dataset_version = dataset_version, 
-                              con = con)
-    dfx[, msmtset_id_alias] = ids
-    update_entity(entity = .ghEnv$meta$arrMeasurementSet, df = dfx, con = con)
-  }
-  record
 }
 
 register_versioned_secure_metadata_entity = function(entity, df, 
@@ -803,18 +749,6 @@ register_versioned_secure_metadata_entity = function(entity, df,
     arrayname = full_arrayname(entity)
     register_tuple_return_id(df, arrayname, uniq, dataset_version = dataset_version, con = con)
   } # end of if (!only_test)
-}
-
-#' @export
-register_rnaquantificationset = function(df, dataset_version = NULL, only_test = FALSE, con = NULL){
-  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrRnaquantificationset, 
-                                            df, dataset_version, only_test, con = con)
-}
-
-#' @export
-register_fusionset = function(df, dataset_version = NULL, only_test = FALSE, con = NULL){
-  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrFusionset, 
-                                            df, dataset_version, only_test, con = con)
 }
 
 #' @export
@@ -986,15 +920,6 @@ check_args_get = function(id, dataset_version, all_versions){
 }
 
 #' @export
-get_rnaquantificationsets = function(rnaquantificationset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrRnaquantificationset,
-                                       id = rnaquantificationset_id, 
-                                       dataset_version = dataset_version, 
-                                       all_versions = all_versions,
-                                       con = con)
-}
-
-#' @export
 get_experimentset = function(experimentset_id = NULL, dataset_version = NULL, all_versions = FALSE, mandatory_fields_only = FALSE, con = NULL){
   get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
                                        id = experimentset_id, 
@@ -1023,15 +948,6 @@ get_variantsets = function(variantset_id = NULL, dataset_version = NULL, all_ver
                                        id = variantset_id, 
                                        dataset_version = dataset_version, 
                                        all_versions = all_versions, 
-                                       con = con)
-}
-
-#' @export
-get_fusionset = function(fusionset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrFusionset, 
-                                       id = fusionset_id, 
-                                       dataset_version = dataset_version, 
-                                       all_versions = all_versions,
                                        con = con)
 }
 
@@ -1423,21 +1339,8 @@ search_ontology = function(terms,
 }
 
 #' @export
-search_rnaquantificationset = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrRnaquantificationset, 
-                                          dataset_id, dataset_version, all_versions, con = con)
-}
-
-#' @export
 search_variantsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
   search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
-                                          dataset_id, dataset_version, all_versions, con = con)
-  
-}
-
-#' @export
-search_fusionsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrFusionset, 
                                           dataset_id, dataset_version, all_versions, con = con)
   
 }
@@ -1461,12 +1364,28 @@ search_measurements = function(dataset_id = NULL, dataset_version = NULL, all_ve
 }
 
 #' @export
-search_measurementsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
+search_measurementsets = function(dataset_id = NULL, dataset_version = NULL, 
+                                  all_versions = FALSE, 
+                                  measurement_type = NULL,
+                                  con = NULL){
+  df_msmtset = search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
                                           dataset_id = dataset_id,
                                           dataset_version = dataset_version,
                                           all_versions = all_versions,
                                           con = con)
+  if (!is.null(measurement_type)) {
+    stopifnot(length(measurement_type) == 1)
+    entity_df = get_entity_info()
+    entity_df = entity_df[entity_df$class == 'measurementdata', ]
+    
+    if (!(measurement_type %in% as.character(entity_df$entity))) {
+      cat("Unexpected measurement entity:", measurement_type, "\n")
+      stop("Allowed measurement entities: ", pretty_print(entity_df$entity))
+    }    
+    
+    df_msmtset = df_msmtset[df_msmtset$entity == measurement_type, ]
+  }
+  df_msmtset
 }
 
 #' internal function for search_METADATA()
@@ -1535,31 +1454,27 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
 }
 
 #' @export
-get_rnaquantification_counts = function(rnaquantificationset_id = NULL, con = NULL){
+get_rnaquantification_counts = function(measurementset_id = NULL, con = NULL){
   con = use_ghEnv_if_null(con)
-  
-  if (is.null(rnaquantificationset_id)){
-    # public first
-    x = scidb(con$db, .ghEnv$meta$arrRnaquantification)
-    # c = as.R(con$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
-    c = iquery(con$db, paste0("aggregate(", x@name, ", count(*), rnaquantificationset_id, dataset_version"), return = TRUE)
-    for (nmsp in con$cache$nmsp_list){
-      if (nmsp != 'public'){
-        x = scidb(con$db, paste(nmsp, .ghEnv$meta$arrRnaquantification, sep = "."))
-        # c1 = as.R(con$db$aggregate(srcArray = x, AGGREGATE_CALL = "count(*)", groupbyDim = 'rnaquantificationset_id, dataset_version'))
-        c1 = iquery(con$db, paste0("aggregate(", x@name, ", count(*), rnaquantificationset_id, dataset_version"), return = TRUE)
-        c = rbind(c, c1)
-      }
-    }
-  } else { #specific rnaquantificationset_id is specified
-    nmsp = find_namespace(id = rnaquantificationset_id, entitynm = .ghEnv$meta$arrRnaquantificationset, 
-                          dflookup = get_rnaquantificationset_lookup(),
-                          con = con)
-    qq = paste("between(", nmsp, ".", .ghEnv$meta$arrRnaquantification, ", null, ", rnaquantificationset_id, ", null, null, null, ", rnaquantificationset_id, ", null, null)", sep = "" )
-    qq = paste("aggregate(", qq, ", count(*), rnaquantificationset_id, dataset_version)")
+  idname = get_base_idname(.ghEnv$meta$arrMeasurementSet)
+  if (is.null(measurementset_id)){
+    c = iquery(con$db, 
+                paste0("aggregate(", 
+                       custom_scan(), "(", 
+                       full_arrayname(.ghEnv$meta$arrRnaquantification), "),", 
+                       "count(*), ", 
+                       idname, 
+                       ", dataset_version)"), 
+                return = TRUE)
+  } else { #specific measurementset_id is specified
+    qq = paste0("filter(", 
+                 custom_scan(), "(", 
+                      full_arrayname(.ghEnv$meta$arrRnaquantification), "), ", 
+                 idname , "=", measurementset_id, ")")
+    qq = paste0("aggregate(", qq, ", count(*), ", idname, ", dataset_version)")
     c = iquery(con$db, qq, return = T)
   }
-  c = c[order(c$rnaquantificationset_id, c$dataset_version), ]
+  c = c[order(c[, idname], c$dataset_version), ]
   return(c)
 }
 
@@ -1667,7 +1582,7 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   test_register_expression_dataframe(df1)
   
   # df1 = df1[, mandatory_fields()[[.ghEnv$meta$arrRnaquantification]]]
-  df1 = df1[, c('dataset_id', 'rnaquantificationset_id', 'biosample_id', 
+  df1 = df1[, c('dataset_id', 'measurementset_id', 'biosample_id', 
                 'feature_id', 'value')]
   adf_expr0 = as.scidb(con$db, 
                        df1, 
@@ -1690,7 +1605,7 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
 
 #' @export
 register_expression_matrix = function(filepath,
-                                      rnaquantificationset_id,
+                                      measurementset_id,
                                       featureset_id,
                                       feature_type,
                                       dataset_version = NULL,
@@ -1699,22 +1614,22 @@ register_expression_matrix = function(filepath,
   con = use_ghEnv_if_null(con)
   
   test_register_expression_matrix(filepath,
-                                  rnaquantificationset_id,
+                                  measurementset_id,
                                   featureset_id,
                                   feature_type,
                                   dataset_version)
   if (!only_test) {
     if (is.null(dataset_version)) {
-      rqset = get_rnaquantificationsets(rnaquantificationset_id = rnaquantificationset_id, con = con) # finds the latest version
+      rqset = get_measurementsets(measurementset_id = measurementset_id, con = con) # finds the latest version
       dataset_version = rqset$dataset_version
-      cat("Dataset version not specified. Inferred version from rnaquantificationset_id as version:", dataset_version, "\n")
+      cat("Dataset version not specified. Inferred version from measurementset_id as version:", dataset_version, "\n")
     } else {
       stopifnot(length(dataset_version) == 1)
-      rqset = get_rnaquantificationsets(rnaquantificationset_id = rnaquantificationset_id,
+      rqset = get_measurementsets(measurementset_id = measurementset_id,
                                         dataset_version = dataset_version, con = con)
     }
     dataset_id = rqset$dataset_id
-    cat("Specified rnaquantificationset_id belongs to dataset:", dataset_id, "\n")
+    cat("Specified measurementset_id belongs to dataset:", dataset_id, "\n")
     
     arr_feature = full_arrayname(.ghEnv$meta$arrFeature)
     arr_biosample = full_arrayname(.ghEnv$meta$arrBiosample)
@@ -1863,7 +1778,7 @@ register_expression_matrix = function(filepath,
                       paste("apply(",
                             joinBack2@name, ", ",
                             "value, dcast(a, float(null)), ",
-                            "rnaquantificationset_id, ", rnaquantificationset_id,
+                            "measurementset_id, ", measurementset_id,
                             ", dataset_id, ", dataset_id, 
                             ", dataset_version, ", dataset_version,
                             ")", sep = "")
@@ -1880,7 +1795,7 @@ register_expression_matrix = function(filepath,
       stop("expression array does not exist")
     }
     
-    return(rnaquantificationset_id)
+    return(measurementset_id)
   } # end of if (!only_test)
 }
 
@@ -1958,11 +1873,11 @@ register_copynumber_matrix_file = function(copynumberset, dataset_version, featu
   }
 
 #' @export
-register_fusion_data = function(df, fusionset, only_test = FALSE, con = NULL){
-  test_register_fusion_data(df, fusionset)
+register_fusion_data = function(df, measurementset, only_test = FALSE, con = NULL){
+  test_register_fusion_data(df, measurementset)
   if (!only_test) {
-    dataset_id = fusionset$dataset_id
-    dataset_version = fusionset$dataset_version
+    dataset_id = measurementset$dataset_id
+    dataset_version = measurementset$dataset_version
     
     xx = df
     
@@ -1985,7 +1900,7 @@ register_fusion_data = function(df, fusionset, only_test = FALSE, con = NULL){
     colnames(xx)[colnames(xx) == 'chrom_left'] = 'reference_name_left'
     colnames(xx)[colnames(xx) == 'chrom_right'] = 'reference_name_right'
     
-    xx$fusionset_id = fusionset_record$fusionset_id
+    xx$measurementset_id = measurementset$measurementset_id
     xx$dataset_version = dataset_version
     
     arrayname = full_arrayname(.ghEnv$meta$arrFusion)
@@ -2068,12 +1983,11 @@ update_entity = function(entity, df, con = NULL){
 get_entity_count_old = function(con = NULL){
   con = use_ghEnv_if_null(con)
   
-  entities = c(.ghEnv$meta$arrProject, .ghEnv$meta$arrDataset, 
-               .ghEnv$meta$arrIndividuals, .ghEnv$meta$arrBiosample, 
-               .ghEnv$meta$arrRnaquantificationset, 
-               .ghEnv$meta$arrVariantset,
-               .ghEnv$meta$arrFusionset,
-               .ghEnv$meta$arrCopyNumberSet, 
+  entities = c(.ghEnv$meta$arrProject, 
+               .ghEnv$meta$arrDataset, 
+               .ghEnv$meta$arrIndividuals, 
+               .ghEnv$meta$arrBiosample, 
+               .ghEnv$meta$arrMeasurementSet, 
                .ghEnv$meta$arrExperimentSet)
   if (length(con$cache$nmsp_list) == 1){
     nmsp = con$cache$nmsp_list

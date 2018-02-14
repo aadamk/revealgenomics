@@ -37,7 +37,9 @@ fsyn1 = scidb4gh:::get_feature_synonym(con = con1)
 fsyn2 = scidb4gh:::get_feature_synonym(con = con2)
 identical(fsyn1, fsyn2)
 
-r2 = get_rnaquantificationsets(con = con2)
-r3 = get_rnaquantificationsets(con = con3)
-search_rnaquantification(rnaquantificationset = r2[8, ], con = con2)
+r2 = get_measurementsets(con = con2)
+r3 = get_measurementsets(con = con3)
+search_measurementsets(measurementset = r2[8, ], 
+                       measurement_type = .ghEnv$meta$arrRnaquantification,
+                       con = con2)
 

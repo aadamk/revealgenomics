@@ -174,8 +174,6 @@ array:
     attributes:
       experimentset_id: int64
       entity: string
-      idname: string
-      measurementset_id: int64
       name: string
       description: string
       featureset_id: int64
@@ -192,7 +190,7 @@ array:
         end: Inf
         chunk_interval: 1000
         overlap: 0
-      measurementset_arr_index:
+      measurementset_id:
         start: 0
         end: Inf
         chunk_interval: 1000000
@@ -245,42 +243,6 @@ array:
     infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: FALSE
-  # RNAQUANTIFICATIONSET
-  RNAQUANTIFICATIONSET:
-    data_class:
-      metadata
-    namespace: 
-      - gh_secure
-    attributes: 
-      experimentset_id: int64
-      name: string
-      description: string
-      created: string
-      updated: string
-    dims: 
-      dataset_version:
-        start: 0
-        end: Inf
-        chunk_interval: 1
-        overlap: 0
-      dataset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-      rnaquantificationset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-    unique_fields:
-      - dataset_id
-      - name
-    search_by_entity: DATASET
-    delete_by_entity: RNAQUANTIFICATIONSET
-    infoArray: TRUE
-    infoArray_max_keys: 1000
-    compression_on: FALSE
   #RNAQUANTIFICATION
   RNAQUANTIFICATION:
     data_class:
@@ -302,7 +264,7 @@ array:
         end: Inf
         chunk_interval: 10
         overlap: 0
-      rnaquantificationset_id:
+      measurementset_id:
         start: 0
         end: Inf
         chunk_interval: 1
@@ -317,47 +279,10 @@ array:
         end: Inf
         chunk_interval: 10000
         overlap: 0
-    search_by_entity: RNAQUANTIFICATIONSET
-    delete_by_entity: RNAQUANTIFICATIONSET
+    search_by_entity: MEASUREMENTSET
+    delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
-  # VARIANTSET
-  VARIANTSET:
-    data_class:
-      metadata
-    namespace: 
-      - gh_secure
-    attributes: 
-      experimentset_id: int64
-      referenceset_id: int64
-      name: string
-      description: string
-      created: string
-      updated: string
-    dims: 
-      dataset_version:
-        start: 0
-        end: Inf
-        chunk_interval: 1
-        overlap: 0
-      dataset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-      variantset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-    unique_fields:
-      - dataset_id
-      - name
-    search_by_entity: DATASET
-    delete_by_entity: VARIANTSET
-    infoArray: TRUE
-    infoArray_max_keys: 1000
-    compression_on: FALSE
   # VARIANT
   VARIANT:
     data_class:
@@ -384,7 +309,7 @@ array:
         end: Inf
         chunk_interval: 10
         overlap: 0
-      variantset_id:
+      measurementset_id:
         start: 0
         end: Inf
         chunk_interval: 1
@@ -404,47 +329,11 @@ array:
         end: Inf
         chunk_interval: 10000
         overlap: 0
-    search_by_entity: VARIANTSET
-    delete_by_entity: VARIANTSET
+    search_by_entity: MEASUREMENTSET
+    delete_by_entity: MEASUREMENTSET
     infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: TRUE
-  # FUSIONSET
-  FUSIONSET:
-    data_class:
-      metadata
-    namespace: 
-      - gh_secure
-    attributes: 
-      experimentset_id: int64
-      name: string
-      description: string
-      created: string
-      updated: string
-    dims: 
-      dataset_version:
-        start: 0
-        end: Inf
-        chunk_interval: 1
-        overlap: 0
-      dataset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-      fusionset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-    unique_fields:
-      - dataset_id
-      - name
-    search_by_entity: DATASET
-    delete_by_entity: FUSIONSET
-    infoArray: TRUE
-    infoArray_max_keys: 1000
-    compression_on: FALSE
   # FUSION
   FUSION:
     data_class:
@@ -478,7 +367,7 @@ array:
         end: Inf
         chunk_interval: 10
         overlap: 0
-      fusionset_id:
+      measurementset_id:
         start: 0
         end: Inf
         chunk_interval: 1
@@ -493,47 +382,10 @@ array:
         end: Inf
         chunk_interval: 100
         overlap: 0
-    search_by_entity: FUSIONSET
-    delete_by_entity: FUSIONSET
+    search_by_entity: MEASUREMENTSET
+    delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
-  # COPYNUMBERSET
-  COPYNUMBERSET:
-    data_class:
-      metadata
-    namespace: 
-      - gh_secure
-    attributes: 
-      experimentset_id: int64
-      name: string
-      description: string
-      created: string
-      updated: string
-    dims: 
-      dataset_version:
-        start: 0
-        end: Inf
-        chunk_interval: 1
-        overlap: 0
-      dataset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-      copynumberset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-    unique_fields:
-      - dataset_id
-      - experimentset_id
-      - name
-    search_by_entity: DATASET
-    delete_by_entity: COPYNUMBERSET
-    infoArray: TRUE
-    infoArray_max_keys: 1000
-    compression_on: FALSE
   # COPYNUMBER_SEG
   COPYNUMBER_SEG:
     data_class:
@@ -599,7 +451,7 @@ array:
         end: Inf
         chunk_interval: 10
         overlap: 0
-      copynumberset_id:
+      measurementset_id:
         start: 0
         end: Inf
         chunk_interval: 1
@@ -614,8 +466,8 @@ array:
         end: Inf
         chunk_interval: 100000
         overlap: 0
-    search_by_entity: COPYNUMBERSET
-    delete_by_entity: COPYNUMBERSET
+    search_by_entity: MEASUREMENTSET
+    delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
           
