@@ -535,8 +535,8 @@ array:
       gene_symbol: string
       featureset_id: int64
       reference_name: string
-      start: int64
-      end: int64
+      start: string
+      end: string
       strand_term: int64
       feature_type: string
       source: string
