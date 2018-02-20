@@ -13,62 +13,65 @@
 #
 
 #' @export
-gh_connect = function(username, password = NULL, host = NULL, port = NULL, protocol = "https"){
+gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https"){
   # SciDB connection and R API --
   
   con = NULL
-  
-  # ask for password interactively if none supplied
-  # https://github.com/Paradigm4/SciDBR/issues/154#issuecomment-327989402
-  if (is.null(password)) {
-    if (rstudioapi::isAvailable()) { # In RStudio, 
-      password = rstudioapi::askForPassword("Password")
-    } else { # in base R
-      password = getpwd()
-    } # Rscripts and knitr not yet supported
-  }
-  
-  if (is.null(password)) { # if still null password
-    stop("Password cannot be null")
-  }
-    
-  # Attempt 1. 
-  err1 = tryCatch({
-    if (is.null(host) & is.null(port)) {
-      # If user did not specify host and port, try default host for scidbconnect at port 8083
-      con$db = scidbconnect(username = username, password = password, port = 8083, protocol = protocol)
-    } else {
-      # If user specified host and port, try user supplied parameters
-      con$db = scidbconnect(host = host, username = username, password = password, port = port, protocol = protocol)
+  if (is.null(username)) {
+    protocol = 'http'
+    con$db = scidbconnect(host = host, port = port, protocol = protocol)
+  } else {
+    # ask for password interactively if none supplied
+    # https://github.com/Paradigm4/SciDBR/issues/154#issuecomment-327989402
+    if (is.null(password)) {
+      if (rstudioapi::isAvailable()) { # In RStudio, 
+        password = rstudioapi::askForPassword("Password")
+      } else { # in base R
+        password = getpwd()
+      } # Rscripts and knitr not yet supported
     }
-  }, error = function(e) {return(e)}
-  )
-  
-  # If previous attempts did not work, maybe port 8083 was forwarded (hard-coded to /shim below)
-  if ("error" %in% class(err1) & is.null(host) & is.null(port)){
-    err2 = tryCatch({ 
-      con$db = scidbconnect(protocol = protocol, 
-                               host = '127.0.0.1/shim/', , 
-                               port = NULL,  
-                               username = username, 
-                               password = password) 
+    
+    if (is.null(password)) { # if still null password
+      stop("Password cannot be null")
+    }
+    # Attempt 1. 
+    err1 = tryCatch({
+      if (is.null(host) & is.null(port)) {
+        # If user did not specify host and port, try default host for scidbconnect at port 8083
+        con$db = scidbconnect(username = username, password = password, port = 8083, protocol = protocol)
+      } else {
+        # If user specified host and port, try user supplied parameters
+        con$db = scidbconnect(host = host, username = username, password = password, port = port, protocol = protocol)
+      }
     }, error = function(e) {return(e)}
     )
-  } else if ("error" %in% class(err1)) {
-    err2 = tryCatch({stop("could not connect via user supplied parameters")}, 
-                    error = function(e) {return(e)}
-    )
-  } else {
-    err2 = FALSE
+    
+    # If previous attempts did not work, maybe port 8083 was forwarded (hard-coded to /shim below)
+    if ("error" %in% class(err1) & is.null(host) & is.null(port)){
+      err2 = tryCatch({ 
+        con$db = scidbconnect(protocol = protocol, 
+                              host = '127.0.0.1/shim/', , 
+                              port = NULL,  
+                              username = username, 
+                              password = password) 
+      }, error = function(e) {return(e)}
+      )
+    } else if ("error" %in% class(err1)) {
+      err2 = tryCatch({stop("could not connect via user supplied parameters")}, 
+                      error = function(e) {return(e)}
+      )
+    } else {
+      err2 = FALSE
+    }
+
+    if ("error" %in% class(err2)) {
+      print(err1);
+      print(err2);
+      con$db = NULL
+    }
   }
   
   
-  if ("error" %in% class(err2)) {
-    print(err1);
-    print(err2);
-    con$db = NULL
-  }   
-
   # Store a copy of connection object in .ghEnv
   # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
   if (TRUE) {
@@ -78,7 +81,7 @@ gh_connect = function(username, password = NULL, host = NULL, port = NULL, proto
 }
 
 #' @export
-gh_connect2 = function(username, password = NULL, host = NULL, port = NULL, protocol = "https") {
+gh_connect2 = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https") {
   con = gh_connect(username, password, host, port, protocol)
   .ghEnv$db = NULL
   return(con)
