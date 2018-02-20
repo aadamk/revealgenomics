@@ -67,10 +67,8 @@ gh_connect = function(username, password = NULL, host = NULL, port = NULL, proto
     print(err1);
     print(err2);
     con$db = NULL
-  } else {
-    all_nmsp = iquery(con$db, "list('namespaces')", schema = "<name:string NOT NULL> [No=0:1,2,0]", return = T)$name
-  }
-  
+  }   
+
   # Store a copy of connection object in .ghEnv
   # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
   if (TRUE) {
