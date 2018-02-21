@@ -290,7 +290,6 @@ search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, 
 #' @export
 search_fusion = function(fusionset, biosample = NULL, feature = NULL, 
                          dataset_lookup_ref = NULL,
-                         inferSchemaOnQuery = TRUE, 
                          con = NULL){
   if (!is.null(fusionset)) {fusionset_id = fusionset$fusionset_id} else {
     stop("fusionset must be supplied"); fusionset_id = NULL
@@ -304,20 +303,8 @@ search_fusion = function(fusionset, biosample = NULL, feature = NULL,
     if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of fusionset and biosample must be same")
   }
   
-  if (!is.null(dataset_lookup_ref)) { # Look up namespace using dataset_id, AND from a user supplied reference table
-    dataset_id = unique(fusionset$dataset_id)
-    stopifnot(length(dataset_id) == 1)
-    
-    namespace = dataset_lookup_ref[dataset_lookup_ref$dataset_id == dataset_id, ]$namespace
-  } else { # Look up namespace using fusionset_id, AND using fusionset_lookup embedded in .ghEnv environment variable 
-           # (not OK to use in multi-user shiny app)
-    namespace = find_namespace(id = fusionset_id,
-                               entitynm = .ghEnv$meta$arrFusionset,
-                               dflookup = get_fusionset_lookup(con = con), 
-                               con = con)
-  }
-  cat("Found namespace: ", namespace, "\n")
-  arrayname = paste(namespace, .ghEnv$meta$arrFusion, sep = ".")
+  arrayname = paste0(custom_scan(), 
+                     "(", full_arrayname(.ghEnv$meta$arrFusion), ")")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
   if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
   
@@ -327,13 +314,11 @@ search_fusion = function(fusionset, biosample = NULL, feature = NULL,
                              biosample_id,
                              feature_id,
                              dataset_version = dataset_version, 
-                             inferSchemaOnQuery = inferSchemaOnQuery,
                              con = con)
   res
 }
 
 search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
-                                inferSchemaOnQuery = TRUE, 
                                 con = NULL){
   con = use_ghEnv_if_null(con)
   
@@ -343,57 +328,26 @@ search_fusions_scidb = function(arrayname, fusionset_id, biosample_id = NULL, fe
   if (is.null(fusionset_id)) stop("fusionset_id must be supplied")
   if (length(fusionset_id) != 1) stop("can handle only one fusionset_id at a time")
   
-  left_query = paste("between(", arrayname,
-                     ", ", dataset_version, ", ", fusionset_id, ", null, null",
-                     ", ", dataset_version, ", ", fusionset_id, ", null, null)", sep = "")
+  left_query = paste0("filter(", arrayname,
+                     ", dataset_version=", dataset_version, " AND fusionset_id=", fusionset_id, ")")
   
   if (!is.null(biosample_id)){
-    if (length(biosample_id) == 1) {
-      left_query = paste("between(", left_query,
-                         ", null, null, ", biosample_id, ", null",
-                         ", null, null, ", biosample_id, ", null)", sep = "")
-    } else {
-      filter_expr = formulate_base_selection_query('BIOSAMPLE', id = biosample_id)
-      left_query = paste("filter(", left_query,
-                         ", ", filter_expr, ")", sep = "")
-    }
+    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
+    left_query = paste("filter(", left_query,
+                       ", ", filter_expr, ")", sep = "")
   }
   
   if (!is.null(feature_id)){
-    if (length(feature_id) == 1) {
-      left_query = paste("filter(", left_query,
-                         ", feature_id_left = ", feature_id, " OR feature_id_right = ", feature_id, ")", sep = "")
-    } else {
-      filter_expr = formulate_base_selection_query('FEATURE', id = feature_id)
-      filter_expr_left = gsub("feature_id", "feature_id_left", filter_expr)
-      filter_expr_right = gsub("feature_id", "feature_id_right", filter_expr)
-      
-      left_query = paste("filter(", left_query,
-                         ", (", filter_expr_left, ") OR (", 
-                         filter_expr_right, "))", sep = "")
-    }
+    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrFeature, id = feature_id)
+    filter_expr_left = gsub("feature_id", "feature_id_left", filter_expr)
+    filter_expr_right = gsub("feature_id", "feature_id_right", filter_expr)
+    
+    left_query = paste("filter(", left_query,
+                       ", (", filter_expr_left, ") OR (", 
+                       filter_expr_right, "))", sep = "")
   }
   
-  if (inferSchemaOnQuery) {
-    iquery(con$db, left_query, return = TRUE)
-  } else {
-    schema_ret = "<feature_id_left:int64 COMPRESSION 'zlib',
-    feature_id_right:int64 COMPRESSION 'zlib',
-    gene_left:string COMPRESSION 'zlib',
-    reference_name_left:string COMPRESSION 'zlib',
-    pos_left:int64 COMPRESSION 'zlib',
-    gene_right:string COMPRESSION 'zlib',
-    reference_name_right:string COMPRESSION 'zlib',
-    pos_right:int64 COMPRESSION 'zlib',
-    num_spanning_reads:int32 COMPRESSION 'zlib',
-    num_mate_pairs:int32 COMPRESSION 'zlib',
-    num_mate_pairs_fusion:int32 COMPRESSION 'zlib',
-    quality_score:double COMPRESSION 'zlib',
-    sample_name_unabbreviated:string COMPRESSION 'zlib'> 
-    [dataset_version=0:*:0:1; fusionset_id=0:*:0:1; biosample_id=0:*:0:100; fusion_id=0:*:0:100]"
-    
-    iquery(con$db, left_query, schema = schema_ret, return = TRUE)
-  }
+  iquery(con$db, left_query, return = TRUE)
 }
 
 
@@ -410,12 +364,8 @@ search_copynumber_mat = function(copynumberset, biosample = NULL, feature = NULL
     stopifnot(length(unique(biosample$dataset_version))==1)
     if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of copynumberset and biosample must be same")
   }
-  namespace = find_namespace(id = copynumberset_id,
-                             entitynm = .ghEnv$meta$arrCopyNumberSet,
-                             dflookup = get_copynumberset_lookup(con = con), 
-                             con = con)
-  cat("Found namespace: ", namespace, "\n")
-  arrayname = paste(namespace, .ghEnv$meta$arrCopynumber_mat, sep = ".")
+  arrayname = paste0(custom_scan(), 
+                     "(", full_arrayname(.ghEnv$meta$arrCopynumber_mat), ")")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
   if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
   
@@ -439,32 +389,20 @@ search_copynumber_mats_scidb = function(arrayname, copynumberset_id, biosample_i
   if (is.null(copynumberset_id)) stop("copynumberset_id must be supplied")
   if (length(copynumberset_id) != 1) stop("can handle only one copynumberset_id at a time")
   
-  left_query = paste("between(", arrayname,
-                     ", ", dataset_version, ", ", copynumberset_id, ", null, null",
-                     ", ", dataset_version, ", ", copynumberset_id, ", null, null)", sep = "")
+  left_query = paste0("filter(", arrayname,
+                      ", dataset_version=", dataset_version, " AND copynumberset_id=", copynumberset_id, ")")
   
   if (!is.null(biosample_id)){
-    if (length(biosample_id) == 1) {
-      left_query = paste("between(", left_query,
-                         ", null, null, ", biosample_id, ", null",
-                         ", null, null, ", biosample_id, ", null)", sep = "")
-    } else {
-      filter_expr = formulate_base_selection_query('BIOSAMPLE', id = biosample_id)
-      left_query = paste("filter(", left_query,
-                         ", ", filter_expr, ")", sep = "")
-    }
+    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
+    left_query = paste0("filter(", left_query,
+                       ", ", filter_expr, ")")
   }
   
   if (!is.null(feature_id)){
-    if (length(feature_id) == 1) {
-      left_query = paste("filter(", left_query,
-                         ", feature_id_left = ", feature_id, " OR feature_id_right = ", feature_id, ")", sep = "")
-    } else {
-      filter_expr = formulate_base_selection_query('FEATURE', id = feature_id)
+    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrFeature, id = feature_id)
 
-      left_query = paste("filter(", left_query,
-                         ", ", filter_expr, ")", sep = "")
-    }
+    left_query = paste0("filter(", left_query,
+                       ", ", filter_expr, ")")
   }
   
   iquery(con$db, left_query, return = TRUE)
@@ -483,12 +421,9 @@ search_copynumber_seg = function(experimentset, biosample = NULL, con = NULL){
     stopifnot(length(unique(biosample$dataset_version))==1)
     if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of experimentset and biosample must be same")
   }
-  namespace = find_namespace(id = experimentset_id,
-                             entitynm = .ghEnv$meta$arrExperimentSet,
-                             dflookup = get_experimentset_lookup(con = con), 
-                             con = con)
-  cat("Found namespace: ", namespace, "\n")
-  arrayname = paste(namespace, .ghEnv$meta$arrCopynumber_seg, sep = ".")
+  
+  arrayname = paste0(custom_scan(), 
+                     "(", full_arrayname(.ghEnv$meta$arrCopynumber_seg), ")")
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
 
   if (exists('debug_trace')) cat("retrieving CopyNumber_seg data from server\n")
@@ -509,20 +444,13 @@ search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_i
   if (is.null(experimentset_id)) stop("experimentset_id must be supplied")
   if (length(experimentset_id) != 1) stop("can handle only one experimentset_id at a time")
   
-  left_query = paste("between(", arrayname,
-                     ", ", dataset_version, ", ", experimentset_id, ", null, null",
-                     ", ", dataset_version, ", ", experimentset_id, ", null, null)", sep = "")
+  left_query = paste0("filter(", arrayname,
+                      ", dataset_version=", dataset_version, " AND experimentset_id=", experimentset_id, ")")
   
   if (!is.null(biosample_id)){
-    if (length(biosample_id) == 1) {
-      left_query = paste("between(", left_query,
-                         ", null, null, ", biosample_id, ", null",
-                         ", null, null, ", biosample_id, ", null)", sep = "")
-    } else {
-      filter_expr = formulate_base_selection_query('BIOSAMPLE', id = biosample_id)
-      left_query = paste("filter(", left_query,
-                         ", ", filter_expr, ")", sep = "")
-    }
+    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
+    left_query = paste("filter(", left_query,
+                       ", ", filter_expr, ")", sep = "")
   }
   
   iquery(con$db, left_query, return = TRUE)

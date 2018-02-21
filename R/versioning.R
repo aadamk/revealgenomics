@@ -29,9 +29,7 @@ get_dataset_max_version = function(dataset_id, updateCache = FALSE, con = NULL){
 increment_dataset_version = function(df){
   if(length(df$dataset_id)!=1) stop("Can increment version for one specific dataset_id only")
   
-  arrayname = .ghEnv$meta$arrDataset
-  nmsp = find_namespace(id = df$dataset_id, entitynm = arrayname)
-  arrayname = paste(nmsp, arrayname, sep = ".")
+  arrayname = paste0(custom_scan(), "(", full_arrayname(.ghEnv$meta$arrDataset), ")")
   df$dataset_version = get_dataset_max_version(dataset_id = df$dataset_id, updateCache = TRUE) + 1
   df$created = NULL
   df$updated = NULL
