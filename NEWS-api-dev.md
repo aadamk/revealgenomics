@@ -25,8 +25,8 @@ delete_entity(entity = 'RNAQUANTIFICATION',
 
 delete_entity(entity = 'VARIANT', 
             ids = 1, dataset_version = 2, 
-            delete_by_entity = 'VARIANTSET')
-# Variant data can be deleted by the parent VariantSet
+            delete_by_entity = 'MEASUREMENTSET')
+# Variant data can be deleted by the parent MeasurementSet
 
 # The earlier API for metadata and feature-data continues to work
 delete_entity(entity = 'DATASET', id = 1, dataset_version = 2)

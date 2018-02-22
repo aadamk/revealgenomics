@@ -700,13 +700,6 @@ register_tuple_return_id = function(df,
 }
 
 #' @export
-register_variantset = function(df, dataset_version = NULL, only_test = FALSE, con = NULL){
-  register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
-                                            df, dataset_version, only_test, con = con)
-}
-
-
-#' @export
 register_experimentset = function(df, dataset_version = NULL, only_test = FALSE, con = NULL){
   # Extra tests for ExperimentSet
   test_register_experimentset(df, silent = ifelse(only_test, FALSE, TRUE))
@@ -803,6 +796,8 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE, con =
                   idname = get_idname(arrayname), arrayname = arrayname, 
                   con = con)
   } # end of if (!only_test)
+  
+  remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrVariant, con = con)
 }
 
 register_info = function(df, idname, arrayname, con = NULL){
@@ -940,24 +935,6 @@ get_versioned_secure_metadata_entity = function(entity, id,
                              mandatory_fields_only = mandatory_fields_only,
                              con = con)
   if (!all_versions) return(latest_version(df)) else return(df)
-}
-
-#' @export
-get_variantsets = function(variantset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
-                                       id = variantset_id, 
-                                       dataset_version = dataset_version, 
-                                       all_versions = all_versions, 
-                                       con = con)
-}
-
-#' @export
-get_copynumberset = function(copynumberset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
-                                       id = copynumberset_id, 
-                                       dataset_version = dataset_version, 
-                                       all_versions = all_versions,
-                                       con = con)
 }
 
 #' @export
@@ -1336,13 +1313,6 @@ search_ontology = function(terms,
       ont[grep(terms, ignore.case = TRUE, ont$term), ]
     }
   }
-}
-
-#' @export
-search_variantsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
-                                          dataset_id, dataset_version, all_versions, con = con)
-  
 }
 
 #' @export

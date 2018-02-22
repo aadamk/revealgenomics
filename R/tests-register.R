@@ -170,22 +170,6 @@ test_register_measurementset  = function(df1, silent = TRUE){
   # any other tests
 }
 
-test_register_variantset = function(df, uniq, silent = TRUE){
-  # Add additional tests here -->
-  
-  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
-  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
-  #                                                df, uniq, silent)
-}
-
-test_register_copynumberset = function(df, uniq, silent = TRUE){
-  # Add additional tests here -->
-  
-  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
-  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
-  #                                                df, uniq, silent)
-}
-
 ######################################################
 # public metadata entities (not versioned by dataset_version)
 
@@ -244,14 +228,14 @@ test_register_variant = function(df){
   df_temp$per_gene_variant_number = -1
   test_mandatory_fields(df_temp, arrayname = .ghEnv$meta$arrVariant)
 
-  stopifnot(c('variantset_id', 'biosample_id', 'feature_id')
+  stopifnot(c('measurementset_id', 'biosample_id', 'feature_id')
             %in% colnames(df))
   
-  check_entity_exists_at_id(entity = 'VARIANTSET',
-                            id = sort(unique(df$variantset_id)))
-  check_entity_exists_at_id(entity = 'BIOSAMPLE',
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrMeasurementSet,
+                            id = sort(unique(df$measurementset_id)))
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrBiosample,
                             id = sort(unique(df$biosample_id)))
-  # check_entity_exists_at_id(entity = 'FEATURE',
+  # check_entity_exists_at_id(entity = .ghEnv$meta$arrFeature,
   #                           id = sort(unique(df$feature_id)))
 }
 

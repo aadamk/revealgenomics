@@ -192,17 +192,17 @@ search_rnaquantification_scidb = function(arrayname,
 
 
 #' @export
-search_variants = function(variantset, biosample = NULL, feature = NULL, con = NULL){
-  if (!is.null(variantset)) {variantset_id = variantset$variantset_id} else {
-    stop("variantset must be supplied"); variantset_id = NULL
+search_variants = function(measurementset, biosample = NULL, feature = NULL, con = NULL){
+  if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
+    stop("measurementset must be supplied"); measurementset_id = NULL
   }
-  if (length(unique(variantset$dataset_version)) != 1) {
-    stop("multiple dataset versions in supplied variantset");
+  if (length(unique(measurementset$dataset_version)) != 1) {
+    stop("multiple dataset versions in supplied measurementset");
   }
-  dataset_version = unique(variantset$dataset_version)
+  dataset_version = unique(measurementset$dataset_version)
   if (!is.null(biosample)) {
     stopifnot(length(unique(biosample$dataset_version))==1)
-    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of variantset and biosample must be same")
+    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of measurementset and biosample must be same")
   }
   arrayname = full_arrayname(.ghEnv$meta$arrVariant)
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
@@ -210,7 +210,7 @@ search_variants = function(variantset, biosample = NULL, feature = NULL, con = N
   
   if (exists('debug_trace')) cat("retrieving expression data from server\n")
   res = search_variants_scidb(arrayname,
-                              variantset_id,
+                              measurementset_id,
                               biosample_id,
                               feature_id,
                               dataset_version = dataset_version, 
@@ -219,21 +219,21 @@ search_variants = function(variantset, biosample = NULL, feature = NULL, con = N
 }
 
 
-search_variants_scidb = function(arrayname, variantset_id, biosample_id = NULL, feature_id = NULL, dataset_version, con = NULL){
+search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, dataset_version, con = NULL){
   con = use_ghEnv_if_null(con)
   
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
-  if (is.null(variantset_id)) stop("variantset_id must be supplied")
-  if (length(variantset_id) != 1) stop("can handle only one variantset_id at a time")
+  if (is.null(measurementset_id)) stop("measurementset_id must be supplied")
+  if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
   
   left_query = paste0("filter(", custom_scan(), "(", arrayname, 
                              "), dataset_version=", dataset_version, 
-                             " AND variantset_id=", variantset_id, ")")
+                             " AND measurementset_id=", measurementset_id, ")")
   right_query = paste0("filter(", custom_scan(), "(", arrayname, 
                       "_INFO), dataset_version=", dataset_version, 
-                              " AND variantset_id=", variantset_id, ")")
+                              " AND measurementset_id=", measurementset_id, ")")
   
   if (!is.null(biosample_id)){
     if (length(biosample_id) == 1) {
