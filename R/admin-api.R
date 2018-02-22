@@ -244,7 +244,7 @@ grant_initial_access = function(con = NULL, user_name) {
          paste0("set_role_permissions('", user_name, "', 'namespace', '",
                       find_namespace('DATASET'), "', 'l')"))
   cat("Granting access to publc studies\n")
-  studylist = iquery(con$db, "project(gh_secure.DATASET, public)", return = T)
+  studylist = iquery(con$db, paste0("project(", full_arrayname(.ghEnv$meta$arrDataset), ", public)"), return = T)
   studylist$dataset_version = NULL
   studylist = unique(studylist)
   studylist = studylist[studylist$public, ]
@@ -264,7 +264,10 @@ grant_initial_access = function(con = NULL, user_name) {
 #' - secure_scan (apply study-level security on dataset_id; must have permissions.dataset_id array)
 #' - scan (just use regular scan of arrays)
 custom_scan = function() {
-  "secure_scan"
+  # Use secure_scan for SciDB enterprise edition only
+  ifelse(options("scidb4gh.use_scidb_ee"), 
+         "secure_scan",
+         "scan")
 }
 
 #' placeholder to be filled in

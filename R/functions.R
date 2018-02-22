@@ -197,7 +197,10 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
 }
 
 find_namespace = function(entitynm) {
-  .ghEnv$meta$L$array[[entitynm]]$namespace
+  # Use secure_scan for SciDB enterprise edition only
+  ifelse(options("scidb4gh.use_scidb_ee"), 
+        .ghEnv$meta$L$array[[entitynm]]$namespace,
+        'public')
 }
 
 #' full name of array with namespace
