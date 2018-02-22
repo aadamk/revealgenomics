@@ -269,10 +269,9 @@ custom_scan = function() {
 
 #' placeholder to be filled in
 add_user_to_data_loaders = function(con) {
-#  1056  iquery -aq "create_role('scidb4gh_data_loaders')"
-#  1057  iquery -aq "set_role_permissions('scidbgh_data_loaders', 'namespace', 'gh_secure', 'rul')"
-#  1058  iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_secure', 'rul')"
-#  1059  iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public', 'rul')"
-#  1060  iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public_rw', 'rul')"
-#  1061  iquery -aq "add_user_to_role('secure_user', 'scidb4gh_data_loaders')"
+ # iquery -aq "create_role('scidb4gh_data_loaders')"
+ # iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_secure', 'ruld')"
+ # iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public', 'ruld')"
+ # iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public_rw', 'ruld')"
+ # iquery -aq "add_user_to_role('secure_user', 'scidb4gh_data_loaders')"
 }

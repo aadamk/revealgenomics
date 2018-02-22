@@ -143,3 +143,32 @@ scidb_array_head= function(array, n = 5, con = NULL){
   iquery(con$db, paste0("limit(", array@name, ", ", n, ")"), return = TRUE)
 }
 
+#' remove old array versions associated with an entity
+remove_old_versions_for_entity = function(entitynm, con = NULL){
+  stopifnot(entitynm %in% get_entity_names())
+  
+  remove_versions(arayname = full_arrayname(entitynm), con = con)
+  info_array_exists = .ghEnv$meta$L$array[[entitynm]]$infoArray
+  if (info_array_exists) {
+    info_array_name = paste0(full_arrayname(entitynm), "_INFO")
+    remove_versions(arayname = info_array_name, con = con)
+  }
+}
+
+#' remove old versions associated with an array
+#' 
+#' Retain the last N_THRESH versions
+remove_versions = function(arayname, con = NULL)
+{
+  N_THRESH = 5
+  
+  con = use_ghEnv_if_null(con)
+  mv = iquery(con$db, sprintf("versions(%s)", arayname), 
+              return=TRUE)
+  if(nrow(mv) > N_THRESH )
+  {
+    mv = max(mv$version_id)
+    cat("Removing versions of array:", arayname, "older than version", (mv-N_THRESH), "\n")
+    iquery(con$db, sprintf("remove_versions(%s, %i)", arayname, (mv-N_THRESH)))
+  }
+}
