@@ -292,7 +292,7 @@ array:
     namespace: 
       - gh_secure
     attributes:
-      reference_name: string
+      chromosome: string
       start: int64
       end: int64
       id: string
@@ -346,10 +346,10 @@ array:
       feature_id_left: int64
       feature_id_right: int64
       gene_left: string
-      reference_name_left: string
+      chromosome_left: string
       pos_left: int64
       gene_right: string
-      reference_name_right: string
+      chromosome_right: string
       pos_right: int64
       num_spanning_reads: int32
       num_mate_pairs: int32
@@ -395,7 +395,7 @@ array:
     namespace: 
       - gh_secure
     attributes:
-      reference_name: string
+      chromosome: string
       start: int64
       end: int64
       num_mark: int32
@@ -534,7 +534,7 @@ array:
       name: string
       gene_symbol: string
       featureset_id: int64
-      reference_name: string
+      chromosome: string
       start: string
       end: string
       strand_term: int64

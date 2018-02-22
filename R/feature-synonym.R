@@ -117,11 +117,13 @@ merge_gene_annotation_and_location = function(gene_annotation_file_path,
   
   x1 = convert_factors_to_char(x1)
   x2 = convert_factors_to_char(x2)
-  x1 = rename_column(x1, old_name = 'name', new_name = 'full_name')
-  x1 = rename_column(x1, old_name = 'symbol', new_name = 'gene_symbol')
-  x2 = rename_column(x2, old_name = 'Start', new_name = 'start')
-  x2 = rename_column(x2, old_name = 'End', new_name = 'end')
-  x2 = rename_column(x2, old_name = 'Chr', new_name = 'reference_name')
+  x1 = plyr::rename(x1, c('name' = 'full_name',
+                          'symbol' = 'gene_symbol'))
+  x2 = plyr::rename(x2, c('Start' = 'start',
+                          'End' = 'end',
+                          'Chr' = 'chromosome'))
+  x2$start = as.character(x2$start)
+  x2$end = as.character(x2$end)
   
   x12 = merge(x1, x2, 
               by.x = "ensembl_gene_id", 
