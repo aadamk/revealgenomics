@@ -5,7 +5,7 @@
 \title{Search Fusion data}
 \usage{
 search_fusion(measurementset, biosample = NULL, feature = NULL,
-  inferSchemaOnQuery = FALSE, con = NULL)
+  dataset_lookup_ref = NULL, con = NULL)
 }
 \arguments{
 \item{inferSchemaOnQuery}{optimization flag (default: TRUE. if FALSE, uses schema hand-baked in internal code. 
