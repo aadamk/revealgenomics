@@ -71,8 +71,8 @@ convert_factors_to_char = function(dfx){
 
 #' Pretty print a large vector of strings, integers etc. 
 #' @export
-pretty_print = function(vec) {
-  ifelse(length(vec) <= 7,
+pretty_print = function(vec, prettify_after = 7) {
+  ifelse(length(vec) <= prettify_after,
          paste(vec, collapse = ", "),
          paste(pretty_print(head(vec, 2)),
                "...(Total: ", length(vec), ")... ",
