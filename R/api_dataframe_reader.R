@@ -8,19 +8,13 @@ DataReader = R6::R6Class(classname = 'DataReader',
                            print_level = function() {cat("----(Level: DataReader)\n")},
                            load_data_from_file = function() {
                              cat("load_data_from_file()"); self$print_level()
-                             stopifnot(length(unique(private$.pipeline_df$project_folder)) == 1,
-                                       length(unique(private$.pipeline_df$project_subfolder)) == 1,
-                                       length(unique(private$.pipeline_df$filename)) == 1)
-                             # yy$project_folder, yy$project_subfolder, yy$filename
-                             private$.file_path = file.path(unique(private$.pipeline_df$BASEPATH),
-                                                            unique(private$.pipeline_df$project_folder),
-                                                            unique(private$.pipeline_df$project_subfolder),
-                                                            unique(private$.pipeline_df$filename))
+                             file_path = unique(private$.pipeline_df$file_path)
+                             stopifnot(length(file_path) == 1)
                              cat(paste0("Reading *", switch(private$.separator,
                                                    '\t' = 'tab',
                                                    ',' = 'comma'), 
-                                 "* delimited file:\n\t", private$.file_path, "\n"))
-                             private$.data_df = read.delim(file = private$.file_path,
+                                 "* delimited file:\n\t", file_path, "\n"))
+                             private$.data_df = read.delim(file = file_path,
                                                            sep = private$.separator,
                                                            check.names = FALSE)
                              cat("Dimensions:", dim(private$.data_df), "\n")
@@ -35,7 +29,6 @@ DataReader = R6::R6Class(classname = 'DataReader',
                            .measurement_set = NULL,
                            .pipeline_df = NULL,
                            .separator = '\t',
-                           .file_path = NULL,
                            .data_df = NULL
                          ))
 

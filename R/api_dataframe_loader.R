@@ -64,6 +64,8 @@ DataFrameLoader = R6Class(classname = "DataFrameLoader",
                                                    bios_ref$name)
               
               if (length(mL$source_unmatched_idx) != 0) {
+                print(sample_name_in_file)
+                print(head(bios_ref$name))
                 stop("Excel sheet must provide link between sample in Pipelines sheet and Sample sheet under column `sample_name`")
               }
               
@@ -164,7 +166,6 @@ DataFrameLoaderRNASeqCufflinksGene = R6Class(classname = "DataFrameLoaderRNASeqC
                                                  super$assign_feature_ids()
                                                  cat("Assign feature_id (Level: RNASeq Cufflinks Gene)\n")
                                                  
-                                                 browser()
                                                  private$.data_df$feature_id = match_features(
                                                                 features_in_file = private$.data_df$tracking_id,
                                                                 df_features_db = private$.reference_object$feature,
