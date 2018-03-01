@@ -1554,13 +1554,14 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   
   test_register_expression_dataframe(df1)
   
-  # df1 = df1[, mandatory_fields()[[.ghEnv$meta$arrRnaquantification]]]
   df1 = df1[, c('dataset_id', 'measurementset_id', 'biosample_id', 
                 'feature_id', 'value')]
+  
+  temp_arr_nm = paste0("temp_df_", stringi::stri_rand_strings(1, 6))
   adf_expr0 = as.scidb(con$db, 
                        df1, 
                        chunk_size=nrow(df1), 
-                       name = "temp_df", 
+                       name = temp_arr_nm, 
                        types = c('int64', 'int64', 'int64', 'int64', 'float'))
   
   qq2 = paste0("apply(", 
@@ -1570,10 +1571,10 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   fullnm = full_arrayname(.ghEnv$meta$arrRnaquantification)
   qq2 = paste0("redimension(", qq2, ", ", fullnm, ")")
   
-  cat("inserting data for", nrow(df1), "expression values into", fullnm, "array \n")
+  cat("inserting data for", nrow(df1), "expression values into", fullnm, 
+      "array at measurementset_id =", unique(df1$measurementset_id), "\n")
   iquery(con$db, paste("insert(", qq2, ", ", fullnm, ")"))
-  # con$db$remove("temp_df")
-  iquery(con$db, "remove(temp_df)")
+  iquery(con$db, paste0("remove(", temp_arr_nm, ")"))
 }
 
 #' @export
