@@ -320,7 +320,7 @@ search_fusions_scidb = function(arrayname, measurementset_id, biosample_id = NUL
   if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
   
   left_query = paste0("filter(", arrayname,
-                     ", dataset_version=", dataset_version, " AND fusionset_id=", fusionset_id, ")")
+                     ", dataset_version=", dataset_version, " AND measurementset_id=", measurementset_id, ")")
   
   if (!is.null(biosample_id)){
     filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
