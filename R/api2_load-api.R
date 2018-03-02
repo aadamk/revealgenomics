@@ -1,0 +1,343 @@
+#
+# BEGIN_COPYRIGHT
+#
+# PARADIGM4 INC.
+# This file is part of the Paradigm4 Enterprise SciDB distribution kit
+# and may only be used with a valid Paradigm4 contract and in accord
+# with the terms and conditions specified by that contract.
+#
+# Copyright (C) 2011 - 2018 Paradigm4 Inc.
+# All Rights Reserved.
+#
+# END_COPYRIGHT
+#
+#####################################
+
+# File structure is as follows
+# - <load-api.R> is a collection of high-level functions called in a loader script
+# - <load-helper.R, load-helper-filetypes.R> contain lower level functions for 
+#                   interpreting data in worksheet or specific file-types 
+#                   (e.g. Cufflinks RNASeq files, Gemine DNASeq files) before ingesting into SciDB
+# - <template-helper.R> contains functions specifically for interpreting / parsing the Excel template sheet
+
+#' @export
+api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, only_test = FALSE, con = NULL) {
+  con = scidb4gh:::use_ghEnv_if_null(con)
+  if (is.null(workbook_path) & is.null(workbook)) {
+    stop("must supply path to workbook, or workbook opened by XLConnect::loadWorkbook")
+  }
+  if (is.null(workbook) & !is.null(workbook_path)){
+    workbook = loadWorkbook(workbook_path)
+  }
+  df0 = myExcelReader(workbook, sheet_name = 'Studies')
+
+  proj_study_ids_summ = data.frame(project_id = numeric(0),
+                                   dataset_id = numeric(0),
+                                   dataset_version = numeric(0))
+  # Work on one project at a time
+  for (proj_idx in df0$project_id) {
+    cat("====Working on project idx", proj_idx, "of worksheet\n")
+    dfi = df0[df0$project_id == proj_idx, ]
+
+    # --------------------------    
+    # PROJECT
+    # Register the project first
+    wksht_fields_proj = c('project_name', 'project_description')
+    dfi_proj = dfi[, wksht_fields_proj]
+    dfi_proj = dfi_proj[!duplicated(dfi_proj), ]
+    
+    if (nrow(dfi_proj) != 1) {
+      stop("Expected one row project dataframe here. 
+           Project name and description should be consistent across rows of worksheet Studies sheet")
+    }
+    
+    dfi_proj = load_helper_column_rename(dfx = dfi_proj,
+                                 scidb4gh_fields = mandatory_fields()[[.ghEnv$meta$arrProject]],
+                                 worksheet_fields = wksht_fields_proj
+                                )
+    
+    project_id = register_project(df = dfi_proj, 
+                                  only_test = only_test, 
+                                  con = con)
+    rm(dfi_proj)
+    
+    # IMPORTANT: remove the columns that will no longer be needed
+    dfi[, wksht_fields_proj] = NULL
+    
+    # --------------------------    
+    # DATASET  
+    dfi$project_id = project_id
+    scidb4gh_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]]
+    wksht_fields_study = c('study_name', 'study_description', 'project_id', 'is_study_public')
+    stopifnot(c(wksht_fields_study, 'study_version') %in% colnames(df0))
+    
+    dfi_st = load_helper_column_rename(dfx = dfi, 
+                               scidb4gh_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]], 
+                               worksheet_fields = wksht_fields_study)
+    dataset_version = dfi_st$study_version
+    
+    if (!(length(unique(dfi_st$name)) == 1 &
+          length(unique(dfi_st$description)) == 1)) {
+      stop("Currently loader handles one study per project.
+           Need to add code for handling multiple studies per project (using field 'study_id'")
+    }
+    # IMPORTANT: remove the columns that will no longer be needed
+    dfi_st$study_id = NULL
+    
+    if (length(unique(dfi_st$public)) != 1) {
+      stop("Study versions should either be public or not")
+    } else {
+      # df1$public = NULL
+    }
+    
+    if (length(dataset_version) != 1) {
+      stop("must write code to ingest multiple study_version-s")
+    }
+    # IMPORTANT: remove the columns that will no longer be needed
+    dfi_st$study_version = NULL
+    dataset_record = register_dataset(df = dfi_st, public = unique(dfi_st$public), 
+                                      dataset_version = dataset_version,
+                                      only_test = only_test, 
+                                      con = con)
+    
+    proj_study_ids = dataset_record
+    proj_study_ids$project_id = project_id
+    proj_study_ids
+    proj_study_ids = proj_study_ids[, 
+                                    c('project_id', 'dataset_id', 'dataset_version')]
+    
+    proj_study_ids_summ = rbind(proj_study_ids_summ, proj_study_ids)
+    cat("----\n")
+  } # <end of> for (proj_idx in df0$project_id)
+
+  proj_study_ids_summ
+}
+
+#' retrieve custom schema definitions
+#' 
+#' this function retrieves custom schema definitions from scidb (preferred), or from workbook 
+#' (latter method should only be used in development)
+#' @export
+api_get_definitions = function(workbook = NULL, con = NULL) {
+  if (is.null(workbook)) {
+    con = scidb4gh:::use_ghEnv_if_null(con = con)
+    def = iquery(con$db, "gh_public.LOAD_TEMPLATE", return = TRUE)
+  } else {
+    def = myExcelReader(workbook, sheet_name = 'Definitions')
+  }
+  def
+}
+
+#' register individuals
+#' 
+#' @param workbook workbook object returned by XLConnect:loadWorbook
+#' @param record record of scidb project_id, dataset_id and dataset_version at which to register individuals
+#' @export
+api_register_individuals = function(workbook, record, def, con = NULL) {
+  stopifnot(nrow(record) == 1)
+  
+  data_df = load_helper_prepare_dataframe(workbook = workbook,
+                                         record = record, 
+                                         def = def, 
+                                         sheetName = 'Subjects',
+                                         entityName = .ghEnv$meta$arrIndividuals,
+                                         worksheet_fields = 
+                                           c('dataset_id', 'subject_id', 'description', 
+                                             'species_', 'SEX'),
+                                         con = con)
+  
+  
+  data_df_record = register_individual(df = data_df, dataset_version = record$dataset_version, 
+                                     con = con)
+
+}
+
+#' Samples / Biosample
+#' @export
+api_register_biosamples = function(workbook, record, def, con = NULL) {
+  stopifnot(nrow(record) == 1)
+  
+  data_df = load_helper_prepare_dataframe(workbook = workbook,
+                                         record = record, 
+                                         def = def, 
+                                         sheetName = 'Samples',
+                                         entityName = .ghEnv$meta$arrBiosample,
+                                         worksheet_fields = 
+                                           c('dataset_id', 'sample_name', 
+                                             'description', 'disease_', 'individual_id'),
+                                         con = con)
+  
+  data_df_record = register_biosample(df = data_df, 
+                                      dataset_version = record$dataset_version, 
+                                      con = con)
+}
+
+#' MeasurementSets
+#' 
+#' This function differs from api_register_indiv/bios/measurements
+#' that work row by row on Subjects/Samples/Pipelines sheets respectively.
+#' This function needs to find unique set of Experiments from the unique value of `concat` column
+#' in Pipelines sheet, and then uses info in `pipeline-choices` sheet to fill up the 
+#' other necessary information
+#' @export
+api_register_experimentsets_measurementsets = function(workbook, record, def, con = NULL) {
+  stopifnot(nrow(record) == 1)
+  
+  pipelines_df = template_helper_extract_record_related_rows(workbook = workbook,
+                                                             sheetName = 'Pipelines', 
+                                                             record = record)
+
+  ######################################  
+  # EXPERIMENTSET
+  data_df = template_helper_extract_pipeline_meta_info(pipelines_df = pipelines_df, workbook = workbook)
+  if (nrow(data_df) == 0) {
+    cat("No ExperimentSets that match pipeline-choices description\n")
+    return(NULL)
+  }
+
+  # ====================================
+  # some parsing on the data
+  # Extract relevant definitions 
+  defi = template_helper_extract_definitions(sheetName = 'pipeline-choices', 
+                                             def = def)
+  
+  # defi = rbind(defi, def[grep("featureset", def$attribute_name), ])
+  # Enforce that columns in data are defined in Definitions sheet
+  cat("Suppressing this check as unique case here\n")
+  try({template_helper_enforce_columns_defined(data_df = data_df, 
+                                               definitions = defi)})
+  
+  
+  # Enforce that mandatory columns listed in Definitions sheet are present in data
+  template_helper_enforce_mandatory_columns_present(data_df = data_df,
+                                                    definitions = defi)
+  
+  # ===================================
+  # Start filling up data for loading to scidb
+  data_df$dataset_id = record$dataset_id
+  
+  # ====================================
+  # EXPERIMENTSET
+  entityName = .ghEnv$meta$arrExperimentSet
+  experimentSet_unique_fields = c('dataset_id', 'measurement_entity', 'data_subtype')
+  worksheet_fields =
+    c('dataset_id', 'name',
+      'description', 'molecule', 'measurement_entity')
+  expset_df = unique(data_df[, experimentSet_unique_fields])
+  expset_df$name = expset_df$data_subtype
+  expset_df$description = paste0(expset_df$name, " experiments")
+  expset_df$molecule = '...'
+  
+  # Rename columns from Janssen custom fields to scidb4gh fields
+  expset_df = load_helper_column_rename(dfx = expset_df,
+                                        scidb4gh_fields = mandatory_fields()[[entityName]], 
+                                        worksheet_fields = worksheet_fields)
+  
+  expset_df_record = register_experimentset(df = expset_df, 
+                                             dataset_version = record$dataset_version, 
+                                             con = con)
+  
+  # ====================================
+  # MEASUREMENTSET
+  entityName = .ghEnv$meta$arrMeasurementSet
+  msmtset_df = data_df
+  
+  # Start filling in fields for upload to scidb
+  
+  # idname
+  msmtset_df$idname = sapply(msmtset_df$measurement_entity, 
+                             function(entitynm) {
+                               info_df = get_entity_info()
+                               search_by_entity = info_df[info_df$entity == entitynm, ]$search_by_entity
+                               scidb4gh:::get_base_idname(search_by_entity)
+                             }
+                             ) 
+  
+  # experimentset_id
+  expset_df = get_experimentset(experimentset_id = expset_df_record$experimentset_id, 
+                    dataset_version = record$dataset_version, con = con)
+  msmtset_df = merge(msmtset_df, 
+                      expset_df[, c(scidb4gh:::get_base_idname(.ghEnv$meta$arrExperimentSet),
+                                                           experimentSet_unique_fields)],
+                      by = experimentSet_unique_fields)
+  
+  # featureset_id
+  fsets = get_featuresets(con = con)
+  matchL = find_matches_and_return_indices(msmtset_df$featureset_name, 
+                                  fsets$name)
+  if (length(matchL$source_unmatched_idx) > 0){
+    cat("Following pipelines do not have featuresets defined yet -- skipping them:\n")
+    print(msmtset_df[matchL$source_unmatched_idx, c(1:5)])
+  }
+  
+  msmtset_df = msmtset_df[matchL$source_matched_idx, ]
+  msmtset_df$featureset_id = fsets$featureset_id[matchL$target_matched_idx]
+  
+  # Rename columns from Janssen custom fields to scidb4gh fields
+  worksheet_fields =        c('entity',             'name')
+  names(worksheet_fields) = c('measurement_entity', 'pipeline_scidb')
+  msmtset_df = plyr::rename(msmtset_df, worksheet_fields)
+  
+  msmtset_df = drop_na_columns(msmtset_df)
+
+  # description
+  if ('pipeline_external_description' %in% colnames(msmtset_df)) {
+    msmtset_df$description = msmtset_df$pipeline_external_description
+  } else {
+    msmtset_df$description = '...'
+  }
+  
+  msmtset_df_record = register_measurementset(df = msmtset_df, 
+                                           dataset_version = record$dataset_version, 
+                                           con = con)
+  
+  return(list(ExperimentSetRecord = expset_df_record,
+              MeasurementSetRecord = msmtset_df_record))
+}
+
+#' automatically register ontology terms
+#' 
+#' gather the terms from controlled_vocabulary column, 
+#' categorize by attribute_name, and
+#' assign them ontology_id-s
+#' @export
+api_register_ontology_from_definition_sheet = function(workbook = NULL, 
+                                                       def = NULL,
+                                                       con = NULL) {
+  con = scidb4gh:::use_ghEnv_if_null(con=con)
+  
+  if (is.null(workbook) & is.null(def)) stop("must supply at least master workbook
+                                       or definitions worksheet")
+  
+  if (is.null(def)) def = myExcelReader(workbook = workbook, 
+                                        sheet_name = 'Definitions')
+  
+  defx = def[!is.na(def$controlled_vocabulary), ]
+  defx = defx[, c('attribute_name', 'controlled_vocabulary')]
+  
+  L1 = lapply(1:nrow(defx),
+        FUN = function(idx) {
+                  term_list = defx$controlled_vocabulary[idx]
+                  vec = trimws(
+                    unlist(stringi::stri_split(str = term_list, 
+                                               regex = "//")), 
+                         which = 'both')
+                  data.frame(
+                    category = defx$attribute_name[idx],
+                    term = c(vec, "NA"), stringsAsFactors = FALSE)
+  })
+  
+  ont_df = do.call(what = "rbind", 
+                   args = L1)
+  
+  ont_df$source_name = "..."
+  ont_df$source_version = "..."
+  
+  ont_NA = data.frame(term = "NA", 
+                      category = 'uncategorized',
+                      source_name = "...", source_version = "...", 
+                      stringsAsFactors = FALSE)
+  ont_df = rbind(ont_df, ont_NA)
+  register_ontology_term(df = ont_df, con = con)
+}
+

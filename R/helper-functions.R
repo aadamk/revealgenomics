@@ -172,3 +172,23 @@ remove_versions = function(arayname, con = NULL)
     iquery(con$db, sprintf("remove_versions(%s, %i)", arayname, (mv-N_THRESH)))
   }
 }
+
+#' helper function to report matches between vectors
+#' 
+#' @param source source vector for finding matches from
+#' @param target target vector in which to find matches
+#' 
+#' @return 
+#' list(match_res, source_matched_idx, source_unmatched_idx, target_matched_idx)
+#' @export
+find_matches_and_return_indices = function(source, target){
+  match_res = match(source, target)
+  match_idx = which(!is.na(match_res))
+  non_match_idx = which(is.na(match_res))
+  
+  list(match_res = match_res,
+       source_matched_idx = match_idx,
+       source_unmatched_idx = non_match_idx,
+       target_matched_idx = match_res[match_idx])
+}
+
