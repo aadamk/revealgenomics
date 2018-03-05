@@ -11,7 +11,7 @@ match_features = function(features_in_file, df_features_db, feature_type, column
   if (length(matchL$source_unmatched_idx) != 0) {
     cat("Out of", length(unique(features_in_file)), "features, ")
     cat("unmatched features:", 
-        pretty_print(vec = unique(features_in_file[mL$source_unmatched_idx])), "\n")
+        pretty_print(vec = unique(features_in_file[matchL$source_unmatched_idx])), "\n")
     stop("...")
   }
   df_features_db$feature_id[matchL$target_matched_idx]
@@ -19,8 +19,9 @@ match_features = function(features_in_file, df_features_db, feature_type, column
 
 DataFrameLoader = R6Class(classname = "DataFrameLoader", 
         public = list(
+          print_level = function() {cat("----(Level: DataFrameLoader)\n")},
           assign_biosample_ids = function(){
-            cat("Function: Assign biosample_ids (Level: DataFrameLoader)\n")
+            cat("assign_biosample_ids()"); self$print_level()
             bios_ref = private$.reference_object$biosample
             if (nrow(private$.reference_object$pipeline_df) > 1) { 
               # multiple Measurements combined into one file
