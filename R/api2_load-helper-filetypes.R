@@ -12,6 +12,10 @@
 # END_COPYRIGHT
 #
 
+# TODO: these functions should be merged into DataFrameLoader under
+# `DataFrameLoaderRnaseqCufflinksGenePerSample` and
+# `DataFrameLoaderRnaseqCufflinksTranscriptPerSample`
+
 # Lower level functions for interpreting specific file-types 
 # (e.g. Cufflinks RNASeq files, Gemine DNASeq files) before ingesting into SciDB
 # -- Not meant to be called directly by the API user.

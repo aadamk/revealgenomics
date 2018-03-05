@@ -70,7 +70,7 @@ load_helper_prepare_dataframe = function(workbook, record, def,
                                             entity = entityName,
                                             con = con)
   
-  # Rename columns from Janssen custom fields to scidb4gh fields
+  # Rename columns from external custom fields to scidb4gh fields
   data_df = load_helper_column_rename(dfx = data_df,
                               scidb4gh_fields = mandatory_fields()[[entityName]], 
                               worksheet_fields = worksheet_fields)
@@ -116,7 +116,7 @@ load_helper_replace_local_ids = function(data_df, record) {
 
 #' Record all entity specific work per entity in one place
 load_helper_do_entity_specific_work = function(data_df, entity, record, con = NULL) {
-  cat("\t assigning some mandatory columns that are not typically present in Janssen data\n")
+  cat("\t assigning some mandatory columns that are not typically present in external data\n")
   # Currently, all entities need to have a description
   if (! 'description' %in% colnames(data_df)) data_df$description = '...' 
   
@@ -186,7 +186,7 @@ load_helper_assign_ontology_ids = function(data_df, definitions, entity, con = N
       data_df2[, field] = vec_ont
     }
   } else {
-    cat("No controlled fields specified by Janssen for entity:", entity, "\n")
+    cat("No controlled fields specified by loader Excel file for entity:", entity, "\n")
   }
   
   # entity specific ontology fields
