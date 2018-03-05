@@ -83,6 +83,7 @@ DataFrameLoader = R6Class(classname = "DataFrameLoader",
           #' compare with `featureset_id` of the current measurementSet
           #' and update the feature stored in `reference_object` if there has been a change in `featureset_id`
           download_features_for_featureset = function() {
+            cat("download_features_for_featureset()"); self$print_level()
             fsets_scidb = private$.reference_object$featureset
             # print(dim(fsets_scidb))
             
@@ -106,7 +107,7 @@ DataFrameLoader = R6Class(classname = "DataFrameLoader",
           #' register new features (if any)
           #' 
           register_new_features = function() {
-            cat("Function: Register new features (Level: DataFrameLoader)\n")
+            cat("register_new_features()"); self$print_level()
             invisible(self)
           },
           
@@ -119,10 +120,12 @@ DataFrameLoader = R6Class(classname = "DataFrameLoader",
           
           # return features in reference object
           retrieve_features = function() {
+            cat("retrieve_features()"); self$print_level()
             private$.reference_object$feature
           },
           
           retrieve_feature_synonyms = function() {
+            cat("retrieve_feature_synonyms()"); self$print_level()
             private$.reference_object$feature_synonym
           },
           
@@ -154,8 +157,9 @@ DataFrameLoader = R6Class(classname = "DataFrameLoader",
 DataFrameLoaderRNASeq = R6Class(classname = "DataFrameLoaderRNASeq",
                                 inherit = DataFrameLoader,
                                 public = list(
+                                  print_level = function() {cat("----(Level: DataFrameLoaderRNASeq)\n")},
                                   load_data = function(){
-                                    cat("Hello RNASeq\n")
+                                    cat("load_data()"); self$print_level()
                                     register_expression_dataframe(df1 = private$.data_df, 
                                                                   dataset_version = private$.reference_object$record$dataset_version)
                                     
@@ -163,9 +167,10 @@ DataFrameLoaderRNASeq = R6Class(classname = "DataFrameLoaderRNASeq",
 DataFrameLoaderRNASeqCufflinksGene = R6Class(classname = "DataFrameLoaderRNASeqCufflinksGene",
                                              inherit = DataFrameLoaderRNASeq,
                                              public = list(
+                                               print_level = function() {cat("----(Level: DataFrameLoaderRNASeqCufflinksGene)\n")},
                                                assign_feature_ids = function(){
+                                                 cat("assign_feature_ids()"); self$print_level()
                                                  super$assign_feature_ids()
-                                                 cat("Assign feature_id (Level: RNASeq Cufflinks Gene)\n")
                                                  
                                                  private$.data_df$feature_id = match_features(
                                                                 features_in_file = private$.data_df$tracking_id,
@@ -178,9 +183,10 @@ DataFrameLoaderRNASeqCufflinksGene = R6Class(classname = "DataFrameLoaderRNASeqC
 DataFrameLoaderRNASeqCufflinksIsoform = R6Class(classname = "DataFrameLoaderRNASeqCufflinksIsoform",
                                                 inherit = DataFrameLoaderRNASeq,
                                                 public = list(
+                                                  print_level = function() {cat("----(Level: DataFrameLoaderRNASeqCufflinksIsoform)\n")},
                                                   assign_feature_ids = function(){
                                                     super$assign_feature_ids()
-                                                    cat("Hello RNASeq Cufflinks Isoform\n")
+                                                    cat("assign_feature_ids()"); self$print_level()
                                                     
                                                     private$.data_df$feature_id = match_features(
                                                       features_in_file = private$.data_df$tracking_id,
@@ -194,7 +200,9 @@ DataFrameLoaderRNASeqCufflinksIsoform = R6Class(classname = "DataFrameLoaderRNAS
 DataFrameLoaderVariant = R6::R6Class(classname = 'DataFrameLoaderVariant',
                                      inherit = DataFrameLoader,
                                      public = list(
+                                       print_level = function() {cat("----(Level: DataFrameLoaderVariant)\n")},
                                        load_data = function() {
+                                         cat("load_data()"); self$print_level()
                                          register_variant(df = private$.data_df, 
                                                           dataset_version = private$.reference_object$record$dataset_version)
                                        }
@@ -203,7 +211,9 @@ DataFrameLoaderVariant = R6::R6Class(classname = 'DataFrameLoaderVariant',
 DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGemini',
                                      inherit = DataFrameLoaderVariant,
                                      public = list(
+                                       print_level = function() {cat("----(Level: DataFrameLoaderVariant)\n")},
                                        assign_feature_ids = function(){
+                                         cat("assign_feature_ids()"); self$print_level()
                                          super$assign_feature_ids()
                                          cat("Assign feature_id (Level: Variant Gemini)\n")
                                          
