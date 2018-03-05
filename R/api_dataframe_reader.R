@@ -153,14 +153,22 @@ DataReaderRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNASeqHTSeq',
                                       }
                                       
                                     ))
+
+#' @export
 createDataReader = function(pipeline_df, measurement_set){
-  switch(measurement_set$concat,
-         'RNAQuantification / RNASeq / Cufflinks_Isoform_FPKM' = DataReaderRNASeqCufflinks$new(pipeline_df = pipeline_df,
-                                                                           measurement_set = measurement_set),
-         'RNAQuantification / RNASeq / Cufflinks_Gene_FPKM' = DataReaderRNASeqCufflinks$new(pipeline_df = pipeline_df,
-                                                                                   measurement_set = measurement_set),
-         'RNAQuantification / RNASeq / HTSeq' = DataReaderRNASeqHTSeq$new(pipeline_df = pipeline_df,
-                                                                                   measurement_set = measurement_set),
-         'Variant / SNV / Mutect / SNPeff / GEMINI / NS / (other filters)' = DataReaderVariantGeminiFiltered$new(pipeline_df = pipeline_df,
-                                                   measurement_set = measurement_set))
+  temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
+                       measurement_set$quantification_level, "}")
+  switch(temp_string,
+         "{[external]-[RNA-seq] Cufflinks}{gene}" = 
+             DataReaderRNASeqCufflinks$new(pipeline_df = pipeline_df,
+                                           measurement_set = measurement_set),
+         "{[external]-[RNA-seq] Cufflinks}{transcript}" = 
+             DataReaderRNASeqCufflinks$new(pipeline_df = pipeline_df,
+                                           measurement_set = measurement_set),
+         "{[external]-[RNA-seq] HTSeq}{gene}" = 
+             DataReaderRNASeqHTSeq$new(pipeline_df = pipeline_df,
+                                       measurement_set = measurement_set),
+         "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = 
+             DataReaderVariantGeminiFiltered$new(pipeline_df = pipeline_df,
+                                                 measurement_set = measurement_set))
 }

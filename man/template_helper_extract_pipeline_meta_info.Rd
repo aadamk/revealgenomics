@@ -4,13 +4,17 @@
 \alias{template_helper_extract_pipeline_meta_info}
 \title{Extract pipeline meta information}
 \usage{
-template_helper_extract_pipeline_meta_info(pipelines_df, workbook)
+template_helper_extract_pipeline_meta_info(pipelines_df, choicesObj)
 }
 \arguments{
 \item{pipelines_df}{data-frame containing rows in Pipelines sheet corresponding to a 
 `[project_id, study_id, study_version]` record}
+
+\item{choicesObj}{list containing instantiated objects of PipelineChoices, FilterChoices
+and FeaturesetChoices classes}
 }
 \description{
-Given rows from Pipelines sheet, extract the unique values in `pipeline_information`
-column, and find the matching rows in `pipeline-choices` sheeet
+Given rows from Pipelines sheet, extract the unique keys for pipeline, filter and featurset-s.
+Then find the matching and relevant rows in `pipeline-choices`, `filter-choices` and 
+`featureset-choices`
 }

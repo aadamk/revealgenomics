@@ -180,7 +180,7 @@ api_register_biosamples = function(workbook, record, def, con = NULL) {
 #' in Pipelines sheet, and then uses info in `pipeline-choices` sheet to fill up the 
 #' other necessary information
 #' @export
-api_register_experimentsets_measurementsets = function(workbook, record, def, con = NULL) {
+api_register_experimentsets_measurementsets = function(workbook, record, def, choicesObj, con = NULL) {
   stopifnot(nrow(record) == 1)
   
   pipelines_df = template_helper_extract_record_related_rows(workbook = workbook,
@@ -189,8 +189,9 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
 
   ######################################  
   # EXPERIMENTSET
-  data_df = template_helper_extract_pipeline_meta_info(pipelines_df = pipelines_df, workbook = workbook)
-  if (nrow(data_df) == 0) {
+  msmtset_df = template_helper_extract_pipeline_meta_info(pipelines_df = pipelines_df, 
+                                                          choicesObj = choicesObj)
+  if (nrow(msmtset_df) == 0) {
     cat("No ExperimentSets that match pipeline-choices description\n")
     return(NULL)
   }
@@ -198,101 +199,74 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
   # ====================================
   # some parsing on the data
   # Extract relevant definitions 
-  defi = template_helper_extract_definitions(sheetName = 'pipeline-choices', 
-                                             def = def)
+  defi = rbind(template_helper_extract_definitions(sheetName = 'pipeline-choices', def = def), 
+               template_helper_extract_definitions(sheetName = 'filter-choices', def = def))
+  defi = defi[!(defi$attribute_name %in% c('filter_id')), ]
   
-  # defi = rbind(defi, def[grep("featureset", def$attribute_name), ])
   # Enforce that columns in data are defined in Definitions sheet
   cat("Suppressing this check as unique case here\n")
-  try({template_helper_enforce_columns_defined(data_df = data_df, 
+  try({template_helper_enforce_columns_defined(data_df = msmtset_df, 
                                                definitions = defi)})
   
   
   # Enforce that mandatory columns listed in Definitions sheet are present in data
-  template_helper_enforce_mandatory_columns_present(data_df = data_df,
-                                                    definitions = defi)
+  cat("Suppressing this check as unique case here\n")
+  try({template_helper_enforce_mandatory_columns_present(data_df = msmtset_df,
+                                                    definitions = defi)})
   
-  # ===================================
-  # Start filling up data for loading to scidb
-  data_df$dataset_id = record$dataset_id
   
-  # ====================================
-  # EXPERIMENTSET
-  entityName = .ghEnv$meta$arrExperimentSet
-  experimentSet_unique_fields = c('dataset_id', 'measurement_entity', 'data_subtype')
-  worksheet_fields =
-    c('dataset_id', 'name',
-      'description', 'molecule', 'measurement_entity')
-  expset_df = unique(data_df[, experimentSet_unique_fields])
+  # Formulate ExperimentSet
+  columns_experimentSet = c('dataset_id', 
+                            'measurement_entity',
+                            'data_subtype')
+  expset_df = unique(msmtset_df[, columns_experimentSet])
   expset_df$name = expset_df$data_subtype
   expset_df$description = paste0(expset_df$name, " experiments")
   expset_df$molecule = '...'
   
-  # Rename columns from Janssen custom fields to scidb4gh fields
-  expset_df = load_helper_column_rename(dfx = expset_df,
-                                        scidb4gh_fields = mandatory_fields()[[entityName]], 
-                                        worksheet_fields = worksheet_fields)
-  
-  expset_df_record = register_experimentset(df = expset_df, 
-                                             dataset_version = record$dataset_version, 
-                                             con = con)
+  expset_record = register_experimentset(df = expset_df, dataset_version = record$dataset_version, 
+                                         con = con)
   
   # ====================================
   # MEASUREMENTSET
-  entityName = .ghEnv$meta$arrMeasurementSet
-  msmtset_df = data_df
-  
-  # Start filling in fields for upload to scidb
-  
-  # idname
-  msmtset_df$idname = sapply(msmtset_df$measurement_entity, 
-                             function(entitynm) {
-                               info_df = get_entity_info()
-                               search_by_entity = info_df[info_df$entity == entitynm, ]$search_by_entity
-                               scidb4gh:::get_base_idname(search_by_entity)
-                             }
-                             ) 
   
   # experimentset_id
-  expset_df = get_experimentset(experimentset_id = expset_df_record$experimentset_id, 
-                    dataset_version = record$dataset_version, con = con)
+  expset_df = get_experimentset(experimentset_id = expset_record$experimentset_id, 
+                                dataset_version = record$dataset_version)
   msmtset_df = merge(msmtset_df, 
-                      expset_df[, c(scidb4gh:::get_base_idname(.ghEnv$meta$arrExperimentSet),
-                                                           experimentSet_unique_fields)],
-                      by = experimentSet_unique_fields)
+                     expset_df[, c(scidb4gh:::get_base_idname(.ghEnv$meta$arrExperimentSet),
+                                   columns_experimentSet)],
+                     by = columns_experimentSet)
   
   # featureset_id
   fsets = get_featuresets(con = con)
   matchL = find_matches_and_return_indices(msmtset_df$featureset_name, 
-                                  fsets$name)
+                                           fsets$name)
   if (length(matchL$source_unmatched_idx) > 0){
     cat("Following pipelines do not have featuresets defined yet -- skipping them:\n")
     print(msmtset_df[matchL$source_unmatched_idx, c(1:5)])
+    msmtset_df = msmtset_df[matchL$source_matched_idx, ]
   }
-  
-  msmtset_df = msmtset_df[matchL$source_matched_idx, ]
   msmtset_df$featureset_id = fsets$featureset_id[matchL$target_matched_idx]
   
-  # Rename columns from Janssen custom fields to scidb4gh fields
-  worksheet_fields =        c('entity',             'name')
-  names(worksheet_fields) = c('measurement_entity', 'pipeline_scidb')
-  msmtset_df = plyr::rename(msmtset_df, worksheet_fields)
-  
+  # Rename columns from external custom fields to scidb4gh fields
+  msmtset_df = plyr::rename(msmtset_df, 
+                            c('measurement_entity' = 'entity'))
+  msmtset_df$name = paste0(msmtset_df$pipeline_source_title, " : ", msmtset_df$filter_name)
   msmtset_df = drop_na_columns(msmtset_df)
-
+  
   # description
-  if ('pipeline_external_description' %in% colnames(msmtset_df)) {
-    msmtset_df$description = msmtset_df$pipeline_external_description
+  if ('pipeline_source_title' %in% colnames(msmtset_df)) {
+    msmtset_df$description = msmtset_df$pipeline_source_title
   } else {
     msmtset_df$description = '...'
   }
   
-  msmtset_df_record = register_measurementset(df = msmtset_df, 
-                                           dataset_version = record$dataset_version, 
-                                           con = con)
-  
-  return(list(ExperimentSetRecord = expset_df_record,
-              MeasurementSetRecord = msmtset_df_record))
+  msmtset_record = register_measurementset(df = msmtset_df, 
+                                              dataset_version = record$dataset_version, 
+                                              con = con)
+  return(list(ExperimentSetRecord = expset_record,
+              MeasurementSetRecord = msmtset_record))
 }
 
 #' automatically register ontology terms

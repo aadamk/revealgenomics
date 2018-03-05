@@ -14,8 +14,12 @@
 
 # HELPER FUNCTIONS functions specifically for interpreting / parsing the Excel template sheet
 
-# note usage of the useCachedValues parameter
-# otherwise, was throwing warnings about the concatenation field
+#' Helper function to read sheet from Excel workbook
+#' 
+#' note usage of the useCachedValues parameter
+#' otherwise, was throwing warnings about the concatenation field
+#' 
+#' @export
 myExcelReader = function(workbook, sheet_name) {
   readWorksheet(object = workbook, 
                 sheet = sheet_name, 
@@ -55,48 +59,70 @@ template_helper_extract_definitions = function(sheetName, def) {
 #' Enforce that mandatory columns listed in Definitions sheet are present in data
 template_helper_enforce_mandatory_columns_present = function(data_df, definitions) {
   mandatory_columns = definitions[definitions$importance == 1, ]$attribute_name
-  stopifnot(mandatory_columns %in% colnames(data_df))
+  if (!all(mandatory_columns %in% colnames(data_df))) {
+    stop("Following attributes defined as mandatory in Definitions sheet, but not present in data:\n\t",
+        pretty_print(mandatory_columns[!(mandatory_columns %in% colnames(data_df))]), "\n")
+  }
 }
 
 #' Extract pipeline meta information 
 #' 
-#' Given rows from Pipelines sheet, extract the unique values in `pipeline_information`
-#' column, and find the matching rows in `pipeline-choices` sheeet
+#' Given rows from Pipelines sheet, extract the unique keys for pipeline, filter and featurset-s.
+#' Then find the matching and relevant rows in `pipeline-choices`, `filter-choices` and 
+#' `featureset-choices`
 #' 
 #' @param pipelines_df data-frame containing rows in Pipelines sheet corresponding to a 
-#'        `[project_id, study_id, study_version]` record
-template_helper_extract_pipeline_meta_info = function(pipelines_df, workbook) {
-  # note usage of the useCachedValues parameter
-  # otherwise, was throwing warnings about the concatenation field
-  pipmeta = readWorksheet(object = workbook, sheet = 'pipeline-choices', 
-                          check.names = FALSE, 
-                          useCachedValues = TRUE)
+#'                     `[project_id, study_id, study_version]` record
+#' @param choicesObj list containing instantiated objects of PipelineChoices, FilterChoices
+#'                   and FeaturesetChoices classes
+template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj) {
+  selector_col_pipeline_choice = "pipeline_choice"
+  selector_col_filter_choice = 'pipeline_output_filter'
+  selector_col_featureset_choice = 'featureset_name'
   
-  pipeline_selector_col = "pipeline_information (Data-type / Sub-type / Pipeline-name)"
-  pipeline_list = unique(pipelines_df[, pipeline_selector_col])
+  # selector_col_pipeline_meta = 'pipeline_scidb'
+  # selector_col_filter_meta = 'filter_name'
+  # selector_col_featureset_meta = 'featureset_altName'
   
-  matchL = find_matches_and_return_indices(pipeline_list, pipmeta$concat)
-  if (length(matchL$source_unmatched_idx) > 0) {
-    cat("Following pipeline entries do not have matches in `pipeline-choices` sheet:\n\t", 
-        pretty_print(unmatched), "\n")
-  }
-  pipeline_meta_df = pipmeta[matchL$target_matched_idx, ]
-  # pipeline_meta_df = drop_na_columns(pipeline_meta_df)
-  pipeline_meta_df$measurement_entity = toupper(pipeline_meta_df$measurement_entity)
+  msmtset_selector = unique(
+    pipelines_df[, c(selector_col_pipeline_choice,
+                     selector_col_filter_choice,
+                     selector_col_featureset_choice)])
   
-  #############
-  # Merge in featureset information
-  # Create dataframe containing pipeline and featureset
-  xx = pipelines_df[, c(pipeline_selector_col, 'featureset_name')]
-  pip_fset_uniq_df = xx[!duplicated(xx), ]
-  # Confirm that each pipeline has only one featureset assigned to it
-  stopifnot(nrow(pip_fset_uniq_df) == length(pipeline_list))
-  # Merge 
-  pipeline_meta_df = merge(pipeline_meta_df, pip_fset_uniq_df, 
-                           by.x = 'concat',
-                           by.y = pipeline_selector_col)
+  pipeline_df =
+    drop_na_columns(
+      do.call(what = 'rbind',
+              args = lapply(msmtset_selector[, selector_col_pipeline_choice],
+                            function(choice) {
+                              choicesObj$pipelineChoicesObj$get_pipeline_metadata(pipeline_scidb = choice)
+                            })
+      )
+    )
   
-  pipeline_meta_df
+  filter_df =
+    drop_na_columns(
+      do.call(what = 'rbind',
+              args = lapply(msmtset_selector[, selector_col_filter_choice],
+                            function(choice) {
+                              choicesObj$filterChoicesObj$get_filter_metadata(filter_name = choice)
+                            })
+      )
+    )
+  # drop some local information
+  filter_df$filter_id = NULL 
+  filter_df$measurement_entity = NULL 
+  
+  msmtset_df = cbind(pipeline_df,
+                     filter_df)
+  msmtset_df$featureset_name = sapply(msmtset_selector[, selector_col_featureset_choice],
+                                      function(choice) {
+                                        choicesObj$featuresetChoicesObj$get_featureset_name(featureset_altName = choice)
+                                      })
+  msmtset_df$dataset_id = record$dataset_id
+  msmtset_df$measurement_entity = 
+    template_helper_convert_names(external_name = msmtset_df$measurement_entity)
+  
+  msmtset_df
 }
 
 #' extract information pertaining to a project-study record
@@ -143,3 +169,43 @@ template_helper_extract_record_related_rows = function(workbook, sheetName, reco
   data
 }
 
+#' Convert external (human-readable names) to API internal names
+#' 
+#' external                   API
+#' Gene Expression            RNAQUANTIFICATION
+#' Variant                    VARIANT
+#' Rearrangement              FUSION
+#' Copy Number Variation      COPYNUMBER_MAT
+template_helper_convert_names = function(api_name = NULL, external_name = NULL) {
+  if (is.null(api_name) & is.null(external_name)) {
+    stop("Must supply at least one parameter")
+  } else if (!is.null(api_name) & !is.null(external_name)) {
+    stop("Must supply only one parameter")
+  }
+  df1 = data.frame(
+    api_names = c(.ghEnv$meta$arrRnaquantification,
+                  .ghEnv$meta$arrVariant, 
+                  .ghEnv$meta$arrFusion,
+                  .ghEnv$meta$arrCopynumber_mat),
+    external_name = c('Gene Expression',
+                      'Variant',
+                      'Rearrangement',
+                      'Copy Number Variation'),
+    stringsAsFactors = FALSE
+  )
+  if (!is.null(api_name)) {
+    m1 = find_matches_and_return_indices(api_name, df1$api_name)
+    if (length(m1$source_unmatched_idx) != 0) {
+      stop("Unexpected internal names provided for conversion: ",
+          pretty_print(api_name[m1$source_unmatched_idx]))
+    }
+    df1$external_name[m1$target_matched_idx]
+  } else if (!is.null(external_name)) {
+    m1 = find_matches_and_return_indices(external_name, df1$external_name)
+    if (length(m1$source_unmatched_idx) != 0) {
+      stop("Unexpected external names provided for conversion: ",
+          pretty_print(external_name[m1$source_unmatched_idx]))
+    }
+    df1$api_name[m1$target_matched_idx]
+  }
+}

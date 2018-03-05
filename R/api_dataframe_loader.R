@@ -286,16 +286,26 @@ DataFrameLoaderVariantGeminiFiltered = R6::R6Class(classname = 'DataFrameLoaderV
                                            inherit = DataFrameLoaderVariantGemini,
                                            public = list())
 
-                            
+                      
+#' @export      
 createDataLoader = function(data_df, reference_object){
-  switch(reference_object$measurement_set$concat,
-         'RNAQuantification / RNASeq / Cufflinks_Isoform_FPKM' = DataFrameLoaderRNASeqCufflinksIsoform$new(data_df = data_df,
-                                                                                              reference_object = reference_object),
-         'RNAQuantification / RNASeq / Cufflinks_Gene_FPKM' = DataFrameLoaderRNASeqCufflinksGene$new(data_df = data_df,
-                                                                                                     reference_object = reference_object),
-         'RNAQuantification / RNASeq / HTSeq' = DataFrameLoaderRNASeqCufflinksGene$new(data_df = data_df,
-                                                                                                     reference_object = reference_object),
-         'Variant / SNV / Mutect / SNPeff / GEMINI / NS / (other filters)' = DataFrameLoaderVariantGeminiFiltered$new(data_df = data_df,
-                                                                   reference_object = reference_object))
+  temp_string = paste0("{",
+                       reference_object$measurement_set$pipeline_scidb, 
+                       "}{", 
+                       reference_object$measurement_set$quantification_level, 
+                       "}")
+  switch(temp_string,
+         "{[external]-[RNA-seq] Cufflinks}{gene}" = 
+           DataFrameLoaderRNASeqCufflinksGene$new(data_df = data_df,
+                                                     reference_object = reference_object),
+         "{[external]-[RNA-seq] Cufflinks}{transcript}" = 
+           DataFrameLoaderRNASeqCufflinksIsoform$new(data_df = data_df,
+                                                  reference_object = reference_object),
+         "{[external]-[RNA-seq] HTSeq}{gene}" = 
+           DataFrameLoaderRNASeqCufflinksGene$new(data_df = data_df,
+                                                  reference_object = reference_object),
+         "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = 
+           DataFrameLoaderVariantGeminiFiltered$new(data_df = data_df,
+                                                    reference_object = reference_object))
 }
 
