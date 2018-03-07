@@ -136,7 +136,8 @@ search_rnaquantification_scidb = function(arrayname,
         qq2 = paste("redimension(", xx@name, 
                     ", <flag:bool>[", 
                     yaml_to_dim_str(
-                      .ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims), "])")
+                      .ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims,
+                      for_auto_chunking = TRUE), "])")
 
         qq = paste("join(",
                    qq, ",",

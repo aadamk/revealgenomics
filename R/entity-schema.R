@@ -15,14 +15,17 @@
 ############################################################
 # Helper functions for using YAML schema object
 
-yaml_to_dim_str = function(dims){
-  dim_str = paste(
-    names(dims), "=",
-    sapply(dims, function(x) {paste(x$start, ":",
-                                    ifelse(x$end == Inf, "*", x$end), ",", x$chunk_interval, ",",
-                                    x$overlap, sep = "")}),
-    sep = "", collapse = ", ")
-  dim_str
+yaml_to_dim_str = function(dims, for_auto_chunking=FALSE){
+  if (!for_auto_chunking) {
+    paste(
+      names(dims), "=",
+      sapply(dims, function(x) {paste(x$start, ":",
+                                      ifelse(x$end == Inf, "*", x$end), ",", x$chunk_interval, ",",
+                                      x$overlap, sep = "")}),
+      sep = "", collapse = ", ")
+  } else {
+    paste0(names(dims), collapse = ",")
+  }
 }
 
 yaml_to_attr_string = function(attributes, compression_on = FALSE){
