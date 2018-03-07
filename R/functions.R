@@ -507,6 +507,7 @@ register_feature = function(df, register_gene_synonyms = TRUE, only_test = FALSE
   if (!only_test) {
     arrayname = full_arrayname(.ghEnv$meta$arrFeature)
     fid = register_tuple_return_id(df, arrayname, uniq, con = con)
+    fid = fid[, get_base_idname(.ghEnv$meta$arrFeature)]
     gene_ftrs = df[df$feature_type == 'gene', ]
     if (register_gene_synonyms & nrow(gene_ftrs) > 0){
       cat("Working on gene synonyms\n")
@@ -635,8 +636,9 @@ register_tuple_return_id = function(df,
   }
   
   # Find matches by set of unique fields provided by user
-  xx = iquery(con$db, paste("project(", arrayname, ", ", 
-                            paste(uniq[uniq!='dataset_id'], collapse = ", "), ")", sep = ""), return = TRUE)
+  xx = iquery(con$db, paste0("project(", arrayname, ", ", 
+                            paste0(uniq[!(uniq %in% c('dataset_id', 'featureset_id'))], # dataset_id and featureset_id are dimensions, and do not need to be projected
+                                   collapse = ","), ")"), return = TRUE)
   matching_entity_ids = find_matches_with_db(df_for_upload = df, df_in_db = xx, unique_fields = uniq)
   nonmatching_idx = which(is.na(matching_entity_ids))
   matching_idx = which(!is.na(matching_entity_ids))
@@ -997,11 +999,10 @@ get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
   if (!fromCache | is.null(.ghEnv$cache$feature_ref)){ # work from SciDB directly
     entitynm = .ghEnv$meta$arrFeature
     arrayname = full_arrayname(entitynm)
-    idname = get_idname(arrayname)
     
     qq = arrayname
     if (!is.null(feature_id)) {
-      qq = form_selector_query_1d_array(arrayname, idname, feature_id)
+      qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), feature_id)
       
       # URL length restriction enforce by apache (see https://github.com/Paradigm4/<CUSTOMER>/issues/53)
       THRESH_query_len = 270000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
@@ -1026,7 +1027,7 @@ get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
     } else { # FASTER path when all data has to be downloaded
       ftr = iquery(con$db, qq, return = T)
       ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
-      ftr = merge(ftr, ftr_info, by = idname, all.x = T)
+      ftr = merge(ftr, ftr_info, by = get_idname(arrayname), all.x = T)
       allfeatures = unpivot_key_value_pairs(ftr, arrayname, key_col = "key", val = "val")
       if (is.null(.ghEnv$cache$feature_ref)) { # the first time (when feature cache has never been filled)
         .ghEnv$cache$feature_ref = allfeatures
@@ -1096,20 +1097,23 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
   if (is_entity_secured(entitynm)) {
     arrayname = paste0(custom_scan(), "(", arrayname, ")")
   }
-  if (length(breaks) == 2) # completely contiguous set of tickers; use `between`
-  {
-    query =sprintf("between(%s, %d, %d)", arrayname, sorted[1], sorted[length(sorted)])
-  }
-  else if (length(breaks) >2 & length(breaks) <= THRESH_K + 2) # few sets of contiguous tickers; use `cross_between`
-  {
-    cb_pts =  paste( sapply(seq(length(breaks)-1), function(i) sprintf("%d, %d", sorted[breaks[i]+1], sorted[breaks[i+1]])), collapse=" , ")
-    query=sprintf("cross_between_(%s, %s)", arrayname, cb_pts)
-  }
-  else # mostly non-contiguous tickers, use `cross_join`
-  {
+  
+  filter_string = tryCatch(expr = {
+    formulate_base_selection_query(fullarrayname = arrayname, 
+                                    id = selected_ids)
+    },
+    error = function(e) {
+    e  
+    }
+  )
+  if (!("error" %in% class(filter_string))) { # if we were able to create a filter string
+    query =sprintf("filter(%s, %s)", 
+                   arrayname, 
+                   filter_string)
+  } else { # mostly non-contiguous tickers, use `cross_join`
     # Formulate the cross_join query
-    diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
-    if (length(diminfo) != 1) stop("code not covered")
+    # diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
+    # if (length(diminfo) != 1) stop("code not covered")
     upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
                      length(selected_ids), 
@@ -1410,11 +1414,8 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
   diminfo = data.frame(start = scidb::schema(tt, "dimensions")$start,
                        end = scidb::schema(tt, "dimensions")$end, stringsAsFactors = FALSE)
   ovlp = scidb::schema(tt, "dimensions")$overlap
-  # fn = function(dimname) {yaml_to_dim_str(.ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims[dimname])}
-  # newdim = paste(sapply(selected_names_all, FUN = fn), collapse = ",")
   newdim = paste(selected_names_all, collapse = ",")
   newsch = paste("<flag:bool>[", newdim, "]", sep="")
-  # xx1 = con$db$redimension(xx1, R(newsch))
   qq2 = paste0("redimension(", xx1@name, ", ", newsch, ")") 
   
   subq = paste(sapply(selected_names_all, FUN=function(x) {paste(paste("A.", x, sep=""), paste("B.", x, sep=""), sep=", ")}), collapse=", ")

@@ -533,7 +533,6 @@ array:
     attributes: 
       name: string
       gene_symbol: string
-      featureset_id: int64
       chromosome: string
       start: string
       end: string
@@ -547,6 +546,11 @@ array:
       - featureset_id
       - feature_type
     dims: 
+      featureset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
       feature_id:
         start: 0
         end: Inf
@@ -566,11 +570,15 @@ array:
     attributes:
       synonym: string
       feature_id: int64
-      featureset_id: int64
       source: string
       created: string
       updated: string
     dims: 
+      featureset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
       feature_synonym_id:
         start: 0
         end: Inf
