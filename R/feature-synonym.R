@@ -166,8 +166,8 @@ build_reference_gene_set = function( featureset_id,
                                                       'kznf_gene_catalog', 'mamit.trnadb', 'cd',
                                                       'lncrnadb', 'enzyme_id', 'intermediate_filament_db'),
                                      hierarchy = c('ensembl_gene_id', 'vega_id', 
-                                                   'ucsc_id', 'ccds_id', 'gene_symbol', 'hgnc_id')
-){
+                                                   'ucsc_id', 'ccds_id', 'gene_symbol', 'hgnc_id'),
+                                     con = NULL) {
   if (is.null(gene_annotation_file_path)) {
     gene_annotation_file_path = system.file("extdata", 
                                             "gene__hugo__hgnc_complete_set.txt.gz", package="scidb4gh")
@@ -199,7 +199,7 @@ build_reference_gene_set = function( featureset_id,
   
   cat("Taking the non-alias fields and registering to get unique feature id-s\n")
   df1 = x12e[, which(!(colnames(x12e) %in% alias_fields))]
-  strand_term = search_ontology(terms = "strand_term_unspecified")
+  strand_term = search_ontology(terms = "strand_term_unspecified", con = con)
   if (is.na(strand_term)) {
     cat("Registering ontology term\n")
     strand_term = register_ontology_term(df = data.frame(term = "strand_term_unspecified",
