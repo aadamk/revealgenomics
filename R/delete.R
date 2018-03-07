@@ -20,7 +20,7 @@ formulate_base_selection_query = function(fullarrayname, id){
   sorted=sort(id)
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
   idname = get_base_idname(fullarrayname)
-  if (length(breaks) <= (THRESH_K + 2)) # few sets of contiguous tickers; use `cross_between`
+  if (length(breaks) <= (THRESH_K + 2)) 
   {
     expr_query1 = paste( sapply(seq(length(breaks)-1), function(i) {
       left = sorted[breaks[i]+1]
@@ -38,6 +38,14 @@ formulate_base_selection_query = function(fullarrayname, id){
   return(expr_query1)
 }
 
+#' Add version filter on top a filter string
+#' 
+#' Checks that entity is versioned before adding the version string
+#' 
+#' @param entity entity on which filtering is to be run
+#' @param base_selection_query typically the output of running `formulate_base_selection_query`
+#'                             e.g. (individual_id>=1 AND individual_id<=3)
+#' @param dataset_version the version at which to filter
 formulate_versioned_selection_query = function(entity, base_selection_query, dataset_version) {
   # Clear out the array
   if (is_entity_versioned(entity)) {
