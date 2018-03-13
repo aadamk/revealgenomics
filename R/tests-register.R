@@ -261,3 +261,7 @@ test_register_copnyumber_matrix_file = function(copynumberset, dataset_version){
   stopifnot("file_path" %in% colnames(copynumberset))
 }
 
+test_register_fusion_data = function(df, fusionset){
+  test_dataframe_formatting(df)
+  stopifnot(nrow(fusionset) == 1)
+}
