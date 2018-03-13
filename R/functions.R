@@ -1785,7 +1785,7 @@ register_copynumber_seg = function(experimentset, only_test = FALSE, con = NULL)
     xx$biosample_id = b[match(xx$ID, b$name), ]$biosample_id
     stopifnot(!any(is.na(xx$biosample_id)))
     xx$ID = NULL
-    colnames(xx) = gsub("chrom", "reference_name", colnames(xx))
+    colnames(xx) = gsub("chrom", "chromosome", colnames(xx))
     colnames(xx) = gsub("loc.start", "start", colnames(xx))
     colnames(xx) = gsub("loc.end",   "end",   colnames(xx))
     colnames(xx) = gsub("[.]", "_", colnames(xx))
@@ -1872,8 +1872,8 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
     
     # Rename some columns
     colnames(xx)[colnames(xx) == 'Sample'] = 'sample_name_unabbreviated'
-    colnames(xx)[colnames(xx) == 'chrom_left'] = 'reference_name_left'
-    colnames(xx)[colnames(xx) == 'chrom_right'] = 'reference_name_right'
+    colnames(xx)[colnames(xx) == 'chrom_left'] = 'chromosome_left'
+    colnames(xx)[colnames(xx) == 'chrom_right'] = 'chromosome_right'
     
     xx$measurementset_id = measurementset$measurementset_id
     xx$dataset_version = dataset_version
