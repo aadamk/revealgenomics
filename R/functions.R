@@ -1836,7 +1836,7 @@ register_copynumber_matrix_file = function(copynumberset, dataset_version, featu
     stopifnot(nrow(xx2) == nrow(xx)*(ncol(xx)-1))
     
     xx2$dataset_version = dataset_version
-    xx2$copynumberset_id = copynumberset$copynumberset_id
+    xx2$measurementset_id = copynumberset$measurementset_id
     xx2$dataset_id = dataset_id
     
     arrayname = full_arrayname(.ghEnv$meta$arrCopynumber_mat)
