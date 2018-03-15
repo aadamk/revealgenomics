@@ -11,6 +11,6 @@ api_register_experimentsets_measurementsets(workbook, record, def, choicesObj,
 This function differs from api_register_indiv/bios/measurements
 that work row by row on Subjects/Samples/Pipelines sheets respectively.
 This function needs to find unique set of Experiments from the unique value of `concat` column
-in Pipelines sheet, and then uses info in `pipeline-choices` sheet to fill up the 
+in Pipelines sheet, and then uses info in `pipeline_choices` sheet to fill up the 
 other necessary information
 }

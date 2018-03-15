@@ -3,12 +3,12 @@
 \docType{data}
 \name{FilterChoices}
 \alias{FilterChoices}
-\title{extract relevant info pertaining to filter-choices sheet}
+\title{extract relevant info pertaining to filter_choices sheet}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
 FilterChoices
 }
 \description{
-extract relevant info pertaining to filter-choices sheet
+extract relevant info pertaining to filter_choices sheet
 }
 \keyword{datasets}

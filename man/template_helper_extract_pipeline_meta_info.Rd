@@ -15,6 +15,6 @@ and FeaturesetChoices classes}
 }
 \description{
 Given rows from Pipelines sheet, extract the unique keys for pipeline, filter and featurset-s.
-Then find the matching and relevant rows in `pipeline-choices`, `filter-choices` and 
-`featureset-choices`
+Then find the matching and relevant rows in `pipeline_choices`, `filter_choices` and 
+`featureset_choices`
 }

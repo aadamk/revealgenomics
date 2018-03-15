@@ -177,7 +177,7 @@ api_register_biosamples = function(workbook, record, def, con = NULL) {
 #' This function differs from api_register_indiv/bios/measurements
 #' that work row by row on Subjects/Samples/Pipelines sheets respectively.
 #' This function needs to find unique set of Experiments from the unique value of `concat` column
-#' in Pipelines sheet, and then uses info in `pipeline-choices` sheet to fill up the 
+#' in Pipelines sheet, and then uses info in `pipeline_choices` sheet to fill up the 
 #' other necessary information
 #' @export
 api_register_experimentsets_measurementsets = function(workbook, record, def, choicesObj, con = NULL) {
@@ -192,15 +192,15 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, ch
   msmtset_df = template_helper_extract_pipeline_meta_info(pipelines_df = pipelines_df, 
                                                           choicesObj = choicesObj)
   if (nrow(msmtset_df) == 0) {
-    cat("No ExperimentSets that match pipeline-choices description\n")
+    cat("No ExperimentSets that match pipeline_choices description\n")
     return(NULL)
   }
 
   # ====================================
   # some parsing on the data
   # Extract relevant definitions 
-  defi = rbind(template_helper_extract_definitions(sheetName = 'pipeline-choices', def = def), 
-               template_helper_extract_definitions(sheetName = 'filter-choices', def = def))
+  defi = rbind(template_helper_extract_definitions(sheetName = 'pipeline_choices', def = def), 
+               template_helper_extract_definitions(sheetName = 'filter_choices', def = def))
   defi = defi[!(defi$attribute_name %in% c('filter_id')), ]
   
   # Enforce that columns in data are defined in Definitions sheet

@@ -3,12 +3,12 @@
 \docType{data}
 \name{PipelineChoices}
 \alias{PipelineChoices}
-\title{extract relevant info pertaining to pipeline-choices sheet}
+\title{extract relevant info pertaining to pipeline_choices sheet}
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
 PipelineChoices
 }
 \description{
-extract relevant info pertaining to pipeline-choices sheet
+extract relevant info pertaining to pipeline_choices sheet
 }
 \keyword{datasets}

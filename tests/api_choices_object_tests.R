@@ -1,6 +1,6 @@
 # This is the metadata about pipeline and filter choices
-filter_choices_df = myExcelReader(workbook = workbook, sheet_name = 'filter-choices')
-pipeline_choices_df = myExcelReader(workbook = workbook, sheet_name = 'pipeline-choices')
+filter_choices_df = myExcelReader(workbook = workbook, sheet_name = 'filter_choices')
+pipeline_choices_df = myExcelReader(workbook = workbook, sheet_name = 'pipeline_choices')
 
 # This is the actual Pipeline information related to a study
 pipelines_df = myExcelReader(workbook = workbook, sheet_name = 'Pipelines')

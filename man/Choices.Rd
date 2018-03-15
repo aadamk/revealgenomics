@@ -9,6 +9,7 @@
 Choices
 }
 \description{
-e.g. pipeline-choices, filter-choices, featureset-choices
+e.g. pipeline_choices, filter_choices, featureset_choices
+multiple matches at a time
 }
 \keyword{datasets}

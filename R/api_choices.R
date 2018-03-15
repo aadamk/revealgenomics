@@ -1,6 +1,6 @@
 #' classes to handle different choices sheets in Excel template
 #' 
-#' e.g. pipeline-choices, filter-choices, featureset-choices
+#' e.g. pipeline_choices, filter_choices, featureset_choices
 
 Choices = R6::R6Class(
   classname = 'Choices',
@@ -29,7 +29,7 @@ Choices = R6::R6Class(
   )
 )
 
-#' extract relevant info pertaining to pipeline-choices sheet
+#' extract relevant info pertaining to pipeline_choices sheet
 #' 
 #' @export
 PipelineChoices = R6::R6Class(
@@ -52,7 +52,7 @@ PipelineChoices = R6::R6Class(
   )
 )
 
-#' extract relevant info pertaining to filter-choices sheet
+#' extract relevant info pertaining to filter_choices sheet
 #' 
 #' @export
 FilterChoices = R6::R6Class(
@@ -78,7 +78,7 @@ FilterChoices = R6::R6Class(
   )
 )
 
-#' extract relevant info pertaining to featureset-choices sheet
+#' extract relevant info pertaining to featureset_choices sheet
 #' 
 #' @export
 FeaturesetChoices = R6::R6Class(
@@ -87,7 +87,7 @@ FeaturesetChoices = R6::R6Class(
   public = list(
     initialize = function(featureset_choices_df) {
       super$initialize(choices_df = featureset_choices_df, 
-                       keyname = 'featureset_altName')
+                       keyname = 'featureset_scidb')
     },
     get_featureset_name = function(featureset_altName) {
       private$get_selected_rows(keys = featureset_altName)$featureset_name

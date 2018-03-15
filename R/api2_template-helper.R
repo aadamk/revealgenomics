@@ -68,8 +68,8 @@ template_helper_enforce_mandatory_columns_present = function(data_df, definition
 #' Extract pipeline meta information 
 #' 
 #' Given rows from Pipelines sheet, extract the unique keys for pipeline, filter and featurset-s.
-#' Then find the matching and relevant rows in `pipeline-choices`, `filter-choices` and 
-#' `featureset-choices`
+#' Then find the matching and relevant rows in `pipeline_choices`, `filter_choices` and 
+#' `featureset_choices`
 #' 
 #' @param pipelines_df data-frame containing rows in Pipelines sheet corresponding to a 
 #'                     `[project_id, study_id, study_version]` record
@@ -77,8 +77,8 @@ template_helper_enforce_mandatory_columns_present = function(data_df, definition
 #'                   and FeaturesetChoices classes
 template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj) {
   selector_col_pipeline_choice = "pipeline_choice"
-  selector_col_filter_choice = 'pipeline_output_filter'
-  selector_col_featureset_choice = 'featureset_name'
+  selector_col_filter_choice = 'filter_choice'
+  selector_col_featureset_choice = 'featureset_choice'
   
   # selector_col_pipeline_meta = 'pipeline_scidb'
   # selector_col_filter_meta = 'filter_name'
