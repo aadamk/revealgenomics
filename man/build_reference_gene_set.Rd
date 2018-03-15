@@ -12,7 +12,7 @@ build_reference_gene_set(featureset_id, gene_annotation_file_path = NULL,
   "bioparadigms_slc", "orphanet", "pseudogene.org", "horde_id", "merops",
   "imgt", "iuphar", "kznf_gene_catalog", "mamit.trnadb", "cd", "lncrnadb",
   "enzyme_id", "intermediate_filament_db"), hierarchy = c("ensembl_gene_id",
-  "vega_id", "ucsc_id", "ccds_id", "gene_symbol", "hgnc_id"))
+  "vega_id", "ucsc_id", "ccds_id", "gene_symbol", "hgnc_id"), con = NULL)
 }
 \arguments{
 \item{featureset_id}{FeatureSet id at which to build a reference gene set}
