@@ -14,6 +14,29 @@
 
 # HELPER FUNCTIONS functions specifically for interpreting / parsing the Excel template sheet
 
+#' Storing columns that link different sheets
+#' 
+#' what columns link FeatureSets between featureset_choices sheet and Pipelines sheet
+#' `api_choices_col` is same as `choices_col` if not specified
+template_linker = list(
+    featureset = list(
+      choices_sheet      = 'featureset_choices',
+      choices_col = 'featureset_name',
+      api_choices_col    = 'featureset_scidb',
+      pipelines_sel_col  = 'featureset_choice'
+    ),
+    filter = list(
+      choices_sheet      = 'filter_choices',
+      choices_col        = 'filter_name',
+      pipelines_sel_col  = 'filter_choice'
+    ),
+    pipeline = list(
+      choices_sheet      = 'pipeline_choices',
+      choices_col        = 'pipeline_scidb',
+      pipelines_sel_col  = 'pipeline_choice'
+    )
+  )
+
 #' Helper function to read sheet from Excel workbook
 #' 
 #' note usage of the useCachedValues parameter
@@ -76,13 +99,9 @@ template_helper_enforce_mandatory_columns_present = function(data_df, definition
 #' @param choicesObj list containing instantiated objects of PipelineChoices, FilterChoices
 #'                   and FeaturesetChoices classes
 template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj) {
-  selector_col_pipeline_choice = "pipeline_choice"
-  selector_col_filter_choice = 'filter_choice'
-  selector_col_featureset_choice = 'featureset_choice'
-  
-  # selector_col_pipeline_meta = 'pipeline_scidb'
-  # selector_col_filter_meta = 'filter_name'
-  # selector_col_featureset_meta = 'featureset_altName'
+  selector_col_pipeline_choice = template_linker$pipeline$pipelines_sel_col
+  selector_col_filter_choice   = template_linker$filter$pipelines_sel_col
+  selector_col_featureset_choice = template_linker$featureset$pipelines_sel_col
   
   msmtset_selector = unique(
     pipelines_df[, c(selector_col_pipeline_choice,
@@ -94,7 +113,7 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj) 
       do.call(what = 'rbind',
               args = lapply(msmtset_selector[, selector_col_pipeline_choice],
                             function(choice) {
-                              choicesObj$pipelineChoicesObj$get_pipeline_metadata(pipeline_scidb = choice)
+                              choicesObj$pipelineChoicesObj$get_pipeline_metadata(keys = choice)
                             })
       )
     )
@@ -104,7 +123,7 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj) 
       do.call(what = 'rbind',
               args = lapply(msmtset_selector[, selector_col_filter_choice],
                             function(choice) {
-                              choicesObj$filterChoicesObj$get_filter_metadata(filter_name = choice)
+                              choicesObj$filterChoicesObj$get_filter_metadata(keys = choice)
                             })
       )
     )
@@ -116,7 +135,7 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj) 
                      filter_df)
   msmtset_df$featureset_name = sapply(msmtset_selector[, selector_col_featureset_choice],
                                       function(choice) {
-                                        choicesObj$featuresetChoicesObj$get_featureset_name(featureset_altName = choice)
+                                        choicesObj$featuresetChoicesObj$get_featureset_name(keys = choice)
                                       })
   msmtset_df$dataset_id = record$dataset_id
   msmtset_df$measurement_entity = 

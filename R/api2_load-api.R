@@ -241,7 +241,7 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, ch
   # featureset_id
   fsets = get_featuresets(con = con)
   matchL = find_matches_and_return_indices(msmtset_df$featureset_name, 
-                                           fsets$name)
+                                           fsets[, template_linker$featureset$choices_col])
   if (length(matchL$source_unmatched_idx) > 0){
     cat("Following pipelines do not have featuresets defined yet -- skipping them:\n")
     print(msmtset_df[matchL$source_unmatched_idx, c(1:5)])
@@ -252,7 +252,7 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, ch
   # Rename columns from external custom fields to scidb4gh fields
   msmtset_df = plyr::rename(msmtset_df, 
                             c('measurement_entity' = 'entity'))
-  msmtset_df$name = paste0(msmtset_df$pipeline_source_title, " : ", msmtset_df$filter_name)
+  msmtset_df$name = paste0(msmtset_df$pipeline_source_title, ": ", msmtset_df$filter_name)
   msmtset_df = drop_na_columns(msmtset_df)
   
   # description

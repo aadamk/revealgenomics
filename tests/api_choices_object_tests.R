@@ -38,10 +38,10 @@ info = as.data.frame(t(m1))
 info$measurement_entity
 info$data_subtype
 
-m1 = sapply(unique(pipelines_df$pipeline_output_filter), 
+m1 = sapply(unique(pipelines_df$filter_choice), 
             function(filter_name) c(
-              'measurement_entity'= filterChoicesObj$get_quantification_level(filter_name = filter_name),
-              'data_subtype' =      filterChoicesObj$get_quantification_unit(filter_name = filter_name)))
+              'measurement_entity'= filterChoicesObj$get_quantification_level(keys = filter_name),
+              'data_subtype' =      filterChoicesObj$get_quantification_unit(keys = filter_name)))
 info = as.data.frame(t(m1))
 info$measurement_entity
 info$data_subtype
@@ -52,12 +52,12 @@ info$data_subtype
 # given any row index of the Pipelines sheet
 n = 2
 key_pipeline = pipelines_df$pipeline_choice[n]
-key_filter   = pipelines_df$pipeline_output_filter[n]
+key_filter   = pipelines_df$filter_choice[n]
 cat("Here is how to retrieve metadata for a row of Pipelines sheet\n")
 cat("Pipeline metadata:\n")
 print(pipelineChoicesObj$get_pipeline_metadata(pipeline_scidb =  key_pipeline))
 cat("Filter metadata:\n")
-print(filterChoicesObj$get_filter_metadata(filter_name = key_filter))
+print(filterChoicesObj$get_filter_metadata(keys = key_filter))
 
 if (pipelineChoicesObj$get_measurement_entity(key_pipeline) ==
     filterChoicesObj$get_measurement_entity(key_filter)) {

@@ -38,16 +38,16 @@ PipelineChoices = R6::R6Class(
   public = list(
     initialize = function(pipeline_choices_df) {
       super$initialize(choices_df = pipeline_choices_df, 
-                       keyname = 'pipeline_scidb')
+                       keyname = template_linker$pipeline$choices_col)
     },
-    get_measurement_entity = function(pipeline_scidb) {
-      private$get_selected_rows(keys = pipeline_scidb)$measurement_entity
+    get_measurement_entity = function(keys) {
+      private$get_selected_rows(keys = keys)$measurement_entity
     },
-    get_data_subtype = function(pipeline_scidb) {
-      private$get_selected_rows(keys = pipeline_scidb)$data_subtype
+    get_data_subtype = function(keys) {
+      private$get_selected_rows(keys = keys)$data_subtype
     },
-    get_pipeline_metadata = function(pipeline_scidb) {
-      private$get_selected_rows(keys = pipeline_scidb)
+    get_pipeline_metadata = function(keys) {
+      private$get_selected_rows(keys = keys)
     }
   )
 )
@@ -61,19 +61,19 @@ FilterChoices = R6::R6Class(
   public = list(
     initialize = function(filter_choices_df) {
       super$initialize(choices_df = filter_choices_df, 
-                       keyname = 'filter_name')
+                       keyname = template_linker$filter$choices_col)
     },
-    get_quantification_level = function(filter_name) {
-      private$get_selected_rows(keys = filter_name)$quantification_level
+    get_quantification_level = function(keys) {
+      private$get_selected_rows(keys = keys)$quantification_level
     },
-    get_quantification_unit = function(filter_name) {
-      private$get_selected_rows(keys = filter_name)$quantification_unit
+    get_quantification_unit = function(keys) {
+      private$get_selected_rows(keys = keys)$quantification_unit
     },
-    get_measurement_entity = function(filter_name) {
-      private$get_selected_rows(keys = filter_name)$measurement_entity
+    get_measurement_entity = function(keys) {
+      private$get_selected_rows(keys = keys)$measurement_entity
     },
-    get_filter_metadata = function(filter_name) {
-      private$get_selected_rows(keys = filter_name)
+    get_filter_metadata = function(keys) {
+      private$get_selected_rows(keys = keys)
     }
   )
 )
@@ -87,13 +87,13 @@ FeaturesetChoices = R6::R6Class(
   public = list(
     initialize = function(featureset_choices_df) {
       super$initialize(choices_df = featureset_choices_df, 
-                       keyname = 'featureset_scidb')
+                       keyname = template_linker$featureset$choices_col)
     },
-    get_featureset_name = function(featureset_altName) {
-      private$get_selected_rows(keys = featureset_altName)$featureset_name
+    get_featureset_name = function(keys) {
+      private$get_selected_rows(keys = keys)$featureset_name
     },
-    get_featureset_metadata = function(featureset_altName) {
-      private$get_selected_rows(keys = featureset_altName)
+    get_featureset_metadata = function(keys) {
+      private$get_selected_rows(keys = keys)
     }
   )
 )
