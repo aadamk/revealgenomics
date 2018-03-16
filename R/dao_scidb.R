@@ -125,7 +125,7 @@ dao_search_rnaquantification = function(measurementset,
   } else { # user has not supplied features; try to download full data
     cat("Estimating download size: ")
     download_size = iquery(con$db, 
-                       query = paste0("project(summarize(", qq, "), bytes)"), 
+                       query = paste0("project(summarize(_materialize(", qq, ", 1)), bytes)"), 
                        return = TRUE)$bytes
     cat(download_size/1024/1024, " MB\n")
     download_limit_mb = 500
