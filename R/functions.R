@@ -1576,6 +1576,8 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
       "array at measurementset_id =", unique(df1$measurementset_id), "\n")
   iquery(con$db, paste("insert(", qq2, ", ", fullnm, ")"))
   iquery(con$db, paste0("remove(", temp_arr_nm, ")"))
+
+  remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrRnaquantification, con = con)
 }
 
 #' @export
