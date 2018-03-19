@@ -87,11 +87,13 @@ DataFrameLoader = R6Class(classname = "DataFrameLoader",
             fsets_scidb = private$.reference_object$featureset
             # print(dim(fsets_scidb))
             
-            featureset_name = unique(private$.reference_object$pipeline_df$featureset_name)
+            featureset_name = unique(private$.reference_object$pipeline_df[, 
+                                                      template_linker$featureset$choices_col])
             stopifnot(length(featureset_name) == 1)
             # print(featureset_name)
             
-            fset = fsets_scidb[match(featureset_name, fsets_scidb$name), ]
+            fset = fsets_scidb[match(featureset_name, 
+                                     fsets_scidb[, template_linker$featureset$choices_col]), ]
             stopifnot(nrow(fset) == 1)
             # print(fset)
             
@@ -237,8 +239,10 @@ DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGe
                                          
                                          stopifnot(nrow(private$.reference_object$pipeline_df) == 1)
                                          fsets_scidb = private$.reference_object$featureset
-                                         fset = drop_na_columns(fsets_scidb[match(private$.reference_object$pipeline_df$featureset_name, 
-                                                                                  fsets_scidb$name), ])
+                                         fset = drop_na_columns(fsets_scidb[match(private$.reference_object$pipeline_df[, 
+                                                                                                template_linker$featureset$choices_col], 
+                                                                                  fsets_scidb[,
+                                                                                              template_linker$featureset$choices_col]), ])
                                          stopifnot(nrow(fset) == 1)
                                          cat("Matching features in file by feature-synonyms in DB at featureset_id", 
                                              fset$featureset_id, "\n")
