@@ -20,7 +20,7 @@ formulate_base_selection_query = function(fullarrayname, id){
   sorted=sort(id)
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
   idname = get_base_idname(fullarrayname)
-  if (length(breaks) <= (THRESH_K + 2)) 
+  if (length(breaks) <= (THRESH_K + 2)) # few sets of contiguous tickers; use `cross_between`
   {
     expr_query1 = paste( sapply(seq(length(breaks)-1), function(i) {
       left = sorted[breaks[i]+1]
