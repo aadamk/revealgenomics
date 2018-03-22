@@ -245,13 +245,6 @@ update_feature_synonym_cache = function(con = NULL){
                                          return = TRUE)
 }
 
-#' @export
-scidb_exists_array = function(arrayName, con = NULL) {
-  con = use_ghEnv_if_null(con)
-  
-  !is.null(tryCatch({iquery(con$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
-}
-
 get_max_id = function(arrayname, con = NULL){
   con = use_ghEnv_if_null(con)
   

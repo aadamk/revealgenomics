@@ -16,9 +16,10 @@
 # Helper functions for dataframe / text manipulation
 ############################################################
 
-# Compare with mandatory fields passed by user
-# Rename remaining columns of dataframe as info_<column-name>
-# Take the info columns that are non-string and convert to string
+#' Compare with mandatory fields passed by user
+#' 
+#' Rename remaining columns of dataframe as info_<column-name>
+#' Take the info columns that are non-string and convert to string
 prep_df_fields = function(df, mandatory_fields){
   available_fields = colnames(df)
   
@@ -79,99 +80,6 @@ pretty_print = function(vec, prettify_after = 7) {
                pretty_print(tail(vec, 2)),
                sep = ""))}
 
-
-############################################################
-# Helper functions for SciDB array operations
-############################################################
-#' @export
-scidb_exists_array = function(arrayName, con = NULL) {
-  con = use_ghEnv_if_null(con)
-  
-  !is.null(tryCatch({iquery(con$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
-}
-
-convert_attr_double_to_int64 = function(arr, attrname, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  attrnames = scidb::schema(arr, "attributes")$name
-  randString = "for_int64_conversion"
-  arr = scidb_attribute_rename(arr, old = attrname, new = randString, con = con)
-  # arr = con$db$apply(srcArray = arr, newAttr = R(attrname), expression = int64(R(randString)))
-  qq = paste0("apply(", arr@name, ", ", attrname, ", int64(", randString, "))")
-  # arr = con$db$project(arr, R(paste(attrnames, collapse = ", ")))
-  qq = paste0("project(", qq, ", ", paste(attrnames, collapse = ","), ")")
-  arr = scidb(con$db, qq)
-}
-
-
-#' @export
-scidb_attribute_rename = function(arr, old, new, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  attrs = scidb::schema(arr, what = "attributes")
-  attrnames = attrs$name
-  stopifnot(old %in% attrnames)
-  
-  attrs[match(old, attrnames), "name"] = new
-  # dims = scidb::schema(arr, "dimensions")
-  
-  attr_schema = paste(
-    paste(
-      paste(attrs$name, attrs$type, sep = ": "),
-      ifelse(attrs$nullable, "", "NOT NULL"), sep = " "),
-    collapse = ", ")
-  dim_schema = gsub("<.*> *", "", scidb::schema(arr)) # TODO : build up from scratch
-  newSchema = paste("<", attr_schema, ">", dim_schema)
-  
-  # arr = con$db$cast(srcArray = arr, schemaArray = R(newSchema))
-  # arr
-  scidb(con$db, paste0("cast(", arr@name, ", ",  newSchema, ")"))
-}
-
-#' @export
-scidb_array_count = function(array, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  qq = paste("op_count(", array@name, ")", sep = "")
-  iquery(con$db, qq, schema="<count:uint64> [i=0:0]", return = T)$count
-}
-
-#' @export
-scidb_array_head= function(array, n = 5, con = NULL){
-  con = use_ghEnv_if_null(con)
-  # as.R(con$db$limit(array, R(n)))
-  iquery(con$db, paste0("limit(", array@name, ", ", n, ")"), return = TRUE)
-}
-
-#' remove old array versions associated with an entity
-remove_old_versions_for_entity = function(entitynm, con = NULL){
-  stopifnot(entitynm %in% get_entity_names())
-  
-  remove_versions(arayname = full_arrayname(entitynm), con = con)
-  info_array_exists = .ghEnv$meta$L$array[[entitynm]]$infoArray
-  if (info_array_exists) {
-    info_array_name = paste0(full_arrayname(entitynm), "_INFO")
-    remove_versions(arayname = info_array_name, con = con)
-  }
-}
-
-#' remove old versions associated with an array
-#' 
-#' Retain the last N_THRESH versions
-remove_versions = function(arayname, con = NULL)
-{
-  N_THRESH = 5
-  
-  con = use_ghEnv_if_null(con)
-  mv = iquery(con$db, sprintf("versions(%s)", arayname), 
-              return=TRUE)
-  if(nrow(mv) > N_THRESH )
-  {
-    mv = max(mv$version_id)
-    cat("Removing versions of array:", arayname, "older than version", (mv-N_THRESH), "\n")
-    iquery(con$db, sprintf("remove_versions(%s, %i)", arayname, (mv-N_THRESH)))
-  }
-}
 
 #' helper function to report matches between vectors
 #' 
