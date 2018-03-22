@@ -16,6 +16,14 @@
 gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https"){
   # SciDB connection and R API --
   
+  if (is.null(username) & protocol != 'http') {
+    stop("if username is null, protocol must be HTTP")
+  }
+  
+  if (!is.null(username) & protocol == 'http') {
+    stop("if protocol is HTTP, cannot try authentication via HTTP")
+  }
+  
   con = NULL
   if (is.null(username)) {
     protocol = 'http'
@@ -36,9 +44,36 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
     }
     # Attempt 1. 
     err1 = tryCatch({
-      if (is.null(host) & is.null(port)) {
-        # If user did not specify host and port, try default host for scidbconnect at port 8083
-        con$db = scidbconnect(username = username, password = password, port = 8083, protocol = protocol)
+      if (is.null(host)& is.null(port)) {
+        # If user did not specify host and port, then formulate host URL from apache config
+        path1 = '/etc/httpd-default/conf.d/default-ssl.conf'
+        path2 = '/opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf'
+        if (file.exists(path1) & !file.exists(path2)) {
+          apache_conf_file = path1
+        } else if (!file.exists(path1) & file.exists(path2)) {
+          apache_conf_file = path2
+        } else {
+          cat("Cannot infer hostname from apache config. Need to supply hostname as parameter to gh_connect\n")
+          return(NULL)
+        }
+        hostname = tryCatch({
+          system(paste0("grep ServerName ", apache_conf_file, " | awk '{print $2}'"), 
+                        intern = TRUE)
+          }, 
+          error = function(e) {
+            cat("Could not infer hostname from apache conf\n")
+            return(e)
+          }
+        )
+        if (! "error" %in% class(hostname)) {
+          hostname = paste0(hostname, '/shim/')
+        } else {
+          print(hostname)
+          cat("Aborting gh_connect()\n")
+          return(NULL)
+        }
+        cat("hostname was not provided. Connecting to", hostname, "\n")
+        con$db = scidbconnect(host = hostname, username = username, password = password, port = NULL, protocol = protocol)
       } else {
         # If user specified host and port, try user supplied parameters
         con$db = scidbconnect(host = host, username = username, password = password, port = port, protocol = protocol)
@@ -46,27 +81,8 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
     }, error = function(e) {return(e)}
     )
     
-    # If previous attempts did not work, maybe port 8083 was forwarded (hard-coded to /shim below)
-    if ("error" %in% class(err1) & is.null(host) & is.null(port)){
-      err2 = tryCatch({ 
-        con$db = scidbconnect(protocol = protocol, 
-                              host = '127.0.0.1/shim/', , 
-                              port = NULL,  
-                              username = username, 
-                              password = password) 
-      }, error = function(e) {return(e)}
-      )
-    } else if ("error" %in% class(err1)) {
-      err2 = tryCatch({stop("could not connect via user supplied parameters")}, 
-                      error = function(e) {return(e)}
-      )
-    } else {
-      err2 = FALSE
-    }
-
-    if ("error" %in% class(err2)) {
+    if ("error" %in% class(err1)) {
       print(err1);
-      print(err2);
       con$db = NULL
     }
   }
@@ -74,9 +90,7 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
   
   # Store a copy of connection object in .ghEnv
   # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
-  if (TRUE) {
-    .ghEnv$db = con$db
-  }
+  .ghEnv$db = con$db
   return(con)
 }
 
