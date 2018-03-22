@@ -1389,10 +1389,11 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
           data.frame(val2 = val2)))
   selected_names_all = c('dataset_version', selected_names)
   colnames(selector) = selected_names_all
-  selector$flag = TRUE
+  selector$flag = -1
   
-  xx = as.scidb(con$db, selector, 
-                types = c(rep("int64", length(selected_names_all)), 'bool'))
+  xx = as.scidb_int64_cols(con$db, 
+                           df1 = selector,
+                           int64_cols = colnames(selector))
   xx1 = xx
   # for (attr in selected_names_all){
   #   xx1 = convert_attr_double_to_int64(arr = xx1, attrname = attr, con = con)
@@ -1408,7 +1409,7 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
                        end = scidb::schema(tt, "dimensions")$end, stringsAsFactors = FALSE)
   ovlp = scidb::schema(tt, "dimensions")$overlap
   newdim = paste(selected_names_all, collapse = ",")
-  newsch = paste("<flag:bool>[", newdim, "]", sep="")
+  newsch = paste("<flag:int64>[", newdim, "]", sep="")
   qq2 = paste0("redimension(", xx1@name, ", ", newsch, ")") 
   
   subq = paste(sapply(selected_names_all, FUN=function(x) {paste(paste("A.", x, sep=""), paste("B.", x, sep=""), sep=", ")}), collapse=", ")
@@ -1552,11 +1553,13 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
                 'feature_id', 'value')]
   
   temp_arr_nm = paste0("temp_df_", stringi::stri_rand_strings(1, 6))
-  adf_expr0 = as.scidb(con$db, 
-                       df1, 
-                       chunk_size=nrow(df1), 
-                       name = temp_arr_nm, 
-                       types = c('int64', 'int64', 'int64', 'int64', 'float'))
+  adf_expr0 = as.scidb_int64_cols(db = con$db,
+                                  df1 = df1,
+                                  int64_cols = c('dataset_id', 'measurementset_id', 'biosample_id', 
+                                                 'feature_id'),
+                                  chunk_size=nrow(df1), 
+                                  name = temp_arr_nm, 
+                                  use_aio_input = TRUE)
   
   qq2 = paste0("apply(", 
                adf_expr0@name, 
