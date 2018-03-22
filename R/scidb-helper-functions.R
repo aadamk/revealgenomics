@@ -37,7 +37,7 @@ as.scidb_int64_cols = function(db, df1, int64_cols, ...) {
   stopifnot(all(int64_cols %in% colnames(df1)))
   
   # check that all columns to be converted to int64-s are integer or numeric
-  stopifnot(all(sapply(df1, class)['feature_id'] %in% c('integer', 'numeric')))
+  stopifnot(all(sapply(df1, class)[int64_cols] %in% c('integer', 'numeric')))
   
   # Convert the user specified columns
   for (colnm in int64_cols) {
