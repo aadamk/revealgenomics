@@ -1565,6 +1565,7 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   
   df1 = df1[, c('dataset_id', 'measurementset_id', 'biosample_id', 
                 'feature_id', 'value')]
+  df1 = plyr::rename(df1, c('value' = 'value__'))
   
   temp_arr_nm = paste0("temp_df_", stringi::stri_rand_strings(1, 6))
   adf_expr0 = as.scidb_int64_cols(db = con$db,
@@ -1577,6 +1578,7 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   
   qq2 = paste0("apply(", 
                adf_expr0@name, 
+                    ", value, float(value__)", 
                     ", dataset_version, ", dataset_version, ")")
   
   fullnm = full_arrayname(.ghEnv$meta$arrRnaquantification)
