@@ -1,11 +1,11 @@
 Package: scidb4gh
 Type: Package
-Title: GA4GH inspired R-API for SciDB
-Version: 0.1
-Date: 2017-04-20
+Title: SciDB Insight API
+Version: 0.2
+Date: 2018-02-22
 Author: Kriti Sen Sharma
 Maintainer: Kriti Sen Sharma <ksen@paradigm4.com>
-Description: GA4GH inspired R-API for SciDB. Used to load (register), maintain (update, delete), and retrieve (search, get) data. Multiple data types are supported e.g. clinical data, gene, transcript, RNASeq, GXP by microarray, variant, fusion etc.
+Description: Get insight across clinical studies. Use this API to load (register), maintain (update, delete), and retrieve (search, get) data. Multiple data types are supported e.g. clinical data, gene, transcript, RNASeq, GXP by microarray, variant, fusion etc.
 Depends:
     data.table,
     tidyr,

@@ -15,14 +15,17 @@
 ############################################################
 # Helper functions for using YAML schema object
 
-yaml_to_dim_str = function(dims){
-  dim_str = paste(
-    names(dims), "=",
-    sapply(dims, function(x) {paste(x$start, ":",
-                                    ifelse(x$end == Inf, "*", x$end), ",", x$chunk_interval, ",",
-                                    x$overlap, sep = "")}),
-    sep = "", collapse = ", ")
-  dim_str
+yaml_to_dim_str = function(dims, for_auto_chunking=FALSE){
+  if (!for_auto_chunking) {
+    paste(
+      names(dims), "=",
+      sapply(dims, function(x) {paste(x$start, ":",
+                                      ifelse(x$end == Inf, "*", x$end), ",", x$chunk_interval, ",",
+                                      x$overlap, sep = "")}),
+      sep = "", collapse = ", ")
+  } else {
+    paste0(names(dims), collapse = ",")
+  }
 }
 
 yaml_to_attr_string = function(attributes, compression_on = FALSE){
@@ -57,7 +60,12 @@ get_mandatory_fields_for_register_entity = function(arrayname){
       mandatory_fields = attrs
     }
   } else if (entity_class == 'featuredata') {
-    mandatory_fields = attrs
+    if (entitynm %in% c(.ghEnv$meta$arrFeature, .ghEnv$meta$arrFeatureSynonym)) {
+      # arrays in which featureset_id is a dimension but also a mandatory field
+      mandatory_fields = c('featureset_id', attrs) 
+    } else {
+      mandatory_fields = attrs
+    }
   } else if (entity_class == 'measurementdata') {
     dims = get_idname(entitynm)
     dims = dims[!(dims %in% c('dataset_version'))]
@@ -143,7 +151,10 @@ get_base_idname = function(arrayname){
   entitynm = strip_namespace(arrayname)
   dims = get_idname(entitynm)
   
-  if (entitynm != .ghEnv$meta$arrDataset) {
+  if (entitynm %in% c(.ghEnv$meta$arrFeature, .ghEnv$meta$arrFeatureSynonym)) {
+    # featuredata arrays that have featureset_id as dimension for faster slicing
+    dims[!(dims %in% c("featureset_id"))] 
+  } else if (entitynm != .ghEnv$meta$arrDataset) {
     dims[!(dims %in% c("dataset_id", "dataset_version"))]
   } else {
     dims[!(dims %in% "dataset_version")]

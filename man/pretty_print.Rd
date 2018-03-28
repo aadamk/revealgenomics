@@ -4,7 +4,7 @@
 \alias{pretty_print}
 \title{Pretty print a large vector of strings, integers etc.}
 \usage{
-pretty_print(vec)
+pretty_print(vec, prettify_after = 7)
 }
 \description{
 Pretty print a large vector of strings, integers etc.

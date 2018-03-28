@@ -1,5 +1,5 @@
 
-## At commit d54f3e5
+## At commit 352afe9
 
 Recent changes:
 
@@ -12,7 +12,7 @@ get_entity_info()
 # 1               PROJECT            metadata                 <NA>              PROJECT
 # 2               DATASET            metadata              PROJECT              DATASET
 # ...
-# 7     RNAQUANTIFICATION                data RNAQUANTIFICATIONSET RNAQUANTIFICATIONSET
+# 7     RNAQUANTIFICATION                data       MEASUREMENTSET       MEASUREMENTSET
 ```
 
 2. Delete of measurement data is now working as 
@@ -20,13 +20,13 @@ get_entity_info()
 ```R
 delete_entity(entity = 'RNAQUANTIFICATION', 
             ids = 2, dataset_version = 1, 
-            delete_by_entity = 'RNAQUANTIFICATIONSET')
-# RnaQuantification data can be deleted by the parent RnaQuantificationSet
+            delete_by_entity = 'MEASUREMENTSET')
+# RnaQuantification data can be deleted by the parent MeasurementSet
 
 delete_entity(entity = 'VARIANT', 
             ids = 1, dataset_version = 2, 
-            delete_by_entity = 'VARIANTSET')
-# Variant data can be deleted by the parent VariantSet
+            delete_by_entity = 'MEASUREMENTSET')
+# Variant data can be deleted by the parent MeasurementSet
 
 # The earlier API for metadata and feature-data continues to work
 delete_entity(entity = 'DATASET', id = 1, dataset_version = 2)
@@ -41,17 +41,17 @@ parameter `ids` is now called `id`
 ```R
 ## parent entity by which one would search an entity 
 scidb4gh:::get_search_by_entity(entity = 'RNAQUANTIFICATION')
-# [1] "RNAQUANTIFICATIONSET"
-scidb4gh:::get_search_by_entity(entity = 'RNAQUANTIFICATIONSET')
+# [1] "MEASUREMENTSET"
+scidb4gh:::get_search_by_entity(entity = 'MEASUREMENTSET')
 # [1] "DATASET"
 ```
     
 ```R
 ## entity by which one would delete an entity 
 scidb4gh:::get_delete_by_entity(entity = 'RNAQUANTIFICATION')
-# [1] "RNAQUANTIFICATIONSET"
-scidb4gh:::get_delete_by_entity(entity = 'RNAQUANTIFICATIONSET')
-# [1] "RNAQUANTIFICATIONSET"
+# [1] "MEASUREMENTSET"
+scidb4gh:::get_delete_by_entity(entity = 'MEASUREMENTSET')
+# [1] "MEASUREMENTSET"
 ```
 5. `search_copynumberset(dataset_id = ..)` was throwing an error earlier when there 
 were no CopyNumberSets in a dataset. This should be fixed now.

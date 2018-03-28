@@ -4,16 +4,10 @@
 \alias{search_fusion}
 \title{Search Fusion data}
 \usage{
-search_fusion(fusionset, biosample = NULL, feature = NULL,
-  dataset_lookup_ref = NULL, inferSchemaOnQuery = TRUE, con = NULL)
+search_fusion(measurementset, biosample = NULL, feature = NULL,
+  dataset_lookup_ref = NULL, con = NULL)
 }
 \arguments{
-\item{dataset_lookup_ref}{If supplied by user, look up namespace using dataset_id, AND from a user 
-supplied reference table 
-(required in multi-user Shiny app).
-If not supplied by user,  look up namespace using fusionset_id, AND using fusionset_lookup embedded in .ghEnv environment variable 
-(not OK to use in multi-user shiny app)}
-
 \item{inferSchemaOnQuery}{optimization flag (default: TRUE. if FALSE, uses schema hand-baked in internal code. 
 Use with caution until schema is automatically inferred from YAML file)}
 }

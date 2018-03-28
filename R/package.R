@@ -16,7 +16,7 @@ NULL
 {
   packageStartupMessage("To get started see ?scidb4gh for a list of available functions. Each\nfunction has a detailed help page with examples.\nThe original PDF specification is available from vignette('scidb4gh')." , 
                         domain = NULL, appendLF = TRUE)
-  # options("scidb4gh.dummy_option"=7999)
+  options("scidb4gh.use_scidb_ee"=TRUE)
 }
 
 # A global environment used to store the metadata information, and cache state by some functions
@@ -30,7 +30,6 @@ NULL
 .ghEnv$meta$arrIndividuals = 'INDIVIDUAL'
 .ghEnv$meta$arrOntology = 'ONTOLOGY'
 .ghEnv$meta$arrBiosample = 'BIOSAMPLE'
-.ghEnv$meta$arrRnaquantificationset = 'RNAQUANTIFICATIONSET'
 .ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
 .ghEnv$meta$arrFeature = 'FEATURE'
 .ghEnv$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
@@ -39,11 +38,8 @@ NULL
 .ghEnv$meta$arrGeneSymbol = 'GENE_SYMBOL'
 .ghEnv$meta$arrGenelist = 'GENELIST'
 .ghEnv$meta$arrGenelist_gene = 'GENELIST_GENE'
-.ghEnv$meta$arrVariantset = 'VARIANTSET'
 .ghEnv$meta$arrVariant = 'VARIANT'
-.ghEnv$meta$arrFusionset = 'FUSIONSET'
 .ghEnv$meta$arrFusion = 'FUSION'
-.ghEnv$meta$arrCopyNumberSet = 'COPYNUMBERSET'
 .ghEnv$meta$arrCopynumber_seg = 'COPYNUMBER_SEG'
 .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
 .ghEnv$meta$arrExperimentSet = 'EXPERIMENTSET'
@@ -53,15 +49,6 @@ NULL
 # Prepare variables for the cache
 .ghEnv$cache$ontology_ref = NULL
 .ghEnv$cache$lookup = list()
-# .ghEnv$cache$lookup[[.ghEnv$meta$arrProject]] = NULL
-# .ghEnv$cache$lookup[[.ghEnv$meta$arrDataset]] = NULL
-# .ghEnv$cache$lookup[[.ghEnv$meta$arrIndividuals]] = NULL
-# .ghEnv$cache$lookup[[.ghEnv$meta$arrBiosample]] = NULL
-# .ghEnv$cache$lookup[[.ghEnv$meta$arrRnaquantificationset]] = NULL
-# .ghEnv$cache$lookup[[.ghEnv$meta$arrVariantset]] = NULL
-# .ghEnv$cache$lookup[[.ghEnv$meta$arrFusionset]] = NULL
-# .ghEnv$cache$lookup[[.ghEnv$meta$arrExperimentSet]] = NULL
-# .ghEnv$cache$lookup[[.ghEnv$meta$arrCopyNumberSet]] = NULL
 .ghEnv$cache$feature_ref = NULL
 .ghEnv$cache$dfFeatureSynonym = NULL
 .ghEnv$cache$biosample_ref = NULL

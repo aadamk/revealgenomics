@@ -139,14 +139,6 @@ test_register_biosample = function(df, uniq, silent = TRUE){
   #                                                df, uniq, silent)
 }
 
-test_register_rnaquantificationset = function(df, uniq, silent = TRUE){
-  # Add additional tests here -->
-  
-  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
-  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrRnaquantificationset, 
-  #                                                df, uniq, silent)
-}
-
 test_register_experimentset = function(df, silent = TRUE){
   # Additional tests
   entity_df = get_entity_info()
@@ -176,30 +168,6 @@ test_register_measurementset  = function(df1, silent = TRUE){
   # END: Common test with test_.._experimentset
   
   # any other tests
-}
-
-test_register_variantset = function(df, uniq, silent = TRUE){
-  # Add additional tests here -->
-  
-  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
-  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrVariantset, 
-  #                                                df, uniq, silent)
-}
-
-test_register_fusionset = function(df, uniq, silent = TRUE){
-  # Add additional tests here -->
-  
-  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
-  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrFusionset, 
-  #                                                df, uniq, silent)
-}
-
-test_register_copynumberset = function(df, uniq, silent = TRUE){
-  # Add additional tests here -->
-  
-  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
-  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
-  #                                                df, uniq, silent)
 }
 
 ######################################################
@@ -241,11 +209,11 @@ test_register_feature_synonym = function(df, uniq, silent = TRUE){
 # measurementdata entities
 
 test_register_expression_matrix = function(filepath,
-                                           rnaquantificationset_id,
+                                           measurementset_id,
                                            featureset_id,
                                            feature_type,
                                            dataset_version){
-  stopifnot(length(rnaquantificationset_id) == 1)
+  stopifnot(length(measurementset_id) == 1)
   stopifnot(length(featureset_id) == 1)
   stopifnot(feature_type == 'gene' | feature_type == 'transcript')
 }
@@ -260,14 +228,14 @@ test_register_variant = function(df){
   df_temp$per_gene_variant_number = -1
   test_mandatory_fields(df_temp, arrayname = .ghEnv$meta$arrVariant)
 
-  stopifnot(c('variantset_id', 'biosample_id', 'feature_id')
+  stopifnot(c('measurementset_id', 'biosample_id', 'feature_id')
             %in% colnames(df))
   
-  check_entity_exists_at_id(entity = 'VARIANTSET',
-                            id = sort(unique(df$variantset_id)))
-  check_entity_exists_at_id(entity = 'BIOSAMPLE',
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrMeasurementSet,
+                            id = sort(unique(df$measurementset_id)))
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrBiosample,
                             id = sort(unique(df$biosample_id)))
-  # check_entity_exists_at_id(entity = 'FEATURE',
+  # check_entity_exists_at_id(entity = .ghEnv$meta$arrFeature,
   #                           id = sort(unique(df$feature_id)))
 }
 
@@ -275,9 +243,9 @@ test_register_expression_dataframe = function(df1) {
   test_mandatory_fields(df = df1, arrayname = .ghEnv$meta$arrRnaquantification, 
                         silent = TRUE)
 
-  check_entity_exists_at_id(entity = 'RNAQUANTIFICATIONSET',
-                            id = sort(unique(df1$rnaquantificationset_id)))
-  check_entity_exists_at_id(entity = 'BIOSAMPLE',
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrMeasurementSet,
+                            id = sort(unique(df1$measurementset_id)))
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrBiosample,
                             id = sort(unique(df1$biosample_id)))
   # check_entity_exists_at_id(entity = 'FEATURE',
   #                           id = sort(unique(df1$feature_id)))
@@ -297,4 +265,3 @@ test_register_fusion_data = function(df, fusionset){
   test_dataframe_formatting(df)
   stopifnot(nrow(fusionset) == 1)
 }
-

@@ -117,11 +117,13 @@ merge_gene_annotation_and_location = function(gene_annotation_file_path,
   
   x1 = convert_factors_to_char(x1)
   x2 = convert_factors_to_char(x2)
-  x1 = rename_column(x1, old_name = 'name', new_name = 'full_name')
-  x1 = rename_column(x1, old_name = 'symbol', new_name = 'gene_symbol')
-  x2 = rename_column(x2, old_name = 'Start', new_name = 'start')
-  x2 = rename_column(x2, old_name = 'End', new_name = 'end')
-  x2 = rename_column(x2, old_name = 'Chr', new_name = 'reference_name')
+  x1 = plyr::rename(x1, c('name' = 'full_name',
+                          'symbol' = 'gene_symbol'))
+  x2 = plyr::rename(x2, c('Start' = 'start',
+                          'End' = 'end',
+                          'Chr' = 'chromosome'))
+  x2$start = as.character(x2$start)
+  x2$end = as.character(x2$end)
   
   x12 = merge(x1, x2, 
               by.x = "ensembl_gene_id", 
@@ -164,8 +166,8 @@ build_reference_gene_set = function( featureset_id,
                                                       'kznf_gene_catalog', 'mamit.trnadb', 'cd',
                                                       'lncrnadb', 'enzyme_id', 'intermediate_filament_db'),
                                      hierarchy = c('ensembl_gene_id', 'vega_id', 
-                                                   'ucsc_id', 'ccds_id', 'gene_symbol', 'hgnc_id')
-){
+                                                   'ucsc_id', 'ccds_id', 'gene_symbol', 'hgnc_id'),
+                                     con = NULL) {
   if (is.null(gene_annotation_file_path)) {
     gene_annotation_file_path = system.file("extdata", 
                                             "gene__hugo__hgnc_complete_set.txt.gz", package="scidb4gh")
@@ -197,7 +199,7 @@ build_reference_gene_set = function( featureset_id,
   
   cat("Taking the non-alias fields and registering to get unique feature id-s\n")
   df1 = x12e[, which(!(colnames(x12e) %in% alias_fields))]
-  strand_term = search_ontology(terms = "strand_term_unspecified")
+  strand_term = search_ontology(terms = "strand_term_unspecified", con = con)
   if (is.na(strand_term)) {
     cat("Registering ontology term\n")
     strand_term = register_ontology_term(df = data.frame(term = "strand_term_unspecified",

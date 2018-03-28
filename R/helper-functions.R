@@ -16,9 +16,10 @@
 # Helper functions for dataframe / text manipulation
 ############################################################
 
-# Compare with mandatory fields passed by user
-# Rename remaining columns of dataframe as info_<column-name>
-# Take the info columns that are non-string and convert to string
+#' Compare with mandatory fields passed by user
+#' 
+#' Rename remaining columns of dataframe as info_<column-name>
+#' Take the info columns that are non-string and convert to string
 prep_df_fields = function(df, mandatory_fields){
   available_fields = colnames(df)
   
@@ -71,8 +72,8 @@ convert_factors_to_char = function(dfx){
 
 #' Pretty print a large vector of strings, integers etc. 
 #' @export
-pretty_print = function(vec) {
-  ifelse(length(vec) <= 7,
+pretty_print = function(vec, prettify_after = 7) {
+  ifelse(length(vec) <= prettify_after,
          paste(vec, collapse = ", "),
          paste(pretty_print(head(vec, 2)),
                "...(Total: ", length(vec), ")... ",
@@ -80,66 +81,22 @@ pretty_print = function(vec) {
                sep = ""))}
 
 
-############################################################
-# Helper functions for SciDB array operations
-############################################################
+#' helper function to report matches between vectors
+#' 
+#' @param source source vector for finding matches from
+#' @param target target vector in which to find matches
+#' 
+#' @return 
+#' list(match_res, source_matched_idx, source_unmatched_idx, target_matched_idx)
 #' @export
-scidb_exists_array = function(arrayName, con = NULL) {
-  con = use_ghEnv_if_null(con)
+find_matches_and_return_indices = function(source, target){
+  match_res = match(source, target)
+  match_idx = which(!is.na(match_res))
+  non_match_idx = which(is.na(match_res))
   
-  !is.null(tryCatch({iquery(con$db, paste("show(", arrayName, ")", sep=""), return=TRUE, binary = FALSE)}, error = function(e) {NULL}))
-}
-
-convert_attr_double_to_int64 = function(arr, attrname, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  attrnames = scidb::schema(arr, "attributes")$name
-  randString = "for_int64_conversion"
-  arr = scidb_attribute_rename(arr, old = attrname, new = randString, con = con)
-  # arr = con$db$apply(srcArray = arr, newAttr = R(attrname), expression = int64(R(randString)))
-  qq = paste0("apply(", arr@name, ", ", attrname, ", int64(", randString, "))")
-  # arr = con$db$project(arr, R(paste(attrnames, collapse = ", ")))
-  qq = paste0("project(", qq, ", ", paste(attrnames, collapse = ","), ")")
-  arr = scidb(con$db, qq)
-}
-
-
-#' @export
-scidb_attribute_rename = function(arr, old, new, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  attrs = scidb::schema(arr, what = "attributes")
-  attrnames = attrs$name
-  stopifnot(old %in% attrnames)
-  
-  attrs[match(old, attrnames), "name"] = new
-  # dims = scidb::schema(arr, "dimensions")
-  
-  attr_schema = paste(
-    paste(
-      paste(attrs$name, attrs$type, sep = ": "),
-      ifelse(attrs$nullable, "", "NOT NULL"), sep = " "),
-    collapse = ", ")
-  dim_schema = gsub("<.*> *", "", scidb::schema(arr)) # TODO : build up from scratch
-  newSchema = paste("<", attr_schema, ">", dim_schema)
-  
-  # arr = con$db$cast(srcArray = arr, schemaArray = R(newSchema))
-  # arr
-  scidb(con$db, paste0("cast(", arr@name, ", ",  newSchema, ")"))
-}
-
-#' @export
-scidb_array_count = function(array, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  qq = paste("op_count(", array@name, ")", sep = "")
-  iquery(con$db, qq, schema="<count:uint64> [i=0:0]", return = T)$count
-}
-
-#' @export
-scidb_array_head= function(array, n = 5, con = NULL){
-  con = use_ghEnv_if_null(con)
-  # as.R(con$db$limit(array, R(n)))
-  iquery(con$db, paste0("limit(", array@name, ", ", n, ")"), return = TRUE)
+  list(match_res = match_res,
+       source_matched_idx = match_idx,
+       source_unmatched_idx = non_match_idx,
+       target_matched_idx = match_res[match_idx])
 }
 

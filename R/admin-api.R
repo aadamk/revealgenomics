@@ -244,7 +244,7 @@ grant_initial_access = function(con = NULL, user_name) {
          paste0("set_role_permissions('", user_name, "', 'namespace', '",
                       find_namespace('DATASET'), "', 'l')"))
   cat("Granting access to publc studies\n")
-  studylist = iquery(con$db, "project(gh_secure.DATASET, public)", return = T)
+  studylist = iquery(con$db, paste0("project(", full_arrayname(.ghEnv$meta$arrDataset), ", public)"), return = T)
   studylist$dataset_version = NULL
   studylist = unique(studylist)
   studylist = studylist[studylist$public, ]
@@ -264,15 +264,17 @@ grant_initial_access = function(con = NULL, user_name) {
 #' - secure_scan (apply study-level security on dataset_id; must have permissions.dataset_id array)
 #' - scan (just use regular scan of arrays)
 custom_scan = function() {
-  "secure_scan"
+  # Use secure_scan for SciDB enterprise edition only
+  ifelse(options("scidb4gh.use_scidb_ee"), 
+         "secure_scan",
+         "scan")
 }
 
 #' placeholder to be filled in
 add_user_to_data_loaders = function(con) {
-#  1056  iquery -aq "create_role('scidb4gh_data_loaders')"
-#  1057  iquery -aq "set_role_permissions('scidbgh_data_loaders', 'namespace', 'gh_secure', 'rul')"
-#  1058  iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_secure', 'rul')"
-#  1059  iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public', 'rul')"
-#  1060  iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public_rw', 'rul')"
-#  1061  iquery -aq "add_user_to_role('secure_user', 'scidb4gh_data_loaders')"
+ # iquery -aq "create_role('scidb4gh_data_loaders')"
+ # iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_secure', 'ruld')"
+ # iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public', 'ruld')"
+ # iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public_rw', 'ruld')"
+ # iquery -aq "add_user_to_role('secure_user', 'scidb4gh_data_loaders')"
 }

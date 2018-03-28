@@ -12,7 +12,7 @@ The function requires that you are connected to SciDB.
 \examples{
 \dontrun{
 init_db('FUSION')
-init_db(c('FUSIONSET', 'FUSION'))
+init_db(c('MEASUREMENTSET', 'FUSION'))
 init_db(arrays = get_entity_names()) # Warning! This reinitializes all the arrays
 }
 }

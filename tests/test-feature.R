@@ -21,7 +21,7 @@ test_feature_synonym_registration = function() {
   df_ftr = data.frame(name = test_gene_names,
                       gene_symbol = c('null', 'null'),
                       featureset_id = fset_id,
-                      reference_name = "debug_test_reference_name",
+                      chromosome = "debug_test_chromosome",
                       start = -1,
                       end = -1,
                       strand_term = search_ontology(terms = "strand_term_unspecified"),
