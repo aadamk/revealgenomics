@@ -69,7 +69,7 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
     dfi$project_id = project_id
     scidb4gh_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]]
     wksht_fields_study = c('study_name', 'study_description', 'project_id', 'is_study_public')
-    stopifnot(c(wksht_fields_study, 'study_version') %in% colnames(df0))
+    stopifnot(all(c(wksht_fields_study, 'study_version') %in% colnames(df0)))
     
     dfi_st = load_helper_column_rename(dfx = dfi, 
                                scidb4gh_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]], 
