@@ -159,9 +159,7 @@ createDataReader = function(pipeline_df, measurement_set){
   temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
                        measurement_set$quantification_level, "}")
   switch(temp_string,
-         "{[external]-[RNA-seq] Cufflinks}{gene}" = 
-             DataReaderRNASeqCufflinks$new(pipeline_df = pipeline_df,
-                                           measurement_set = measurement_set),
+         "{[external]-[RNA-seq] Cufflinks}{gene}",
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = 
              DataReaderRNASeqCufflinks$new(pipeline_df = pipeline_df,
                                            measurement_set = measurement_set),
@@ -170,5 +168,9 @@ createDataReader = function(pipeline_df, measurement_set){
                                        measurement_set = measurement_set),
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = 
              DataReaderVariantGeminiFiltered$new(pipeline_df = pipeline_df,
-                                                 measurement_set = measurement_set))
+                                                 measurement_set = measurement_set),
+         "{[external]-[Fusion] Tophat Fusion}{gene}" =
+             DataReader$new(pipeline_df = pipeline_df,
+                            measurement_set = measurement_set)
+         )
 }
