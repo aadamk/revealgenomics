@@ -277,7 +277,7 @@ array:
       feature_id:
         start: 0
         end: Inf
-        chunk_interval: 100
+        chunk_interval: 1000
         overlap: 0
     search_by_entity: MEASUREMENTSET
     delete_by_entity: MEASUREMENTSET
