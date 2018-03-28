@@ -37,6 +37,77 @@ template_linker = list(
     )
   )
 
+#' Helper function to load Excel workbook into memory
+#' 
+#' @param filename path to Excel workbook
+#' 
+#' @export
+myExcelLoader = function(filename) {
+  tryCatch({
+    workbook = XLConnect::loadWorkbook(filename = filename)
+  },
+  error = function(e) {
+    cat("Could not open file at file path:", filename)
+    return(NULL)
+  })
+  
+  required_sheets = c("Definitions",           "Studies",               "Subjects",             
+                      "Samples",               "Pipelines",             "Contrasts",            
+                      "pipeline_choices",      "featureset_choices",    "filter_choices" )
+  
+  if (! all(required_sheets %in% XLConnect::getSheets(workbook)) ) {
+    stop("Following required sheet(s) not present: ", 
+         paste0(required_sheets[!(required_sheets %in% XLConnect::getSheets(workbook))],
+                collapse = ", "))
+  }
+  
+  wb = list()
+  for (sheet_nm in required_sheets) {
+    cat("Reading sheet: ", sheet_nm, "\n")
+    wb[[sheet_nm]] = XLConnect::readWorksheet(object = workbook, sheet = sheet_nm, 
+                                              check.names = FALSE, 
+                                              useCachedValues = TRUE)
+    # cleanup string literals 
+    # 
+    # convert columns in a dataframe from string vector of 'TRUE'/'FALSE' to logicals
+    convert_string_columns_to_logicals = function(dfx, colnms) {
+      # custom converter from TRUE or FALSE strings to logical
+      # 
+      # param vec character vector containing 'TRUE' or 'FALSE'
+      as.logical_custom = function(vec) {
+        cat("Converting string TRUE or FALSE to logical\n")
+        res = sapply(vec, function(val) {
+          switch (val,
+                  'TRUE' = TRUE,
+                  'FALSE' = FALSE,
+                  stop("value must be 'TRUE' or 'FALSE'")
+          )}
+        )
+        names(res) = NULL
+        res
+      }
+      
+      if (!all(sapply(dfx, class)[colnms] == 'logical')) {
+        colnms_x = colnms[which(sapply(dfx, class)[colnms] != 'logical')]
+        for (colnm in colnms_x) {
+          cat("column:", colnm, "\n\t")
+          dfx[, colnm] = as.logical_custom(dfx[, colnm])
+        }
+      }
+      dfx
+    }
+    if (sheet_nm == 'Definitions') {
+      wb[[sheet_nm]] = convert_string_columns_to_logicals(dfx = wb[[sheet_nm]],
+                                  colnms = grep("attribute_in_", colnames(wb[[sheet_nm]]), value = TRUE)
+                                                          )
+    } else if (sheet_nm == 'Studies') {
+      wb[[sheet_nm]] = convert_string_columns_to_logicals(dfx = wb[[sheet_nm]],
+                                                          colnms = 'is_study_public')
+    }
+  }
+  wb
+}
+
 #' Helper function to read sheet from Excel workbook
 #' 
 #' note usage of the useCachedValues parameter
@@ -44,10 +115,22 @@ template_linker = list(
 #' 
 #' @export
 myExcelReader = function(workbook, sheet_name) {
-  readWorksheet(object = workbook, 
-                sheet = sheet_name, 
-                check.names = FALSE, 
-                useCachedValues = TRUE)
+  if (class(workbook) == 'workbook') {
+    readWorksheet(object = workbook, 
+                  sheet = sheet_name, 
+                  check.names = FALSE, 
+                  useCachedValues = TRUE)
+  } else if (class(workbook) == 'list') {
+    if (sheet_name %in% names(workbook)) {
+      workbook[[sheet_name]]
+    } else {
+      stop("No sheet by name: ", sheet_name, " in workbook. \n\nAvailable sheets: ",
+           paste0(names(workbook), collapse = ", "))
+    }
+  } else {
+    stop("Workbook must be of type `XLConnect::workbook` (loaded by `XLConnect::loadWorkbook()`)\n 
+         or of type `list` (loaded by `scidb4gh::myExcelLoader()`)")
+  }
 }
 
 #' Enforce that columns in any data sheet have definitions in Definitions sheet
@@ -165,13 +248,15 @@ template_helper_extract_record_related_rows = function(workbook, sheetName, reco
   stopifnot(nrow(dataset) == 1)
   stopifnot(project_id == dataset$project_id)
   
-  data0 = readWorksheet(workbook, sheet = sheetName,
-                        check.names = FALSE,
-                        useCachedValues = TRUE)
+  # data0 = readWorksheet(workbook, sheet = sheetName,
+  #                       check.names = FALSE,
+  #                       useCachedValues = TRUE)
+  data0 = myExcelReader(workbook = workbook, sheet_name = sheetName)
   data0 = data0[!duplicated(data0), ]
-  study = readWorksheet(workbook, sheet = masterSheet,
-                        check.names = FALSE,
-                        useCachedValues = TRUE)
+  # study = readWorksheet(workbook, sheet = masterSheet,
+  #                       check.names = FALSE,
+  #                       useCachedValues = TRUE)
+  study = myExcelReader(workbook = workbook, sheet_name = masterSheet)
   
   study_loc = study[study[, 'study_name'] == dataset$name &
                       study[, 'study_version'] == dataset_version, ]
