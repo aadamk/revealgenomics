@@ -16,7 +16,7 @@ NULL
 {
   packageStartupMessage("To get started see ?scidb4gh for a list of available functions. Each\nfunction has a detailed help page with examples.\nThe original PDF specification is available from vignette('scidb4gh')." , 
                         domain = NULL, appendLF = TRUE)
-  options("scidb4gh.use_scidb_ee"=FALSE)
+  options("scidb4gh.use_scidb_ee"=TRUE)
 }
 
 # A global environment used to store the metadata information, and cache state by some functions
