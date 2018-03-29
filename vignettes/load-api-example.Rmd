@@ -1,5 +1,5 @@
 ---
-title: "Load API example"
+title: "Insight API upload to SciDB example"
 author: "Paradigm4 Customer Solutions"
 output:
   html_document: default
@@ -15,7 +15,7 @@ library(scidb4gh)
 
 # Initialization
 
-The initialization steps are provided below. Currently, we need to log in as the root database user to load data to the pan-study repository. 
+The initialization steps are provided below. 
 ```{r init}
 library(scidb4gh)
 gh_connect()

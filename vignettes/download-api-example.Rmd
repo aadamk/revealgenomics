@@ -1,6 +1,10 @@
 ---
-title: "download-api-example"
-output: html_document
+title: "Insight API download from SciDB"
+author: "Paradigm4 Customer Solutions"
+output:
+  html_document: default
+  pdf_document:
+    number_sections: yes
 ---
 
 ```{r setup, include=FALSE}
