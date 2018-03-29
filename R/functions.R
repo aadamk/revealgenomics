@@ -17,7 +17,8 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
   # SciDB connection and R API --
   
   if (is.null(username) & protocol != 'http') {
-    stop("if username is null, protocol must be HTTP")
+    cat("using HTTP protocol\n")
+    protocol = 'http'
   }
   
   if (!is.null(username) & protocol == 'http') {
@@ -27,7 +28,11 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
   con = NULL
   if (is.null(username)) {
     protocol = 'http'
-    con$db = scidbconnect(host = host, port = port, protocol = protocol)
+    if (is.null(host) & is.null(port)) {
+      con$db = scidbconnect(protocol = protocol)
+    } else {
+      con$db = scidbconnect(host = host, port = port, protocol = protocol)
+    }
   } else {
     # ask for password interactively if none supplied
     # https://github.com/Paradigm4/SciDBR/issues/154#issuecomment-327989402
