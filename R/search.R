@@ -129,15 +129,14 @@ search_rnaquantification_scidb = function(arrayname,
         data.frame(feature_id = as.integer(feature_id)))
       if (TRUE){ # Return data using join
         selector$dataset_id = dataset_id
-        selector$flag = TRUE
+        selector$flag = -1
         # t1 = proc.time()
-        xx = as.scidb(con$db, selector,
-                      types = c(rep('int64', ncol(selector)-1), 'bool'))
-        qq2 = paste("redimension(", xx@name, 
-                    ", <flag:bool>[", 
-                    yaml_to_dim_str(
-                      .ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims,
-                      for_auto_chunking = TRUE), "])")
+        xx = as.scidb_int64_cols(db = con$db, df1 = selector, 
+                                 int64_cols = colnames(selector))
+        qq2 = paste0("redimension(", xx@name, 
+                    ", <flag:int64>[", 
+                                   paste0(get_idname(.ghEnv$meta$arrRnaquantification), collapse = ", "),
+                                  "])")
 
         qq = paste("join(",
                    qq, ",",
@@ -344,17 +343,17 @@ search_fusions_scidb = function(arrayname, measurementset_id, biosample_id = NUL
 
 
 #' @export
-search_copynumber_mat = function(copynumberset, biosample = NULL, feature = NULL, con = NULL){
-  if (!is.null(copynumberset)) {copynumberset_id = copynumberset$copynumberset_id} else {
-    stop("copynumberset must be supplied"); copynumberset_id = NULL
+search_copynumber_mat = function(measurementset, biosample = NULL, feature = NULL, con = NULL){
+  if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
+    stop("measurementset must be supplied"); measurementset_id = NULL
   }
-  if (length(unique(copynumberset$dataset_version)) != 1) {
-    stop("multiple dataset versions in supplied copynumberset");
+  if (length(unique(measurementset$dataset_version)) != 1) {
+    stop("multiple dataset versions in supplied measurementset");
   }
-  dataset_version = unique(copynumberset$dataset_version)
+  dataset_version = unique(measurementset$dataset_version)
   if (!is.null(biosample)) {
     stopifnot(length(unique(biosample$dataset_version))==1)
-    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of copynumberset and biosample must be same")
+    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of measurementset and biosample must be same")
   }
   arrayname = paste0(custom_scan(), 
                      "(", full_arrayname(.ghEnv$meta$arrCopynumber_mat), ")")
@@ -363,7 +362,7 @@ search_copynumber_mat = function(copynumberset, biosample = NULL, feature = NULL
   
   if (exists('debug_trace')) cat("retrieving CopyNumber_mat data from server\n")
   res = search_copynumber_mats_scidb(arrayname,
-                             copynumberset_id,
+                             measurementset_id,
                              biosample_id,
                              feature_id,
                              dataset_version = dataset_version, 
@@ -371,18 +370,18 @@ search_copynumber_mat = function(copynumberset, biosample = NULL, feature = NULL
   res
 }
 
-search_copynumber_mats_scidb = function(arrayname, copynumberset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
+search_copynumber_mats_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
                                         con = NULL){
   con = use_ghEnv_if_null(con)
   
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
-  if (is.null(copynumberset_id)) stop("copynumberset_id must be supplied")
-  if (length(copynumberset_id) != 1) stop("can handle only one copynumberset_id at a time")
+  if (is.null(measurementset_id)) stop("measurementset_id must be supplied")
+  if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
   
   left_query = paste0("filter(", arrayname,
-                      ", dataset_version=", dataset_version, " AND copynumberset_id=", copynumberset_id, ")")
+                      ", dataset_version=", dataset_version, " AND measurementset_id=", measurementset_id, ")")
   
   if (!is.null(biosample_id)){
     filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
