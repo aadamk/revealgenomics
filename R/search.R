@@ -129,15 +129,14 @@ search_rnaquantification_scidb = function(arrayname,
         data.frame(feature_id = as.integer(feature_id)))
       if (TRUE){ # Return data using join
         selector$dataset_id = dataset_id
-        selector$flag = TRUE
+        selector$flag = -1
         # t1 = proc.time()
-        xx = as.scidb(con$db, selector,
-                      types = c(rep('int64', ncol(selector)-1), 'bool'))
-        qq2 = paste("redimension(", xx@name, 
-                    ", <flag:bool>[", 
-                    yaml_to_dim_str(
-                      .ghEnv$meta$L$array[[.ghEnv$meta$arrRnaquantification]]$dims,
-                      for_auto_chunking = TRUE), "])")
+        xx = as.scidb_int64_cols(db = con$db, df1 = selector, 
+                                 int64_cols = colnames(selector))
+        qq2 = paste0("redimension(", xx@name, 
+                    ", <flag:int64>[", 
+                                   paste0(get_idname(.ghEnv$meta$arrRnaquantification), collapse = ", "),
+                                  "])")
 
         qq = paste("join(",
                    qq, ",",
