@@ -1440,31 +1440,6 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
   iquery(con$db, qq, return = T)
 }
 
-#' @export
-get_rnaquantification_counts = function(measurementset_id = NULL, con = NULL){
-  con = use_ghEnv_if_null(con)
-  idname = get_base_idname(.ghEnv$meta$arrMeasurementSet)
-  if (is.null(measurementset_id)){
-    c = iquery(con$db, 
-                paste0("aggregate(", 
-                       custom_scan(), "(", 
-                       full_arrayname(.ghEnv$meta$arrRnaquantification), "),", 
-                       "count(*), ", 
-                       idname, 
-                       ", dataset_version)"), 
-                return = TRUE)
-  } else { #specific measurementset_id is specified
-    qq = paste0("filter(", 
-                 custom_scan(), "(", 
-                      full_arrayname(.ghEnv$meta$arrRnaquantification), "), ", 
-                 idname , "=", measurementset_id, ")")
-    qq = paste0("aggregate(", qq, ", count(*), ", idname, ", dataset_version)")
-    c = iquery(con$db, qq, return = T)
-  }
-  c = c[order(c[, idname], c$dataset_version), ]
-  return(c)
-}
-
 unpivot = function(df1, arrayname) {
   unpivot = TRUE
   idname = get_idname(arrayname)
