@@ -299,7 +299,8 @@ createDataLoader = function(data_df, reference_object){
                        reference_object$measurement_set$quantification_level, 
                        "}")
   switch(temp_string,
-         "{[external]-[RNA-seq] Cufflinks}{gene}" = 
+         "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
+         "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" =
            DataFrameLoaderRNASeqCufflinksGene$new(data_df = data_df,
                                                      reference_object = reference_object),
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = 
@@ -308,8 +309,12 @@ createDataLoader = function(data_df, reference_object){
          "{[external]-[RNA-seq] HTSeq}{gene}" = 
            DataFrameLoaderRNASeqCufflinksGene$new(data_df = data_df,
                                                   reference_object = reference_object),
-         "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = 
+         "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = ,
+         "{[DNAnexus]-[Variant_Custom: GATK + PoN + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
+         "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" =
            DataFrameLoaderVariantGeminiFiltered$new(data_df = data_df,
-                                                    reference_object = reference_object))
+                                                    reference_object = reference_object),
+         stop("Need to add loader for choice:\n", temp_string)
+  )
 }
 
