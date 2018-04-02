@@ -2,7 +2,7 @@
 % Please edit documentation in R/api2_load-api.R
 \name{api_register_experimentsets_measurementsets}
 \alias{api_register_experimentsets_measurementsets}
-\title{MeasurementSets}
+\title{Register ExperimentSets and MeasurementSets}
 \usage{
 api_register_experimentsets_measurementsets(workbook, record, def, choicesObj,
   con = NULL)

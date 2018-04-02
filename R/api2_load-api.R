@@ -172,7 +172,7 @@ api_register_biosamples = function(workbook, record, def, con = NULL) {
                                       con = con)
 }
 
-#' MeasurementSets
+#' Register ExperimentSets and MeasurementSets
 #' 
 #' This function differs from api_register_indiv/bios/measurements
 #' that work row by row on Subjects/Samples/Pipelines sheets respectively.
