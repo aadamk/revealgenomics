@@ -88,21 +88,6 @@ DataReaderVariantGemini = R6::R6Class(classname = 'DataReaderVariantGemini',
                                         }
                                       ))
 
-DataReaderVariantGeminiFiltered = R6::R6Class(classname = 'DataReaderVariantGeminiFiltered',
-                                              inherit = DataReaderVariantGemini,
-                                              public = list(
-                                                initialize = function(pipeline_df,
-                                                                      measurement_set) {
-                                                  private$.separator = ','
-                                                  super$initialize(pipeline_df,
-                                                                   measurement_set)
-                                                }
-                                              ))
-
-DataReaderVariantGeminiUnfiltered = R6::R6Class(classname = 'DataReaderVariantGeminiUnfiltered',
-                                              inherit = DataReaderVariantGemini,
-                                              public = list(
-                                              ))
 DataReaderRNASeq = R6::R6Class(classname = 'DataReaderRNASeq',
                                inherit = DataReader,
                                public = list(
