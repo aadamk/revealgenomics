@@ -113,21 +113,56 @@ DataReaderRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNASeqCufflinks',
                                     super$load_data_from_file()
                                     cat("load_data_from_file()"); self$print_level()
                                     
-                                    column_names = colnames(private$.data_df)
-                                    # # There is a "X" prefix assigned by read.delim into all column names (as sample names begin with numbers)
-                                    # # -- remove the prefix
-                                    # not required after using check.names = FALSE in read.delim
-                                    # stopifnot(length(grep("^X", column_names)) == length(column_names-1))
-                                    # colnames(private$.data_df) = gsub("^X", "", colnames(private$.data_df))
+                                    # - if 1 pipeline info row for a file, try per-sample reader. 
+                                    #     + if that fails, try aggregate reader
+                                    # - if multiple pipeline info rows for a file, try aggregate reader
+                                    if (nrow(private$.pipeline_df) == 1) {
+                                      cat("One pipeline information row for file. Attempting to use per-sample file loader\n")
+                                      tryAggregateLoader = tryCatch({
+                                        # code for per-sample loader
+                                        stopifnot(length(private$.pipeline_df$original_sample_name) == 1)
+                                        private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
+                                        
+                                        columns_to_drop = c('class_code', 
+                                                            'nearest_ref_id', 
+                                                            'tss_id', 'locus', 
+                                                            'length', 'coverage', 
+                                                            'FPKM_conf_lo', 'FPKM_conf_hi', 'FPKM_status')
+                                        private$.data_df[, columns_to_drop] = NULL
+                                        private$.data_df = plyr::rename(private$.data_df, 
+                                                                        c('FPKM' = 'value'))
+                                        
+                                        if (identical(private$.data_df$tracking_id, private$.data_df$gene_id)) {
+                                          cat("Identified gene file-type\n")
+                                          private$.data_df$gene_id = NULL
+                                        } else {
+                                          cat("Identified isoform file-type\n")
+                                          stop("Need to code for this. Refer function: register_expression_file_cufflinks()")
+                                        }
+                                        
+                                        return(FALSE) # do not need to try aggregate loader 
+                                      }, error = function(e) {
+                                        cat("Tried per-sample file loader and failed. Trying aggregateLoader\n")
+                                        return(TRUE)
+                                      })
+                                    } else { # 
+                                      cat("multiple pipeline information row for file. Attempting to use aggregate file loader")
+                                      tryAggregateLoader = TRUE
+                                    }
                                     
-                                    # There is a "_0" suffix in all column names -- remove that
-                                    cat("Local rule 1\n")
-                                    cat("============\n")
-                                    cat("\tThere is a \"_0\" suffix in all column names -- remove that\n")
-                                    stopifnot(length(grep("_0$", column_names)) == (length(column_names) -1))
-                                    colnames(private$.data_df) = gsub("_[0-9]$", "", column_names)
-                                    
-                                    super$convert_wide_to_tall_skinny()
+                                    if (tryAggregateLoader) {
+                                      # code for aggregate file loader
+                                      column_names = colnames(private$.data_df)
+
+                                      # There is a "_0" suffix in all column names -- remove that
+                                      cat("Local rule 1\n")
+                                      cat("============\n")
+                                      cat("\tThere is a \"_0\" suffix in all column names -- remove that\n")
+                                      stopifnot(length(grep("_0$", column_names)) == (length(column_names) -1))
+                                      colnames(private$.data_df) = gsub("_[0-9]$", "", column_names)
+                                      
+                                      super$convert_wide_to_tall_skinny()
+                                    }
                                   }
                                 ))
 
