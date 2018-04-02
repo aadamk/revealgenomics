@@ -45,6 +45,28 @@ DataReaderVariantGemini = R6::R6Class(classname = 'DataReaderVariantGemini',
                                         load_data_from_file = function() {
                                           cat("load_data_from_file()"); self$print_level()
                                           
+                                          tsvReadSuccess = tryCatch({
+                                            cat("Trying to read as TSV file\n")
+                                            temp = read.delim(file = unique(private$.pipeline_df$file_path),
+                                                            sep = private$.separator,
+                                                            nrows = 2, # file should at least have two lines
+                                                            check.names = FALSE)
+                                            if (ncol(temp) == 1) {
+                                              cat("Unlikely that variant file has 1 column. Try CSV next\n")
+                                              FALSE
+                                            } else {
+                                              cat("Read attempt as TSV succeeded\n")
+                                              TRUE
+                                            }
+                                          }, error = function(e) {
+                                            cat("Read attempt as TSV failed. Try CSV next\n")
+                                            FALSE
+                                          })
+                                          
+                                          if (!tsvReadSuccess) {
+                                            private$.separator = ','
+                                          }
+                                            
                                           super$load_data_from_file()
                                           
                                           cat("Rule 1:\n")
