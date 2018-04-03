@@ -260,6 +260,7 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
 #' 
 #' @export
 register_expression_matrix_client = function(filepath,
+                                             file_format = c('tall', 'wide'),
                                              measurementset,
                                              featureset,
                                              biosample_ref = NULL,
@@ -284,11 +285,20 @@ register_expression_matrix_client = function(filepath,
     biosample_ref = biosample_ref[biosample_ref$dataset_id ==  dataset_id, ] 
   }
   
-  expr_df = read.delim(file = expr_file_path, sep = "\t")
-  expr_df = tidyr::gather(data = expr_df,
-                          key = 'biosample_name',
-                          value='value',
-                          colnames(expr_df)[2:length(colnames(expr_df))])
+  if (file_format == 'wide') {
+    cat("Reading wide format matrix file\n")
+  } else {
+    cat("Reading tall TSV file. Expecting columns `GENE_ID`, `biosample_name`, `value`\n")
+  }
+  expr_df = read.delim(file = filepath, sep = "\t", check.names=FALSE)
+  if (file_format == 'wide') {
+    cat("Converting wide format to tall format\n")
+    expr_df = tidyr::gather(data = expr_df,
+                            key = 'biosample_name',
+                            value='value',
+                            colnames(expr_df)[2:length(colnames(expr_df))])
+  } 
+  stopifnot(all(c('biosample_name', 'value', 'GENE_ID') %in% colnames(expr_df)))
   
   expr_df$feature_id =   feature_ref[match(expr_df$GENE_ID, feature_ref$name), ]$feature_id
   if (any(is.na(expr_df$feature_id))) {
