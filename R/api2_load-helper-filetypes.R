@@ -12,14 +12,14 @@
 # END_COPYRIGHT
 #
 
-# TODO: these functions should be merged into DataFrameLoader under
-# `DataFrameLoaderRnaseqCufflinksGenePerSample` and
-# `DataFrameLoaderRnaseqCufflinksTranscriptPerSample`
-
 # Lower level functions for interpreting specific file-types 
 # (e.g. Cufflinks RNASeq files, Gemine DNASeq files) before ingesting into SciDB
 # -- Not meant to be called directly by the API user.
 
+#' DEPRECATED
+#' 
+#'   stop("Code integrated into: DataReaderRNASeqCufflinks::load_data_from_file(). Use that function instead")
+#'   
 #' register cufflinks gene file-type
 #'
 #' Should be replaced by `register_expression_file_cufflinks` once it is tested to handle
@@ -29,7 +29,7 @@
 #' @param biosample_df (optional) dataframe consisting biosamples of current study
 #' @param featureset_id featureset ID in which to look for features
 #' @param feature_df (optional) dataframe consisting of features on current featureset_id
-register_expression_file_cufflinks_gene = function(filepath,
+register_expression_file_cufflinks_gene__DEPRECATED = function(filepath,
                                                    separator,
                                                    dataset_id,
                                                    dataset_version,
@@ -38,6 +38,7 @@ register_expression_file_cufflinks_gene = function(filepath,
                                                    rnaquantificationset_id,
                                                    biosample_df = NULL,
                                                    feature_df = NULL) {
+  stop("Code integrated into: DataReaderRNASeqCufflinks::load_data_from_file(). Use that function instead")
   if (is.null(biosample_df)) {
     cat("Reading in biosample dataframe for current study. 
         Consider providing this for faster uploads\n")
@@ -117,15 +118,17 @@ register_expression_file_cufflinks_gene = function(filepath,
   return(list(registeredNewFeatures = registeredNewFeatures))
 }
 
-#' Register cufflinks isoform / gene file-type
+#' DEPRECATED
 #' 
-#' Eventually this one function should make `register_expression_file_cufflinks_gene` redundant
+#'   stop("Code integrated into: DataReaderRNASeqCufflinks::load_data_from_file(). Use that function instead")
+#'   
+#'   Eventually this one function should make `register_expression_file_cufflinks_gene` redundant
 #' 
 #' @param biosample_name unique sample name at which to register biosample
 #' @param biosample_df (optional) dataframe consisting biosamples of current study
 #' @param featureset_id featureset ID in which to look for features
 #' @param feature_df (optional) dataframe consisting of features on current featureset_id
-register_expression_file_cufflinks = function(filepath,
+register_expression_file_cufflinks__DEPRECATED = function(filepath,
                                               separator,
                                               dataset_id,
                                               dataset_version,
@@ -134,6 +137,7 @@ register_expression_file_cufflinks = function(filepath,
                                               rnaquantificationset_id,
                                               biosample_df = NULL,
                                               feature_df = NULL) {
+  stop("Code integrated into: DataReaderRNASeqCufflinks::load_data_from_file(). Use that function instead")
   if (is.null(biosample_df)) {
     cat("Reading in biosample dataframe for current study. 
         Consider providing this for faster uploads\n")
