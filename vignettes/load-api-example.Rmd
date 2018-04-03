@@ -18,6 +18,7 @@ library(scidb4gh)
 The initialization steps are provided below. 
 ```{r init}
 library(scidb4gh)
+options(scidb4gh.use_scidb_ee=FALSE)
 gh_connect()
 ```
 # Loading Annotation entities
@@ -310,19 +311,54 @@ read.delim(file = system.file("extdata", "rnaseq.txt",
                                package = "scidb4gh"))
 ```
 
-These matrix files can sometimes be very large, and we provide an API to directly load the data into SciDB:
+# Upload from server 
+
+These matrix files can sometimes be very large, and we provide an API to directly load the data into SciDB. Note that the file-path used below must exist on the SciDB server. Alternatively, use the client-to-server upload method described further below.
 
 ```{r reg-exprn-set, eval = TRUE, include = TRUE}
 # Choose the first pipeline for 'Salmon  Gene counts'
 measurementset_id = pipeline_record[1, ]$measurementset_id
 
+expr_file_path = system.file("extdata", "rnaseq.txt", 
+                                                   package = "scidb4gh")
 # register expression data 
-register_expression_matrix( filepath = system.file("extdata", "rnaseq.txt", 
-                                                   package = "scidb4gh"),
+upload1Status = tryCatch(
+  {
+    register_expression_matrix( filepath = expr_file_path,
                             measurementset_id = measurementset_id, 
                             featureset_id = featureset_id,
                             feature_type = 'gene'
                           )
+    return(TRUE)
+  }, error = function(e) {
+    cat("Failed to upload expression matrix file. Make sure following file-path exists on SciDB server:\n\t", 
+        expr_file_path,
+        "\n")
+    return(FALSE)
+  }
+)
+```
+
+## Upload from client to server
+
+```{r}
+measurementset = get_measurementsets(measurementset_id = measurementset_id)
+featureset = get_featuresets(featureset_id = featureset_id)
+register_expression_matrix_client(filepath = expr_file_path, 
+                                  measurementset = measurementset,
+                                  featureset = featureset)
+```
+
+You can speed up the upload by providing reference feature and biosample dataframes as below
+
+```{r}
+bios_ref = get_biosamples()
+ftr_ref = get_features()
+register_expression_matrix_client(filepath = expr_file_path, 
+                                  measurementset = measurementset,
+                                  featureset = featureset,
+                                  feature_ref = ftr_ref,
+                                  biosample_ref = bios_ref)
 ```
 
 Now verify the upload:
@@ -333,7 +369,6 @@ eset = search_rnaquantification(measurementset = measurementset)
 print(eset)
 exprs(eset)
 ```
-
 
 # Dataset versioning
 
