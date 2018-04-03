@@ -268,7 +268,6 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
 #' 
 #' @export
 register_expression_matrix_client = function(filepath,
-                                             file_format = c('tall', 'wide'),
                                              measurementset,
                                              featureset,
                                              file_format,
