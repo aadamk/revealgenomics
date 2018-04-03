@@ -346,7 +346,8 @@ measurementset = get_measurementsets(measurementset_id = measurementset_id)
 featureset = get_featuresets(featureset_id = featureset_id)
 register_expression_matrix_client(filepath = expr_file_path, 
                                   measurementset = measurementset,
-                                  featureset = featureset)
+                                  featureset = featureset,
+                                  file_format = 'wide')
 ```
 
 You can speed up the upload by providing reference feature and biosample dataframes as below
@@ -358,7 +359,8 @@ register_expression_matrix_client(filepath = expr_file_path,
                                   measurementset = measurementset,
                                   featureset = featureset,
                                   feature_ref = ftr_ref,
-                                  biosample_ref = bios_ref)
+                                  biosample_ref = bios_ref,
+                                  file_format = 'wide')
 ```
 
 Now verify the upload:

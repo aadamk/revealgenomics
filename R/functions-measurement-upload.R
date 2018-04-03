@@ -254,15 +254,24 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
 
 #' Upload expression matrix file 
 #' 
-#' filepath can exist on SciDB server or client
-
-#' `register_expression_matrix_client`
+#' This wrapper function shows an example of how to call the internal upload function 
+#' `register_expression_dataframe``
+#' 
+#' @param filepath can exist on SciDB server or client
+#' @param measurementset dataframe containing pipeline information for measurementset_id at which to insert expression data; 
+#'                       retrieve using `get_measurementsets(measurementset_id = measurementset_id)`
+#' @param featureset dataframe containing featureSet information for featureset_id at which to insert expression data; 
+#'                       retrieve using `get_featureset(featureset_id = featureset_id)`
+#' @param file_format must be `tall` or `wide`
+#' @param biosample_ref (optional) reference data-frame containing information for all biosamples in current study / dataset
+#' @param feature_ref (optional) reference data-frame containing information for all features in current study / dataset
 #' 
 #' @export
 register_expression_matrix_client = function(filepath,
                                              file_format = c('tall', 'wide'),
                                              measurementset,
                                              featureset,
+                                             file_format,
                                              biosample_ref = NULL,
                                              feature_ref = NULL,
                                              con = NULL) {
@@ -270,6 +279,7 @@ register_expression_matrix_client = function(filepath,
   
   stopifnot(nrow(measurementset) == 1)
   stopifnot(nrow(featureset) == 1)
+  if (length(file_format) != 1) stop("file_format parameter must be `tall` or `wide")
   
   dataset_id = measurementset$dataset_id
   dataset_version = measurementset$dataset_version

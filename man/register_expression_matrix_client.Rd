@@ -5,9 +5,24 @@
 \title{Upload expression matrix file}
 \usage{
 register_expression_matrix_client(filepath, measurementset, featureset,
-  biosample_ref = NULL, feature_ref = NULL, con = NULL)
+  file_format, biosample_ref = NULL, feature_ref = NULL, con = NULL)
+}
+\arguments{
+\item{filepath}{can exist on SciDB server or client}
+
+\item{measurementset}{dataframe containing pipeline information for measurementset_id at which to insert expression data; 
+retrieve using `get_measurementsets(measurementset_id = measurementset_id)`}
+
+\item{featureset}{dataframe containing featureSet information for featureset_id at which to insert expression data; 
+retrieve using `get_featureset(featureset_id = featureset_id)`}
+
+\item{file_format}{must be `tall` or `wide`}
+
+\item{biosample_ref}{(optional) reference data-frame containing information for all biosamples in current study / dataset}
+
+\item{feature_ref}{(optional) reference data-frame containing information for all features in current study / dataset}
 }
 \description{
-filepath can exist on SciDB server or client
-`register_expression_matrix_client`
+This wrapper function shows an example of how to call the internal upload function 
+`register_expression_dataframe``
 }
