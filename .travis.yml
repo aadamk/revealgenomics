@@ -30,7 +30,8 @@ before_install:
   - while ! curl http://localhost:8080/version; do sleep 1; done
 
 install:
-  - R -e "install.packages(c('knitr', 'bit64', 'curl', 'data.table', 'openssl', 'devtools', 'tidyr', 'dplyr', 'yaml', 'reshape2', 'Biobase', 'jsonlite', 'scidb', 'testthat'))"
+  - R -e "source('http://bioconductor.org/biocLite.R'); biocLite(c('Biobase'), ask = FALSE);"
+  - R -e "install.packages(c('knitr', 'bit64', 'curl', 'data.table', 'openssl', 'devtools', 'tidyr', 'dplyr', 'yaml', 'reshape2', 'jsonlite', 'scidb', 'testthat'))"
   - R -e 'devtools::install_deps(dep = T)'
 
 # script:
