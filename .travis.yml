@@ -30,7 +30,7 @@ before_install:
   - while ! curl http://localhost:8080/version; do sleep 1; done
 
 install:
-  - R -e "install.packages(c('tidyr', 'dplyr', 'yaml', 'reshape2', 'Biobase', 'jsonlite', 'scidb', 'testthat'))"
+  - R -e "install.packages(c('knitr', 'bit64', 'curl', 'data.table', 'openssl', 'devtools', 'tidyr', 'dplyr', 'yaml', 'reshape2', 'Biobase', 'jsonlite', 'scidb', 'testthat'))"
   - R -e 'devtools::install_deps(dep = T)'
 
 # script:
