@@ -34,12 +34,12 @@ install:
   - R -e "install.packages(c('knitr', 'bit64', 'curl', 'data.table', 'openssl', 'devtools', 'tidyr', 'dplyr', 'yaml', 'reshape2', 'jsonlite', 'scidb', 'testthat'))"
   - R -e 'devtools::install_deps(dep = T)'
 
-# script:
-#   - R CMD build .
-#   - SCIDB_TEST_HOST=127.0.0.1 R CMD check *tar.gz
-
-after_install:
+script:
+  - R CMD build .
+  - R CMD INSTALL *tar.gz
   - R -e "devtools::test()"
+
+# after_install:
 
 after_failure:
   - docker logs scidb
