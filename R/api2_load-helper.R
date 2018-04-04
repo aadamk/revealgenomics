@@ -121,6 +121,9 @@ load_helper_do_entity_specific_work = function(data_df, entity, record, con = NU
   if (! 'description' %in% colnames(data_df)) data_df$description = '...' 
   
   if (entity == .ghEnv$meta$arrIndividuals) {
+    if (class(data_df$subject_id) != 'character') {
+      data_df$subject_id = as.character(data_df$subject_id)
+    }
     if (! 'species_' %in% colnames(data_df)) data_df$species_ = 'homo sapiens'
     # if (! 'SEX' %in% colnames(data_df)) {
     #   data_df$SEX = 'gender-unknown'
@@ -130,6 +133,13 @@ load_helper_do_entity_specific_work = function(data_df, entity, record, con = NU
     #                         switch(term, 'F' = 'female', 'M' = 'male','gender-unknown')
     #                       })
     # }
+    if ('sex' %in% colnames(data_df)) { # TODO: More elegant solution possible here
+      cat("Preparing: SEX/sex ==> sex_")
+      data_df = plyr::rename(data_df, c('sex' = 'SEX'))
+      data_df$SEX[is.na(data_df$SEX)] = 'gender-unknown'
+      data_df$SEX = search_ontology(terms = data_df$SEX)
+      if (any(is.na(data_df$SEX))) stop("Should not have NA here")
+    }
   } else if (entity == .ghEnv$meta$arrBiosample) {
     # handle ontology columns
     if (! 'disease_' %in% colnames(data_df)) {
@@ -176,6 +186,7 @@ load_helper_assign_ontology_ids = function(data_df, definitions, entity, con = N
         pretty_print(controlled_fields), "\n")
     for (field in controlled_fields) {
       vec = as.character(data_df[, field])
+      # vec[is.na(vec)] = 'NA'
       
       vec_ont = search_ontology(terms = vec, 
                                 category = field)
