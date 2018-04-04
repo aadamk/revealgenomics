@@ -165,6 +165,47 @@ DataFrameLoaderRNASeq = R6Class(classname = "DataFrameLoaderRNASeq",
                                     register_expression_dataframe(df1 = private$.data_df, 
                                                                   dataset_version = private$.reference_object$record$dataset_version)
                                     
+                                  },
+                                  register_new_features = function() {
+                                    cat("register_new_features()"); self$print_level()
+                                    if ('gene_short_name' %in% colnames(private$.data_df)) {
+                                      stopifnot(nrow(private$.reference_object$pipeline_df) == 1)
+                                      fsets_scidb = private$.reference_object$featureset
+                                      fset = drop_na_columns(fsets_scidb[match(private$.reference_object$pipeline_df[, 
+                                                                                                                     template_linker$featureset$choices_col], 
+                                                                               fsets_scidb[,
+                                                                                           template_linker$featureset$choices_col]), ])
+                                      stopifnot(nrow(fset) == 1)
+                                      # cat("Reading annotation info from RNA-seq data file\n")
+                                      feature_df = data.frame(name = private$.data_df$tracking_id,
+                                                           gene_symbol = private$.data_df$gene_short_name,
+                                                           featureset_id = fset$featureset_id,
+                                                           chromosome = 'unknown',
+                                                           start = '...',
+                                                           end = '...',
+                                                           strand_term = search_ontology(terms = 'strand_term_unspecified'),
+                                                           feature_type = 'gene',
+                                                           source = 'RNA-seq file',
+                                                           stringsAsFactors = FALSE)
+                                      
+                                      cat("Matching features in file by feature-names in DB at featureset_id", 
+                                          fset$featureset_id, "\n")
+                                      features_sel = private$.reference_object$feature
+                                      m1 = find_matches_and_return_indices(private$.data_df$tracking_id, features_sel$name)
+                                      
+                                      if (length(m1$source_unmatched_idx) > 0) {
+                                        new_ftr_ids = register_feature(df = feature_df)
+                                      
+                                        # update the selected features
+                                        cat("updating feature in reference object\n")
+                                        private$.reference_object$feature = search_features(featureset_id = fset$featureset_id)
+                                        cat("updating feature-synonym in reference object\n")
+                                        fsyn = scidb4gh:::get_feature_synonym()
+                                        private$.reference_object$feature_synonym = fsyn[fsyn$featureset_id == fset$featureset_id, ]
+                                      } else {
+                                        cat("No new features to register\n")
+                                      }
+                                    }
                                   }))
 DataFrameLoaderRNASeqCufflinksGene = R6Class(classname = "DataFrameLoaderRNASeqCufflinksGene",
                                              inherit = DataFrameLoaderRNASeq,
@@ -250,9 +291,6 @@ DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGe
                                            private$.reference_object$feature_synonym$featureset_id == 
                                              fset$featureset_id, ]
                                          m1 = find_matches_and_return_indices(private$.data_df$gene, fsyn_sel$synonym)
-                                         # length(m1$source_matched_idx)
-                                         # length(m1$source_unmatched_idx)
-                                         # private$.data_df$gene[(m1$source_unmatched_idx)]
                                          
                                          private$.data_df$feature_id = -1
                                          if (length(m1$source_unmatched_idx) > 0) {
