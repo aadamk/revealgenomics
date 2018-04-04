@@ -18,7 +18,6 @@ library(scidb4gh)
 The initialization steps are provided below. 
 ```{r init}
 library(scidb4gh)
-options(scidb4gh.use_scidb_ee=FALSE)
 gh_connect()
 ```
 # Loading Annotation entities

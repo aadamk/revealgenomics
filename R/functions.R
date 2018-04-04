@@ -19,6 +19,7 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
   if (is.null(username) & protocol != 'http') {
     cat("using HTTP protocol\n")
     protocol = 'http'
+    options(scidb4gh.use_scidb_ee = FALSE)
   }
   
   if (!is.null(username) & protocol == 'http') {
