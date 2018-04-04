@@ -418,3 +418,26 @@ df_individual_v2 = data.frame(dataset_id = dataset_id,
                             race = c('Caucasian', 'Asian', 'African-American', 'Asian'))
 register_individual(df = df_individual_v2, dataset_version = 2)
 ```
+
+# Calculate statistics
+
+We provide some simple functions to calculate statistics on the different measurement data types.
+
+### Gene expression data
+
+The function below calculates statistics for gene-expression data across all studies that a user has access to. This is useful as a quality check for the upload. 
+
+```{r}
+calculate_statistics_rnaquantification()
+# alternatively specify one pipeline id
+# calculate_statistics_rnaquantification(measurementset_id = 1)
+```
+
+### Variant data
+
+The function below can evaluate statistics for variant data. We do not evaluate it here
+since variant data has not been loaded in this example notebook. 
+
+```{r, eval=FALSE}
+calculate_statistics_variant()
+```

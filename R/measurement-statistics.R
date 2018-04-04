@@ -65,7 +65,7 @@ calculate_statistics_variant = function(measurementset_id = NULL, con = NULL) {
 #' Calculate statistics on Gene-Expression data
 #' 
 #' @export
-calculate_statistics_rnaquantification = function(measurementset_id = NULL, con = NULL){
+calculate_statistics_rnaquantification = function(measurementset_id = NULL, decorateResults = TRUE, con = NULL){
   con = use_ghEnv_if_null(con)
   idname = get_base_idname(.ghEnv$meta$arrMeasurementSet)
   if (is.null(measurementset_id)){
@@ -86,6 +86,28 @@ calculate_statistics_rnaquantification = function(measurementset_id = NULL, con 
     c = iquery(con$db, qq, return = T)
   }
   c = c[order(c[, idname], c$dataset_version), ]
-  return(c)
+  if (!decorateResults) {
+    return(c)
+  } else {
+    ms = get_measurementsets(measurementset_id = unique(sort(c$measurementset_id)), 
+                             all_versions =  TRUE,
+                             con = con)
+    ms = plyr::rename(ms, c('name' = 'pipeline'))
+    
+    d = get_datasets(dataset_id = unique(sort(c$dataset_id)),
+                     all_versions =  TRUE,
+                     con = con)
+    d = plyr::rename(d, c('name' = 'study_name'))
+    
+    res = merge(ms[, c('measurementset_id', 'dataset_id', 'dataset_version', 'pipeline')], 
+                c,
+                by = c('measurementset_id', 'dataset_version'))
+    res = merge(d[, c('dataset_id', 'dataset_version', 'study_name')],
+                res, 
+                by = c('dataset_id', 'dataset_version'))
+    return(res[order(res$dataset_id, 
+                     res$dataset_version,
+                     res$measurementset_id), ])
+  }
 }
 
