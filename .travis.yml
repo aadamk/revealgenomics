@@ -51,6 +51,7 @@ r_github_packages:
   - paradigm4/scidbr
   
 install:
+  - R -e 'install.packages("devtools")'
   - R -e 'devtools::install_deps(dep = T)'
 
 script:
@@ -60,8 +61,6 @@ script:
   - R -e "devtools::test()"
   - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/insight-docs/master/04-load-api.Rmd", destfile = "/tmp/load-api-example.Rmd")'
   - R -e 'rmarkdown::render(input = "/tmp/load-api-example.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
-
-# after_install:
 
 after_failure:
   - docker logs scidb
