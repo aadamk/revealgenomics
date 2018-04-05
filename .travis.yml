@@ -30,16 +30,14 @@ before_install:
   - while ! curl http://localhost:8080/version; do sleep 1; done
 
 r_binary_packages:
-  - roxygen2
   - knitr
   - bit64
   - curl
   - data.table
   - openssl
-  - devtools
   - tidyr
   - dplyr
-  - yaml-
+  - yaml
   - reshape2
   - jsonlite
   - testthat
@@ -58,6 +56,7 @@ script:
   - R -e "devtools::install_github('Paradigm4/scidbr')"
   - R CMD build .
   - R CMD INSTALL *tar.gz
+  - R -e 'install.packages("roxygen2")'
   - R -e "devtools::test()"
   - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/insight-docs/master/04-load-api.Rmd", destfile = "/tmp/load-api-example.Rmd")'
   - R -e 'rmarkdown::render(input = "/tmp/load-api-example.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
