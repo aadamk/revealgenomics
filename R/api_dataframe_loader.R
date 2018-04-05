@@ -350,6 +350,9 @@ createDataLoader = function(data_df, reference_object){
          "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" =
            DataFrameLoaderVariantGeminiFiltered$new(data_df = data_df,
                                                     reference_object = reference_object),
+         "{[external]-[Fusion] Tophat Fusion}{gene}" = ,
+         "{[external]-[Fusion] Defuse}{gene}" =
+           NULL,
          stop("Need to add loader for choice:\n", temp_string)
   )
 }

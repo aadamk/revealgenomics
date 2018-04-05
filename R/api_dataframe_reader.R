@@ -214,7 +214,8 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" =
              DataReaderVariantGemini$new(pipeline_df = pipeline_df,
                                                  measurement_set = measurement_set),
-         "{[external]-[Fusion] Tophat Fusion}{gene}" =
+         "{[external]-[Fusion] Tophat Fusion}{gene}" = ,
+         "{[external]-[Fusion] Defuse}{gene}" =
              DataReader$new(pipeline_df = pipeline_df,
                             measurement_set = measurement_set),
          stop("Need to add reader for choice:\n", temp_string)
