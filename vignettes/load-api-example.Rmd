@@ -5,11 +5,12 @@ output:
   html_document: default
   pdf_document:
     number_sections: yes
+params:
+  force_init_db: FALSE
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-rm(list=ls())
 library(scidb4gh)
 ```
 
@@ -19,6 +20,8 @@ The initialization steps are provided below.
 ```{r init}
 library(scidb4gh)
 gh_connect()
+init_db(arrays_to_init = get_entity_names(),
+        force = params$force_init_db)
 ```
 # Loading Annotation entities
 
