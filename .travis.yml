@@ -31,7 +31,7 @@ before_install:
 
 install:
   - R -e "source('http://bioconductor.org/biocLite.R'); biocLite(c('Biobase'), ask = FALSE);"
-  - R -e "install.packages(c('knitr', 'bit64', 'curl', 'data.table', 'openssl', 'devtools', 'tidyr', 'dplyr', 'yaml', 'reshape2', 'jsonlite', 'scidb', 'testthat'))"
+  - R -e "install.packages(c('roxygen2', 'knitr', 'bit64', 'curl', 'data.table', 'openssl', 'devtools', 'tidyr', 'dplyr', 'yaml', 'reshape2', 'jsonlite', 'scidb', 'testthat'))"
   - R -e 'devtools::install_deps(dep = T)'
 
 script:
