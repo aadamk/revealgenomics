@@ -23,7 +23,7 @@
 #' init_db(arrays = get_entity_names()) # Warning! This reinitializes all the arrays
 #' }
 #' @export
-init_db = function(arrays_to_init, con = NULL){
+init_db = function(arrays_to_init, force = FALSE, con = NULL){
   con = use_ghEnv_if_null(con)
   
   db = con$db
@@ -35,7 +35,11 @@ init_db = function(arrays_to_init, con = NULL){
     
   cat("CAUTION: The following arrays will be deleted and reinitialized\n", 
       paste(arrays_to_init, collapse = ", "), "\n Proceed?")  
-  response <- readline("(Y)es/(N)o: ")
+  if (!force) {
+    response <- readline("(Y)es/(N)o: ")
+  } else {
+    response = 'yes'
+  }
   if ( (tolower(response) == 'y' | tolower(response) == 'yes') & !is.na(response)) {
     cat("Proceeding with initialization of DB\n")
   } else{
