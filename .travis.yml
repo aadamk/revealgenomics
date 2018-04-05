@@ -58,7 +58,7 @@ script:
   - R CMD build .
   - R CMD INSTALL *tar.gz
   - R -e "devtools::test()"
-  - R -e 'rmarkdown::render(input = "vignettes/load-api-example.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
+  - R -e 'rmarkdown::render(input = "https://github.com/Paradigm4/insight-docs/blob/master/04-load-api.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
 
 # after_install:
 
