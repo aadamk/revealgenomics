@@ -48,7 +48,7 @@ bioc_packages:
   - Biobase
   
 r_github_packages:
-  - paradigm4/scidb
+  - paradigm4/scidbr
   
 install:
   - R -e 'devtools::install_deps(dep = T)'
