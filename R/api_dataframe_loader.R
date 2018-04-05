@@ -1,5 +1,3 @@
-library(R6)
-
 #' convenience function for matching features between database and file
 match_features = function(features_in_file, df_features_db, feature_type, column_in_db) {
   df_features_db = df_features_db[df_features_db$feature_type == feature_type, ]
@@ -17,7 +15,7 @@ match_features = function(features_in_file, df_features_db, feature_type, column
   df_features_db$feature_id[matchL$target_matched_idx]
 }
 
-DataFrameLoader = R6Class(classname = "DataFrameLoader", 
+DataFrameLoader = R6::R6Class(classname = "DataFrameLoader", 
         public = list(
           print_level = function() {cat("----(Level: DataFrameLoader)\n")},
           assign_biosample_ids = function(){
@@ -156,7 +154,7 @@ DataFrameLoader = R6Class(classname = "DataFrameLoader",
           .data_df = NULL,
           .reference_object = NULL
         ))
-DataFrameLoaderRNASeq = R6Class(classname = "DataFrameLoaderRNASeq",
+DataFrameLoaderRNASeq = R6::R6Class(classname = "DataFrameLoaderRNASeq",
                                 inherit = DataFrameLoader,
                                 public = list(
                                   print_level = function() {cat("----(Level: DataFrameLoaderRNASeq)\n")},
@@ -207,7 +205,7 @@ DataFrameLoaderRNASeq = R6Class(classname = "DataFrameLoaderRNASeq",
                                       }
                                     }
                                   }))
-DataFrameLoaderRNASeqCufflinksGene = R6Class(classname = "DataFrameLoaderRNASeqCufflinksGene",
+DataFrameLoaderRNASeqCufflinksGene = R6::R6Class(classname = "DataFrameLoaderRNASeqCufflinksGene",
                                              inherit = DataFrameLoaderRNASeq,
                                              public = list(
                                                print_level = function() {cat("----(Level: DataFrameLoaderRNASeqCufflinksGene)\n")},
@@ -223,7 +221,7 @@ DataFrameLoaderRNASeqCufflinksGene = R6Class(classname = "DataFrameLoaderRNASeqC
                                                  private$.data_df$tracking_id = NULL
                                                }))
 
-DataFrameLoaderRNASeqCufflinksIsoform = R6Class(classname = "DataFrameLoaderRNASeqCufflinksIsoform",
+DataFrameLoaderRNASeqCufflinksIsoform = R6::R6Class(classname = "DataFrameLoaderRNASeqCufflinksIsoform",
                                                 inherit = DataFrameLoaderRNASeq,
                                                 public = list(
                                                   print_level = function() {cat("----(Level: DataFrameLoaderRNASeqCufflinksIsoform)\n")},
