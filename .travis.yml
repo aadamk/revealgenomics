@@ -51,14 +51,13 @@ r_github_packages:
   - paradigm4/scidb
   
 install:
-#  - R -e "source('http://bioconductor.org/biocLite.R'); biocLite(c('Biobase'), ask = FALSE);"
-#  - R -e "install.packages(c('roxygen2', 'knitr', 'bit64', 'curl', 'data.table', 'openssl', 'devtools', 'tidyr', 'dplyr', 'yaml', 'reshape2', 'jsonlite', 'scidb', 'testthat'))"
   - R -e 'devtools::install_deps(dep = T)'
 
 script:
   - R CMD build .
   - R CMD INSTALL *tar.gz
   - R -e "devtools::test()"
+  - R -e 'rmarkdown::render(input = "vignettes/load-api-example.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
 
 # after_install:
 
