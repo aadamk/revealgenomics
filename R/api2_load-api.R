@@ -180,8 +180,21 @@ api_register_biosamples = function(workbook, record, def, con = NULL) {
 #' in Pipelines sheet, and then uses info in `pipeline_choices` sheet to fill up the 
 #' other necessary information
 #' @export
-api_register_experimentsets_measurementsets = function(workbook, record, def, choicesObj, con = NULL) {
+api_register_experimentsets_measurementsets = function(workbook, record, def, con = NULL) {
   stopifnot(nrow(record) == 1)
+  
+  # Create choices objects from metadata sheet
+  choicesObj = list(
+    pipelineChoicesObj = PipelineChoices$new(
+      pipeline_choices_df = myExcelReader(workbook = workbook, 
+                                          sheet_name = scidb4gh:::template_linker$pipeline$choices_sheet)),
+    filterChoicesObj = FilterChoices$new(
+      filter_choices_df = myExcelReader(workbook = workbook, 
+                                        sheet_name = scidb4gh:::template_linker$filter$choices_sheet)),
+    featuresetChoicesObj = FeaturesetChoices$new(
+      featureset_choices_df = myExcelReader(workbook = workbook, 
+                                            sheet_name = scidb4gh:::template_linker$featureset$choices_sheet))
+  )
   
   pipelines_df = template_helper_extract_record_related_rows(workbook = workbook,
                                                              sheetName = 'Pipelines', 
