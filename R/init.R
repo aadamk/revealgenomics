@@ -12,9 +12,9 @@
 # END_COPYRIGHT
 #
 
-#' Function to (potentially delete and) initialize arrays in GA4GH respository
+#' (potentially delete and) initialize arrays managed by Insight API
 #'
-#' The function requires that you are connected to SciDB.
+#' The function requires that you are connected to SciDB as an user with admin privileges
 #' @return NULL
 #' @examples
 #' \dontrun{
@@ -45,6 +45,16 @@ init_db = function(arrays_to_init, force = FALSE, con = NULL){
   } else{
     cat("Canceled initialization of DB\n")
     return(FALSE)
+  }
+  
+  if (as.logical(options('scidb4gh.use_scidb_ee'))) {
+    if (identical(arrays_to_init, get_entity_names())) {
+      cat("You asked to initialize all arrays. Should I initialize the permissions array too?\n")
+      resp_perm <- readline("(Y)es/(N)o: ")
+    }
+  } else {
+    # In CE mode, do not need a permissions array
+    resp_perm = "n"
   }
   
   arrays = L$array
@@ -110,4 +120,34 @@ init_db = function(arrays_to_init, force = FALSE, con = NULL){
       )
     }}
   }
+  
+  if ( (tolower(resp_perm) == 'y' | tolower(resp_perm) == 'yes') & !is.na(resp_perm)) {
+    cat("Proceeding with initialization of permissions array\n")
+    init_permissions_array(con = con)
+  } else{
+    cat("Canceled initialization of permissions array\n")
+  }
+}
+
+init_permissions_array = function(con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  db = con$db
+  
+  cat("Try deleting permissions array (if exists)\n")
+  tryCatch({
+    iquery(db, paste0("remove(", PERMISSIONS_ARRAY(), ")"))
+  }, 
+  error = function(e) {
+    cat("====Failed to remove permissions array\n")
+  })
+  
+  cat("Create permissions array\n")
+  tryCatch({
+    iquery(db, paste0("create array ", PERMISSIONS_ARRAY(), "dataset_id<access:bool> [user_id=0:*:0:1; dataset_id=0:*:0:256]"))
+  }, 
+  error = function(e) {
+    cat("====Failed to create permissions array\n")
+  })
+  
+  
 }
