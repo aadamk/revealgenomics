@@ -4,8 +4,7 @@
 \alias{api_register_experimentsets_measurementsets}
 \title{Register ExperimentSets and MeasurementSets}
 \usage{
-api_register_experimentsets_measurementsets(workbook, record, def, choicesObj,
-  con = NULL)
+api_register_experimentsets_measurementsets(workbook, record, def, con = NULL)
 }
 \description{
 This function differs from api_register_indiv/bios/measurements

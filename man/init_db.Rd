@@ -2,12 +2,12 @@
 % Please edit documentation in R/init.R
 \name{init_db}
 \alias{init_db}
-\title{Function to (potentially delete and) initialize arrays in GA4GH respository}
+\title{(potentially delete and) initialize arrays managed by Insight API}
 \usage{
 init_db(arrays_to_init, con = NULL)
 }
 \description{
-The function requires that you are connected to SciDB.
+The function requires that you are connected to SciDB as an user with admin privileges
 }
 \examples{
 \dontrun{

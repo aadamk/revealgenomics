@@ -4,7 +4,8 @@
 \alias{calculate_statistics_rnaquantification}
 \title{Calculate statistics on Gene-Expression data}
 \usage{
-calculate_statistics_rnaquantification(measurementset_id = NULL, con = NULL)
+calculate_statistics_rnaquantification(measurementset_id = NULL,
+  decorateResults = TRUE, con = NULL)
 }
 \description{
 Calculate statistics on Gene-Expression data
