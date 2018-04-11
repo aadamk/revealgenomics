@@ -1,6 +1,6 @@
 Package: scidb4gh
 Type: Package
-Title: SciDB Insight API
+Title: SciDB REVEAL/Genomics API
 Version: 0.2
 Date: 2018-02-22
 Author: Kriti Sen Sharma

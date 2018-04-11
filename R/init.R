@@ -12,7 +12,7 @@
 # END_COPYRIGHT
 #
 
-#' (potentially delete and) initialize arrays managed by Insight API
+#' (potentially delete and) initialize arrays managed by REVEAL/Genomics API
 #'
 #' The function requires that you are connected to SciDB as an user with admin privileges
 #' @return NULL
