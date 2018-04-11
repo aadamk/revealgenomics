@@ -186,7 +186,7 @@ load_helper_assign_ontology_ids = function(data_df, definitions, entity, con = N
         pretty_print(controlled_fields), "\n")
     for (field in controlled_fields) {
       vec = as.character(data_df[, field])
-      # vec[is.na(vec)] = 'NA'
+      vec[is.na(vec)] = 'NA'
       
       vec_ont = search_ontology(terms = vec, 
                                 category = field)
