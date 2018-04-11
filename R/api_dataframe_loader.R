@@ -20,6 +20,7 @@ DataFrameLoader = R6::R6Class(classname = "DataFrameLoader",
           print_level = function() {cat("----(Level: DataFrameLoader)\n")},
           assign_biosample_ids = function(){
             cat("assign_biosample_ids()"); self$print_level()
+            
             bios_ref = private$.reference_object$biosample
             if (nrow(private$.reference_object$pipeline_df) > 1) { 
               # multiple Measurements combined into one file
@@ -276,10 +277,11 @@ DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGe
                                          cat("Function: Register new features (Level: DataFrameLoaderVariantGemini)\n")
                                          super$register_new_features()
                                          
-                                         stopifnot(nrow(private$.reference_object$pipeline_df) == 1)
+                                         fset_choice = unique(private$.reference_object$pipeline_df[,
+                                                                template_linker$featureset$choices_col])
+                                         stopifnot(length(fset_choice) == 1)
                                          fsets_scidb = private$.reference_object$featureset
-                                         fset = drop_na_columns(fsets_scidb[match(private$.reference_object$pipeline_df[, 
-                                                                                                template_linker$featureset$choices_col], 
+                                         fset = drop_na_columns(fsets_scidb[match(fset_choice, 
                                                                                   fsets_scidb[,
                                                                                               template_linker$featureset$choices_col]), ])
                                          stopifnot(nrow(fset) == 1)
