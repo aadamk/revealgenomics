@@ -85,6 +85,16 @@ DataReaderVariantGemini = R6::R6Class(classname = 'DataReaderVariantGemini',
                                               pretty_print(column_rename), "\n")
                                           private$.data_df = plyr::rename(private$.data_df, 
                                                                           column_rename)
+                                          
+                                          if (nrow(private$.pipeline_df) > 1) {
+                                            cat("This is a summarized GEMINI file\n")
+                                            cat("Expecting 'Analysis_Barcode' column to hold the sample name\n")
+                                            stopifnot('Analysis_Barcode' %in% colnames(private$.data_df) )
+                                            if ('biosample_name' %in% colnames(private$.data_df)) {
+                                              stop("Did not expect `biosample_name` column in variant file\n")
+                                            }
+                                            private$.data_df$biosample_name = private$.data_df$Analysis_Barcode
+                                          }
                                         }
                                       ))
 
@@ -211,7 +221,8 @@ createDataReader = function(pipeline_df, measurement_set){
                                        measurement_set = measurement_set),
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: GATK + PoN + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
-         "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" =
+         "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" = ,
+         "{[DNAnexus]-[DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" =
              DataReaderVariantGemini$new(pipeline_df = pipeline_df,
                                                  measurement_set = measurement_set),
          "{[external]-[Fusion] Tophat Fusion}{gene}" = ,
