@@ -212,6 +212,21 @@ DataReaderRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNASeqHTSeq',
                                       
                                     ))
 
+DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
+                                     inherit = DataReader,
+                                     public = list(
+                                       print_level = function() {cat("----(Level: DataReaderRNASeq)\n")},
+                                       load_data_from_file = function() {
+                                         private$.header = FALSE
+                                         super$load_data_from_file()
+                                         colnames(private$.data_df) = c('biosample_name', 
+                                                                        'gene_left', 'chromosome_left', 'pos_left',
+                                                                        'gene_right', 'chromosome_right', 'pos_right',
+                                                                        'num_spanning_reads', 'num_mate_pairs', 
+                                                                        'num_mate_pairs_fusion', 
+                                                                        'quality_score')
+                                       }
+                                     ))
 #' @export
 createDataReader = function(pipeline_df, measurement_set){
   temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
@@ -231,7 +246,9 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[DNAnexus]-[DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" =
              DataReaderVariantGemini$new(pipeline_df = pipeline_df,
                                                  measurement_set = measurement_set),
-         "{[external]-[Fusion] Tophat Fusion}{gene}" = ,
+         "{[external]-[Fusion] Tophat Fusion}{gene}" = 
+             DataReaderFusionTophat$new(pipeline_df = pipeline_df,
+                                        measurement_set = measurement_set),
          "{[external]-[Fusion] Defuse}{gene}" =
              DataReader$new(pipeline_df = pipeline_df,
                             measurement_set = measurement_set),
