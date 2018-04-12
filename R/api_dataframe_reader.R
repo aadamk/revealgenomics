@@ -14,9 +14,14 @@ DataReader = R6::R6Class(classname = 'DataReader',
                                                    '\t' = 'tab',
                                                    ',' = 'comma'), 
                                  "* delimited file:\n\t", file_path, "\n"))
+                             if (!private$.header) {
+                               cat("--- No header in file\n")
+                             }
                              private$.data_df = read.delim(file = file_path,
                                                            sep = private$.separator,
-                                                           check.names = FALSE)
+                                                           check.names = FALSE,
+                                                           stringsAsFactors = FALSE,
+                                                           header = private$.header)
                              cat("Dimensions:", dim(private$.data_df), "\n")
                              invisible(self)
                            },
@@ -28,6 +33,7 @@ DataReader = R6::R6Class(classname = 'DataReader',
                          private = list(
                            .measurement_set = NULL,
                            .pipeline_df = NULL,
+                           .header = TRUE, # whether to read first row of data-file as header
                            .separator = '\t',
                            .data_df = NULL
                          ))
