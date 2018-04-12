@@ -184,6 +184,11 @@ load_helper_assign_ontology_ids = function(data_df, definitions, entity, con = N
     cat("Following fields are controlled fields:", 
         pretty_print(controlled_fields), "\n")
     for (field in controlled_fields) {
+      if (field == 'SEX') {
+        cat("controlled vocabulary for gender has been enforced earlier -- see function:
+            `load_helper_do_entity_specific_work()` under `INDIVIDUAL` entity\n")
+        next
+      }
       vec = as.character(data_df[, field])
       vec[is.na(vec)] = 'NA'
       
