@@ -109,7 +109,7 @@ DataFrameLoader = R6::R6Class(classname = "DataFrameLoader",
           #' 
           register_new_features = function() {
             cat("register_new_features()"); self$print_level()
-            invisible(self)
+            return(FALSE)
           },
           
           #' return reference_object 
@@ -128,6 +128,29 @@ DataFrameLoader = R6::R6Class(classname = "DataFrameLoader",
           retrieve_feature_synonyms = function() {
             cat("retrieve_feature_synonyms()"); self$print_level()
             private$.reference_object$feature_synonym
+          },
+          
+          #' update feature and feature synonym in reference object
+          update_reference_object = function() {
+            # update the selected features
+            fsets_scidb = private$.reference_object$featureset
+            # print(dim(fsets_scidb))
+            
+            featureset_name = unique(private$.reference_object$pipeline_df[, 
+                                                                           template_linker$featureset$choices_col])
+            stopifnot(length(featureset_name) == 1)
+            # print(featureset_name)
+            
+            fset = fsets_scidb[match(featureset_name, 
+                                     fsets_scidb[, template_linker$featureset$choices_col]), ]
+
+            cat("updating feature in reference object\n")
+            
+            private$.reference_object$feature = search_features(featureset_id = 
+                                fset$featureset_id)
+            cat("updating feature-synonym in reference object\n")
+            fsyn = scidb4gh:::get_feature_synonym()
+            private$.reference_object$feature_synonym = fsyn[fsyn$featureset_id == fset$featureset_id, ]
           },
           
           #' assign feature ids
@@ -195,14 +218,10 @@ DataFrameLoaderRNASeq = R6::R6Class(classname = "DataFrameLoaderRNASeq",
                                       if (length(m1$source_unmatched_idx) > 0) {
                                         new_ftr_ids = register_feature(df = feature_df)
                                       
-                                        # update the selected features
-                                        cat("updating feature in reference object\n")
-                                        private$.reference_object$feature = search_features(featureset_id = fset$featureset_id)
-                                        cat("updating feature-synonym in reference object\n")
-                                        fsyn = scidb4gh:::get_feature_synonym()
-                                        private$.reference_object$feature_synonym = fsyn[fsyn$featureset_id == fset$featureset_id, ]
+                                        return(TRUE)
                                       } else {
                                         cat("No new features to register\n")
+                                        return(FALSE)
                                       }
                                     }
                                   }))
@@ -311,24 +330,89 @@ DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGe
                                                                 stringsAsFactors = FALSE)
                                            new_ftr_ids = register_feature(df = ftr_new, register_gene_synonyms = TRUE)
                                            
-                                           # update the selected features
-                                           cat("updating feature in reference object\n")
-                                           private$.reference_object$feature = search_features(featureset_id = fset$featureset_id)
-                                           cat("updating feature-synonym in reference object\n")
-                                           fsyn = scidb4gh:::get_feature_synonym()
-                                           private$.reference_object$feature_synonym = fsyn[fsyn$featureset_id == fset$featureset_id, ]
+                                           return(TRUE)
                                          } else {
                                            cat("No new features to register\n")
+                                           return(FALSE)
                                          }
                                          invisible(self)
                                        }
                                      ))
 
-DataFrameLoaderVariantGeminiFiltered = R6::R6Class(classname = 'DataFrameLoaderVariantGeminiFiltered',
-                                           inherit = DataFrameLoaderVariantGemini,
-                                           public = list())
+DataFrameLoaderFusionTophat = R6::R6Class(classname = 'DataFrameLoaderFusionTophat',
+                                     inherit = DataFrameLoader,
+                                     public = list(
+                                       print_level = function() {cat("----(Level: DataFrameLoaderFusionTophat)\n")},
+                                       register_new_features = function() {
+                                         fset_choice = unique(private$.reference_object$pipeline_df[,
+                                                                                                    template_linker$featureset$choices_col])
+                                         stopifnot(length(fset_choice) == 1)
+                                         fsets_scidb = private$.reference_object$featureset
+                                         fset = drop_na_columns(fsets_scidb[match(fset_choice, 
+                                                                                  fsets_scidb[,
+                                                                                              template_linker$featureset$choices_col]), ])
+                                         stopifnot(nrow(fset) == 1)
+                                         cat("Matching features in file by feature-synonyms in DB at featureset_id", 
+                                             fset$featureset_id, "\n")
+                                         fsyn_sel = private$.reference_object$feature_synonym[
+                                           private$.reference_object$feature_synonym$featureset_id == 
+                                             fset$featureset_id, ]
+                                         
+                                         list_of_features = unique(c(as.character(private$.data_df$gene_left), 
+                                                                     as.character(private$.data_df$gene_right)))
+                                         head(list_of_features)
+                                         
+                                         matches_synonym = find_matches_and_return_indices(list_of_features, 
+                                                                                           fsyn_sel$synonym)
+                                         
+                                         unmatched = matches_synonym$source_unmatched_idx
+                                         cat("Number of unmatched gene symbols:", length(unmatched), "\n e.g.", 
+                                             pretty_print(list_of_features[unmatched]), "\n")
+                                         
+                                         if (length(list_of_features[unmatched]) > 0) {
+                                           newfeatures = data.frame(
+                                             name = list_of_features[unmatched],
+                                             gene_symbol = 'NA',
+                                             featureset_id = fset$featureset_id,
+                                             chromosome = "unknown",
+                                             start = '...', 
+                                             end = '...',
+                                             strand_term = search_ontology('strand_term_unspecified'),
+                                             feature_type = "gene",
+                                             source = "Tophat fusion file")
+                                           
+                                           feature_record = register_feature(df = newfeatures)
+                                           
+                                           return(TRUE)
+                                         } else {
+                                           cat("No new features to register\n")
+                                           return(FALSE)
+                                         }                                         
+                                       },
+                                       assign_feature_ids = function(){
+                                         cat("assign_feature_ids()"); self$print_level()
+                                         super$assign_feature_ids()
+                                         
+                                         syn = private$.reference_object$feature_synonym
+                                         syn = syn[syn$featureset_id == 
+                                                     private$.reference_object$measurement_set$featureset_id, ]
+                                         
+                                         # Now register the left and right genes with system feature_id-s
+                                         private$.data_df$feature_id_left = syn[match(private$.data_df$gene_left, syn$synonym), ]$feature_id
+                                         private$.data_df$feature_id_right = syn[match(private$.data_df$gene_right, syn$synonym), ]$feature_id
+                                         stopifnot(!any(is.na(private$.data_df$feature_id_left)))
+                                         stopifnot(!any(is.na(private$.data_df$feature_id_right)))
+                                       },
+                                       load_data = function() {
+                                         cat("load_data()"); self$print_level()
+                                         private$.data_df = plyr::rename(private$.data_df,
+                                                                         c('biosample_name' = 
+                                                                             'sample_name_unabbreviated'))
+                                         register_fusion_data(df = private$.data_df,
+                                                              measurementset = private$.reference_object$measurement_set)
+                                       }
+                                     ))
 
-                      
 #' @export      
 createDataLoader = function(data_df, reference_object){
   temp_string = paste0("{",
