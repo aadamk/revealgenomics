@@ -276,7 +276,6 @@ DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGe
                                        assign_feature_ids = function(){
                                          cat("assign_feature_ids()"); self$print_level()
                                          super$assign_feature_ids()
-                                         cat("Assign feature_id (Level: Variant Gemini)\n")
                                          
                                          fset_id = private$.reference_object$measurement_set$featureset_id
                                          cat("Match features in file to feature synonyms at featureset_id =", fset_id, "\n")
@@ -436,9 +435,11 @@ createDataLoader = function(data_df, reference_object){
          "{[DNAnexus]-[Variant_Custom: GATK + PoN + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" =
-           DataFrameLoaderVariantGeminiFiltered$new(data_df = data_df,
+           DataFrameLoaderVariantGemini$new(data_df = data_df,
                                                     reference_object = reference_object),
-         "{[external]-[Fusion] Tophat Fusion}{gene}" = ,
+         "{[external]-[Fusion] Tophat Fusion}{gene}" = 
+           DataFrameLoaderFusionTophat$new(data_df = data_df,
+                                           reference_object = reference_object),
          "{[external]-[Fusion] Defuse}{gene}" =
            NULL,
          stop("Need to add loader for choice:\n", temp_string)
