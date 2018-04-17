@@ -813,9 +813,9 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE, con =
                                       mandatory_fields = non_info_cols),
                   idname = get_idname(arrayname), arrayname = arrayname, 
                   con = con)
+    
+    remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrVariant, con = con)
   } # end of if (!only_test)
-  
-  remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrVariant, con = con)
 }
 
 register_info = function(df, idname, arrayname, con = NULL){
