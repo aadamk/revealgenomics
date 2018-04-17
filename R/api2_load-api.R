@@ -74,13 +74,12 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
     dfi_st = load_helper_column_rename(dfx = dfi, 
                                scidb4gh_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]], 
                                worksheet_fields = wksht_fields_study)
-    dataset_version = dfi_st$study_version
     
-    if (!(length(unique(dfi_st$name)) == 1 &
-          length(unique(dfi_st$description)) == 1)) {
-      stop("Currently loader handles one study per project.
-           Need to add code for handling multiple studies per project (using field 'study_id'")
-    }
+    # if (!(length(unique(dfi_st$name)) == 1 &
+    #       length(unique(dfi_st$description)) == 1)) {
+    #   stop("Currently loader handles one study per project.
+    #        Need to add code for handling multiple studies per project (using field 'study_id'")
+    # }
     # IMPORTANT: remove the columns that will no longer be needed
     dfi_st$study_id = NULL
     
@@ -90,6 +89,7 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
       # df1$public = NULL
     }
     
+    dataset_version = unique(dfi_st$study_version)
     if (length(dataset_version) != 1) {
       stop("must write code to ingest multiple study_version-s")
     }
