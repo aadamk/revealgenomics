@@ -309,7 +309,8 @@ DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGe
                                          fsyn_sel = private$.reference_object$feature_synonym[
                                            private$.reference_object$feature_synonym$featureset_id == 
                                              fset$featureset_id, ]
-                                         m1 = find_matches_and_return_indices(private$.data_df$gene, fsyn_sel$synonym)
+                                         m1 = find_matches_and_return_indices(private$.data_df$gene, 
+                                                                              fsyn_sel[fsyn_sel$source == 'gene_symbol', ]$synonym)
                                          
                                          private$.data_df$feature_id = -1
                                          if (length(m1$source_unmatched_idx) > 0) {
