@@ -1620,26 +1620,33 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
     
     xx = df
     
-    update_feature_synonym_cache(con = con)
-    syn = get_feature_synonym_from_cache(con = con)
+    if (!all(c('feature_id_left', 'feature_id_right') %in% colnames(xx))) {
+      update_feature_synonym_cache(con = con)
+      syn = get_feature_synonym_from_cache(con = con)
+      syn = syn[syn$featureset_id == measurementset$featureset_id, ]
+      
+      # Now register the left and right genes with system feature_id-s
+      xx$feature_id_left = syn[match(xx$gene_left, syn$synonym), ]$feature_id
+      xx$feature_id_right = syn[match(xx$gene_right, syn$synonym), ]$feature_id
+      stopifnot(!any(is.na(xx$feature_id_left)))
+      stopifnot(!any(is.na(xx$feature_id_right)))
+    }
     
-    # Now register the left and right genes with system feature_id-s
-    xx$feature_id_left = syn[match(xx$gene_left, syn$synonym), ]$feature_id
-    xx$feature_id_right = syn[match(xx$gene_right, syn$synonym), ]$feature_id
-    stopifnot(!any(is.na(xx$feature_id_left)))
-    stopifnot(!any(is.na(xx$feature_id_right)))
-    
-    # Biosamples
-    b = search_biosamples(dataset_id = dataset_id, dataset_version = dataset_version, con = con)
-    xx$biosample_id = b[match(xx$biosample_name, b$name), ]$biosample_id
-    stopifnot(!any(is.na(xx$biosample_id)))
+    if (!('biosample_id' %in% colnames(xx))) {
+      # Biosamples
+      b = search_biosamples(dataset_id = dataset_id, dataset_version = dataset_version, con = con)
+      xx$biosample_id = b[match(xx$biosample_name, b$name), ]$biosample_id
+      stopifnot(!any(is.na(xx$biosample_id)))
+    }
     
     # Rename some columns
     colnames(xx)[colnames(xx) == 'Sample'] = 'sample_name_unabbreviated'
     colnames(xx)[colnames(xx) == 'chrom_left'] = 'chromosome_left'
     colnames(xx)[colnames(xx) == 'chrom_right'] = 'chromosome_right'
     
-    xx$measurementset_id = measurementset$measurementset_id
+    if (!('measurementset_id' %in% colnames(xx))) {
+      xx$measurementset_id = measurementset$measurementset_id
+    }
     xx$dataset_version = dataset_version
     
     arrayname = full_arrayname(.ghEnv$meta$arrFusion)
@@ -1647,7 +1654,9 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
     xx = xx %>% group_by(biosample_id) %>% mutate(fusion_id = row_number())
     xx = as.data.frame(xx)
     
-    xx$dataset_id = dataset_id
+    if (!('dataset_id' %in% colnames(xx))) {
+      xx$dataset_id = dataset_id
+    }
     
     cat("registering", nrow(xx), "entries of fusion data into array", arrayname, "\n")
     register_tuple(df = xx,
@@ -1655,6 +1664,8 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
                      get_idname(arrayname), get_int64fields(arrayname)),
                    arrayname = arrayname, 
                    con = con)
+    
+    remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrFusion, con = con)
   } # end of if (!only_test)
 }
 
