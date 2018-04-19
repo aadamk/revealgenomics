@@ -36,6 +36,7 @@ We create one of the two possible security namespaces:
 iquery -aq "create_namespace('gh_public')"
 iquery -aq "create_namespace('gh_public_rw')"
 iquery -aq "create_namespace('gh_secure')"
+iquery -aq "create_namespace('permissions')"
 ```
 
 3. Use the following trick to bypass the `auth-file` parameter:
