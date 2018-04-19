@@ -33,7 +33,9 @@ iquery --auth-file ~/.scidb_root_auth -aq "list('libraries')"
 
 We create one of the two possible security namespaces:
 ```{sh}
-iquery -aq "create_namespace('collaboration')"
+iquery -aq "create_namespace('gh_public')"
+iquery -aq "create_namespace('gh_public_rw')"
+iquery -aq "create_namespace('gh_secure')"
 ```
 
 3. Use the following trick to bypass the `auth-file` parameter:
@@ -55,58 +57,24 @@ At this point, you should be able to run:
 iquery -aq "list('libraries')"
 ```
 
-# Plugins
+# Plugins and shim
 
 The plugins and API can be downloaded and installed via any directory, but a 
 standard directory structure is currently being used for development.
 
 ```{sh}
-mkdir -p ~/coding/downloads/plugins
+cd /tmp
+wget https://github.com/Paradigm4/extra-scidb-libs/raw/master/extra-scidb-libs-18.1-1-1.x86_64.rpm
+sudo rpm -i extra-scidb-libs-18.1-1-1.x86_64.rpm
 ```
 
-Download the scidb4gh API
-```{sh}
-cd ~/coding/downloads/
-# On Ubuntu
-git clone https://github.com/Paradigm4/scidb4gh.git
-# On Centos
-git clone https://<USERNAME>@github.com/Paradigm4/scidb4gh.git
-# Contact support@paradigm4.com for access to this repo
-```
+**NOTE**
 
-Download the SciDB plugins
-```{sh}
-cd ~/coding/downloads/plugins/
-git clone https://github.com/Paradigm4/dev_tools.git
-```
-
-Next follow [instructions](https://github.com/Paradigm4/dev_tools)
-for installing dev_tools. Then load the following libraries:
-
-```{sh}
-# Using dev_tools
-# Assuming that dev_tools is already installed
-LIBS_TO_INSTALL_16_9="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between limit summarize"
-LIBS_TO_INSTALL_17_1="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between secure_scan"
-LIBS_TO_INSTALL_18_1="grouped_aggregate accelerated_io_tools equi_join sg_free_cross_between secure_scan"
-for lib in $LIBS_TO_INSTALL_{scidb_version}; 
-  do
-  echo $lib
-  iquery -aq "install_github('Paradigm4/$lib')"
-  iquery -aq "load_library('$lib')"
-done
-```
-
-# Shim
-
-Follow instructions at the [P4 Github page](https://github.com/paradigm4/shim). 
-Shim is configured using a file under `/var/lib/shim/conf`. 
-Importantly, we set `aio=1` in that file for faster download of data from SciDB 
-(remember to restart SciDB at this point)
-
-```{sh}
-sudo service shimsvc restart
-```
+1. Shim is configured using a file under `/var/lib/shim/conf`. 
+2. Any configuration changes need a restart for shim via `sudo service shimsvc restart`
+3. Other plugins required for project are:
+    + `sg_free_cross_between`
+    + `secure_scan`
 
 # Package installation
 
@@ -144,6 +112,8 @@ Next, install the following R packages from CRAN
 ```{sh}
 sudo R
 # Then run
+source("http://bioconductor.org/biocLite.R"); 
+biocLite(c("Biobase")); 
 install.packages(c('roxygen2', 
                    'tidyr', 
                    'RPostgreSQL', 
@@ -152,12 +122,10 @@ install.packages(c('roxygen2',
                    'knitr',
                    'reshape',
                    'reshape2')); 
-source("http://bioconductor.org/biocLite.R"); 
-biocLite(c("Biobase")); 
 ```
 
-Next we install the SciDB-R package (we can also install from CRAN). Below,
-we show how to install via devtools:
+Next we install the SciDB related R package via devtools
+
 ```{sh}
 sudo R --slave -e "devtools::install_github('Paradigm4/scidbr')"
 ```
@@ -169,7 +137,7 @@ This API's R package can be installed in two ways:
 ### If you are just using the package
 
 ```{sh}
-sudo R --slave -e "devtools::install_github('Paradigm4/scidb4gh')"
+sudo R --slave -e "devtools::install_github('Paradigm4/reveal-genomics')"
 ```
 
 ### If you are working on package development on the target machine 
