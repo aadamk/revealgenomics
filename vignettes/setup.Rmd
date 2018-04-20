@@ -58,6 +58,10 @@ At this point, you should be able to run:
 iquery -aq "list('libraries')"
 ```
 
+## Create users, roles, permissions
+
+Consult [this gist](https://gist.github.com/ksens/27c21f25246f1e6ef2e5d5cde0909682)
+
 # Plugins and shim
 
 The plugins and API can be downloaded and installed via any directory, but a 
