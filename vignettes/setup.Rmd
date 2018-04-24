@@ -28,34 +28,7 @@ iquery --auth-file ~/.scidb_root_auth -aq "list()"
 iquery --auth-file ~/.scidb_root_auth -aq "list('libraries')"
 ```
 
-We create one of the two possible security namespaces:
-```{sh}
-iquery -aq "create_namespace('gh_public')"
-iquery -aq "create_namespace('gh_public_rw')"
-iquery -aq "create_namespace('gh_secure')"
-iquery -aq "create_namespace('permissions')"
-```
-
-3. Use the following trick to bypass the `auth-file` parameter:
-
-Open a config file:
-```{sh}
-vi ~/.config/scidb/iquery.conf
-# Paste the following there
-############################
-{
-"auth-file":"/home/scidb/.scidb_root_auth"
-}
-############################
-```
-
-At this point, you should be able to run:
-
-```{sh}
-iquery -aq "list('libraries')"
-```
-
-## Create users, roles, permissions
+## Create namespaces, users, roles, permissions
 
 Consult [this gist](https://gist.github.com/ksens/27c21f25246f1e6ef2e5d5cde0909682)
 
