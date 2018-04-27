@@ -215,7 +215,7 @@ DataReaderRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNASeqHTSeq',
 DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                      inherit = DataReader,
                                      public = list(
-                                       print_level = function() {cat("----(Level: DataReaderRNASeq)\n")},
+                                       print_level = function() {cat("----(Level: DataReaderFusionTophat)\n")},
                                        load_data_from_file = function() {
                                          private$.header = FALSE
                                          super$load_data_from_file()
