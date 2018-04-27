@@ -92,21 +92,22 @@ dao_search_rnaquantification = function(measurementset,
   dataset_id = unique(measurementset$dataset_id)
   stopifnot(length(dataset_id) == 1)
   
-  ftr_id = unique(feature$feature_id)
+  ftr_id = sort(unique(feature$feature_id))
   
   arr0 = full_arrayname(.ghEnv$meta$arrRnaquantification)
   
-  qq = paste0("filter(", custom_scan(), "(", arr0, "), measurementset_id = ", rqs_id, ")")
+  qq = paste0(custom_scan(), "(", arr0, ")")
   
   if (!is.null(feature)) {
-    K_THRESH = 500
+    K_THRESH = 20
     if (length(ftr_id) <= K_THRESH) {
       path = "filter_features"
     } else {
       path = "build_literal_and_cross_join_features"
     }
     if (path == 'filter_features') {
-      expr = paste0("feature_id=", ftr_id, collapse = " OR ")
+      expr = formulate_base_selection_query(fullarrayname = .ghEnv$meta$arrFeature,
+                                            id = ftr_id)
       qq2 = paste0("filter(", qq, ", ", expr, ")")
     } else if (path == "build_literal_and_cross_join_features") {
       expr = paste0(ftr_id, collapse = ",")
@@ -122,6 +123,8 @@ dao_search_rnaquantification = function(measurementset,
                           ")")
   
     }
+    qq2 = paste0("filter(", qq2, ", measurementset_id = ", rqs_id, ")")
+    res = iquery(con$db, query = qq2, binary = FALSE, return = TRUE)
   } else { # user has not supplied features; try to download full data
     cat("Estimating download size: ")
     download_size = iquery(con$db, 
@@ -134,10 +137,9 @@ dao_search_rnaquantification = function(measurementset,
 Post an issue at https://github.com/Paradigm4/scidb4gh/issues\n")
       return(NULL)
     }
-    qq2 = qq
+    res = iquery(con$db, query = qq, binary = TRUE, return = TRUE)
   }
   
-  res = iquery(con$db, query = qq2, return = TRUE)
 
   # Retrieved biosamples
   biosample_id = unique(res$biosample_id)
