@@ -17,6 +17,7 @@ register new features (if any)
 return reference_object
 
 For DEBUG only
+update feature and feature synonym in reference object
 assign feature ids
 
 assume that new features have been registered by this time

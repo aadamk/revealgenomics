@@ -2,11 +2,20 @@
 % Please edit documentation in R/api2_template-helper.R
 \name{myExcelReader}
 \alias{myExcelReader}
-\title{Helper function to read sheet from Excel workbook}
+\title{Read sheet from Excel workbook}
 \usage{
 myExcelReader(workbook, sheet_name)
 }
+\arguments{
+\item{workbook}{Workbook must be of type `XLConnect::workbook` (loaded by `XLConnect::loadWorkbook()`) 
+or of type `list` (loaded by `scidb4gh::myExcelLoader()`)}
+
+\item{sheet_name}{name of sheet to read from workbook}
+}
 \description{
-note usage of the useCachedValues parameter
+To be used in conjunction with `myExcelLoader()`.
+}
+\details{
+Note usage of the useCachedValues parameter
 otherwise, was throwing warnings about the concatenation field
 }

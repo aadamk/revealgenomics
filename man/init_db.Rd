@@ -2,9 +2,9 @@
 % Please edit documentation in R/init.R
 \name{init_db}
 \alias{init_db}
-\title{(potentially delete and) initialize arrays managed by Insight API}
+\title{(potentially delete and) initialize arrays managed by REVEAL/Genomics API}
 \usage{
-init_db(arrays_to_init, con = NULL)
+init_db(arrays_to_init, force = FALSE, con = NULL)
 }
 \description{
 The function requires that you are connected to SciDB as an user with admin privileges

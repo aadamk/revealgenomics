@@ -37,14 +37,21 @@ template_linker = list(
     )
   )
 
-#' Helper function to load Excel workbook into memory
+#' Load Excel workbook into memory
 #' 
+#' To be used in conjunction with `myExcelReader()`
+#' `
 #' @param filename path to Excel workbook
+#' @param use_readxl use readxl package (default), otherwise XLConnect package
 #' 
 #' @export
-myExcelLoader = function(filename) {
+myExcelLoader = function(filename, use_readxl=TRUE) {
   tryCatch({
-    workbook = XLConnect::loadWorkbook(filename = filename)
+    if (use_readxl) {
+      readxl::excel_sheets(path = filename)
+    } else {
+      workbook = XLConnect::loadWorkbook(filename = filename)
+    }
   },
   error = function(e) {
     cat("Could not open file at file path:", filename)
@@ -55,18 +62,30 @@ myExcelLoader = function(filename) {
                       "Samples",               "Pipelines",             "Contrasts",            
                       "pipeline_choices",      "featureset_choices",    "filter_choices" )
   
-  if (! all(required_sheets %in% XLConnect::getSheets(workbook)) ) {
+  if (use_readxl) {
+    sheets_in_file = readxl::excel_sheets(path = filename)
+  } else {
+    sheets_in_file = XLConnect::getSheets(workbook)
+  }
+  if (! all(required_sheets %in% sheets_in_file) ) {
     stop("Following required sheet(s) not present: ", 
-         paste0(required_sheets[!(required_sheets %in% XLConnect::getSheets(workbook))],
+         paste0(required_sheets[!(required_sheets %in% sheets_in_file)],
                 collapse = ", "))
   }
   
   wb = list()
   for (sheet_nm in required_sheets) {
     cat("Reading sheet: ", sheet_nm, "\n")
-    wb[[sheet_nm]] = XLConnect::readWorksheet(object = workbook, sheet = sheet_nm, 
-                                              check.names = FALSE, 
-                                              useCachedValues = TRUE)
+    if (use_readxl) {
+      wb[[sheet_nm]] = readxl::read_excel(path = filename, ## file name + location
+                                          sheet = sheet_nm, ## Which sheet name to parse 
+                                          trim_ws = TRUE ## Trim trailing or leading whitespaces?
+                                          )  # guess_max is left to default
+    } else {
+      wb[[sheet_nm]] = XLConnect::readWorksheet(object = workbook, sheet = sheet_nm, 
+                                                check.names = FALSE, 
+                                                useCachedValues = TRUE)
+    }
     # cleanup string literals 
     # 
     # convert columns in a dataframe from string vector of 'TRUE'/'FALSE' to logicals
@@ -108,11 +127,16 @@ myExcelLoader = function(filename) {
   wb
 }
 
-#' Helper function to read sheet from Excel workbook
+#' Read sheet from Excel workbook
 #' 
-#' note usage of the useCachedValues parameter
+#' To be used in conjunction with `myExcelLoader()`
+#' 
+#' Note usage of the useCachedValues parameter
 #' otherwise, was throwing warnings about the concatenation field
 #' 
+#' @param workbook Workbook must be of type `XLConnect::workbook` (loaded by `XLConnect::loadWorkbook()`) 
+#'                 or of type `list` (loaded by `scidb4gh::myExcelLoader()`)
+#' @param sheet_name name of sheet to read from workbook
 #' @export
 myExcelReader = function(workbook, sheet_name) {
   if (class(workbook) == 'workbook') {
