@@ -77,10 +77,12 @@ myExcelLoader = function(filename, use_readxl=TRUE) {
   for (sheet_nm in required_sheets) {
     cat("Reading sheet: ", sheet_nm, "\n")
     if (use_readxl) {
-      wb[[sheet_nm]] = readxl::read_excel(path = filename, ## file name + location
+      wb[[sheet_nm]] = as.data.frame(readxl::read_excel(path = filename, ## file name + location
                                           sheet = sheet_nm, ## Which sheet name to parse 
-                                          trim_ws = TRUE ## Trim trailing or leading whitespaces?
-                                          )  # guess_max is left to default
+                                          trim_ws = TRUE, ## Trim trailing or leading whitespaces?
+                                          guess_max = 21474836))  # guess_max default at 1000 throws read errors at CASTOR / POLLUX sheet
+                                                                 # leaving at Inf throws warning messages.
+                                                                 # warning messages prompted the value used here.
     } else {
       wb[[sheet_nm]] = XLConnect::readWorksheet(object = workbook, sheet = sheet_nm, 
                                                 check.names = FALSE, 
