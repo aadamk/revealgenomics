@@ -2,7 +2,7 @@
 % Please edit documentation in R/api2_template-helper.R
 \name{myExcelLoader}
 \alias{myExcelLoader}
-\title{Helper function to load Excel workbook into memory}
+\title{Load Excel workbook into memory}
 \usage{
 myExcelLoader(filename, use_readxl = TRUE)
 }

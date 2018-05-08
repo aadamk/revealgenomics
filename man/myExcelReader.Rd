@@ -13,7 +13,7 @@ or of type `list` (loaded by `scidb4gh::myExcelLoader()`)}
 \item{sheet_name}{name of sheet to read from workbook}
 }
 \description{
-To be used in conjunction with `myExcelLoader()`.
+To be used in conjunction with `myExcelLoader()`
 }
 \details{
 Note usage of the useCachedValues parameter
