@@ -16,13 +16,13 @@
 #' 
 #' @export
 calculate_statistics_variant = function(measurementset_id = NULL, con = NULL) {
-  con = scidb4gh:::use_ghEnv_if_null(con = con)
+  con = use_ghEnv_if_null(con = con)
   db = con$db
   if (!is.null(measurementset_id)) {
     res = iquery(db, 
                  paste0("aggregate(
                         filter(", 
-                        scidb4gh:::full_arrayname(.ghEnv$meta$arrVariant), 
+                        full_arrayname(.ghEnv$meta$arrVariant), 
                         ", measurementset_id=", measurementset_id, 
                         "), count(*) AS variant_count, measurementset_id, biosample_id)"),
                  return = TRUE)
@@ -30,7 +30,7 @@ calculate_statistics_variant = function(measurementset_id = NULL, con = NULL) {
   } else { # for all measurementsets
     res = iquery(db, 
                  paste0("aggregate(",
-                        scidb4gh:::full_arrayname(.ghEnv$meta$arrVariant), 
+                        full_arrayname(.ghEnv$meta$arrVariant), 
                         ", count(*) AS variant_count, measurementset_id, biosample_id)"),
                  return = TRUE)
     res = res[order(res$measurementset_id, res$biosample_id), ]
@@ -110,4 +110,39 @@ calculate_statistics_rnaquantification = function(measurementset_id = NULL, deco
                      res$measurementset_id), ])
   }
 }
+
+#' Calculate summary statistics across measurementsets
+#' 
+#' @examples calculate_statistics_across_measurementsets(
+#'              df_measurementset = search_measurementsets(dataset_id = 31))
+#' @examples calculate_statistics_across_measurementsets(
+#'              df_measurementset = get_measurementsets(measurementset_id = c(2:5)))
+#' 
+#' @export
+calculate_statistics_across_measurementsets = function(df_measurementset, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  db = con$db
+  idx = df_measurementset$measurementset_id
+  zz = df_measurementset[, c('measurementset_id', 'name', 'entity')]
+  
+  
+  L1 = lapply(unique(zz$entity),
+              function(entitynm) {
+                counts = iquery(db, paste0("aggregate(filter(", full_arrayname(entitynm), ", ", 
+                                           formulate_base_selection_query(fullarrayname = .ghEnv$meta$arrMeasurementSet,
+                                                                                     id = idx), "),
+                                           count(*), measurementset_id)"), return = TRUE)
+                if (nrow(counts) == 0) {
+                  counts = data.frame(measurementset_id = idx,
+                                      count = rep(NA, length(idx)))
+                }
+                merge(zz[zz$entity == entitynm, ], 
+                      counts, by = 'measurementset_id', all.x = TRUE)
+              }
+  )
+  # names(L1) = unique(zz$entity)
+  
+  dplyr::bind_rows(L1)
+}
+
 
