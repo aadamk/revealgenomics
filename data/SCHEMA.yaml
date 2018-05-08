@@ -262,22 +262,22 @@ array:
       dataset_id:
         start: 0
         end: Inf
-        chunk_interval: 10
+        chunk_interval: 1
         overlap: 0
       measurementset_id:
         start: 0
         end: Inf
-        chunk_interval: 10
+        chunk_interval: 1
         overlap: 0
       biosample_id:
         start: 0
         end: Inf
-        chunk_interval: 1000
+        chunk_interval: 128
         overlap: 0
       feature_id:
         start: 0
         end: Inf
-        chunk_interval: 1000
+        chunk_interval: 32768
         overlap: 0
     search_by_entity: MEASUREMENTSET
     delete_by_entity: MEASUREMENTSET
