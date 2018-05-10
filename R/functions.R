@@ -1273,13 +1273,11 @@ latest_version = function(df){
   drop_na_columns(as.data.frame(df))
 }
 
-# For legacy reasons, this function is named find_nmsp_...
-# Before secure_scan(), the namespace was found by a lookup by dataset_id
-# Currently, this function knows the namespace for an entity by entity-type alone
-find_nmsp_filter_on_dataset_id_and_version = function(arrayname, 
-                                                      dataset_id, 
-                                                      dataset_version, 
-                                                      con = NULL){
+#' internal function for `search_METADATA()``
+filter_on_dataset_id_and_version = function(arrayname, 
+                                            dataset_id, 
+                                            dataset_version, 
+                                            con = NULL){
   con = use_ghEnv_if_null(con)
   
   qq = arrayname
@@ -1294,8 +1292,9 @@ find_nmsp_filter_on_dataset_id_and_version = function(arrayname,
     stop(cat("Must specify dataset_id. To retrieve all ", tolower(arrayname), "s, use get_", tolower(arrayname), "s()", sep = ""))
   }
   
-  join_info_ontology_and_unpivot(qq,
-                                 arrayname,
+  join_info_ontology_and_unpivot(qq = qq,
+                                 arrayname = arrayname,
+                                 replicate_query_on_info_array = TRUE,
                                  con = con)
 }
 
@@ -1388,9 +1387,9 @@ search_versioned_secure_metadata_entity = function(entity,
                                                    all_versions, 
                                                    con = NULL) {
   check_args_search(dataset_version, all_versions)
-  df = find_nmsp_filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
-                                                  dataset_version = dataset_version, 
-                                                  con = con)
+  df = filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
+                                        dataset_version = dataset_version, 
+                                        con = con)
   
   # reorder the output by the dimensions
   # from https://stackoverflow.com/questions/17310998/sort-a-dataframe-in-r-by-a-dynamic-set-of-columns-named-in-another-data-frame
@@ -1460,18 +1459,29 @@ unpivot = function(df1, arrayname) {
   x3
 }
 
-join_info = function(qq, arrayname, mandatory_fields_only = FALSE, con = NULL) {
+#' Join flex fields
+#' 
+#' @param replicate_query_on_info_array when joining info array, replicate query carried
+#'                                      out on primary array
+#'                                      e.g. `filter(gh_secure.BIOSAMPLE, dataset_id=32)`
+#'                                      replicates to `filter(gh_secure.BIOSAMPLE_INFO, dataset_id=32)`.
+#'                                      Turned off by default
+join_info = function(qq, arrayname, 
+                     mandatory_fields_only = FALSE, 
+                     replicate_query_on_info_array = FALSE,
+                     con = NULL) {
   con = use_ghEnv_if_null(con)
-  entitynm = strip_namespace(arrayname)
-  if (is_entity_secured(entitynm)) {
-    info_array = paste0(custom_scan(), "(", full_arrayname(entitynm), "_INFO)")
-  } else {
-    info_array = paste0(                    full_arrayname(entitynm), "_INFO" )
-  }
-  qq1 = qq
-  idname = get_idname(arrayname)
   # Join INFO array
   if (!mandatory_fields_only) {
+    entitynm = strip_namespace(arrayname)
+    if (is_entity_secured(entitynm)) {
+      info_array = paste0(custom_scan(), "(", full_arrayname(entitynm), "_INFO)")
+    } else {
+      info_array = paste0(                    full_arrayname(entitynm), "_INFO" )
+    }
+    qq1 = qq
+    idname = get_idname(arrayname)
+
     if (exists('debug_trace')) {t1 = proc.time()}
     if (FALSE){ # TODO: See why search_individuals(dataset_id = 1) is so slow; the two options here did not make a difference
       stop("have not tested secure_scan code-path yet")
@@ -1480,7 +1490,14 @@ join_info = function(qq, arrayname, mandatory_fields_only = FALSE, con = NULL) {
       stop("have not tested secure_scan code-path yet")
       qq1 = paste("cross_join(", info_array, " as A, ", qq1, " as B, A.", idname, ", B.", idname, ")", sep = "")
     } else {
-      qq1 = paste0("equi_join(", qq1, ", ", info_array, 
+      if (replicate_query_on_info_array) {
+        info_array_query = gsub(pattern = entitynm,
+                                replacement = paste0(entitynm, "_INFO" ),
+                                x = qq1)
+      } else {
+        info_array_query = info_array
+      }
+      qq1 = paste0("equi_join(", qq1, ", ", info_array_query, 
                   ", 'left_names=", paste(idname, collapse = ","), 
                   "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')")
     }
@@ -1491,8 +1508,17 @@ join_info = function(qq, arrayname, mandatory_fields_only = FALSE, con = NULL) {
   x2
 }
 
-join_info_ontology_and_unpivot = function(qq, arrayname, mandatory_fields_only = FALSE, con = NULL) {
-  df1 = join_info(qq, arrayname, mandatory_fields_only, con)
+#' Join flex fields, unpivot and convert ontology fields
+#' 
+#' @param replicate_query_on_info_array see description at [join_info()]
+join_info_ontology_and_unpivot = function(qq, arrayname, 
+                                          mandatory_fields_only = FALSE, 
+                                          replicate_query_on_info_array = FALSE,
+                                          con = NULL) {
+  df1 = join_info(qq = qq, arrayname = arrayname, 
+                  mandatory_fields_only = mandatory_fields_only, 
+                  replicate_query_on_info_array = replicate_query_on_info_array,
+                  con = con)
   df2 = unpivot(df1, arrayname = arrayname)
   join_ontology_terms(df = df2, con = con)
 }
