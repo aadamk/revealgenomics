@@ -128,7 +128,7 @@ calculate_statistics_across_measurementsets = function(df_measurementset, con = 
   
   L1 = lapply(unique(zz$entity),
               function(entitynm) {
-                counts = iquery(db, paste0("aggregate(filter(", full_arrayname(entitynm), ", ", 
+                counts = iquery(db, paste0("aggregate(filter(", custom_scan(), "(", full_arrayname(entitynm), "), ", 
                                            formulate_base_selection_query(fullarrayname = .ghEnv$meta$arrMeasurementSet,
                                                                                      id = idx), "),
                                            count(*), measurementset_id)"), return = TRUE)
