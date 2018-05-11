@@ -39,7 +39,7 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
     # https://github.com/Paradigm4/SciDBR/issues/154#issuecomment-327989402
     if (is.null(password)) {
       if (rstudioapi::isAvailable()) { # In RStudio, 
-        password = rstudioapi::askForPassword("Password")
+        password = rstudioapi::askForPassword(paste0("Password for ", username, ":"))
       } else { # in base R
         password = getpwd()
       } # Rscripts and knitr not yet supported
