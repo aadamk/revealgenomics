@@ -191,8 +191,15 @@ search_rnaquantification_scidb = function(arrayname,
 
 
 
+#' search variants
+#' 
+#' Search variants by pipeline, sample and/or  feature
+#' 
+#' @param measurementset pipeline dataframe (mandatory)
+#' 
 #' @export
-search_variants = function(measurementset, biosample = NULL, feature = NULL, con = NULL){
+search_variants = function(measurementset, biosample = NULL, feature = NULL, 
+                           con = NULL){
   if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
     stop("measurementset must be supplied"); measurementset_id = NULL
   }
