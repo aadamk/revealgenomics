@@ -225,8 +225,12 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
   res
 }
 
-
-search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, dataset_version, con = NULL){
+#' Inner function for searching variants
+#' 
+#' @param use_cross_join use `cross_join` if TRUE, else use `equi_join`
+search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
+                                 use_cross_join = FALSE, 
+                                 con = NULL){
   con = use_ghEnv_if_null(con)
   
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
@@ -235,24 +239,24 @@ search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NU
   if (is.null(measurementset_id)) stop("measurementset_id must be supplied")
   if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
   
-  left_query = paste0("filter(", custom_scan(), "(", arrayname, 
+  var_nonflex_q = paste0("filter(", custom_scan(), "(", arrayname, 
                              "), dataset_version=", dataset_version, 
                              " AND measurementset_id=", measurementset_id, ")")
-  right_query = paste0("filter(", custom_scan(), "(", arrayname, 
+  var_flex_q = paste0("filter(", custom_scan(), "(", arrayname, 
                       "_INFO), dataset_version=", dataset_version, 
                               " AND measurementset_id=", measurementset_id, ")")
   
   if (!is.null(biosample_id)){
     if (length(biosample_id) == 1) {
-      left_query = paste0("filter(", left_query,
+      var_nonflex_q = paste0("filter(", var_nonflex_q,
                          ", biosample_id=", biosample_id, ")")
-      right_query = paste0("filter(", right_query,
+      var_flex_q = paste0("filter(", var_flex_q,
                           ", biosample_id=", biosample_id, ")")
     } else {
-      left_query = paste0("filter(", left_query, 
+      var_nonflex_q = paste0("filter(", var_nonflex_q, 
                          ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
                                                               id = biosample_id), ")")
-      right_query = paste0("filter(", right_query, 
+      var_flex_q = paste0("filter(", var_flex_q, 
                           ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
                                                                id = biosample_id), ")")
     }
@@ -260,31 +264,41 @@ search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NU
   
   if (!is.null(feature_id)){
     if (length(feature_id) == 1) {
-      left_query = paste0("filter(", left_query,
+      var_nonflex_q = paste0("filter(", var_nonflex_q,
                          ", feature_id=", feature_id, ")")
-      right_query = paste0("filter(", right_query,
+      var_flex_q = paste0("filter(", var_flex_q,
                           ", feature_id=", feature_id, ")")
     } else {
-      left_query = paste0("filter(", left_query, 
+      var_nonflex_q = paste0("filter(", var_nonflex_q, 
                          ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
                                                               id = feature_id), ")")
-      right_query = paste0("filter(", right_query, 
+      var_flex_q = paste0("filter(", var_flex_q, 
                           ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
                                                                id = feature_id), ")")
     }
   }
   
-  xx = join_info_ontology_and_unpivot(qq = left_query, arrayname = strip_namespace(arrayname), 
-                                      con = con)
-  xx
+  if (use_cross_join) {
+    query = paste0("cross_join(", var_flex_q, " as X,",
+                   var_nonflex_q, "as Y, ",
+                   "X.biosample_id, Y.biosample_id, ",
+                   "X.feature_id,   Y.feature_id, ", 
+                   "X.per_gene_variant_number, Y.per_gene_variant_number)")
+    var_raw = iquery(con$db, query = query, return = TRUE)
+    res = unpivot(df1 = var_raw, arrayname = .ghEnv$meta$arrVariant)
+  } else {
+    res = join_info_ontology_and_unpivot(qq = var_nonflex_q, 
+                                         arrayname = strip_namespace(arrayname), 
+                                         replicate_query_on_info_array = TRUE, 
+                                         con = con)
+  }
+  res
 }
 
 
 
 #' Search Fusion data
 #' 
-#' @param inferSchemaOnQuery optimization flag (default: TRUE. if FALSE, uses schema hand-baked in internal code. 
-#'                           Use with caution until schema is automatically inferred from YAML file)
 #' @export
 search_fusion = function(measurementset, biosample = NULL, feature = NULL, 
                          dataset_lookup_ref = NULL,
