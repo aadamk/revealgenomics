@@ -7,10 +7,6 @@
 search_fusion(measurementset, biosample = NULL, feature = NULL,
   dataset_lookup_ref = NULL, con = NULL)
 }
-\arguments{
-\item{inferSchemaOnQuery}{optimization flag (default: TRUE. if FALSE, uses schema hand-baked in internal code. 
-Use with caution until schema is automatically inferred from YAML file)}
-}
 \description{
 Search Fusion data
 }

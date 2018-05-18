@@ -8,7 +8,11 @@ dao_search_rnaquantification(measurementset, biosample_ref, feature = NULL,
   con)
 }
 \arguments{
-\item{biosample_ref}{Reference dataframe containing all biosamples available to the user (retrieved by `dao_get_biosample(con = con)`)}
+\item{biosample_ref}{Reference dataframe containing at least the biosample data for 
+current study (e.g. by calling 
+`search_biosamples(dataset_id = measurementset$dataset_id)`). 
+OK if more biosample rows are provided (e.g. by calling
+`get_biosamples()`)}
 }
 \description{
 Faster implementation of `search_rnaquantification` for UI development

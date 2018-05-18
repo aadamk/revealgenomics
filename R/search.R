@@ -188,6 +188,106 @@ search_rnaquantification_scidb = function(arrayname,
 }
 
 
+#' Faster implementation of `search_rnaquantification` for UI development
+#' 
+#' Here, there is no option to select by specific biosamples
+#' 
+#' @param biosample_ref Reference dataframe containing at least the biosample data for 
+#'                      current study (e.g. by calling 
+#'                      `search_biosamples(dataset_id = measurementset$dataset_id)`). 
+#'                      OK if more biosample rows are provided (e.g. by calling
+#'                      `get_biosamples()`)
+#' 
+#' @export
+dao_search_rnaquantification = function(measurementset, 
+                                        biosample_ref, 
+                                        feature = NULL, 
+                                        con) {
+  stopifnot(nrow(measurementset) == 1)
+  rqs_id = unique(measurementset$measurementset_id)
+  stopifnot(length(rqs_id)==1)
+  
+  dataset_version = unique(measurementset$dataset_version)
+  stopifnot(length(dataset_version) == 1)
+  
+  dataset_id = unique(measurementset$dataset_id)
+  stopifnot(length(dataset_id) == 1)
+  
+  if (! (measurementset$featureset_id %in% feature$featureset_id) ) {
+    stop(paste0("Featureset specified py pipeline: ", measurementset$featureset_id, 
+                " not present in features dataframe"))
+  }
+  feature = feature[feature$featureset_id == measurementset$featureset_id, ]
+  ftr_id = sort(unique(feature$feature_id))
+  
+  arr0 = full_arrayname(.ghEnv$meta$arrRnaquantification)
+  
+  qq = paste0(custom_scan(), "(", arr0, ")")
+  
+  if (!is.null(feature)) {
+    K_THRESH = 20
+    if (length(ftr_id) <= K_THRESH) {
+      path = "filter_features"
+    } else {
+      path = "build_literal_and_cross_join_features"
+    }
+    if (path == 'filter_features') {
+      expr = formulate_base_selection_query(fullarrayname = .ghEnv$meta$arrFeature,
+                                            id = ftr_id)
+      qq2 = paste0("filter(", qq, ", ", expr, ")")
+    } else if (path == "build_literal_and_cross_join_features") {
+      expr = paste0(ftr_id, collapse = ",")
+      qq2a = paste0("build(<feature_id:int64>[i=1:", length(ftr_id), "], '[",
+                    expr, "]', true)")
+      qq2b = paste0("redimension(
+                    apply(", qq2a, ", 
+                    flag, int32(1)), <flag:int32>[feature_id])")
+      qq2c = paste0("cross_join(", qq, " as X,",
+                    qq2b, " as Y, X.feature_id, Y.feature_id)")
+      qq2 = paste0("project(", qq2c, ",", 
+                   paste0(names(.ghEnv$meta$L$array$RNAQUANTIFICATION$attributes), collapse = ","),
+                   ")")
+      
+    }
+    qq2 = paste0("filter(", qq2, ", measurementset_id = ", rqs_id, ")")
+    res = iquery(con$db, query = qq2, binary = FALSE, return = TRUE)
+  } else { # user has not supplied features; try to download full data
+    cat("Estimating download size: ")
+    download_size = iquery(con$db, 
+                           query = paste0("project(summarize(_materialize(", qq, ", 1)), bytes)"), 
+                           return = TRUE)$bytes
+    cat(download_size/1024/1024, " MB\n")
+    download_limit_mb = 500
+    if (download_size > download_limit_mb * 1024 * 1024) {
+      cat("Trying to download more than", download_limit_mb, "MB at a time! 
+          Post an issue at https://github.com/Paradigm4/scidb4gh/issues\n")
+      return(NULL)
+    }
+    res = iquery(con$db, query = qq, binary = TRUE, return = TRUE)
+  }
+  
+  
+  # Retrieved biosamples
+  biosample_id = unique(res$biosample_id)
+  biosample = biosample_ref[biosample_ref$biosample_id %in% biosample_id, ]
+  
+  # Retrieved features
+  feature_id = unique(res$feature_id)
+  if (!is.null(feature)) {
+    feature_sel = feature[feature$feature_id %in% feature_id, ]
+  } else { # user has not supplied features; need to download features from DB
+    cat("Downloading features to form ExpressionSet\n")
+    feature_sel = get_features(feature_id = feature_id, fromCache = FALSE,
+                               con = con)
+  }
+  expressionSet = formulate_list_expression_set(expr_df = res, 
+                                                dataset_version = dataset_version, 
+                                                measurementset = measurementset,
+                                                biosample = biosample,
+                                                feature = feature_sel)
+  
+  return(expressionSet)
+}
 
 
 
@@ -213,7 +313,17 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
   }
   arrayname = full_arrayname(.ghEnv$meta$arrVariant)
   if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
-  if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
+  if (!is.null(feature)) {
+    if (! (measurementset$featureset_id %in% feature$featureset_id) ) {
+      stop(paste0("Featureset specified py pipeline: ", measurementset$featureset_id, 
+                  " not present in features dataframe"))
+    }
+    feature = feature[feature$featureset_id == measurementset$featureset_id, ]
+    
+    feature_id = sort(unique(feature$feature_id))
+  } else {
+    feature_id = NULL
+  }
   
   if (exists('debug_trace')) cat("retrieving expression data from server\n")
   res = search_variants_scidb(arrayname,
