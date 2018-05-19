@@ -299,6 +299,7 @@ dao_search_rnaquantification = function(measurementset,
 #' 
 #' @export
 search_variants = function(measurementset, biosample = NULL, feature = NULL, 
+                           autoconvert_characters = TRUE,
                            con = NULL){
   if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
     stop("measurementset must be supplied"); measurementset_id = NULL
@@ -332,6 +333,10 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
                               feature_id,
                               dataset_version = dataset_version, 
                               con = con)
+  
+  if (autoconvert_characters) {
+    res = autoconvert_char(df1 = res)
+  }
   res
 }
 
