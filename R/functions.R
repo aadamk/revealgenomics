@@ -1708,8 +1708,28 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   
   #############################################
   ## Step 1 # Convert data frame to matrix
-  stopifnot(nrow(expr_df) == length(biosample_df$biosample_id) * length(feature_df$feature_id))
+  # stopifnot(nrow(expr_df) == length(biosample_df$biosample_id) * length(feature_df$feature_id))
   exprs = acast(expr_df, feature_id~biosample_id, value.var="value")
+  
+  ##! Start fix code - Do the checking on the casted data frame instead!
+  stopifnot( nrow(exprs) == nrow(feature_df) )
+  stopifnot( ncol(exprs) == nrow(biosample_df) )
+  
+  ## And let's at least provide a message to the console if we encounter this in any other study, since this is relevant for debugging! (-:
+  
+  NAs.found <- apply( exprs, 1, function(x) { sum(is.na(x)) })
+  if(sum(NAs.found)>0) {
+    NAs.found <- NAs.found[NAs.found != 0]
+    NAs.name <- feature_df %>% 
+      dplyr::filter(feature_id %in% names(NAs.found)) %>%
+      dplyr::mutate(feature_id = factor(.data$feature_id, levels = names(NAs.found))) %>%
+      dplyr::arrange(feature_id) %>%
+      dplyr::pull(name) %>%
+      as.character(.)
+    message(
+      paste0("[convertToExpressionSet] ", NAs.found, "x empty entries found for feature_id ", names(NAs.found), " (", NAs.name, ")", sep="\n")
+    )
+  }
   
   # Convert column name to biosample id name
   selected_bios = as.integer(colnames(exprs))
