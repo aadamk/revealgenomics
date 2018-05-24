@@ -1514,13 +1514,25 @@ join_info = function(qq, arrayname,
 join_info_ontology_and_unpivot = function(qq, arrayname, 
                                           mandatory_fields_only = FALSE, 
                                           replicate_query_on_info_array = FALSE,
+                                          profile_timing = FALSE,
                                           con = NULL) {
+  if (profile_timing) {cat(paste0("Array: ", arrayname, "\n"))}
+  t1 = proc.time()
   df1 = join_info(qq = qq, arrayname = arrayname, 
                   mandatory_fields_only = mandatory_fields_only, 
                   replicate_query_on_info_array = replicate_query_on_info_array,
                   con = con)
+  if (profile_timing) {cat(paste0("join_info time: ", (proc.time()-t1)[3], "\n"))}
+  
+  t1 = proc.time()
   df2 = unpivot(df1, arrayname = arrayname)
-  join_ontology_terms(df = df2, con = con)
+  if (profile_timing) {cat(paste0("unpivot time: ", (proc.time()-t1)[3], "\n"))}
+
+  t1 = proc.time()
+  res = join_ontology_terms(df = df2, con = con)
+  if (profile_timing) {cat(paste0("join_ontology_terms time: ", (proc.time()-t1)[3], "\n"))}
+  
+  res
 }
 
 unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){

@@ -327,16 +327,20 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
   }
   
   if (exists('debug_trace')) cat("retrieving expression data from server\n")
+  t1 = proc.time()
   res = search_variants_scidb(arrayname,
                               measurementset_id,
                               biosample_id,
                               feature_id,
                               dataset_version = dataset_version, 
                               con = con)
+  cat(paste0("search_variants_scidb time: ", (proc.time()-t1)[3], "\n"))
   
+  t1 = proc.time()
   if (autoconvert_characters) {
     res = autoconvert_char(df1 = res)
   }
+  cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
   res
 }
 
@@ -405,6 +409,7 @@ search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NU
     res = join_info_ontology_and_unpivot(qq = var_nonflex_q, 
                                          arrayname = strip_namespace(arrayname), 
                                          replicate_query_on_info_array = TRUE, 
+                                         profile_timing = TRUE,
                                          con = con)
   }
   res
