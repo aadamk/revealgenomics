@@ -5,7 +5,8 @@
 \title{Join flex fields, unpivot and convert ontology fields}
 \usage{
 join_info_ontology_and_unpivot(qq, arrayname, mandatory_fields_only = FALSE,
-  replicate_query_on_info_array = FALSE, con = NULL)
+  replicate_query_on_info_array = FALSE, profile_timing = FALSE,
+  con = NULL)
 }
 \arguments{
 \item{replicate_query_on_info_array}{see description at [join_info()]}

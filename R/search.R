@@ -300,6 +300,7 @@ dao_search_rnaquantification = function(measurementset,
 #' @export
 search_variants = function(measurementset, biosample = NULL, feature = NULL, 
                            autoconvert_characters = TRUE,
+                           variants_in_one_array = TRUE,
                            con = NULL){
   if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
     stop("measurementset must be supplied"); measurementset_id = NULL
@@ -333,6 +334,7 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
                               biosample_id,
                               feature_id,
                               dataset_version = dataset_version, 
+                              variants_in_one_array = variants_in_one_array,
                               con = con)
   cat(paste0("search_variants_scidb time: ", (proc.time()-t1)[3], "\n"))
   
@@ -347,8 +349,10 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
 #' Inner function for searching variants
 #' 
 #' @param use_cross_join use `cross_join` if TRUE, else use `equi_join`
-search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
+search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, 
+                                 dataset_version, 
                                  use_cross_join = FALSE, 
+                                 variants_in_one_array, 
                                  con = NULL){
   con = use_ghEnv_if_null(con)
   
@@ -358,60 +362,97 @@ search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NU
   if (is.null(measurementset_id)) stop("measurementset_id must be supplied")
   if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
   
-  var_nonflex_q = paste0("filter(", custom_scan(), "(", arrayname, 
-                             "), dataset_version=", dataset_version, 
-                             " AND measurementset_id=", measurementset_id, ")")
-  var_flex_q = paste0("filter(", custom_scan(), "(", arrayname, 
-                      "_INFO), dataset_version=", dataset_version, 
-                              " AND measurementset_id=", measurementset_id, ")")
-  
-  if (!is.null(biosample_id)){
-    if (length(biosample_id) == 1) {
-      var_nonflex_q = paste0("filter(", var_nonflex_q,
-                         ", biosample_id=", biosample_id, ")")
-      var_flex_q = paste0("filter(", var_flex_q,
-                          ", biosample_id=", biosample_id, ")")
-    } else {
-      var_nonflex_q = paste0("filter(", var_nonflex_q, 
-                         ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
-                                                              id = biosample_id), ")")
-      var_flex_q = paste0("filter(", var_flex_q, 
-                          ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
-                                                               id = biosample_id), ")")
+  if (!variants_in_one_array) { # Data exists in two arrays: VARIANT and VARIANT_INFO
+    var_nonflex_q = paste0("filter(", custom_scan(), "(", arrayname, 
+                           "), dataset_version=", dataset_version, 
+                           " AND measurementset_id=", measurementset_id, ")")
+    var_flex_q = paste0("filter(", custom_scan(), "(", arrayname, 
+                        "_INFO), dataset_version=", dataset_version, 
+                        " AND measurementset_id=", measurementset_id, ")")
+    
+    if (!is.null(biosample_id)){
+      if (length(biosample_id) == 1) {
+        var_nonflex_q = paste0("filter(", var_nonflex_q,
+                               ", biosample_id=", biosample_id, ")")
+        var_flex_q = paste0("filter(", var_flex_q,
+                            ", biosample_id=", biosample_id, ")")
+      } else {
+        var_nonflex_q = paste0("filter(", var_nonflex_q, 
+                               ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
+                                                                    id = biosample_id), ")")
+        var_flex_q = paste0("filter(", var_flex_q, 
+                            ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
+                                                                 id = biosample_id), ")")
+      }
     }
-  }
-  
-  if (!is.null(feature_id)){
-    if (length(feature_id) == 1) {
-      var_nonflex_q = paste0("filter(", var_nonflex_q,
-                         ", feature_id=", feature_id, ")")
-      var_flex_q = paste0("filter(", var_flex_q,
-                          ", feature_id=", feature_id, ")")
-    } else {
-      var_nonflex_q = paste0("filter(", var_nonflex_q, 
-                         ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
-                                                              id = feature_id), ")")
-      var_flex_q = paste0("filter(", var_flex_q, 
-                          ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
-                                                               id = feature_id), ")")
+    
+    if (!is.null(feature_id)){
+      if (length(feature_id) == 1) {
+        var_nonflex_q = paste0("filter(", var_nonflex_q,
+                               ", feature_id=", feature_id, ")")
+        var_flex_q = paste0("filter(", var_flex_q,
+                            ", feature_id=", feature_id, ")")
+      } else {
+        var_nonflex_q = paste0("filter(", var_nonflex_q, 
+                               ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
+                                                                    id = feature_id), ")")
+        var_flex_q = paste0("filter(", var_flex_q, 
+                            ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
+                                                                 id = feature_id), ")")
+      }
     }
+    if (use_cross_join) {
+      query = paste0("cross_join(", var_flex_q, " as X,",
+                     var_nonflex_q, "as Y, ",
+                     "X.biosample_id, Y.biosample_id, ",
+                     "X.feature_id,   Y.feature_id, ", 
+                     "X.per_gene_variant_number, Y.per_gene_variant_number)")
+      var_raw = iquery(con$db, query = query, return = TRUE)
+      res = unpivot(df1 = var_raw, arrayname = .ghEnv$meta$arrVariant)
+    } else {
+      res = join_info_ontology_and_unpivot(qq = var_nonflex_q, 
+                                           arrayname = strip_namespace(arrayname), 
+                                           replicate_query_on_info_array = TRUE, 
+                                           profile_timing = TRUE,
+                                           con = con)
+    }
+  } else { # VARIANT and VARIANT_INFO in one array
+    if (!is.null(biosample_id)) stop("Code path not implemented: 
+                                     Selection of biosample id from Variants in one array")
+    if (use_cross_join) stop("`use_cross_join` not supposed to be TRUE 
+                             when `variants_in_one_array` is TRUE")
+    
+    if (is.null(feature_id)) stop("Expect feature_id to be non-null")
+    
+    leftq = paste0("apply(build(<feature_id:int64>[i=0:*], '[", 
+                    paste0(sort(feature_id), collapse = ","), 
+                    "]', true), measurementset_id, ", measurementset_id, 
+                   ", dataset_version, ", dataset_version, ")")
+    
+    query = paste0("equi_join(", 
+                      custom_scan(), "(gh_secure.VARIANT_v3),",
+                      leftq, ", 'left_names=feature_id,dataset_version,measurementset_id', 
+                     'right_names=feature_id,dataset_version,measurementset_id', 
+                     'algorithm=hash_replicate_right', 'keep_dimensions=1')")
+    t1 = proc.time()
+    var_raw = iquery(con$db, query, return = T, only_attributes = T)
+    cat("Selection from VARIANT_v3:", (proc.time()-t1)[3], "\n")
+    
+    t1 = proc.time()
+    res = tidyr::spread(data = var_raw, key = "key_id", value = "val")
+    cat("Unpivot from VARIANT_v3:", (proc.time()-t1)[3], "\n")
+    
+    t1 = proc.time()
+    VAR_KEY = get_variant_key(con = con)
+    M = find_matches_and_return_indices(colnames(res), VAR_KEY$key_id)
+    
+    matched_colnames = c(colnames(res)[M$source_unmatched_idx], 
+                         VAR_KEY[M$target_matched_idx, ]$key)
+    stopifnot(all(!is.na(matched_colnames)))
+    colnames(res) = matched_colnames
+    cat("Replacing variant keys:", (proc.time()-t1)[3], "\n")
   }
   
-  if (use_cross_join) {
-    query = paste0("cross_join(", var_flex_q, " as X,",
-                   var_nonflex_q, "as Y, ",
-                   "X.biosample_id, Y.biosample_id, ",
-                   "X.feature_id,   Y.feature_id, ", 
-                   "X.per_gene_variant_number, Y.per_gene_variant_number)")
-    var_raw = iquery(con$db, query = query, return = TRUE)
-    res = unpivot(df1 = var_raw, arrayname = .ghEnv$meta$arrVariant)
-  } else {
-    res = join_info_ontology_and_unpivot(qq = var_nonflex_q, 
-                                         arrayname = strip_namespace(arrayname), 
-                                         replicate_query_on_info_array = TRUE, 
-                                         profile_timing = TRUE,
-                                         con = con)
-  }
   res
 }
 
