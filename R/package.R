@@ -39,6 +39,7 @@ NULL
 .ghEnv$meta$arrGenelist = 'GENELIST'
 .ghEnv$meta$arrGenelist_gene = 'GENELIST_GENE'
 .ghEnv$meta$arrVariant = 'VARIANT'
+.ghEnv$meta$arrVariantKey = 'VARIANT_KEY'
 .ghEnv$meta$arrFusion = 'FUSION'
 .ghEnv$meta$arrCopynumber_seg = 'COPYNUMBER_SEG'
 .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
@@ -47,8 +48,8 @@ NULL
 .ghEnv$meta$arrMeasurementSet = 'MEASUREMENTSET'
 
 # Prepare variables for the cache
-.ghEnv$cache$ontology_ref = NULL
 .ghEnv$cache$lookup = list()
 .ghEnv$cache$feature_ref = NULL
 .ghEnv$cache$dfFeatureSynonym = NULL
 .ghEnv$cache$biosample_ref = NULL
+.ghEnv$cache$dfVariantKey = NULL

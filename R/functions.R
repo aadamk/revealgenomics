@@ -216,6 +216,11 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
   }
 }
 
+#' @export
+get_variant_key = function(updateCache = FALSE, con = NULL){
+  get_variant_key_from_cache(updateCache, con = con)
+}
+
 find_namespace = function(entitynm) {
   # Use secure_scan for SciDB enterprise edition only
   ifelse(options("scidb4gh.use_scidb_ee"), 

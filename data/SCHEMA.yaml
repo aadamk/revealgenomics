@@ -283,6 +283,24 @@ array:
     delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
+  # VARIANT_KEY
+  VARIANT_KEY:
+    data_class:
+      metadata
+    namespace:
+      - gh_public
+    attributes:
+      key: string
+    dims:
+      key_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    search_by_entity: VARIANT_KEY
+    delete_by_entity: VARIANT_KEY
+    infoArray: FALSE
+    compression_on: FALSE
   # VARIANT
   VARIANT:
     data_class:
