@@ -51,6 +51,8 @@ init_db = function(arrays_to_init, force = FALSE, con = NULL){
     if (identical(arrays_to_init, get_entity_names())) {
       cat("You asked to initialize all arrays. Should I initialize the permissions array too?\n")
       resp_perm <- readline("(Y)es/(N)o: ")
+    } else { # do not reinitialize permissions array if only working on one or two arrays
+      resp_perm = "n"
     }
   } else {
     # In CE mode, do not need a permissions array
@@ -125,7 +127,7 @@ init_db = function(arrays_to_init, force = FALSE, con = NULL){
     cat("Proceeding with initialization of permissions array\n")
     init_permissions_array(con = con)
   } else{
-    cat("Canceled initialization of permissions array\n")
+    cat("Not initalizing permissions array\n")
   }
 }
 
