@@ -291,6 +291,8 @@ array:
       - gh_public
     attributes:
       key: string
+    unique_fields:
+      - key
     dims:
       key_id:
         start: 0
