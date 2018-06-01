@@ -145,7 +145,7 @@ init_permissions_array = function(con = NULL) {
   
   cat("Create permissions array\n")
   tryCatch({
-    iquery(db, paste0("create array ", PERMISSIONS_ARRAY(), "dataset_id<access:bool> [user_id=0:*:0:1; dataset_id=0:*:0:256]"))
+    iquery(db, paste0("create array ", PERMISSIONS_ARRAY(), " <access:bool> [user_id=0:*:0:1; dataset_id=0:*:0:256]"))
   }, 
   error = function(e) {
     cat("====Failed to create permissions array\n")
