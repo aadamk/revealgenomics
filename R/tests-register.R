@@ -131,12 +131,11 @@ test_register_individual = function(df, uniq, silent = TRUE){
   #                                                df, uniq, silent)
 }
 
-test_register_biosample = function(df, uniq, silent = TRUE){
-  # Add additional tests here -->
-  
-  # Test below was moved as a common test in register_versioned_secure_metadata_entity()
-  # test_register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
-  #                                                df, uniq, silent)
+test_register_biosample = function(df, silent = TRUE){
+  if ('sample_name' %in% colnames(df)) {
+    stop("Cannot use reserved column name: `sample_name`! 
+         Use `name` or other column-name instead.")
+  }
 }
 
 test_register_experimentset = function(df, silent = TRUE){

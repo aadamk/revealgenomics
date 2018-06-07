@@ -549,6 +549,9 @@ register_biosample = function(df,
                               dataset_version = NULL,
                               only_test = FALSE,
                               con = NULL){
+  # Extra tests for Biosample
+  test_register_biosample(df, silent = ifelse(only_test, FALSE, TRUE))
+  
   register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
                                             df, dataset_version, only_test, con = con)
 }
@@ -1751,7 +1754,21 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   # Convert column name to biosample id name
   selected_bios = as.integer(colnames(exprs))
   pos = match(selected_bios, biosample_df$biosample_id)
-  colnames(exprs) = biosample_df[pos, "name"]
+  
+  selected_bios = as.integer(colnames(exprs))
+  pos = match(selected_bios, biosample_df$biosample_id)
+  
+  # In case phenotype data is a dataframe with merged INDIVIDUAL and BIOSAMPLE info
+  # it is likely that `sample_name` column was used for disambiguating INDIVIDUAL.name
+  # and BIOSAMPLE.name. Use that when available
+  nameCol<- c("sample_name", "name")
+  nameCol <- nameCol[ nameCol %in% colnames(biosample_df) ]
+  if(length(nameCol) == 2) { 
+    nameCol <- "sample_name" 
+  }
+  stopifnot(length(nameCol) == 1)
+  
+  colnames(exprs) = biosample_df[pos, nameCol]
   
   # Convert row names to feature name
   sel_fx = as.integer(rownames(exprs))
@@ -1768,7 +1785,7 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   
   # Run a check first
   # all(pData$biosample_id==colnames(exprs))
-  rownames(pData) = pData$name
+  rownames(pData) = pData[, nameCol]
   
   metadata = data.frame(labelDescription=colnames(pData), row.names = colnames(pData))
   phenoData <- new("AnnotatedDataFrame",
