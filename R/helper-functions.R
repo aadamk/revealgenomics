@@ -19,10 +19,14 @@
 #' Auto-promote characters to types
 #' 
 #' Custom function
-#' - should not autopromote non-character columns
+#' - should not autopromote non-character columns for VARIANT data
 #' - for columns that are interpreted as logical, should use strict checking for TRUE/True, or FALSE/False
 #' ('T' is a valid character in genomic data)
-autoconvert_char = function(df1) {
+#' 
+#' @param convert_logicals if TRUE, accept automatically converted logicals (see note above)
+autoconvert_char = function(df1, convert_logicals = TRUE) {
+  if (nrow(df1) == 0) return(df1)
+  
   col_types = sapply(df1, class)
   col_types_chars    = names(col_types[which(col_types == 'character')])
   col_types_nonchars = names(col_types[which(col_types != 'character')])
@@ -37,9 +41,15 @@ autoconvert_char = function(df1) {
   col_types_ac = sapply(df_ac, class)
   col_types_ac_logicals    = names(col_types_ac[which(col_types_ac == 'logical')])
   col_types_ac_nonlogicals = names(col_types_ac[which(col_types_ac != 'logical')])
-  df_ac = cbind(df1[, col_types_nonchars], 
-                df1[, col_types_ac_logicals],
-                df_ac[, col_types_ac_nonlogicals])
+  if (convert_logicals) {
+    df_ac = cbind(as_tibble(df1)[, col_types_nonchars], 
+                  df_ac)
+    
+  } else {
+    df_ac = cbind(as_tibble(df1)[, col_types_nonchars], 
+                  as_tibble(df1)[, col_types_ac_logicals],
+                  as_tibble(df1)[, col_types_ac_nonlogicals])
+  }
   df_ac[, colnames(df1)]
 }
 
