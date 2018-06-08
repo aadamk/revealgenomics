@@ -19,7 +19,9 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
   if (is.null(username) & protocol != 'http') {
     cat("using HTTP protocol\n")
     protocol = 'http'
-    options(scidb4gh.use_scidb_ee = FALSE)
+    unset_scidb_ee_flag = TRUE
+  } else {
+    unset_scidb_ee_flag = FALSE
   }
   
   if (!is.null(username) & protocol == 'http') {
@@ -92,8 +94,10 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
       con$db = NULL
     }
   }
-  
-  
+
+  if (unset_scidb_ee_flag) {
+    if (!is.null(con$db)) options(scidb4gh.use_scidb_ee = FALSE)
+  }  
   # Store a copy of connection object in .ghEnv
   # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
   .ghEnv$db = con$db

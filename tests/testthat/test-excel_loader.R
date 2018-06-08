@@ -21,9 +21,16 @@ test_that("Check that upload fails if user does not use data.frame", {
 })
 
 test_that("Check that upload works for `Definitions` sheet of Excel template ", {
-  if (!options('scidb4gh.use_scidb_ee')[[1]]) { # do not run this on EE installs, mainly targeted for Travis
-    # cat("# Now connect to scidb\n")
-    gh_connect()
+  # cat("# Now connect to scidb\n")
+  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
+    scidb_tmpl_path = system.file("extdata",
+                                  "scidb_metadata_template.xlsx", 
+                                  package="scidb4gh")
+    dfDefn = readxl::read_excel(scidb_tmpl_path, sheet = 'Definitions', trim_ws = TRUE)
+    dfDefn$dataset_id = 9999
+    dfDefn$Notes = '...'
+
     # cat("# Register definitions\n")
     def_id = register_definitions(df = as.data.frame(dfDefn))
     expect_true(nrow(def_id) == nrow(dfDefn))
