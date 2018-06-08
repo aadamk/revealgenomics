@@ -29,6 +29,7 @@ NULL
 .ghEnv$meta$arrDataset = 'DATASET'
 .ghEnv$meta$arrIndividuals = 'INDIVIDUAL'
 .ghEnv$meta$arrOntology = 'ONTOLOGY'
+.ghEnv$meta$arrDefinition = 'DEFINITION'
 .ghEnv$meta$arrBiosample = 'BIOSAMPLE'
 .ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
 .ghEnv$meta$arrFeature = 'FEATURE'

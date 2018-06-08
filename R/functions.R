@@ -221,6 +221,11 @@ get_variant_key = function(updateCache = FALSE, con = NULL){
   get_variant_key_from_cache(updateCache, con = con)
 }
 
+#' @export
+get_definition = function(updateCache = FALSE, con = NULL){
+  get_definition_from_cache(updateCache, con = con)
+}
+
 find_namespace = function(entitynm) {
   # Use secure_scan for SciDB enterprise edition only
   ifelse(options("scidb4gh.use_scidb_ee"), 
@@ -361,6 +366,27 @@ register_ontology_term = function(df, only_test = FALSE, con = NULL){
     
     # force update the ontology
     update_ontology_cache(con = con)
+    
+    return(ids)
+  } # end of if (!only_test)
+}
+
+#' @export
+register_definitions = function(df, only_test = FALSE, con = NULL){
+  uniq = unique_fields()[[.ghEnv$meta$arrDefinition]]
+  test_register_definition(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  
+  # Manual correction as units are empty in template
+  if (class(df[, 'units']) == 'logical') {
+    df[, 'units'] = as.character(df[, 'units'])
+  }
+    
+  if (!only_test) {
+    arrayname = full_arrayname(.ghEnv$meta$arrDefinition)
+    ids = register_tuple_return_id(df, arrayname, uniq, con = con)
+    
+    # force update the cache
+    update_definition_cache(con = con)
     
     return(ids)
   } # end of if (!only_test)

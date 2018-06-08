@@ -181,6 +181,10 @@ test_register_ontology = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrOntology, df, uniq, silent)
 }
 
+test_register_definition = function(df, uniq, silent = TRUE){
+  run_tests_dataframe(entity = .ghEnv$meta$arrDefinition, df, uniq, silent)
+}
+
 test_register_featureset = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrFeatureset, df, uniq, silent)
 }
