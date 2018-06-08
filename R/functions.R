@@ -843,11 +843,11 @@ count_unique_calls = function(variants){
   nrow(v[duplicated(v[, c('biosample_id', 'CHROM', 'POS')]), ])
 }
 
-join_ontology_terms = function(df, con = NULL){
+join_ontology_terms = function(df, updateCache = FALSE, con = NULL){
   terms = grep(".*_$", colnames(df), value=TRUE)
   df2 = df
   for (term in terms){
-    df2[, term] = get_ontology_from_cache(con = con)[df[, term], "term"]
+    df2[, term] = get_ontology_from_cache(updateCache = updateCache, con = con)[df[, term], "term"]
   }
   return(df2)
 }
