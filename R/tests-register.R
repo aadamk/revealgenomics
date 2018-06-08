@@ -92,6 +92,11 @@ test_non_null_ontology_elements = function(df, suffix = c("_", "_term")) {
 
 #' Run tests on data frame 
 run_tests_dataframe = function(entity, df, uniq, silent) {
+  if (!identical(class(df), 'data.frame')) {
+    stop("REVEAL/Genomics API allows uploads via data.frame only.
+    You might be using data.table, or tibble. 
+    If so, consider using as.data.frame() before calling any register_...() function")
+  }
   test_dataframe_formatting(df)
   test_mandatory_fields(df, arrayname = entity, silent = silent)
   test_unique_fields(df, uniq)
