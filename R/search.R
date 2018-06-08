@@ -340,7 +340,7 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
   
   t1 = proc.time()
   if (autoconvert_characters) {
-    res = autoconvert_char(df1 = res)
+    res = autoconvert_char(df1 = res, convert_logicals = FALSE)
   }
   cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
   res
