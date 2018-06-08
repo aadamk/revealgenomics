@@ -37,6 +37,12 @@ test_that("Check that upload works for `Definitions` sheet of Excel template ", 
     expect_true(ncol(dfDefn2) == (ncol(dfDefn) + 1))
     expect_true(all.equal(dfDefn, dfDefn2[, colnames(dfDefn)]))
     
+    # cat("# Verify that output of search_definitions is consistent\n")
+    expect_true(nrow(search_definitions(dataset_id = 10000)) == 0)
+    res = search_definitions(dataset_id = 9999)
+    expect_true(nrow(dfDefn) == nrow(res))
+    expect_true(all.equal(dfDefn2[, colnames(res)], res))
+    
     # cat("# Clean-up\n")
     delete_entity(entity = .ghEnv$meta$arrDefinition, id = def_id$definition_id)
     expect_true(nrow(get_definition(updateCache = T)) == 0)

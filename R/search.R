@@ -131,6 +131,18 @@ search_ontology = function(terms,
     }
   }
 }
+
+#' @export
+search_definitions = function(dataset_id, updateCache = FALSE, con = NULL) {
+  stopifnot(length(dataset_id) == 1)
+  df1 = get_definition(updateCache = updateCache, con = con)
+  if (nrow(df1) == 0) {
+    return(df1)
+  } else {
+    drop_na_columns(df1[df1$dataset_id == dataset_id, ])
+  }
+}
+
 #' @export
 search_genelist_gene = function(genelist = NULL, 
                                 genelist_id = NULL, con = NULL){
@@ -209,7 +221,6 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
   join_info_ontology_and_unpivot(qq, arrayname, 
                                  con = con)
 }
-
 
 ##################### MEASUREMENTDATA ###########################################################
 
