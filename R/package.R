@@ -53,4 +53,6 @@ NULL
 .ghEnv$cache$feature_ref = NULL
 .ghEnv$cache$dfFeatureSynonym = NULL
 .ghEnv$cache$biosample_ref = NULL
-.ghEnv$cache$dfVariantKey = NULL
+.ghEnv$cache[[.ghEnv$meta$arrOntology]] = NULL
+.ghEnv$cache[[.ghEnv$meta$arrVariantKey]] = NULL
+.ghEnv$cache[[.ghEnv$meta$arrDefinition]] = NULL

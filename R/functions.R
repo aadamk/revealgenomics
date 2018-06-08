@@ -194,16 +194,6 @@ update_biosample_cache = function(con = NULL){
   .ghEnv$cache$biosample_ref = get_biosamples(con = con)
 }
 
-get_ontology_from_cache = function(updateCache = FALSE, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  if (updateCache | is.null(.ghEnv$cache$dfOntology)){
-    update_ontology_cache(con = con)
-  }
-  if (nrow(.ghEnv$cache$dfOntology) == 0) update_ontology_cache(con = con)
-  return(.ghEnv$cache$dfOntology)
-}
-
 #' @export
 get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
   dfOntology = get_ontology_from_cache(updateCache, con = con)
@@ -240,26 +230,6 @@ full_arrayname = function(entitynm) {
   paste0(find_namespace(entitynm), ".", entitynm)
 }
 
-update_ontology_cache = function(con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  entitynm = .ghEnv$meta$arrOntology
-  arraynm =  full_arrayname(entitynm)
-  idname = get_idname(entitynm)
-  qq = paste0("equi_join(", 
-                arraynm, ", ", 
-                arraynm, "_INFO, ",
-                "'left_names=", idname, "', ", 
-                "'right_names=", idname, "', ",
-                "'left_outer=1', 'keep_dimensions=1')"
-              )
-  zz = iquery(con$db, qq, return = TRUE)
-  zz[, 'instance_id'] = NULL
-  zz[, 'value_no'] = NULL
-  zz = unpivot(df1 = zz, arrayname = entitynm)
-  if (nrow(zz) > 1) zz = zz[order(zz[, idname]), ]
-  .ghEnv$cache$dfOntology = zz
-}
 
 get_feature_synonym_from_cache = function(updateCache = FALSE, con = NULL){
   if (updateCache | is.null(.ghEnv$cache$dfFeatureSynonym)){
