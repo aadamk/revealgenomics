@@ -31,6 +31,8 @@ test_that("Check that upload works for `Definitions` sheet of Excel template ", 
     dfDefn$dataset_id = 9999
     dfDefn$Notes = '...'
 
+    init_db(arrays_to_init = .ghEnv$meta$arrDefinition, force = TRUE)
+    
     # cat("# Register definitions\n")
     def_id = register_definitions(df = as.data.frame(dfDefn))
     expect_true(nrow(def_id) == nrow(dfDefn))
