@@ -190,3 +190,54 @@ register_entities_excel = function(study_worksheet,
     } # end of loop through measurementsets in a dataset record
   } # end of loop through dataset records
 }
+
+entity_to_excel_sheet_converter = function(entity = NULL) {
+  picker = c('Studies', 'Subjects', 'Samples')
+  names(picker) = c(.ghEnv$meta$arrDataset,
+                    .ghEnv$meta$arrIndividuals,
+                    .ghEnv$meta$arrBiosample)
+  if (is.null(entity)) {
+    picker 
+  } else {
+    picker[entity]
+  }
+}
+
+apply_definition_constraints = function(df1 = df1,
+                                        dataset_id = dataset_id,
+                                        entity = entity,
+                                        updateCache = FALSE, 
+                                        con = con) {
+  def = search_definitions(dataset_id = dataset_id,
+                           updateCache = updateCache,
+                           con = con)
+  if (nrow(def) != 0) {
+    sheetName = entity_to_excel_sheet_converter(entity)
+    if (!is.na(sheetName)) {
+      defi = template_helper_extract_definitions(sheetName = sheetName, 
+                                                 def = def)
+      if (nrow(defi) != 0) {
+        defi_contr = defi[!is.na(defi$controlled_vocabulary), ]
+        if (nrow(defi_contr) > 0) {
+          cat(paste0("Applying constraint A: controlled-vocab fields (", 
+                     nrow(defi_contr), " of ", nrow(defi), ") definitions\n"))
+          
+          df1 = join_ontology_terms(df = df1, 
+                                    terms = defi_contr$attribute_name,
+                                    updateCache = FALSE, 
+                                    con = con)
+        }
+        
+        cat("Applying constraint B: Column ordering same as excel sheet\n")
+        allcols = colnames(df1)
+        excel_defined_cols = defi$attribute_name[which((defi$attribute_name %in% allcols))]
+        other_cols = allcols[!(allcols %in% excel_defined_cols)]
+        stopifnot(all(c(other_cols,
+                        excel_defined_cols) %in% allcols))
+        df1 = df1[, c(other_cols,
+                      excel_defined_cols)]
+      }
+    }
+  }
+  df1
+}

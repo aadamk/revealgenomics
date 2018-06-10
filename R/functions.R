@@ -846,8 +846,12 @@ count_unique_calls = function(variants){
   nrow(v[duplicated(v[, c('biosample_id', 'CHROM', 'POS')]), ])
 }
 
-join_ontology_terms = function(df, updateCache = FALSE, con = NULL){
-  terms = grep(".*_$", colnames(df), value=TRUE)
+join_ontology_terms = function(df, terms = NULL, updateCache = FALSE, con = NULL){
+  if (is.null(terms)) {
+    terms = grep(".*_$", colnames(df), value=TRUE)
+  } else {
+    terms = terms[terms %in% colnames(df)]
+  }
   df2 = df
   for (term in terms){
     df2[, term] = get_ontology_from_cache(updateCache = updateCache, con = con)[df[, term], "term"]
@@ -955,11 +959,22 @@ get_versioned_secure_metadata_entity = function(entity, id,
                                                 mandatory_fields_only = FALSE,
                                                 con = NULL){
   check_args_get(id = id, dataset_version, all_versions)
-  df = select_from_1d_entity(entitynm = entity, id = id, 
+  df1 = select_from_1d_entity(entitynm = entity, id = id, 
                              dataset_version = dataset_version, 
                              mandatory_fields_only = mandatory_fields_only,
                              con = con)
-  if (!all_versions) return(latest_version(df)) else return(df)
+
+  L1 = lapply(unique(df1$dataset_id), 
+              function(dataset_idi) {
+                apply_definition_constraints(df1 = df1[df1$dataset_id == dataset_idi, ],
+                                             dataset_id = dataset_idi,
+                                             entity = entity,
+                                             con = con)
+              }) 
+  df1 = do.call(what = "rbind", 
+                args = L1)
+  
+  if (!all_versions) return(latest_version(df1)) else return(df1)
 }
 
 #' @export
@@ -1200,14 +1215,19 @@ search_versioned_secure_metadata_entity = function(entity,
                                                    all_versions, 
                                                    con = NULL) {
   check_args_search(dataset_version, all_versions)
-  df = filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
+  df1 = filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
                                         dataset_version = dataset_version, 
                                         con = con)
-  
   # reorder the output by the dimensions
   # from https://stackoverflow.com/questions/17310998/sort-a-dataframe-in-r-by-a-dynamic-set-of-columns-named-in-another-data-frame
-  df = df[do.call(order, df[get_idname(entity)]), ] 
-  if (!all_versions) return(latest_version(df)) else return(df)
+  df1 = df1[do.call(order, df1[get_idname(entity)]), ] 
+
+  df1 = apply_definition_constraints(df1 = df1,
+                                     dataset_id = dataset_id,
+                                     entity = entity,
+                                     con = con)
+  
+  if (!all_versions) return(latest_version(df1)) else return(df1)
 }
 
 
