@@ -22,7 +22,7 @@
 
 #' @export
 api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, only_test = FALSE, con = NULL) {
-  con = scidb4gh:::use_ghEnv_if_null(con)
+  con = use_ghEnv_if_null(con)
   if (is.null(workbook_path) & is.null(workbook)) {
     stop("must supply path to workbook, or workbook opened by XLConnect::loadWorkbook")
   }
@@ -113,19 +113,15 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
   proj_study_ids_summ
 }
 
-#' retrieve custom schema definitions
+#' register definitions for dataset
 #' 
-#' this function retrieves custom schema definitions from scidb (preferred), or from workbook 
-#' (latter method should only be used in development)
-#' @export
-api_get_definitions = function(workbook = NULL, con = NULL) {
-  if (is.null(workbook)) {
-    con = scidb4gh:::use_ghEnv_if_null(con = con)
-    def = iquery(con$db, "gh_public.LOAD_TEMPLATE", return = TRUE)
-  } else {
-    def = myExcelReader(workbook, sheet_name = 'Definitions')
-  }
-  def
+#' 
+api_register_definitions = function(df_definitions, record, con = NULL) {
+  stopifnot(nrow(record) == 1)
+  
+  df_definitions$dataset_id = record$dataset_id
+  definition_record = register_definitions(df = as.data.frame(df_definitions), 
+                                           con = con)
 }
 
 #' register individuals
