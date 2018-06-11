@@ -490,7 +490,6 @@ array:
     delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
-          
   # ONTOLOGY
   ONTOLOGY:
     data_class:
@@ -515,6 +514,42 @@ array:
       - category
     search_by_entity: 
     delete_by_entity: ONTOLOGY
+    infoArray: TRUE
+    infoArray_max_keys: 1000
+    compression_on: FALSE
+  # DEFINITION
+  DEFINITION:
+    data_class:
+      metadata
+    namespace: 
+      - gh_public
+    attributes: 
+      attribute_name: string
+      type: string
+      units: string
+      description: string
+      controlled_vocabulary: string
+      importance: double
+      attribute_in_Studies: bool
+      attribute_in_Subjects: bool
+      attribute_in_Samples: bool
+      attribute_in_Pipelines: bool
+    dims: 
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      definition_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+    unique_fields:
+      - dataset_id
+      - attribute_name
+    search_by_entity: DEFINITION
+    delete_by_entity: DEFINITION
     infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: FALSE

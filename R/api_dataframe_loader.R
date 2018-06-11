@@ -149,7 +149,7 @@ DataFrameLoader = R6::R6Class(classname = "DataFrameLoader",
             private$.reference_object$feature = search_features(featureset_id = 
                                 fset$featureset_id)
             cat("updating feature-synonym in reference object\n")
-            fsyn = scidb4gh:::get_feature_synonym()
+            fsyn = get_feature_synonym()
             private$.reference_object$feature_synonym = fsyn[fsyn$featureset_id == fset$featureset_id, ]
           },
           

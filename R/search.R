@@ -12,6 +12,218 @@
 # END_COPYRIGHT
 #
 
+################### METADATA (secured by dataset_id) ############################################################
+
+#' @export
+search_datasets = function(project_id = NULL, dataset_version = NULL, all_versions = TRUE, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
+  check_args_search(dataset_version, all_versions)
+  entitynm = .ghEnv$meta$arrDataset
+  
+  if (!is.null(project_id)) {
+    fullnm = paste0(custom_scan(), "(", full_arrayname(entitynm), ")")
+    if (is.null(dataset_version)) {
+      qq = paste0("filter(", fullnm, ", ", "project_id=", project_id, ")")
+    } else {
+      qq = paste0(
+        "filter(", fullnm, ", ", "project_id=", project_id, 
+        " AND dataset_version=", dataset_version, ")")
+    }
+  } else {
+    stop(cat("Must specify project_id To retrieve all datasets, use get_datasets()", sep = ""))
+  }
+  
+  df = join_info_ontology_and_unpivot(qq,
+                                      entitynm,
+                                      con = con)
+  if (!all_versions) return(latest_version(df)) else return(df)
+}
+
+#' Search individuals by dataset
+#' 
+#' `search_individuals()` can be used to retrive
+#' all individuals in a particular dataset
+#' @export
+search_individuals = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
+                                          dataset_id, dataset_version, all_versions,
+                                          con = con)
+}
+
+#' @export
+search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
+                                          dataset_id, dataset_version, all_versions,
+                                          con = con)
+  
+}
+
+#' @export
+search_copynumbersets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
+                                          dataset_id, dataset_version, all_versions, con = con)
+}
+
+#' @export
+search_experimentsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
+                                          dataset_id, dataset_version, all_versions, con = con)
+}
+
+#' @export
+search_measurements = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
+  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
+                                          dataset_id, dataset_version, all_versions, con = con)
+}
+
+#' @export
+search_measurementsets = function(dataset_id = NULL, dataset_version = NULL, 
+                                  all_versions = FALSE, 
+                                  measurement_type = NULL,
+                                  con = NULL){
+  df_msmtset = search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
+                                                       dataset_id = dataset_id,
+                                                       dataset_version = dataset_version,
+                                                       all_versions = all_versions,
+                                                       con = con)
+  if (!is.null(measurement_type)) {
+    stopifnot(length(measurement_type) == 1)
+    entity_df = get_entity_info()
+    entity_df = entity_df[entity_df$class == 'measurementdata', ]
+    
+    if (!(measurement_type %in% as.character(entity_df$entity))) {
+      cat("Unexpected measurement entity:", measurement_type, "\n")
+      stop("Allowed measurement entities: ", pretty_print(entity_df$entity))
+    }    
+    
+    df_msmtset = df_msmtset[df_msmtset$entity == measurement_type, ]
+  }
+  df_msmtset
+}
+
+################### METADATA (not secured by dataset_id) ############################################################
+
+#' @export
+search_ontology = function(terms, 
+                           category = 'uncategorized', 
+                           exact_match = TRUE, updateCache = FALSE, con = NULL){
+  ont = get_ontology(updateCache = updateCache, con = con)
+  if (!is.null(category)) ont = ont[ont$category == category, ]
+  if (nrow(ont) == 0) return(NA)
+  ont_ids = ont$ontology_id
+  names(ont_ids) = ont$term
+  if (exact_match){
+    res = ont_ids[terms]
+    if (any(is.na(res)) & !updateCache) {
+      cat("Updating ontology cache\n")
+      search_ontology(terms, exact_match = exact_match, updateCache = TRUE, con = con)
+    }
+    names(res) = terms
+    as.integer(res)
+  } else {
+    if (length(terms) != 1) {
+      # do a recursive call
+      if (updateCache) stop("cannot do inexact searching on multiple terms with updateCache set to TRUE")
+      lapply(terms, FUN = function(term) {search_ontology(terms = term, exact_match = FALSE, con = con)})
+    } else {
+      ont[grep(terms, ignore.case = TRUE, ont$term), ]
+    }
+  }
+}
+
+#' @export
+search_definitions = function(dataset_id, updateCache = FALSE, con = NULL) {
+  stopifnot(length(dataset_id) == 1)
+  df1 = get_definitions(updateCache = updateCache, con = con)
+  if (nrow(df1) == 0) {
+    return(df1)
+  } else {
+    drop_na_columns(df1[df1$dataset_id == dataset_id, ])
+  }
+}
+
+#' @export
+search_genelist_gene = function(genelist = NULL, 
+                                genelist_id = NULL, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
+  arrayname = full_arrayname(.ghEnv$meta$arrGenelist_gene)
+  
+  if (!is.null(genelist) & !is.null(genelist_id)) {
+    stop("Use only one method for searching. Preferred method is using genelist")
+  }
+  
+  # API level security (TODO: replace with pscan() operator)
+  if (is.null(genelist_id)) {
+    genelist_id = genelist$genelist_id
+  } else {
+    genelist = get_genelist(genelist_id = genelist_id)
+  }
+  if (!genelist$public & 
+      !(get_logged_in_user(con = con) %in% c('root', 'scidbadmin', genelist$owner))) {
+    stop("Do not have permissions to search genelist_id: ", genelist_id)
+  }
+  
+  qq = arrayname
+  if (length(genelist_id)==1){
+    qq = paste("filter(", qq, ", genelist_id = ", genelist_id, ")", sep="")
+  } else {stop("Not covered yet")}
+  
+  res = iquery(con$db, qq, return = TRUE)
+  
+  
+}
+
+###################### FEATUREDATA ##########################################################
+
+#' Search features by synonym
+#' 
+#' @param synonym: A name for a gene by any convention e.g. ensembl_gene_id, entrez_id, vega_id
+#' @param id_type: (Optional) The id type by which to search e.g. ensembl_gene_id, entrez_id, vega_id
+#' @param featureset_id: (Optional) The featureset within which to search
+#' @return feature(s) associated with provided synonym
+#' @export
+search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL, updateCache = FALSE, con = NULL){
+  syn = get_feature_synonym_from_cache(updateCache = updateCache, con = con)
+  f1 = syn[syn$synonym %in% synonym, ]
+  if (!is.null(id_type)) {f1 = f1[f1$source == id_type, ]}
+  if (!is.null(featureset_id)) {f1 = f1[f1$featureset_id == f1$featureset_id, ]}
+  get_features(feature_id = unique(f1$feature_id), fromCache = !updateCache, con = con)
+}
+
+#' @export
+search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_id = NULL, con = NULL){
+  arrayname = full_arrayname(.ghEnv$meta$arrFeature)
+  
+  qq = arrayname
+  if (!is.null(featureset_id)){
+    if (length(featureset_id)==1){
+      qq = paste("filter(", qq, ", featureset_id = ", featureset_id, ")", sep="")
+    } else if (length(featureset_id)==2){
+      qq = paste("filter(", qq, ", featureset_id = '", featureset_id[1], "' OR featureset_id = '", featureset_id[2], "')", sep="")
+    } else {stop("Not covered yet")}
+  }
+  
+  if (!is.null(feature_type)){
+    if (length(feature_type)==1){
+      qq = paste("filter(", qq, ", feature_type = '", feature_type, "')", sep="")
+    } else if (length(feature_type)==2){
+      qq = paste("filter(", qq, ", feature_type = '", feature_type[1], "' OR feature_type = '", feature_type[2], "')", sep="")
+    } else {stop("Not covered yet")}
+  }
+  
+  if (!is.null(gene_symbol)) {
+    subq = paste(sapply(gene_symbol, FUN = function(x) {paste("gene_symbol = '", x, "'", sep = "")}), collapse = " OR ")
+    qq = paste("filter(", qq, ", ", subq, ")", sep="")
+  }
+  
+  join_info_ontology_and_unpivot(qq, arrayname, 
+                                 con = con)
+}
+
+##################### MEASUREMENTDATA ###########################################################
+
 #' @export
 search_rnaquantification = function(measurementset = NULL,
                                     biosample = NULL,
@@ -340,7 +552,7 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
   
   t1 = proc.time()
   if (autoconvert_characters) {
-    res = autoconvert_char(df1 = res)
+    res = autoconvert_char(df1 = res, convert_logicals = FALSE)
   }
   cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
   res

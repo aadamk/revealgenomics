@@ -92,6 +92,11 @@ test_non_null_ontology_elements = function(df, suffix = c("_", "_term")) {
 
 #' Run tests on data frame 
 run_tests_dataframe = function(entity, df, uniq, silent) {
+  if (!identical(class(df), 'data.frame')) {
+    stop("REVEAL/Genomics API allows uploads via data.frame only.
+    You might be using data.table, or tibble. 
+    If so, consider using as.data.frame() before calling any register_...() function")
+  }
   test_dataframe_formatting(df)
   test_mandatory_fields(df, arrayname = entity, silent = silent)
   test_unique_fields(df, uniq)
@@ -174,6 +179,10 @@ test_register_measurementset  = function(df1, silent = TRUE){
 
 test_register_ontology = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrOntology, df, uniq, silent)
+}
+
+test_register_definition = function(df, uniq, silent = TRUE){
+  run_tests_dataframe(entity = .ghEnv$meta$arrDefinition, df, uniq, silent)
 }
 
 test_register_featureset = function(df, uniq, silent = TRUE){

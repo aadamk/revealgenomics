@@ -18,6 +18,7 @@ test_that("get_base_idname(ENTITY) matches entity_id for metadata classes", {
   expect_base_idname(entity = .ghEnv$meta$arrGeneSymbol)
   expect_base_idname(entity = .ghEnv$meta$arrGenelist)
   expect_base_idname(entity = .ghEnv$meta$arrGenelist_gene)
+  expect_base_idname(entity = .ghEnv$meta$arrDefinition)
 })
 
 test_that("dataset_id is a mandatory column for certain metadata entities", {
@@ -25,5 +26,6 @@ test_that("dataset_id is a mandatory column for certain metadata entities", {
   expect_true('dataset_id' %in% mandatory_fields()[[.ghEnv$meta$arrBiosample]])
   expect_true('dataset_id' %in% mandatory_fields()[[.ghEnv$meta$arrMeasurementSet]])
   expect_true('dataset_id' %in% mandatory_fields()[[.ghEnv$meta$arrMeasurement]])
+  expect_true('dataset_id' %in% mandatory_fields()[[.ghEnv$meta$arrDefinition]])
   # add more
 })

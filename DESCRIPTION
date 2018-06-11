@@ -14,6 +14,7 @@ Depends:
     reshape2,
     Biobase,
     jsonlite,
+    readxl,
     scidb
 Imports:
     R6,

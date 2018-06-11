@@ -14,17 +14,17 @@ register_measurements = function(dataset_id, dataset_version, con = NULL) {
   df_info_msrmt = df_info[df_info$class == 'measurementdata',]
   df_info_msrmt$entity = as.character(df_info_msrmt$entity)
   
-  nmsp = scidb4gh:::find_namespace(id = dataset_id, entitynm = 'DATASET')
+  nmsp = find_namespace(id = dataset_id, entitynm = 'DATASET')
   cat("--Namespace: ", nmsp, "\n")
   for (idx in c(1:3,5)){
     msrmnt_entity = df_info_msrmt[idx, ]$entity
-    stopifnot(scidb4gh:::is_entity_secured(msrmnt_entity) & 
+    stopifnot(is_entity_secured(msrmnt_entity) & 
                 length(.ghEnv$meta$L$array[[msrmnt_entity]]$namespace) > 1)
     cat("Measurement entity: ", msrmnt_entity, "\n")
     
     msrmt_array = paste(nmsp, msrmnt_entity, sep = ".")
     msrmt_set_nm = df_info_msrmt[idx, ]$search_by_entity
-    msrmt_set_idnm = scidb4gh:::get_base_idname(msrmt_set_nm)
+    msrmt_set_idnm = get_base_idname(msrmt_set_nm)
     t1 = proc.time()
     res = iquery(con$db,
                  paste("aggregate(filter(", msrmt_array, 
@@ -42,7 +42,7 @@ register_measurements = function(dataset_id, dataset_version, con = NULL) {
       res$measurement_entity = msrmnt_entity
       head(res)
       
-      msrmt_set_DF = scidb4gh:::get_entity(entity = msrmt_set_nm, 
+      msrmt_set_DF = get_entity(entity = msrmt_set_nm, 
                                            id = sort(unique(res[, msrmt_set_idnm])),  
                                            all_versions = TRUE)
       

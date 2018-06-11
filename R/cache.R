@@ -12,20 +12,78 @@
 # END_COPYRIGHT
 #
 
-update_variant_key_cache = function(con = NULL){
+###################################################################################
+# BASE FUNCTIONS: Begin
+update_entity_cache = function(entitynm, con = NULL) {
   con = use_ghEnv_if_null(con)
   
-  entitynm = .ghEnv$meta$arrVariantKey
   arraynm =  full_arrayname(entitynm)
-  .ghEnv$cache$dfVariantKey = iquery(con$db, arraynm, return = TRUE)
+  if (get_entity_infoArrayExists(entitynm)) { # INFO array exists
+    idname = get_base_idname(entitynm)
+    qq = paste0("equi_join(", 
+                arraynm, ", ", 
+                arraynm, "_INFO, ",
+                "'left_names=", idname, "', ", 
+                "'right_names=", idname, "', ",
+                "'left_outer=1', 'keep_dimensions=1')"
+    )
+    zz = iquery(con$db, qq, return = TRUE)
+    zz[, 'instance_id'] = NULL
+    zz[, 'value_no'] = NULL
+    zz = unpivot(df1 = zz, arrayname = entitynm)
+    if (nrow(zz) > 1) zz = zz[order(zz[, idname]), ]
+    
+    zz = autoconvert_char(df1 = zz)
+    .ghEnv$cache[[entitynm]] = zz
+  } else { # INFO array does not exist
+    .ghEnv$cache[[entitynm]] = iquery(con$db, arraynm, return = TRUE)
+  }
 }
 
-get_variant_key_from_cache = function(updateCache = FALSE, con = NULL){
+get_entity_from_cache = function(entitynm, updateCache, con = NULL) {
   con = use_ghEnv_if_null(con)
   
-  if (updateCache | is.null(.ghEnv$cache$dfVariantKey)){
-    update_variant_key_cache(con = con)
+  if (updateCache | is.null(.ghEnv$cache[[entitynm]])){
+    update_entity_cache(entitynm = entitynm, con = con)
   }
-  if (nrow(.ghEnv$cache$dfVariantKey) == 0) update_variant_key_cache(con = con)
-  return(.ghEnv$cache$dfVariantKey)
+  if (nrow(.ghEnv$cache[[entitynm]]) == 0) {
+    update_entity_cache(entitynm = entitynm, con = con)
+  } 
+  
+  return(.ghEnv$cache[[entitynm]])
 }
+# BASE FUNCTIONS: End
+###################################################################################
+# VARIANT_KEY 
+update_variant_key_cache = function(con = NULL){
+  update_entity_cache(entitynm = .ghEnv$meta$arrVariantKey, 
+                      con = con)
+}
+
+get_variant_key_from_cache = function(updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrVariantKey, updateCache = updateCache, 
+                        con = con)
+}
+
+# DEFINITION
+update_definition_cache = function(con = NULL){
+  update_entity_cache(entitynm = .ghEnv$meta$arrDefinition, 
+                      con = con)
+}
+
+get_definition_from_cache = function(updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrDefinition, updateCache = updateCache, 
+                        con = con)
+}
+
+# ONTOLOGY
+update_ontology_cache = function(con = NULL){
+  update_entity_cache(entitynm = .ghEnv$meta$arrOntology, 
+                      con = con)
+}
+
+get_ontology_from_cache = function(updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrOntology, updateCache = updateCache, 
+                        con = con)
+}
+

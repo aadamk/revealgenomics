@@ -22,7 +22,7 @@
 
 #' @export
 api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, only_test = FALSE, con = NULL) {
-  con = scidb4gh:::use_ghEnv_if_null(con)
+  con = use_ghEnv_if_null(con)
   if (is.null(workbook_path) & is.null(workbook)) {
     stop("must supply path to workbook, or workbook opened by XLConnect::loadWorkbook")
   }
@@ -113,19 +113,15 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
   proj_study_ids_summ
 }
 
-#' retrieve custom schema definitions
+#' register definitions for dataset
 #' 
-#' this function retrieves custom schema definitions from scidb (preferred), or from workbook 
-#' (latter method should only be used in development)
-#' @export
-api_get_definitions = function(workbook = NULL, con = NULL) {
-  if (is.null(workbook)) {
-    con = scidb4gh:::use_ghEnv_if_null(con = con)
-    def = iquery(con$db, "gh_public.LOAD_TEMPLATE", return = TRUE)
-  } else {
-    def = myExcelReader(workbook, sheet_name = 'Definitions')
-  }
-  def
+#' 
+api_register_definitions = function(df_definitions, record, con = NULL) {
+  stopifnot(nrow(record) == 1)
+  
+  df_definitions$dataset_id = record$dataset_id
+  definition_record = register_definitions(df = as.data.frame(df_definitions), 
+                                           con = con)
 }
 
 #' register individuals
@@ -187,13 +183,13 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
   choicesObj = list(
     pipelineChoicesObj = PipelineChoices$new(
       pipeline_choices_df = myExcelReader(workbook = workbook, 
-                                          sheet_name = scidb4gh:::template_linker$pipeline$choices_sheet)),
+                                          sheet_name = template_linker$pipeline$choices_sheet)),
     filterChoicesObj = FilterChoices$new(
       filter_choices_df = myExcelReader(workbook = workbook, 
-                                        sheet_name = scidb4gh:::template_linker$filter$choices_sheet)),
+                                        sheet_name = template_linker$filter$choices_sheet)),
     featuresetChoicesObj = FeaturesetChoices$new(
       featureset_choices_df = myExcelReader(workbook = workbook, 
-                                            sheet_name = scidb4gh:::template_linker$featureset$choices_sheet))
+                                            sheet_name = template_linker$featureset$choices_sheet))
   )
   
   pipelines_df = template_helper_extract_record_related_rows(workbook = workbook,
@@ -247,7 +243,7 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
   expset_df = get_experimentset(experimentset_id = expset_record$experimentset_id, 
                                 dataset_version = record$dataset_version)
   msmtset_df = merge(msmtset_df, 
-                     expset_df[, c(scidb4gh:::get_base_idname(.ghEnv$meta$arrExperimentSet),
+                     expset_df[, c(get_base_idname(.ghEnv$meta$arrExperimentSet),
                                    columns_experimentSet)],
                      by = columns_experimentSet)
   
@@ -291,7 +287,7 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
 api_register_ontology_from_definition_sheet = function(workbook = NULL, 
                                                        def = NULL,
                                                        con = NULL) {
-  con = scidb4gh:::use_ghEnv_if_null(con=con)
+  con = use_ghEnv_if_null(con=con)
   
   if (is.null(workbook) & is.null(def)) stop("must supply at least master workbook
                                        or definitions worksheet")

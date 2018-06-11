@@ -19,7 +19,9 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
   if (is.null(username) & protocol != 'http') {
     cat("using HTTP protocol\n")
     protocol = 'http'
-    options(scidb4gh.use_scidb_ee = FALSE)
+    unset_scidb_ee_flag = TRUE
+  } else {
+    unset_scidb_ee_flag = FALSE
   }
   
   if (!is.null(username) & protocol == 'http') {
@@ -92,8 +94,10 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
       con$db = NULL
     }
   }
-  
-  
+
+  if (unset_scidb_ee_flag) {
+    if (!is.null(con$db)) options(scidb4gh.use_scidb_ee = FALSE)
+  }  
   # Store a copy of connection object in .ghEnv
   # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
   .ghEnv$db = con$db
@@ -138,7 +142,6 @@ get_entity = function(entity, id, ...){
   }
 }
 
-## This is a function that should go into the "functions.R" file and be an 
 ##  internal function.  It will be used in the get_dataset_subelements() 
 ##  function as a way of programmatically identifying all metadata elements
 ##  within a given dataset, so that they can be deleted.  It is based on
@@ -194,16 +197,6 @@ update_biosample_cache = function(con = NULL){
   .ghEnv$cache$biosample_ref = get_biosamples(con = con)
 }
 
-get_ontology_from_cache = function(updateCache = FALSE, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  if (updateCache | is.null(.ghEnv$cache$dfOntology)){
-    update_ontology_cache(con = con)
-  }
-  if (nrow(.ghEnv$cache$dfOntology) == 0) update_ontology_cache(con = con)
-  return(.ghEnv$cache$dfOntology)
-}
-
 #' @export
 get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
   dfOntology = get_ontology_from_cache(updateCache, con = con)
@@ -221,6 +214,11 @@ get_variant_key = function(updateCache = FALSE, con = NULL){
   get_variant_key_from_cache(updateCache, con = con)
 }
 
+#' @export
+get_definitions = function(updateCache = FALSE, con = NULL){
+  get_definition_from_cache(updateCache, con = con)
+}
+
 find_namespace = function(entitynm) {
   # Use secure_scan for SciDB enterprise edition only
   ifelse(options("scidb4gh.use_scidb_ee"), 
@@ -235,26 +233,6 @@ full_arrayname = function(entitynm) {
   paste0(find_namespace(entitynm), ".", entitynm)
 }
 
-update_ontology_cache = function(con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  entitynm = .ghEnv$meta$arrOntology
-  arraynm =  full_arrayname(entitynm)
-  idname = get_idname(entitynm)
-  qq = paste0("equi_join(", 
-                arraynm, ", ", 
-                arraynm, "_INFO, ",
-                "'left_names=", idname, "', ", 
-                "'right_names=", idname, "', ",
-                "'left_outer=1', 'keep_dimensions=1')"
-              )
-  zz = iquery(con$db, qq, return = TRUE)
-  zz[, 'instance_id'] = NULL
-  zz[, 'value_no'] = NULL
-  zz = unpivot(df1 = zz, arrayname = entitynm)
-  if (nrow(zz) > 1) zz = zz[order(zz[, idname]), ]
-  .ghEnv$cache$dfOntology = zz
-}
 
 get_feature_synonym_from_cache = function(updateCache = FALSE, con = NULL){
   if (updateCache | is.null(.ghEnv$cache$dfFeatureSynonym)){
@@ -361,6 +339,27 @@ register_ontology_term = function(df, only_test = FALSE, con = NULL){
     
     # force update the ontology
     update_ontology_cache(con = con)
+    
+    return(ids)
+  } # end of if (!only_test)
+}
+
+#' @export
+register_definitions = function(df, only_test = FALSE, con = NULL){
+  uniq = unique_fields()[[.ghEnv$meta$arrDefinition]]
+  test_register_definition(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  
+  # Manual correction as units are empty in template
+  if (class(df[, 'units']) == 'logical') {
+    df[, 'units'] = as.character(df[, 'units'])
+  }
+    
+  if (!only_test) {
+    arrayname = full_arrayname(.ghEnv$meta$arrDefinition)
+    ids = register_tuple_return_id(df, arrayname, uniq, con = con)
+    
+    # force update the cache
+    update_definition_cache(con = con)
     
     return(ids)
   } # end of if (!only_test)
@@ -847,11 +846,15 @@ count_unique_calls = function(variants){
   nrow(v[duplicated(v[, c('biosample_id', 'CHROM', 'POS')]), ])
 }
 
-join_ontology_terms = function(df, con = NULL){
-  terms = grep(".*_$", colnames(df), value=TRUE)
+join_ontology_terms = function(df, terms = NULL, updateCache = FALSE, con = NULL){
+  if (is.null(terms)) {
+    terms = grep(".*_$", colnames(df), value=TRUE)
+  } else {
+    terms = terms[terms %in% colnames(df)]
+  }
   df2 = df
   for (term in terms){
-    df2[, term] = get_ontology_from_cache(con = con)[df[, term], "term"]
+    df2[, term] = get_ontology_from_cache(updateCache = updateCache, con = con)[df[, term], "term"]
   }
   return(df2)
 }
@@ -956,11 +959,22 @@ get_versioned_secure_metadata_entity = function(entity, id,
                                                 mandatory_fields_only = FALSE,
                                                 con = NULL){
   check_args_get(id = id, dataset_version, all_versions)
-  df = select_from_1d_entity(entitynm = entity, id = id, 
+  df1 = select_from_1d_entity(entitynm = entity, id = id, 
                              dataset_version = dataset_version, 
                              mandatory_fields_only = mandatory_fields_only,
                              con = con)
-  if (!all_versions) return(latest_version(df)) else return(df)
+
+  L1 = lapply(unique(df1$dataset_id), 
+              function(dataset_idi) {
+                apply_definition_constraints(df1 = df1[df1$dataset_id == dataset_idi, ],
+                                             dataset_id = dataset_idi,
+                                             entity = entity,
+                                             con = con)
+              }) 
+  df1 = do.call(what = "rbind", 
+                args = L1)
+  
+  if (!all_versions) return(latest_version(df1)) else return(df1)
 }
 
 #' @export
@@ -1154,121 +1168,6 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
   query
 }
 
-#' Search features by synonym
-#' 
-#' @param synonym: A name for a gene by any convention e.g. ensembl_gene_id, entrez_id, vega_id
-#' @param id_type: (Optional) The id type by which to search e.g. ensembl_gene_id, entrez_id, vega_id
-#' @param featureset_id: (Optional) The featureset within which to search
-#' @return feature(s) associated with provided synonym
-#' @export
-search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL, updateCache = FALSE, con = NULL){
-  syn = get_feature_synonym_from_cache(updateCache = updateCache, con = con)
-  f1 = syn[syn$synonym %in% synonym, ]
-  if (!is.null(id_type)) {f1 = f1[f1$source == id_type, ]}
-  if (!is.null(featureset_id)) {f1 = f1[f1$featureset_id == f1$featureset_id, ]}
-  get_features(feature_id = unique(f1$feature_id), fromCache = !updateCache, con = con)
-}
-
-#' @export
-search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_id = NULL, con = NULL){
-  arrayname = full_arrayname(.ghEnv$meta$arrFeature)
-  
-  qq = arrayname
-  if (!is.null(featureset_id)){
-    if (length(featureset_id)==1){
-      qq = paste("filter(", qq, ", featureset_id = ", featureset_id, ")", sep="")
-    } else if (length(featureset_id)==2){
-      qq = paste("filter(", qq, ", featureset_id = '", featureset_id[1], "' OR featureset_id = '", featureset_id[2], "')", sep="")
-    } else {stop("Not covered yet")}
-  }
-  
-  if (!is.null(feature_type)){
-    if (length(feature_type)==1){
-      qq = paste("filter(", qq, ", feature_type = '", feature_type, "')", sep="")
-    } else if (length(feature_type)==2){
-      qq = paste("filter(", qq, ", feature_type = '", feature_type[1], "' OR feature_type = '", feature_type[2], "')", sep="")
-    } else {stop("Not covered yet")}
-  }
-  
-  if (!is.null(gene_symbol)) {
-    subq = paste(sapply(gene_symbol, FUN = function(x) {paste("gene_symbol = '", x, "'", sep = "")}), collapse = " OR ")
-    qq = paste("filter(", qq, ", ", subq, ")", sep="")
-  }
-  
-  join_info_ontology_and_unpivot(qq, arrayname, 
-                                 con = con)
-}
-
-#' @export
-search_genelist_gene = function(genelist = NULL, 
-                                genelist_id = NULL, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  arrayname = full_arrayname(.ghEnv$meta$arrGenelist_gene)
-  
-  if (!is.null(genelist) & !is.null(genelist_id)) {
-    stop("Use only one method for searching. Preferred method is using genelist")
-  }
-  
-  # API level security (TODO: replace with pscan() operator)
-  if (is.null(genelist_id)) {
-    genelist_id = genelist$genelist_id
-  } else {
-    genelist = get_genelist(genelist_id = genelist_id)
-  }
-  if (!genelist$public & 
-      !(get_logged_in_user(con = con) %in% c('root', 'scidbadmin', genelist$owner))) {
-    stop("Do not have permissions to search genelist_id: ", genelist_id)
-  }
-  
-  qq = arrayname
-  if (length(genelist_id)==1){
-    qq = paste("filter(", qq, ", genelist_id = ", genelist_id, ")", sep="")
-  } else {stop("Not covered yet")}
-  
-  res = iquery(con$db, qq, return = TRUE)
-  
-  
-}
-
-#' @export
-search_datasets = function(project_id = NULL, dataset_version = NULL, all_versions = TRUE, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  check_args_search(dataset_version, all_versions)
-  entitynm = .ghEnv$meta$arrDataset
-  
-  if (!is.null(project_id)) {
-    fullnm = paste0(custom_scan(), "(", full_arrayname(entitynm), ")")
-    if (is.null(dataset_version)) {
-      qq = paste0("filter(", fullnm, ", ", "project_id=", project_id, ")")
-    } else {
-      qq = paste0(
-        "filter(", fullnm, ", ", "project_id=", project_id, 
-                             " AND dataset_version=", dataset_version, ")")
-    }
-  } else {
-    stop(cat("Must specify project_id To retrieve all datasets, use get_datasets()", sep = ""))
-  }
-  
-  df = join_info_ontology_and_unpivot(qq,
-                                      entitynm,
-                                      con = con)
-  if (!all_versions) return(latest_version(df)) else return(df)
-}
-
-#' Search individuals by dataset
-#' 
-#' `search_individuals()` can be used to retrive
-#' all individuals in a particular dataset
-#' @export
-search_individuals = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
-                                          dataset_id, dataset_version, all_versions,
-                                          con = con)
-}
-
-
 check_args_search = function(dataset_version, all_versions){
   if (!is.null(dataset_version) & all_versions==TRUE) stop("Cannot specify specific dataset_version, and also set all_versions = TRUE")
 }
@@ -1306,85 +1205,6 @@ filter_on_dataset_id_and_version = function(arrayname,
                                  con = con)
 }
 
-#' @export
-search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
-                                          dataset_id, dataset_version, all_versions,
-                                          con = con)
-  
-}
-
-#' @export
-search_ontology = function(terms, 
-                           category = 'uncategorized', 
-                           exact_match = TRUE, updateCache = FALSE, con = NULL){
-  ont = get_ontology(updateCache = updateCache, con = con)
-  if (!is.null(category)) ont = ont[ont$category == category, ]
-  if (nrow(ont) == 0) return(NA)
-  ont_ids = ont$ontology_id
-  names(ont_ids) = ont$term
-  if (exact_match){
-    res = ont_ids[terms]
-    if (any(is.na(res)) & !updateCache) {
-      cat("Updating ontology cache\n")
-      search_ontology(terms, exact_match = exact_match, updateCache = TRUE, con = con)
-    }
-    names(res) = terms
-    as.integer(res)
-  } else {
-    if (length(terms) != 1) {
-      # do a recursive call
-      if (updateCache) stop("cannot do inexact searching on multiple terms with updateCache set to TRUE")
-      lapply(terms, FUN = function(term) {search_ontology(terms = term, exact_match = FALSE, con = con)})
-    } else {
-      ont[grep(terms, ignore.case = TRUE, ont$term), ]
-    }
-  }
-}
-
-#' @export
-search_copynumbersets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
-                                          dataset_id, dataset_version, all_versions, con = con)
-}
-
-#' @export
-search_experimentsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
-                                          dataset_id, dataset_version, all_versions, con = con)
-}
-
-#' @export
-search_measurements = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
-                                          dataset_id, dataset_version, all_versions, con = con)
-}
-
-#' @export
-search_measurementsets = function(dataset_id = NULL, dataset_version = NULL, 
-                                  all_versions = FALSE, 
-                                  measurement_type = NULL,
-                                  con = NULL){
-  df_msmtset = search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet, 
-                                          dataset_id = dataset_id,
-                                          dataset_version = dataset_version,
-                                          all_versions = all_versions,
-                                          con = con)
-  if (!is.null(measurement_type)) {
-    stopifnot(length(measurement_type) == 1)
-    entity_df = get_entity_info()
-    entity_df = entity_df[entity_df$class == 'measurementdata', ]
-    
-    if (!(measurement_type %in% as.character(entity_df$entity))) {
-      cat("Unexpected measurement entity:", measurement_type, "\n")
-      stop("Allowed measurement entities: ", pretty_print(entity_df$entity))
-    }    
-    
-    df_msmtset = df_msmtset[df_msmtset$entity == measurement_type, ]
-  }
-  df_msmtset
-}
-
 #' internal function for search_METADATA()
 #' 
 #' internal function for `search_individuals()`, `search_biosamples()` etc.
@@ -1395,14 +1215,19 @@ search_versioned_secure_metadata_entity = function(entity,
                                                    all_versions, 
                                                    con = NULL) {
   check_args_search(dataset_version, all_versions)
-  df = filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
+  df1 = filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
                                         dataset_version = dataset_version, 
                                         con = con)
-  
   # reorder the output by the dimensions
   # from https://stackoverflow.com/questions/17310998/sort-a-dataframe-in-r-by-a-dynamic-set-of-columns-named-in-another-data-frame
-  df = df[do.call(order, df[get_idname(entity)]), ] 
-  if (!all_versions) return(latest_version(df)) else return(df)
+  df1 = df1[do.call(order, df1[get_idname(entity)]), ] 
+
+  df1 = apply_definition_constraints(df1 = df1,
+                                     dataset_id = dataset_id,
+                                     entity = entity,
+                                     con = con)
+  
+  if (!all_versions) return(latest_version(df1)) else return(df1)
 }
 
 

@@ -122,7 +122,7 @@ merge_aux_info_from_df = function(master_df, aux_df, aux_info_colname, by.x, by.
   stopifnot(length(unique(join_on_key)) == length(join_on_key))
   aux_json = lapply(join_on_key, function(key) {
     mydf = aux_df[aux_df[, by.y] == key, ]
-    mydf = scidb4gh:::drop_na_columns(mydf)
+    mydf = drop_na_columns(mydf)
     
     if (verbose_merge) cat("Debug output: ")
     if (verbose_merge) if (nrow(mydf) > 1) {cat("..(", nrow(mydf), ")", sep = "")}
