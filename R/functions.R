@@ -215,7 +215,7 @@ get_variant_key = function(updateCache = FALSE, con = NULL){
 }
 
 #' @export
-get_definition = function(updateCache = FALSE, con = NULL){
+get_definitions = function(updateCache = FALSE, con = NULL){
   get_definition_from_cache(updateCache, con = con)
 }
 

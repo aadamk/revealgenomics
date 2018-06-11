@@ -38,7 +38,7 @@ test_that("Check that upload works for `Definitions` sheet of Excel template ", 
     expect_true(nrow(def_id) == nrow(dfDefn))
     
     # cat("# Download definitionsn")
-    dfDefn2 = get_definition(updateCache = T)
+    dfDefn2 = get_definitions(updateCache = T)
     expect_true(nrow(dfDefn) == nrow(dfDefn2))
     
     
@@ -54,6 +54,6 @@ test_that("Check that upload works for `Definitions` sheet of Excel template ", 
     
     # cat("# Clean-up\n")
     delete_entity(entity = .ghEnv$meta$arrDefinition, id = def_id$definition_id)
-    expect_true(nrow(get_definition(updateCache = T)) == 0)
+    expect_true(nrow(get_definitions(updateCache = T)) == 0)
   }
 })
