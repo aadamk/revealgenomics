@@ -183,13 +183,13 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
   choicesObj = list(
     pipelineChoicesObj = PipelineChoices$new(
       pipeline_choices_df = myExcelReader(workbook = workbook, 
-                                          sheet_name = scidb4gh:::template_linker$pipeline$choices_sheet)),
+                                          sheet_name = template_linker$pipeline$choices_sheet)),
     filterChoicesObj = FilterChoices$new(
       filter_choices_df = myExcelReader(workbook = workbook, 
-                                        sheet_name = scidb4gh:::template_linker$filter$choices_sheet)),
+                                        sheet_name = template_linker$filter$choices_sheet)),
     featuresetChoicesObj = FeaturesetChoices$new(
       featureset_choices_df = myExcelReader(workbook = workbook, 
-                                            sheet_name = scidb4gh:::template_linker$featureset$choices_sheet))
+                                            sheet_name = template_linker$featureset$choices_sheet))
   )
   
   pipelines_df = template_helper_extract_record_related_rows(workbook = workbook,
@@ -243,7 +243,7 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
   expset_df = get_experimentset(experimentset_id = expset_record$experimentset_id, 
                                 dataset_version = record$dataset_version)
   msmtset_df = merge(msmtset_df, 
-                     expset_df[, c(scidb4gh:::get_base_idname(.ghEnv$meta$arrExperimentSet),
+                     expset_df[, c(get_base_idname(.ghEnv$meta$arrExperimentSet),
                                    columns_experimentSet)],
                      by = columns_experimentSet)
   
@@ -287,7 +287,7 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
 api_register_ontology_from_definition_sheet = function(workbook = NULL, 
                                                        def = NULL,
                                                        con = NULL) {
-  con = scidb4gh:::use_ghEnv_if_null(con=con)
+  con = use_ghEnv_if_null(con=con)
   
   if (is.null(workbook) & is.null(def)) stop("must supply at least master workbook
                                        or definitions worksheet")

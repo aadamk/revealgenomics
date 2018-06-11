@@ -90,17 +90,17 @@ register_entities_excel = function(study_worksheet,
     pipelines_df = template_helper_extract_record_related_rows(workbook = workbook,
                                                                           sheetName = 'Pipelines', 
                                                                           record = record)
-    pipelines_df$featureset_scidb = pipelines_df[, scidb4gh:::template_linker$featureset$pipelines_sel_col]
+    pipelines_df$featureset_scidb = pipelines_df[, template_linker$featureset$pipelines_sel_col]
     pipelines_df = plyr::rename(pipelines_df, 
-                                setNames(scidb4gh:::template_linker$featureset$choices_col,
-                                         scidb4gh:::template_linker$featureset$pipelines_sel_col))
+                                setNames(template_linker$featureset$choices_col,
+                                         template_linker$featureset$pipelines_sel_col))
     
     bios_scidb = search_biosamples(dataset_id = record$dataset_id, dataset_version = record$dataset_version)
     reference_object = list(record = record,
                             biosample = bios_scidb,
                             featureset = get_featuresets(),
                             feature = NULL,
-                            feature_synonym = scidb4gh:::get_feature_synonym())
+                            feature_synonym = get_feature_synonym())
     
     # loop through measurementsets in a dataset record
     for (msmtset_id_sel in expset_msmtset_rec$MeasurementSetRecord$measurementset_id) {
@@ -110,9 +110,9 @@ register_entities_excel = function(study_worksheet,
       cat("Working on measurementset_id:", msmtset_id_sel,
           "(", reference_object$measurement_set$name,")\n")
       
-      pip_sel = pipelines_df[((pipelines_df[, scidb4gh:::template_linker$pipeline$pipelines_sel_col] == 
+      pip_sel = pipelines_df[((pipelines_df[, template_linker$pipeline$pipelines_sel_col] == 
                                  reference_object$measurement_set$pipeline_scidb) & 
-                                (pipelines_df[, scidb4gh:::template_linker$filter$pipelines_sel_col] == 
+                                (pipelines_df[, template_linker$filter$pipelines_sel_col] == 
                                    reference_object$measurement_set$filter_name)), ]
       pip_sel$file_path = file.path(BASEPATH, 
                                     pip_sel$project_folder,
