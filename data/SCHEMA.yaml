@@ -327,7 +327,7 @@ array:
       dataset_id:
         start: 0
         end: Inf
-        chunk_interval: 10
+        chunk_interval: 1
         overlap: 0
       measurementset_id:
         start: 0
@@ -337,12 +337,12 @@ array:
       biosample_id:
         start: 0
         end: Inf
-        chunk_interval: 100
+        chunk_interval: 1000
         overlap: 0
       feature_id:
         start: 0
         end: Inf
-        chunk_interval: 10000
+        chunk_interval: 100
         overlap: 0
       per_gene_variant_number:
         start: 0
