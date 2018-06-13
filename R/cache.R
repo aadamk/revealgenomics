@@ -33,7 +33,7 @@ update_entity_cache = function(entitynm, con = NULL) {
     zz = unpivot(df1 = zz, arrayname = entitynm)
     if (nrow(zz) > 1) zz = zz[order(zz[, idname]), ]
     
-    zz = autoconvert_char(df1 = zz)
+    if (entitynm != .ghEnv$meta$arrOntology) zz = autoconvert_char(df1 = zz)
     .ghEnv$cache[[entitynm]] = zz
   } else { # INFO array does not exist
     .ghEnv$cache[[entitynm]] = iquery(con$db, arraynm, return = TRUE)
