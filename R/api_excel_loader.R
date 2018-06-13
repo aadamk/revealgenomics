@@ -31,6 +31,7 @@ register_entities_excel = function(study_worksheet,
                                                        .ghEnv$meta$arrDefinition),
                                   BASEPATH = '',
                                   con = NULL) {
+  register_upto_entity = match.arg(register_upto_entity)                                          
   
   abort_condition_met = function(register_upto_entity, check_with_entity) {
     if (register_upto_entity == check_with_entity) {
@@ -40,7 +41,6 @@ register_entities_excel = function(study_worksheet,
       return(FALSE)
     }
   }
-  register_upto_entity = match.arg(register_upto_entity)                                          
   workbook = myExcelLoader(filename = study_worksheet)
   def = myExcelReader(workbook, sheet_name = 'Definitions')
   
