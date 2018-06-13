@@ -24,7 +24,6 @@ test_feature_synonym_registration = function() {
                       chromosome = "debug_test_chromosome",
                       start = -1,
                       end = -1,
-                      strand_term = search_ontology(terms = "strand_term_unspecified"),
                       feature_type = "gene",
                       source = "...")
   
