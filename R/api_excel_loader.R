@@ -86,18 +86,18 @@ register_entities_excel = function(study_worksheet,
     
     # EXPERIMENTSET and MEASUREMENTSET
     cat("#### Registering EXPERIMENTSET and MEASUREMENTSET ####\n")
-    expset_msmtset_rec = api_register_experimentsets_measurementsets(workbook = workbook, 
+    expset_msmtset_rec = api_register_featuresets_experimentsets_measurementsets(workbook = workbook, 
                                                                      record = record, 
                                                                      def = def)
     
     cat("#### Registering MEASUREMENT-DATA ####\n")
     # ==========================
     # TODO: The following can be wrapped up into a function called
-    # api_register_measurementsets(workbook = workbook, record = record, BASEPATH = BASEPATH)
+    # api_register_measurementdata(workbook = workbook, record = record, BASEPATH = BASEPATH)
     # PIPELINES correspond to rows pointing to Measurement data (e.g. RNASeq, Variant etc.)  
     pipelines_df = template_helper_extract_record_related_rows(workbook = workbook,
-                                                                          sheetName = 'Pipelines', 
-                                                                          record = record)
+                                                               sheetName = 'Pipelines', 
+                                                               record = record)
     pipelines_df$featureset_scidb = pipelines_df[, template_linker$featureset$pipelines_sel_col]
     pipelines_df = plyr::rename(pipelines_df, 
                                 setNames(template_linker$featureset$choices_col,

@@ -168,7 +168,7 @@ api_register_biosamples = function(workbook, record, def, con = NULL) {
                                       con = con)
 }
 
-#' Register ExperimentSets and MeasurementSets
+#' Register FeatureSets, ExperimentSets and MeasurementSets
 #' 
 #' This function differs from api_register_indiv/bios/measurements
 #' that work row by row on Subjects/Samples/Pipelines sheets respectively.
@@ -176,7 +176,7 @@ api_register_biosamples = function(workbook, record, def, con = NULL) {
 #' in Pipelines sheet, and then uses info in `pipeline_choices` sheet to fill up the 
 #' other necessary information
 #' @export
-api_register_experimentsets_measurementsets = function(workbook, record, def, con = NULL) {
+api_register_featuresets_experimentsets_measurementsets = function(workbook, record, def, con = NULL) {
   stopifnot(nrow(record) == 1)
   
   # Create choices objects from metadata sheet
@@ -197,7 +197,7 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
                                                              record = record)
 
   ######################################  
-  # EXPERIMENTSET
+  # EXTRACT ALL RELEVANT INFORMATION
   msmtset_df = template_helper_extract_pipeline_meta_info(pipelines_df = pipelines_df, 
                                                           choicesObj = choicesObj,
                                                           record = record)
@@ -210,7 +210,8 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
   # some parsing on the data
   # Extract relevant definitions 
   defi = rbind(template_helper_extract_definitions(sheetName = 'pipeline_choices', def = def), 
-               template_helper_extract_definitions(sheetName = 'filter_choices', def = def))
+               template_helper_extract_definitions(sheetName = 'filter_choices', def = def),
+               template_helper_extract_definitions(sheetName = 'featureset_choices', def = def))
   defi = defi[!(defi$attribute_name %in% c('filter_id')), ]
   
   # Enforce that columns in data are defined in Definitions sheet
@@ -225,6 +226,8 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
                                                     definitions = defi)})
   
   
+  ######################################  
+  # EXPERIMENTSET
   # Formulate ExperimentSet
   columns_experimentSet = c('dataset_id', 
                             'measurement_entity',
@@ -236,6 +239,38 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
   
   expset_record = register_experimentset(df = expset_df, dataset_version = record$dataset_version, 
                                          con = con)
+  
+  ######################################  
+  # FEATURESET
+  # Formulate FeatureSet
+  columns_featureSet = c('featureset_name', 
+                         'featureset_scidb',
+                         'featureset_source', 
+                         'featureset_source_version',
+                         'featureset_species')
+  ftrset_df = unique(msmtset_df[, columns_featureSet])
+  
+  new_colnames_featureset = c('featureset_name', 'name', 'source', 'source_version', 'species')
+  names(new_colnames_featureset) = columns_featureSet
+  ftrset_df = plyr::rename(ftrset_df, new_colnames_featureset)
+  ftrset_df$description = "..."
+  ftrset_df$source_uri = "..."
+  
+  refSets = get_referenceset()
+  if (nrow(refSets) > 2) {
+    stop("In following piece of code referenceSet linking logic is implemented assuming only two referenceSets: GRCh37 and GRCh38")
+  }
+  refset37_id = refSets[grep("37", refSets$name), ]$referenceset_id
+  refset38_id = refSets[grep("38", refSets$name), ]$referenceset_id
+  stopifnot(length(refset37_id) == 1 &
+              length(refset38_id) == 1)
+  
+  ftrset_df$referenceset_id = -1
+  ftrset_df[grep("37", ftrset_df$source), ]$referenceset_id = refset37_id
+  ftrset_df[grep("38", ftrset_df$source), ]$referenceset_id = refset38_id
+  
+  ftrset_record = register_featureset(df = ftrset_df, 
+                          con = con)  
   
   # ====================================
   # MEASUREMENTSET
@@ -256,6 +291,7 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
     cat("Following pipelines do not have featuresets defined yet -- skipping them:\n")
     print(msmtset_df[matchL$source_unmatched_idx, c(1:5)])
     msmtset_df = msmtset_df[matchL$source_matched_idx, ]
+    stop("Should not have occurred")
   }
   msmtset_df$featureset_id = fsets$featureset_id[matchL$target_matched_idx]
   

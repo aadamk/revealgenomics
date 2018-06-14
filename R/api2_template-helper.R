@@ -236,16 +236,28 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj, 
                             })
       )
     )
+  
+  featureset_df =
+    drop_na_columns(
+      do.call(what = 'rbind',
+              args = lapply(msmtset_selector[, selector_col_featureset_choice],
+                            function(choice) {
+                              choicesObj$featuresetChoicesObj$get_featureset_metadata(keys = choice)
+                            })
+      )
+    )
+  
   # drop some local information
   filter_df$filter_id = NULL 
   filter_df$measurement_entity = NULL 
   
   msmtset_df = cbind(pipeline_df,
-                     filter_df)
-  msmtset_df$featureset_name = sapply(msmtset_selector[, selector_col_featureset_choice],
-                                      function(choice) {
-                                        choicesObj$featuresetChoicesObj$get_featureset_name(keys = choice)
-                                      })
+                     filter_df,
+                     featureset_df)
+  # msmtset_df$featureset_name = sapply(msmtset_selector[, selector_col_featureset_choice],
+  #                                     function(choice) {
+  #                                       choicesObj$featuresetChoicesObj$get_featureset_name(keys = choice)
+  #                                     })
   msmtset_df$dataset_id = record$dataset_id
   msmtset_df$measurement_entity = 
     template_helper_convert_names(external_name = msmtset_df$measurement_entity)
