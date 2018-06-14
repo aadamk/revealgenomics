@@ -48,6 +48,7 @@ register_entities_excel = function(study_worksheet,
   # (provided ontology list is stabilized)
   ontology_ids = api_register_ontology_from_definition_sheet(def = def, con = con)
   
+  cat("#### Registering ONTOLOGY ####\n")
   register_ontology_term(df = data.frame(term = 'refer `sample_disease` column', 
                                          source_name= '...', 
                                          source_version = '...'), 
@@ -56,6 +57,7 @@ register_entities_excel = function(study_worksheet,
     return(invisible(NULL))
   }
   
+  cat("#### Registering PROJECT, STUDY ####\n")
   project_study_record = api_register_project_datasets(workbook = workbook, con = con)
   if (abort_condition_met(register_upto_entity, check_with_entity = .ghEnv$meta$arrDataset)) {
     return(invisible(NULL))
@@ -65,6 +67,8 @@ register_entities_excel = function(study_worksheet,
   for (idx in 1:nrow(project_study_record)) {
     record = project_study_record[idx, ]
     # DEFINITION
+    cat("#### Registering record ####", idx, "of", nrow(project_study_record), "\n")
+    cat("#### Registering DEFINITION ####\n")
     definition_record = api_register_definitions(df_definitions = def, 
                                                  record = record,
                                                  con = con)
@@ -73,16 +77,20 @@ register_entities_excel = function(study_worksheet,
     }
     
     # INDIVIDUAL
+    cat("#### Registering INDIVIDUAL ####\n")
     indiv_rec = api_register_individuals(workbook = workbook, record = record, def = def)
     
     # BIOSAMPLE
+    cat("#### Registering BIOSAMPLE ####\n")
     bios_rec = api_register_biosamples(workbook = workbook, record = record, def = def)
     
     # EXPERIMENTSET and MEASUREMENTSET
+    cat("#### Registering EXPERIMENTSET and MEASUREMENTSET ####\n")
     expset_msmtset_rec = api_register_experimentsets_measurementsets(workbook = workbook, 
                                                                      record = record, 
                                                                      def = def)
     
+    cat("#### Registering MEASUREMENT-DATA ####\n")
     # ==========================
     # TODO: The following can be wrapped up into a function called
     # api_register_measurementsets(workbook = workbook, record = record, BASEPATH = BASEPATH)
