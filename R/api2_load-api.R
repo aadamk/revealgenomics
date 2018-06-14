@@ -199,7 +199,8 @@ api_register_experimentsets_measurementsets = function(workbook, record, def, co
   ######################################  
   # EXPERIMENTSET
   msmtset_df = template_helper_extract_pipeline_meta_info(pipelines_df = pipelines_df, 
-                                                          choicesObj = choicesObj)
+                                                          choicesObj = choicesObj,
+                                                          record = record)
   if (nrow(msmtset_df) == 0) {
     cat("No ExperimentSets that match pipeline_choices description\n")
     return(NULL)

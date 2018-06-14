@@ -207,7 +207,7 @@ template_helper_enforce_mandatory_columns_present = function(data_df, definition
 #'                     `[project_id, study_id, study_version]` record
 #' @param choicesObj list containing instantiated objects of PipelineChoices, FilterChoices
 #'                   and FeaturesetChoices classes
-template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj) {
+template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj, record) {
   selector_col_pipeline_choice = template_linker$pipeline$pipelines_sel_col
   selector_col_filter_choice   = template_linker$filter$pipelines_sel_col
   selector_col_featureset_choice = template_linker$featureset$pipelines_sel_col
