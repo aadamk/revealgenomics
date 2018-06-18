@@ -135,10 +135,10 @@ get_experiment = function(con = NULL) {
   con = use_ghEnv_if_null(con)
   
   qq = paste("equi_join(", 
-             "grouped_aggregate(secure_scan(", full_arrayname(.ghEnv$meta$arrMeasurement), "), ", 
+             "grouped_aggregate(", custom_scan(), "(", full_arrayname(.ghEnv$meta$arrMeasurement), "), ", 
              "count(*),", 
              "dataset_id, dataset_version, experimentset_id, measurement_entity, biosample_id) as X, ", 
-             "filter(secure_scan(", full_arrayname(.ghEnv$meta$arrDataset), "_INFO), key='", info_key, "'),",
+             "filter(", custom_scan(), "(", full_arrayname(.ghEnv$meta$arrDataset), "_INFO), key='", info_key, "'),",
              "'left_names=dataset_id,dataset_version',",
              "'right_names=dataset_id,dataset_version')", 
              sep = "")
@@ -146,7 +146,7 @@ get_experiment = function(con = NULL) {
   qq2 = paste("equi_join(", 
               qq, ", ", 
               "project(
-              apply(secure_scan(", full_arrayname(.ghEnv$meta$arrExperimentSet), "), experimentset_id_, experimentset_id), 
+              apply(", custom_scan(), "(", full_arrayname(.ghEnv$meta$arrExperimentSet), "), experimentset_id_, experimentset_id), 
               experimentset_id_, name), ", 
               "'left_names=experimentset_id,dataset_version', ", 
               "'right_names=experimentset_id_,dataset_version')")
