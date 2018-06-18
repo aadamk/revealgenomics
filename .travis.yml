@@ -64,7 +64,7 @@ script:
   - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/reveal-genomics-docs/master/04-load-api.Rmd", destfile = "/tmp/load-api-example.Rmd")'
   - R -e 'rmarkdown::render(input = "/tmp/load-api-example.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
   - R -e 'rmarkdown::render(input = "/tmp/download-api-example.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
-  - R -e 'source("extdata", "travis-manual-tests.R", package="scidb4gh")'
+  - R -e 'source(system.file("extdata", "travis-manual-tests.R", package="scidb4gh"))'
 
 after_failure:
   - docker logs scidb
