@@ -84,30 +84,17 @@ get_measurement = function(measurement_id = NULL, dataset_version = NULL,
   
   # Merge with datasets info to join in study category
   d = get_datasets(con = con)
+  if (!('study category' %in% colnames(d))) {
+    d$`study category` = NA
+  }
   if (any(is.na(d$`study category`))) {
-    d[which(is.na(d$`study category`)), ]$`study category` = "unknown"
+    d[which(is.na(d$`study category`)), ]$`study category` = NA
   }
   msrmt2 = merge(msrmt, 
                  d[, c('dataset_id', 'dataset_version', 'study category')], 
                  by = c('dataset_id', 'dataset_version'))
   if (nrow(msrmt2) != nrow(msrmt)) stop("Some measurements did not belong to specific dataset_id-s")
   msrmt2
-}
-
-get_experiment_v1 = function(mandatory_fields_only = FALSE) {
-  msrmt = get_measurement(mandatory_fields_only = mandatory_fields_only)
-  
-  zz = msrmt[, c('dataset_id', 'dataset_version', 'experimentset_id', 'measurement_entity', 'biosample_id', 'study category')]
-  head(zz)
-  zz = zz[!duplicated(zz), ]
-  
-  # Merge with ExperimentSet info to join in experiment sub-type
-  expsets = get_experimentset(mandatory_fields_only = mandatory_fields_only)
-  experiments = merge(zz, 
-                      expsets[, c('experimentset_id', 'name')], 
-                      by = 'experimentset_id')
-  
-  experiments
 }
 
 #' retrieve all the experiments available to logged in user
@@ -137,7 +124,7 @@ get_experiment = function(con = NULL) {
              "dataset_id, dataset_version, experimentset_id, measurement_entity, biosample_id) as X, ", 
              "filter(", custom_scan(), "(", full_arrayname(.ghEnv$meta$arrDataset), "_INFO), key='", info_key, "'),",
              "'left_names=dataset_id,dataset_version',",
-             "'right_names=dataset_id,dataset_version')", 
+             "'right_names=dataset_id,dataset_version', 'left_outer=true')", 
              sep = "")
   
   qq2 = paste("equi_join(", 
@@ -150,8 +137,8 @@ get_experiment = function(con = NULL) {
   
   xx = iquery(con$db, 
               qq2, 
-              return = T)
-  stopifnot(unique(xx$key) == info_key)
+              return = T, only_attributes = T)
+  stopifnot(unique(xx$key) == info_key | is.na(unique(xx$key)))
   xx$key = NULL
   colnames(xx)[which(colnames(xx) == 'val')] = info_key
   xx
