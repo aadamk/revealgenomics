@@ -732,7 +732,6 @@ register_experimentset = function(df, dataset_version = NULL, only_test = FALSE,
                                             df, dataset_version, only_test, con = con)
 }
 
-#' @export
 register_measurement = function(df, dataset_version = NULL, only_test = FALSE, con = NULL){
   register_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
                                             df, dataset_version, only_test, con = con)
