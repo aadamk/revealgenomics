@@ -7,11 +7,10 @@
 populate_measurements(dataset_id, dataset_version, con = NULL)
 }
 \description{
-Work in progress
-Once finished, this function should eventually be used instead of the script <load-experiment.R>
-The function would be called after loading the data for each dataset
-It compiles information for all measerement entities, and inserts the relevant
-information into the MEASUREMENT entity (at this point, this is called the EXPERIMENT entity,
-but the name should be changed. A MEASUREMENT combines both the Experiment and the 
-Pipeline information)
+The function should be called after loading the `MeasurementData` arrays` (e.g. Variant, RNA-seq etc.).
+The `MEASUREMENT` entity records one entry for each entry in a `MeasurementData` array per biosample,
+per pipeline
+}
+\details{
+(A `MEASUREMENT` combines both Experiment and Pipeline information)
 }
