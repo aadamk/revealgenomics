@@ -1304,6 +1304,7 @@ join_info = function(qq, arrayname,
                      con = NULL) {
   con = use_ghEnv_if_null(con)
   # Join INFO array
+  qq1 = qq
   if (!mandatory_fields_only) {
     entitynm = strip_namespace(arrayname)
     if (is_entity_secured(entitynm)) {
@@ -1311,7 +1312,6 @@ join_info = function(qq, arrayname,
     } else {
       info_array = paste0(                    full_arrayname(entitynm), "_INFO" )
     }
-    qq1 = qq
     idname = get_idname(arrayname)
 
     if (exists('debug_trace')) {t1 = proc.time()}
@@ -1333,7 +1333,7 @@ join_info = function(qq, arrayname,
                   ", 'left_names=", paste(idname, collapse = ","), 
                   "', 'right_names=", paste(idname, collapse = ","),  "', 'left_outer=true', 'keep_dimensions=true')")
     }
-  }
+  } 
   x2 = iquery(con$db, qq1, return = TRUE)
   
   if (exists('debug_trace')) {cat("join with info:\n"); print( proc.time()-t1 )}

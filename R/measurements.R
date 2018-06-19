@@ -71,15 +71,20 @@ populate_measurements = function(dataset_id, dataset_version, con = NULL) {
   }
 }
 
+#' Retrieve data from `Measurement` entity
+#' 
+#' Function `populate_measurements()` must be called before calling this function.
+#' See more details about `Measurement` entity in documentation for `populate_measurements()`
 #' @export
 get_measurements = function(measurement_id = NULL, dataset_version = NULL, 
-                           all_versions = TRUE, mandatory_fields_only = FALSE, con = NULL){
+                           all_versions = TRUE, con = NULL){
   msrmt = get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
                                                id = measurement_id, 
                                                dataset_version, all_versions, 
-                                               mandatory_fields_only = mandatory_fields_only, 
                                                con = con)
-  
+  if (is.null(msrmt)) {
+    stop("Measurement entity not populated. Try calling function: `populate_measurements()`")
+  }
   # Merge with datasets info to join in study category
   d = get_datasets(con = con)
   if (!('study category' %in% colnames(d))) {
