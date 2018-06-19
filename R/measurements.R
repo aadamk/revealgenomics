@@ -72,7 +72,7 @@ populate_measurements = function(dataset_id, dataset_version, con = NULL) {
 }
 
 #' @export
-get_measurement = function(measurement_id = NULL, dataset_version = NULL, 
+get_measurements = function(measurement_id = NULL, dataset_version = NULL, 
                            all_versions = TRUE, mandatory_fields_only = FALSE, con = NULL){
   msrmt = get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
                                                id = measurement_id, 
@@ -97,11 +97,11 @@ get_measurement = function(measurement_id = NULL, dataset_version = NULL,
 
 #' retrieve all the experiments available to logged in user
 #' 
-#' joins Measurement, Dataset (for study category field), and ExperimentSet arrays
+#' joins `Measurement`, `Dataset` (for `study category` field if available), and `ExperimentSet` arrays
 #' to return experiment information to user
 #' 
 #' @examples 
-#' experiments = get_experiment()
+#' experiments = get_experiments()
 #' cat("Categorization of experiments by major type\n")
 #' table(experiments$measurement_entity)
 #' cat("Categorization of experiments by sub type\n")
@@ -110,7 +110,7 @@ get_measurement = function(measurement_id = NULL, dataset_version = NULL,
 #' table(experiments$`study category`)
 #' 
 #' @export
-get_experiment = function(con = NULL) {
+get_experiments = function(con = NULL) {
   con = use_ghEnv_if_null(con)
   
   info_key = 'study category'
