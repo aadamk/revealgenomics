@@ -7,29 +7,26 @@
 #' information into the MEASUREMENT entity (at this point, this is called the EXPERIMENT entity,
 #' but the name should be changed. A MEASUREMENT combines both the Experiment and the 
 #' Pipeline information) 
-register_measurements = function(dataset_id, dataset_version, con = NULL) {
+#' @export
+populate_measurements = function(dataset_id, dataset_version, con = NULL) {
   con = use_ghEnv_if_null(con)
-  
+  db = con$db
   df_info = get_entity_info()
   df_info_msrmt = df_info[df_info$class == 'measurementdata',]
   df_info_msrmt$entity = as.character(df_info_msrmt$entity)
   
-  nmsp = find_namespace(id = dataset_id, entitynm = 'DATASET')
-  cat("--Namespace: ", nmsp, "\n")
-  for (idx in c(1:3,5)){
+  for (idx in which(df_info_msrmt$entity != .ghEnv$meta$arrCopynumber_seg)){
     msrmnt_entity = df_info_msrmt[idx, ]$entity
-    stopifnot(is_entity_secured(msrmnt_entity) & 
-                length(.ghEnv$meta$L$array[[msrmnt_entity]]$namespace) > 1)
+    # stopifnot(is_entity_secured(msrmnt_entity))
     cat("Measurement entity: ", msrmnt_entity, "\n")
     
-    msrmt_array = paste(nmsp, msrmnt_entity, sep = ".")
+    msrmt_array = full_arrayname(msrmnt_entity)
     msrmt_set_nm = df_info_msrmt[idx, ]$search_by_entity
     msrmt_set_idnm = get_base_idname(msrmt_set_nm)
     t1 = proc.time()
-    res = iquery(con$db,
-                 paste("aggregate(filter(", msrmt_array, 
-                                  ", dataset_id = ", dataset_id, " AND dataset_version = ", dataset_version, ")", 
-                       ", count(*), biosample_id, ", 
+    res = iquery(db,
+                 paste("aggregate(", custom_scan(), "(", msrmt_array, 
+                       "), count(*), biosample_id, ", 
                        msrmt_set_idnm, 
                        ", dataset_version)"), 
                  return = T)
@@ -54,22 +51,22 @@ register_measurements = function(dataset_id, dataset_version, con = NULL) {
       colnames(res2)[which(colnames(res2) == msrmt_set_idnm)] = 'measurementset_id'
       colnames(res2)[which(colnames(res2) == 'name')] = 'measurementset_name'
       # res2$dataset_id = 1
-      if (length(unique(res2$dataset_version)) != 1 |
-          unique(res2$dataset_version) != 1) stop("This script has not been checked for multiple dataset versions at a time")
+      # if (length(unique(res2$dataset_version)) != 1 |
+      #             unique(res2$dataset_version) != 1) stop("This script has not been checked for multiple dataset versions at a time")
       # res2$dataset_version = NULL
       
       cat("======\n")
       cat("Registering", nrow(res2), "experiment-pipeline entries\n")
-      for (dataset_idi in unique(res2$dataset_id)) {
+      for (dataset_idi in sort(unique(res2$dataset_id))) {
         res2_sel1 = res2[res2$dataset_id == dataset_idi, ]
-        for (dataset_version in unique(res2_sel1$dataset_version)) {
+        for (dataset_version in sort(unique(res2_sel1$dataset_version))) {
           res2_sel2 = res2_sel1[res2_sel1$dataset_version == dataset_version, ]
           res2_sel2$dataset_version = NULL
           cat("======------======\n")
           cat("Registering", nrow(res2_sel2), 
               "experiment-pipeline entries for dataset_id:", dataset_idi, "at version:", dataset_version, "\n")
-          experiment_record = register_experiment(df = res2_sel2, 
-                                                  dataset_version = dataset_version)
+          measurement_record = register_measurement(df = res2_sel2, 
+                                                    dataset_version = dataset_version)
         }
       }
     }
