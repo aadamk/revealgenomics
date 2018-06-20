@@ -15,6 +15,7 @@ match_features = function(features_in_file, df_features_db, feature_type, column
   df_features_db$feature_id[matchL$target_matched_idx]
 }
 
+##### DataFrameLoader #####
 DataFrameLoader = R6::R6Class(classname = "DataFrameLoader", 
         public = list(
           print_level = function() {cat("----(Level: DataFrameLoader)\n")},
@@ -170,14 +171,17 @@ DataFrameLoader = R6::R6Class(classname = "DataFrameLoader",
           returnReferenceObject = function(){
             
           },
-          initialize = function(data_df, reference_object){
+          initialize = function(data_df, reference_object, feature_annotation_df = NULL){
             private$.data_df = data_df
             private$.reference_object = reference_object
+            private$.feature_annotation_df = feature_annotation_df
           }
         ), private = list(
           .data_df = NULL,
+          .feature_annotation_df = NULL, 
           .reference_object = NULL
         ))
+##### DataFrameLoaderRNASeq #####
 DataFrameLoaderRNASeq = R6::R6Class(classname = "DataFrameLoaderRNASeq",
                                 inherit = DataFrameLoader,
                                 public = list(
@@ -225,6 +229,7 @@ DataFrameLoaderRNASeq = R6::R6Class(classname = "DataFrameLoaderRNASeq",
                                       }
                                     }
                                   }))
+##### DataFrameLoaderRNASeqCufflinksGene #####
 DataFrameLoaderRNASeqCufflinksGene = R6::R6Class(classname = "DataFrameLoaderRNASeqCufflinksGene",
                                              inherit = DataFrameLoaderRNASeq,
                                              public = list(
@@ -241,6 +246,7 @@ DataFrameLoaderRNASeqCufflinksGene = R6::R6Class(classname = "DataFrameLoaderRNA
                                                  private$.data_df$tracking_id = NULL
                                                }))
 
+##### DataFrameLoaderRNASeqCufflinksIsoform #####
 DataFrameLoaderRNASeqCufflinksIsoform = R6::R6Class(classname = "DataFrameLoaderRNASeqCufflinksIsoform",
                                                 inherit = DataFrameLoaderRNASeq,
                                                 public = list(
@@ -258,6 +264,7 @@ DataFrameLoaderRNASeqCufflinksIsoform = R6::R6Class(classname = "DataFrameLoader
                                                     
                                                   }))
 
+##### DataFrameLoaderVariant #####
 DataFrameLoaderVariant = R6::R6Class(classname = 'DataFrameLoaderVariant',
                                      inherit = DataFrameLoader,
                                      public = list(
@@ -269,6 +276,7 @@ DataFrameLoaderVariant = R6::R6Class(classname = 'DataFrameLoaderVariant',
                                        }
                                      ))
 
+##### DataFrameLoaderVariantGemini #####
 DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGemini',
                                      inherit = DataFrameLoaderVariant,
                                      public = list(
@@ -339,6 +347,7 @@ DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGe
                                        }
                                      ))
 
+##### DataFrameLoaderFusionTophat #####
 DataFrameLoaderFusionTophat = R6::R6Class(classname = 'DataFrameLoaderFusionTophat',
                                      inherit = DataFrameLoader,
                                      public = list(
@@ -413,6 +422,7 @@ DataFrameLoaderFusionTophat = R6::R6Class(classname = 'DataFrameLoaderFusionToph
                                        }
                                      ))
 
+##### createDataLoader #####
 #' @export      
 createDataLoader = function(data_df, reference_object){
   temp_string = paste0("{",
