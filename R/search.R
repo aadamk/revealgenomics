@@ -425,18 +425,18 @@ dao_search_rnaquantification = function(measurementset,
   dataset_id = unique(measurementset$dataset_id)
   stopifnot(length(dataset_id) == 1)
   
-  if (! (measurementset$featureset_id %in% feature$featureset_id) ) {
-    stop(paste0("Featureset specified py pipeline: ", measurementset$featureset_id, 
-                " not present in features dataframe"))
-  }
-  feature = feature[feature$featureset_id == measurementset$featureset_id, ]
-  ftr_id = sort(unique(feature$feature_id))
-  
   arr0 = full_arrayname(.ghEnv$meta$arrRnaquantification)
   
   qq = paste0(custom_scan(), "(", arr0, ")")
   
   if (!is.null(feature)) {
+    if (! (measurementset$featureset_id %in% feature$featureset_id) ) {
+      stop(paste0("Featureset specified py pipeline: ", measurementset$featureset_id, 
+                  " not present in features dataframe"))
+    }
+    feature = feature[feature$featureset_id == measurementset$featureset_id, ]
+    ftr_id = sort(unique(feature$feature_id))
+    
     K_THRESH = 20
     if (length(ftr_id) <= K_THRESH) {
       path = "filter_features"
@@ -464,9 +464,18 @@ dao_search_rnaquantification = function(measurementset,
     qq2 = paste0("filter(", qq2, ", measurementset_id = ", rqs_id, ")")
     res = iquery(con$db, query = qq2, binary = FALSE, return = TRUE)
   } else { # user has not supplied features; try to download full data
+    qq2 = paste0("filter(", qq, 
+                 ", ", get_base_idname(.ghEnv$meta$arrMeasurementSet), 
+                 "=", measurementset$measurementset_id, 
+                 ")")
     cat("Estimating download size: ")
     download_size = iquery(con$db, 
-                           query = paste0("project(summarize(_materialize(", qq, ", 1)), bytes)"), 
+                           query = 
+                             paste0(
+                               "project(
+                                 summarize(",
+                                   qq2, 
+                                   "), bytes)"), 
                            return = TRUE)$bytes
     cat(download_size/1024/1024, " MB\n")
     download_limit_mb = 500
@@ -475,7 +484,7 @@ dao_search_rnaquantification = function(measurementset,
           Post an issue at https://github.com/Paradigm4/scidb4gh/issues\n")
       return(NULL)
     }
-    res = iquery(con$db, query = qq, binary = TRUE, return = TRUE)
+    res = iquery(con$db, query = qq2, binary = TRUE, return = TRUE)
   }
   
   
