@@ -1,3 +1,4 @@
+##### DataReader #####
 DataReader = R6::R6Class(classname = 'DataReader', 
                          public = list(
                            initialize = function(pipeline_df,
@@ -25,6 +26,9 @@ DataReader = R6::R6Class(classname = 'DataReader',
                              cat("Dimensions:", dim(private$.data_df), "\n")
                              invisible(self)
                            },
+                           get_feature_annotation = function() {
+                             private$.feature_annotation_df
+                           },
                            get_data = function(){
                              private$.data_df
                            }
@@ -33,17 +37,20 @@ DataReader = R6::R6Class(classname = 'DataReader',
                          private = list(
                            .measurement_set = NULL,
                            .pipeline_df = NULL,
+                           .feature_annotation_df = NULL,
                            .header = TRUE, # whether to read first row of data-file as header
                            .separator = '\t',
                            .data_df = NULL
                          ))
 
+##### DataReaderVariant #####
 DataReaderVariant = R6::R6Class(classname = 'DataReaderVariant',
                                 inherit = DataReader,
                                 public = list(
                                   print_level = function() {cat("----(Level: DataReaderVariant)\n")}
                                 ))
 
+##### DataReaderVariantGemini #####
 DataReaderVariantGemini = R6::R6Class(classname = 'DataReaderVariantGemini',
                                       inherit = DataReaderVariant,
                                       public = list(
@@ -104,6 +111,7 @@ DataReaderVariantGemini = R6::R6Class(classname = 'DataReaderVariantGemini',
                                         }
                                       ))
 
+##### DataReaderRNASeq #####
 DataReaderRNASeq = R6::R6Class(classname = 'DataReaderRNASeq',
                                inherit = DataReader,
                                public = list(
@@ -121,6 +129,7 @@ DataReaderRNASeq = R6::R6Class(classname = 'DataReaderRNASeq',
                                  }
                                ))
 
+##### DataReaderRNASeqCufflinks #####
 DataReaderRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNASeqCufflinks',
                                 inherit = DataReaderRNASeq,
                                 public = list(
@@ -182,6 +191,7 @@ DataReaderRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNASeqCufflinks',
                                   }
                                 ))
 
+##### DataReaderRNASeqHTSeq #####
 DataReaderRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNASeqHTSeq',
                                     inherit = DataReaderRNASeq,
                                     public = list(
@@ -190,8 +200,34 @@ DataReaderRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNASeqHTSeq',
                                         super$load_data_from_file()
                                         cat("load_data_from_file()"); self$print_level()
                                         
+                                        # HTSeq file has feature annotation as well as expression data
+                                        # Step 1 of 2 -- Extract annotation data
+                                        ftr_col = 'gene'
+                                        stopifnot(length(unique(private$.data_df[, ftr_col])) == 
+                                                    nrow(private$.data_df[, ftr_col]))
+                                        ftr_ann_columns = c(ftr_col, 'mrna', 'refseq', 'ucscid', 
+                                                            'description', 'entrez', 
+                                                            'chr', 'beg', 'end')
+                                        browser()
+                                        private$.feature_annotation_df = private$.data_df[, ftr_ann_columns]
+                                        colnames(private$.feature_annotation_df) = c('gene_symbol', 
+                                                                                     'mrna', 
+                                                                                     'refseq', 
+                                                                                     'ucscid', 
+                                                                                     'description', 
+                                                                                     'entrez', 
+                                                                                     'chromosome', 
+                                                                                     'start', 
+                                                                                     'end')
+                                        
+                                        # Step 2 of 2 -- Extract expression data
+                                        private$.data_df = private$.data_df[, 
+                                                            c(ftr_col, 
+                                                              colnames(private$.data_df)[!(colnames(private$.data_df) %in% 
+                                                                               ftr_ann_columns)])]
                                         column_names = colnames(private$.data_df)
 
+                                        # Now work on the expression data matrix
                                         # There is a 'xxx/' prefix in all column names -- remove that
                                         cat("Local rule 1\n")
                                         cat("============\n")
@@ -212,6 +248,7 @@ DataReaderRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNASeqHTSeq',
                                       
                                     ))
 
+##### DataReaderFusionTophat #####
 DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                      inherit = DataReader,
                                      public = list(
@@ -227,6 +264,7 @@ DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                                                         'quality_score')
                                        }
                                      ))
+##### createDataReader #####
 #' @export
 createDataReader = function(pipeline_df, measurement_set){
   temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
