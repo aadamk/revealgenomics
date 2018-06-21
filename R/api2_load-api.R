@@ -266,9 +266,13 @@ api_register_featuresets_experimentsets_measurementsets = function(workbook, rec
               length(refset38_id) == 1)
   
   ftrset_df$referenceset_id = -1
-  ftrset_df[grep("37", ftrset_df$source), ]$referenceset_id = refset37_id
-  ftrset_df[grep("38", ftrset_df$source), ]$referenceset_id = refset38_id
-  
+  if (length(grep("37", ftrset_df$source)) > 0) {
+    ftrset_df[grep("37", ftrset_df$source), ]$referenceset_id = refset37_id
+  }
+  if (length(grep("38", ftrset_df$source)) > 0) {
+    ftrset_df[grep("38", ftrset_df$source), ]$referenceset_id = refset38_id
+  }
+  cat("==== Registering FEATURESET ====\n")
   ftrset_record = register_featureset(df = ftrset_df, 
                           con = con)  
   
