@@ -85,7 +85,7 @@ register_entities_excel = function(study_worksheet,
     bios_rec = api_register_biosamples(workbook = workbook, record = record, def = def)
     
     # EXPERIMENTSET and MEASUREMENTSET
-    cat("#### Registering EXPERIMENTSET and MEASUREMENTSET ####\n")
+    cat("#### Registering FEATURESET, EXPERIMENTSET and MEASUREMENTSET ####\n")
     expset_msmtset_rec = api_register_featuresets_experimentsets_measurementsets(workbook = workbook, 
                                                                      record = record, 
                                                                      def = def)

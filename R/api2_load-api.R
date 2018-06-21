@@ -237,6 +237,7 @@ api_register_featuresets_experimentsets_measurementsets = function(workbook, rec
   expset_df$description = paste0(expset_df$name, " experiments")
   expset_df$molecule = '...'
   
+  cat("==== Registering EXPERIMENTSET =====\n")
   expset_record = register_experimentset(df = expset_df, dataset_version = record$dataset_version, 
                                          con = con)
   
@@ -312,6 +313,7 @@ api_register_featuresets_experimentsets_measurementsets = function(workbook, rec
     msmtset_df$description = '...'
   }
   
+  cat("==== Registering MEASUREMENTSET ====\n")
   msmtset_record = register_measurementset(df = msmtset_df, 
                                               dataset_version = record$dataset_version, 
                                               con = con)
