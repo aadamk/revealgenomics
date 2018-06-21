@@ -781,7 +781,8 @@ register_variant = function(df, dataset_version = NULL, only_test = FALSE, con =
   test_register_variant(df)
   if (!only_test) {
     if (!('per_gene_variant_number' %in% colnames(df))) {
-      df = df %>% group_by(feature_id, biosample_id) %>% mutate(per_gene_variant_number = row_number())
+      # specify dplyr mutate as per https://stackoverflow.com/a/33593868
+      df = df %>% group_by(feature_id, biosample_id) %>% dplyr::mutate(per_gene_variant_number = row_number())
     }
     df = as.data.frame(df)
     if (is.null(dataset_version)) {
