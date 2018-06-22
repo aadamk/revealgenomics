@@ -9,6 +9,7 @@ Description: Get insight across clinical studies. Use this API to load (register
 Depends:
     data.table,
     tidyr,
+    plyr,
     dplyr,
     yaml,
     reshape2,
