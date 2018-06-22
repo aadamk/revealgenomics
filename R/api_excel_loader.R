@@ -19,20 +19,27 @@
 #' and links to files storing the `MeasurementData` entities 
 #' (e.g. `RNASeq`, `Variant` etc.)
 #' 
-#' @param register_upto_entity use this function to load up till user-specified entity.  
-#'                         e.g. you can load `Ontology`, `(Project)` and `Dataset`, 
-#'                         `Definition` and not load the rest. 
+#' @param register_upto_entity use this parameter to restrict load up to an user-specified entity.  
+#'                         e.g. you can load up to `Ontology`, `Dataset` (and `Project`), 
+#'                         `Definition` and not load the rest. The ordering is same
+#'                         as in the parameter definition below.
 #'                         Default value is `all` i.e. all entities are loaded
+#' @param register_measurement_entity use this parameter to restrict which measurement-data types 
+#'                                    should be loaded by the function. 
+#'                                    Default value is `all` i.e. all measurement-types are loaded
 #' @export
 register_entities_excel = function(study_worksheet, 
-                                  register_upto_entity = c('all', 
-                                                       .ghEnv$meta$arrOntology,
-                                                       .ghEnv$meta$arrDataset,
-                                                       .ghEnv$meta$arrDefinition),
-                                  BASEPATH = '',
+                                  register_upto_entity = c('all', 'ONTOLOGY', 'DATASET', 'DEFINITION'),
+                                  register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
+                                                                  'FUSION', 'COPYNUMBER_SEG', 'COPYNUMBER_MAT'),
                                   con = NULL) {
   register_upto_entity = match.arg(register_upto_entity)                                          
-  
+  register_measurement_entity = match.arg(register_measurement_entity)                                          
+  if (!({zz = get_entity_info(); 
+             register_measurement_entity %in% 
+               c('all', zz[zz$class == "measurementdata", ]$entity)})) {
+    stop("Invalid register_measurement_entity definition in function")
+  }
   abort_condition_met = function(register_upto_entity, check_with_entity) {
     if (register_upto_entity == check_with_entity) {
       cat(paste0("... Aborting after loading up to entity: ", check_with_entity, "\n"))
@@ -93,7 +100,7 @@ register_entities_excel = function(study_worksheet,
     cat("#### Registering MEASUREMENT-DATA ####\n")
     # ==========================
     # TODO: The following can be wrapped up into a function called
-    # api_register_measurementdata(workbook = workbook, record = record, BASEPATH = BASEPATH)
+    # api_register_measurementdata(workbook = workbook, ...)
     # PIPELINES correspond to rows pointing to Measurement data (e.g. RNASeq, Variant etc.)  
     pipelines_df = template_helper_extract_record_related_rows(workbook = workbook,
                                                                sheetName = 'Pipelines', 
@@ -112,9 +119,15 @@ register_entities_excel = function(study_worksheet,
     
     # loop through measurementsets in a dataset record
     for (msmtset_id_sel in expset_msmtset_rec$MeasurementSetRecord$measurementset_id) {
+      cat("====================================================\n")
+      cat("====================================================\n")
       reference_object$measurement_set = get_measurementsets(measurementset_id = msmtset_id_sel)
-      cat("====================================================\n")
-      cat("====================================================\n")
+      if (register_measurement_entity != 'all' &
+            register_measurement_entity != reference_object$measurement_set$entity) {
+        cat("User chose to load entity of type:", register_measurement_entity, "only.\nSkipping measurementset_id",
+            reference_object$measurement_set$measurementset_id, "of type:", reference_object$measurement_set$entity, "\n")
+        next
+      }
       cat("Working on measurementset_id:", msmtset_id_sel,
           "(", reference_object$measurement_set$name,")\n")
       
@@ -122,9 +135,12 @@ register_entities_excel = function(study_worksheet,
                                  reference_object$measurement_set$pipeline_scidb) & 
                                 (pipelines_df[, template_linker$filter$pipelines_sel_col] == 
                                    reference_object$measurement_set$filter_name)), ]
-      pip_sel$file_path = file.path(BASEPATH, 
-                                    pip_sel$project_folder,
-                                    pip_sel$project_subfolder,
+      na_to_blank = function(terms) { # macro to convert empty location in Excel file (read as NA) into "" (blank)
+        ifelse(is.na(terms), "", terms)
+      }
+      pip_sel$file_path = file.path(na_to_blank(pip_sel$local_project_folder_prefix), 
+                                    na_to_blank(pip_sel$project_folder),
+                                    na_to_blank(pip_sel$project_subfolder),
                                     pip_sel$filename)
       # As different files are loaded,
       # local reference_object keeps track of current state of features in the database

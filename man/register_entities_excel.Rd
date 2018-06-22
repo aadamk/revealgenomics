@@ -5,14 +5,20 @@
 \title{register entities via Excel sheet}
 \usage{
 register_entities_excel(study_worksheet, register_upto_entity = c("all",
-  .ghEnv$meta$arrOntology, .ghEnv$meta$arrDataset, .ghEnv$meta$arrDefinition),
-  BASEPATH = "", con = NULL)
+  "ONTOLOGY", "DATASET", "DEFINITION"), register_measurement_entity = c("all",
+  "RNAQUANTIFICATION", "VARIANT", "FUSION", "COPYNUMBER_SEG", "COPYNUMBER_MAT"),
+  con = NULL)
 }
 \arguments{
-\item{register_upto_entity}{use this function to load up till user-specified entity.
-e.g. you can load `Ontology`, `(Project)` and `Dataset`, 
-`Definition` and not load the rest. 
+\item{register_upto_entity}{use this parameter to restrict load up to an user-specified entity.
+e.g. you can load up to `Ontology`, `Dataset` (and `Project`), 
+`Definition` and not load the rest. The ordering is same
+as in the parameter definition below.
 Default value is `all` i.e. all entities are loaded}
+
+\item{register_measurement_entity}{use this parameter to restrict which measurement-data types 
+should be loaded by the function. 
+Default value is `all` i.e. all measurement-types are loaded}
 }
 \description{
 Register entities using Excel sheet. 
