@@ -155,7 +155,7 @@ register_entities_excel = function(study_worksheet,
         }
         loaderObj = createDataLoader(data_df = readerObj$get_data(), 
                                      reference_object = reference_object, 
-                                     feature_annotation_df = readerObj$get_feature_annotation_df)
+                                     feature_annotation_df = readerObj$get_feature_annotation())
         class(loaderObj)
         errorStatus = tryCatch(expr = {
           loaderObj$assign_biosample_ids()
