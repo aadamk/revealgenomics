@@ -424,7 +424,7 @@ DataFrameLoaderFusionTophat = R6::R6Class(classname = 'DataFrameLoaderFusionToph
 
 ##### createDataLoader #####
 #' @export      
-createDataLoader = function(data_df, reference_object){
+createDataLoader = function(data_df, reference_object, feature_annotation_df = NULL){
   temp_string = paste0("{",
                        reference_object$measurement_set$pipeline_scidb, 
                        "}{", 
