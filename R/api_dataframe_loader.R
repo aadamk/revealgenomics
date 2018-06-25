@@ -181,11 +181,11 @@ DataLoader = R6::R6Class(classname = "DataLoader",
           .feature_annotation_df = NULL, 
           .reference_object = NULL
         ))
-##### DataLoaderRNASeq #####
-DataLoaderRNASeq = R6::R6Class(classname = "DataLoaderRNASeq",
+##### DataLoaderRNAQuantRNASeq #####
+DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                 inherit = DataLoader,
                                 public = list(
-                                  print_level = function() {cat("----(Level: DataLoaderRNASeq)\n")},
+                                  print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeq)\n")},
                                   load_data = function(){
                                     cat("load_data()"); self$print_level()
                                     register_expression_dataframe(df1 = private$.data_df, 
@@ -229,11 +229,11 @@ DataLoaderRNASeq = R6::R6Class(classname = "DataLoaderRNASeq",
                                       }
                                     }
                                   }))
-##### DataLoaderRNASeqCufflinksGene #####
-DataLoaderRNASeqCufflinksGene = R6::R6Class(classname = "DataLoaderRNASeqCufflinksGene",
-                                             inherit = DataLoaderRNASeq,
+##### DataLoaderRNAQuantRNASeqCufflinksGene #####
+DataLoaderRNAQuantRNASeqCufflinksGene = R6::R6Class(classname = "DataLoaderRNAQuantRNASeqCufflinksGene",
+                                             inherit = DataLoaderRNAQuantRNASeq,
                                              public = list(
-                                               print_level = function() {cat("----(Level: DataLoaderRNASeqCufflinksGene)\n")},
+                                               print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeqCufflinksGene)\n")},
                                                assign_feature_ids = function(){
                                                  cat("assign_feature_ids()"); self$print_level()
                                                  super$assign_feature_ids()
@@ -246,11 +246,11 @@ DataLoaderRNASeqCufflinksGene = R6::R6Class(classname = "DataLoaderRNASeqCufflin
                                                  private$.data_df$tracking_id = NULL
                                                }))
 
-##### DataLoaderRNASeqCufflinksIsoform #####
-DataLoaderRNASeqCufflinksIsoform = R6::R6Class(classname = "DataLoaderRNASeqCufflinksIsoform",
-                                                inherit = DataLoaderRNASeq,
+##### DataLoaderRNAQuantRNASeqCufflinksIsoform #####
+DataLoaderRNAQuantRNASeqCufflinksIsoform = R6::R6Class(classname = "DataLoaderRNAQuantRNASeqCufflinksIsoform",
+                                                inherit = DataLoaderRNAQuantRNASeq,
                                                 public = list(
-                                                  print_level = function() {cat("----(Level: DataLoaderRNASeqCufflinksIsoform)\n")},
+                                                  print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeqCufflinksIsoform)\n")},
                                                   assign_feature_ids = function(){
                                                     super$assign_feature_ids()
                                                     cat("assign_feature_ids()"); self$print_level()
@@ -434,10 +434,10 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
          "{[external]-[RNA-seq] HTSeq}{gene}" = ,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = ,
-           DataLoaderRNASeqCufflinksGene$new(data_df = data_df,
+           DataLoaderRNAQuantRNASeqCufflinksGene$new(data_df = data_df,
                                                      reference_object = reference_object),
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = 
-           DataLoaderRNASeqCufflinksIsoform$new(data_df = data_df,
+           DataLoaderRNAQuantRNASeqCufflinksIsoform$new(data_df = data_df,
                                                   reference_object = reference_object),
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: GATK + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,

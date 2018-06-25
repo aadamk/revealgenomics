@@ -111,11 +111,11 @@ DataReaderVariantGemini = R6::R6Class(classname = 'DataReaderVariantGemini',
                                         }
                                       ))
 
-##### DataReaderRNASeq #####
-DataReaderRNASeq = R6::R6Class(classname = 'DataReaderRNASeq',
+##### DataReaderRNAQuant #####
+DataReaderRNAQuant = R6::R6Class(classname = 'DataReaderRNAQuant',
                                inherit = DataReader,
                                public = list(
-                                 print_level = function() {cat("----(Level: DataReaderRNASeq)\n")}
+                                 print_level = function() {cat("----(Level: DataReaderRNAQuant)\n")}
                                ), 
                                private = list(
                                  convert_wide_to_tall_skinny = function() {
@@ -129,11 +129,11 @@ DataReaderRNASeq = R6::R6Class(classname = 'DataReaderRNASeq',
                                  }
                                ))
 
-##### DataReaderRNASeqCufflinks #####
-DataReaderRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNASeqCufflinks',
+##### DataReaderRNAQuantRNASeqCufflinks #####
+DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantRNASeqCufflinks',
                                 inherit = DataReaderRNASeq,
                                 public = list(
-                                  print_level = function() {cat("----(Level: DataReaderRNASeqCufflinks)\n")},
+                                  print_level = function() {cat("----(Level: DataReaderRNAQuantRNASeqCufflinks)\n")},
                                   load_data_from_file = function() {
                                     super$load_data_from_file()
                                     cat("load_data_from_file()"); self$print_level()
@@ -191,11 +191,11 @@ DataReaderRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNASeqCufflinks',
                                   }
                                 ))
 
-##### DataReaderRNASeqHTSeq #####
-DataReaderRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNASeqHTSeq',
+##### DataReaderRNAQuantRNASeqHTSeq #####
+DataReaderRNAQuantRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNAQuantRNASeqHTSeq',
                                     inherit = DataReaderRNASeq,
                                     public = list(
-                                      print_level = function() {cat("----(Level: DataReaderRNASeqHTSeq)\n")},
+                                      print_level = function() {cat("----(Level: DataReaderRNAQuantRNASeqHTSeq)\n")},
                                       load_data_from_file = function() {
                                         super$load_data_from_file()
                                         cat("load_data_from_file()"); self$print_level()
@@ -208,7 +208,6 @@ DataReaderRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNASeqHTSeq',
                                         ftr_ann_columns = c(ftr_col, 'mrna', 'refseq', 'ucscid', 
                                                             'description', 'entrez', 
                                                             'chr', 'beg', 'end')
-                                        browser()
                                         private$.feature_annotation_df = private$.data_df[, ftr_ann_columns]
                                         colnames(private$.feature_annotation_df) = c('gene_symbol', 
                                                                                      'mrna', 
@@ -273,10 +272,10 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = ,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" =
-             DataReaderRNASeqCufflinks$new(pipeline_df = pipeline_df,
+             DataReaderRNAQuantRNASeqCufflinks$new(pipeline_df = pipeline_df,
                                            measurement_set = measurement_set),
          "{[external]-[RNA-seq] HTSeq}{gene}" = 
-             DataReaderRNASeqHTSeq$new(pipeline_df = pipeline_df,
+             DataReaderRNAQuantRNASeqHTSeq$new(pipeline_df = pipeline_df,
                                        measurement_set = measurement_set),
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: GATK + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
