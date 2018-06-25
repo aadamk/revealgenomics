@@ -15,10 +15,10 @@ match_features = function(features_in_file, df_features_db, feature_type, column
   df_features_db$feature_id[matchL$target_matched_idx]
 }
 
-##### DataFrameLoader #####
-DataFrameLoader = R6::R6Class(classname = "DataFrameLoader", 
+##### DataLoader #####
+DataLoader = R6::R6Class(classname = "DataLoader", 
         public = list(
-          print_level = function() {cat("----(Level: DataFrameLoader)\n")},
+          print_level = function() {cat("----(Level: DataLoader)\n")},
           assign_biosample_ids = function(){
             cat("assign_biosample_ids()"); self$print_level()
             
@@ -181,11 +181,11 @@ DataFrameLoader = R6::R6Class(classname = "DataFrameLoader",
           .feature_annotation_df = NULL, 
           .reference_object = NULL
         ))
-##### DataFrameLoaderRNASeq #####
-DataFrameLoaderRNASeq = R6::R6Class(classname = "DataFrameLoaderRNASeq",
-                                inherit = DataFrameLoader,
+##### DataLoaderRNASeq #####
+DataLoaderRNASeq = R6::R6Class(classname = "DataLoaderRNASeq",
+                                inherit = DataLoader,
                                 public = list(
-                                  print_level = function() {cat("----(Level: DataFrameLoaderRNASeq)\n")},
+                                  print_level = function() {cat("----(Level: DataLoaderRNASeq)\n")},
                                   load_data = function(){
                                     cat("load_data()"); self$print_level()
                                     register_expression_dataframe(df1 = private$.data_df, 
@@ -229,11 +229,11 @@ DataFrameLoaderRNASeq = R6::R6Class(classname = "DataFrameLoaderRNASeq",
                                       }
                                     }
                                   }))
-##### DataFrameLoaderRNASeqCufflinksGene #####
-DataFrameLoaderRNASeqCufflinksGene = R6::R6Class(classname = "DataFrameLoaderRNASeqCufflinksGene",
-                                             inherit = DataFrameLoaderRNASeq,
+##### DataLoaderRNASeqCufflinksGene #####
+DataLoaderRNASeqCufflinksGene = R6::R6Class(classname = "DataLoaderRNASeqCufflinksGene",
+                                             inherit = DataLoaderRNASeq,
                                              public = list(
-                                               print_level = function() {cat("----(Level: DataFrameLoaderRNASeqCufflinksGene)\n")},
+                                               print_level = function() {cat("----(Level: DataLoaderRNASeqCufflinksGene)\n")},
                                                assign_feature_ids = function(){
                                                  cat("assign_feature_ids()"); self$print_level()
                                                  super$assign_feature_ids()
@@ -246,11 +246,11 @@ DataFrameLoaderRNASeqCufflinksGene = R6::R6Class(classname = "DataFrameLoaderRNA
                                                  private$.data_df$tracking_id = NULL
                                                }))
 
-##### DataFrameLoaderRNASeqCufflinksIsoform #####
-DataFrameLoaderRNASeqCufflinksIsoform = R6::R6Class(classname = "DataFrameLoaderRNASeqCufflinksIsoform",
-                                                inherit = DataFrameLoaderRNASeq,
+##### DataLoaderRNASeqCufflinksIsoform #####
+DataLoaderRNASeqCufflinksIsoform = R6::R6Class(classname = "DataLoaderRNASeqCufflinksIsoform",
+                                                inherit = DataLoaderRNASeq,
                                                 public = list(
-                                                  print_level = function() {cat("----(Level: DataFrameLoaderRNASeqCufflinksIsoform)\n")},
+                                                  print_level = function() {cat("----(Level: DataLoaderRNASeqCufflinksIsoform)\n")},
                                                   assign_feature_ids = function(){
                                                     super$assign_feature_ids()
                                                     cat("assign_feature_ids()"); self$print_level()
@@ -264,11 +264,11 @@ DataFrameLoaderRNASeqCufflinksIsoform = R6::R6Class(classname = "DataFrameLoader
                                                     
                                                   }))
 
-##### DataFrameLoaderVariant #####
-DataFrameLoaderVariant = R6::R6Class(classname = 'DataFrameLoaderVariant',
-                                     inherit = DataFrameLoader,
+##### DataLoaderVariant #####
+DataLoaderVariant = R6::R6Class(classname = 'DataLoaderVariant',
+                                     inherit = DataLoader,
                                      public = list(
-                                       print_level = function() {cat("----(Level: DataFrameLoaderVariant)\n")},
+                                       print_level = function() {cat("----(Level: DataLoaderVariant)\n")},
                                        load_data = function() {
                                          cat("load_data()"); self$print_level()
                                          register_variant(df = private$.data_df, 
@@ -276,11 +276,11 @@ DataFrameLoaderVariant = R6::R6Class(classname = 'DataFrameLoaderVariant',
                                        }
                                      ))
 
-##### DataFrameLoaderVariantGemini #####
-DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGemini',
-                                     inherit = DataFrameLoaderVariant,
+##### DataLoaderVariantGemini #####
+DataLoaderVariantGemini = R6::R6Class(classname = 'DataLoaderVariantGemini',
+                                     inherit = DataLoaderVariant,
                                      public = list(
-                                       print_level = function() {cat("----(Level: DataFrameLoaderVariant)\n")},
+                                       print_level = function() {cat("----(Level: DataLoaderVariant)\n")},
                                        assign_feature_ids = function(){
                                          cat("assign_feature_ids()"); self$print_level()
                                          super$assign_feature_ids()
@@ -300,7 +300,7 @@ DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGe
                                        },
                                        
                                        register_new_features = function() {
-                                         cat("Function: Register new features (Level: DataFrameLoaderVariantGemini)\n")
+                                         cat("Function: Register new features (Level: DataLoaderVariantGemini)\n")
                                          super$register_new_features()
                                          
                                          fset_choice = unique(private$.reference_object$pipeline_df[,
@@ -347,11 +347,11 @@ DataFrameLoaderVariantGemini = R6::R6Class(classname = 'DataFrameLoaderVariantGe
                                        }
                                      ))
 
-##### DataFrameLoaderFusionTophat #####
-DataFrameLoaderFusionTophat = R6::R6Class(classname = 'DataFrameLoaderFusionTophat',
-                                     inherit = DataFrameLoader,
+##### DataLoaderFusionTophat #####
+DataLoaderFusionTophat = R6::R6Class(classname = 'DataLoaderFusionTophat',
+                                     inherit = DataLoader,
                                      public = list(
-                                       print_level = function() {cat("----(Level: DataFrameLoaderFusionTophat)\n")},
+                                       print_level = function() {cat("----(Level: DataLoaderFusionTophat)\n")},
                                        register_new_features = function() {
                                          fset_choice = unique(private$.reference_object$pipeline_df[,
                                                                                                     template_linker$featureset$choices_col])
@@ -432,14 +432,12 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
                        "}")
   switch(temp_string,
          "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
-         "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" =
-           DataFrameLoaderRNASeqCufflinksGene$new(data_df = data_df,
+         "{[external]-[RNA-seq] HTSeq}{gene}" = ,
+         "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = ,
+           DataLoaderRNASeqCufflinksGene$new(data_df = data_df,
                                                      reference_object = reference_object),
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = 
-           DataFrameLoaderRNASeqCufflinksIsoform$new(data_df = data_df,
-                                                  reference_object = reference_object),
-         "{[external]-[RNA-seq] HTSeq}{gene}" = 
-           DataFrameLoaderRNASeqCufflinksGene$new(data_df = data_df,
+           DataLoaderRNASeqCufflinksIsoform$new(data_df = data_df,
                                                   reference_object = reference_object),
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: GATK + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
@@ -447,10 +445,10 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[DNAnexus]-[Variant_Custom: VarScan + Annotate] VarScan / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" =
-           DataFrameLoaderVariantGemini$new(data_df = data_df,
+           DataLoaderVariantGemini$new(data_df = data_df,
                                                     reference_object = reference_object),
          "{[external]-[Fusion] Tophat Fusion}{gene}" = 
-           DataFrameLoaderFusionTophat$new(data_df = data_df,
+           DataLoaderFusionTophat$new(data_df = data_df,
                                            reference_object = reference_object),
          "{[external]-[Fusion] Defuse}{gene}" =
            NULL,
