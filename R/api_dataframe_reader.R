@@ -247,6 +247,44 @@ DataReaderRNAQuantRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNAQuantRNASe
                                       
                                     ))
 
+
+##### DataReaderRNAQuantMicroarray #####
+DataReaderRNAQuantMicroarray = R6::R6Class(classname = 'DataReaderRNAQuantMicroarray',
+                                 inherit = DataReaderRNAQuant,
+                                 public = list(
+                                   print_level = function() {cat("----(Level: DataReaderRNAQuantMicroarray)\n")},
+                                   load_data_from_file = function() {
+                                     cat("load_data_from_file()"); self$print_level()
+                                     file_path = unique(private$.pipeline_df$file_path)
+                                     stopifnot(length(file_path) == 1)
+                                     # restore bioconductor expressionSet object from file path
+                                     cat(paste0("restore bioconductor expressionSet object from file path:\n\t", file_path, "\n"))
+                                     exprSetObj = readRDS(file_path)
+                                     
+                                     cat("Extracting expression data\n")
+                                     private$.data_df = as.data.frame(
+                                       Biobase::exprs(exprSetObj) # to distinguish from plyr::exprs
+                                       )
+                                     private$.data_df = cbind(
+                                       data.frame('probeset_id' = rownames(private$.data_df),
+                                                  stringsAsFactors = FALSE),
+                                       private$.data_df)
+                                     rownames(private$.data_df) = 1:nrow(private$.data_df)
+                                     
+                                     super$convert_wide_to_tall_skinny()
+                                     
+                                     cat("Dimensions:", dim(private$.data_df), "\n")
+                                     
+                                     cat("Extracting feature data\n")
+                                     private$.feature_annotation_df = exprSetObj@featureData@data
+                                     
+                                     invisible(self)
+                                     
+                                   }
+                                 ), 
+                                 private = list(
+                                 ))
+                                   
 ##### DataReaderFusionTophat #####
 DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                      inherit = DataReader,
@@ -291,6 +329,10 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Fusion] Defuse}{gene}" =
              DataReader$new(pipeline_df = pipeline_df,
                             measurement_set = measurement_set),
+         "{[Affymetrix]-[Microarray] Affymetrix Bioconductor CDF v3.2.0}{gene}" = ,
+         "{[Affymetrix]-[Microarray] UMich Alt CDF v20.0.0}{gene}" =
+           DataReaderRNAQuantMicroarray$new(pipeline_df = pipeline_df,
+                          measurement_set = measurement_set),
          stop("Need to add reader for choice:\n", temp_string)
          )
 }
