@@ -181,17 +181,35 @@ DataLoader = R6::R6Class(classname = "DataLoader",
           .feature_annotation_df = NULL, 
           .reference_object = NULL
         ))
-##### DataLoaderRNAQuantRNASeq #####
-DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
+##### DataLoaderRNAQuant #####
+DataLoaderRNAQuant = R6::R6Class(classname = "DataLoaderRNAQuant",
                                 inherit = DataLoader,
                                 public = list(
-                                  print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeq)\n")},
+                                  print_level = function() {cat("----(Level: DataLoaderRNAQuant)\n")},
                                   load_data = function(){
                                     cat("load_data()"); self$print_level()
                                     register_expression_dataframe(df1 = private$.data_df, 
                                                                   dataset_version = private$.reference_object$record$dataset_version)
                                     
                                   },
+                                  assign_feature_ids = function(feature_type, column_in_file) {
+                                    super$assign_feature_ids()
+                                    cat("assign_feature_ids()"); self$print_level()
+                                    
+                                    private$.data_df$feature_id = match_features(
+                                      features_in_file = private$.data_df[, column_in_file],
+                                      df_features_db = private$.reference_object$feature,
+                                      feature_type = feature_type,
+                                      column_in_db = 'name')
+                                    private$.data_df[, column_in_file] = NULL
+                                  }
+                                ))
+                                  
+##### DataLoaderRNAQuantRNASeq #####
+DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
+                                inherit = DataLoaderRNAQuant, 
+                                public = list(
+                                  print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeq)\n")},
                                   register_new_features = function() {
                                     cat("register_new_features()"); self$print_level()
                                     if ('gene_short_name' %in% colnames(private$.data_df)) {
@@ -236,14 +254,8 @@ DataLoaderRNAQuantRNASeqCufflinksGene = R6::R6Class(classname = "DataLoaderRNAQu
                                                print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeqCufflinksGene)\n")},
                                                assign_feature_ids = function(){
                                                  cat("assign_feature_ids()"); self$print_level()
-                                                 super$assign_feature_ids()
-                                                 
-                                                 private$.data_df$feature_id = match_features(
-                                                                features_in_file = private$.data_df$tracking_id,
-                                                                df_features_db = private$.reference_object$feature,
-                                                                feature_type = 'gene',
-                                                                column_in_db = 'name')
-                                                 private$.data_df$tracking_id = NULL
+                                                 super$assign_feature_ids(feature_type = 'gene',
+                                                                          column_in_file = 'tracking_id')
                                                }))
 
 ##### DataLoaderRNAQuantRNASeqCufflinksIsoform #####
@@ -252,17 +264,83 @@ DataLoaderRNAQuantRNASeqCufflinksIsoform = R6::R6Class(classname = "DataLoaderRN
                                                 public = list(
                                                   print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeqCufflinksIsoform)\n")},
                                                   assign_feature_ids = function(){
-                                                    super$assign_feature_ids()
                                                     cat("assign_feature_ids()"); self$print_level()
-                                                    
-                                                    private$.data_df$feature_id = match_features(
-                                                      features_in_file = private$.data_df$tracking_id,
-                                                      df_features_db = private$.reference_object$feature,
-                                                      feature_type = 'transcript',
-                                                      column_in_db = 'name')
-                                                    private$.data_df$tracking_id = NULL
-                                                    
+                                                    super$assign_feature_ids(feature_type = 'transcript',
+                                                                             column_in_file = 'tracking_id')
                                                   }))
+
+
+##### DataLoaderRNAQuantMicroarray #####
+DataLoaderRNAQuantMicroarray = R6::R6Class(classname = "DataLoaderRNAQuantMicroarray",
+                                       inherit = DataLoaderRNAQuant, 
+                                       public = list(
+                                         print_level = function() {cat("----(Level: DataLoaderRNAQuantMicroarray)\n")},
+                                         register_new_features = function() {
+                                           cat("register_new_features()"); self$print_level()
+                                           col_match_ftr_name = 'probeset_id'
+                                           if (col_match_ftr_name %in% colnames(private$.data_df)) {
+                                             matchTarget = unique(private$.reference_object$pipeline_df[, 
+                                                                                                        template_linker$featureset$choices_col])
+                                             stopifnot(length(matchTarget) == 1)
+                                             fsets_scidb = private$.reference_object$featureset
+                                             fset = drop_na_columns(fsets_scidb[match(matchTarget, 
+                                                                                      fsets_scidb[,
+                                                                                                  template_linker$featureset$choices_col]), ])
+                                             stopifnot(nrow(fset) == 1)
+                                             
+                                             cat("Matching features in file by feature-names in DB at featureset_id", 
+                                                 fset$featureset_id, "\n")
+                                             features_sel = private$.reference_object$feature
+                                             m1 = find_matches_and_return_indices(private$.data_df[, col_match_ftr_name], 
+                                                                                  features_sel$name)
+                                             
+                                             if (length(m1$source_unmatched_idx) > 0) {
+                                               ftr_ann_df = private$.feature_annotation_df
+                                               
+                                               ftr_ann_df$name = rownames(ftr_ann_df)
+                                               ftr_ann_df = plyr::rename(ftr_ann_df, 
+                                                                         c('ENTREZID' = 'entrez_gene_id',
+                                                                           'ENSEMBL' = 'ensembl_gene_id',
+                                                                           'SYMBOL' = 'gene_symbol',
+                                                                           'GENENAME' = 'gene_full_name', 
+                                                                           'GENEFAMILY' = 'gene_family',
+                                                                           'INICalls' = 'INI_calls',
+                                                                           'PROBENUM' = 'probe_num'))
+                                               
+                                               unmatched_features = unique(private$.data_df[, 
+                                                                        col_match_ftr_name][m1$source_unmatched_idx])
+                                               
+                                               m2 = find_matches_and_return_indices(unmatched_features, 
+                                                                                    ftr_ann_df$name)
+                                               if (length(m2$source_unmatched_idx) > 0) {
+                                                 stop("Feature annotation data does not contain annotation for",
+                                                      pretty_print(unmatched_features[m2$source_unmatched_idx]))
+                                               }
+                                               
+                                               ftr_ann_df = ftr_ann_df[m2$target_matched_idx, ]
+                                               rownames(ftr_ann_df) = 1:nrow(ftr_ann_df)
+                                               
+                                               ftr_ann_df$featureset_id = fset$featureset_id
+                                               ftr_ann_df$chromosome = 'NA'
+                                               ftr_ann_df$start = 'NA'
+                                               ftr_ann_df$end = 'NA'
+                                               ftr_ann_df$strand_term = search_ontology(terms = 'strand_term_unspecified')
+                                               ftr_ann_df$feature_type = 'probeset'
+                                               ftr_ann_df$source = 'expression_set_object'
+                                               register_feature(df = ftr_ann_df, 
+                                                                register_gene_synonyms = FALSE)
+                                               return(TRUE)
+                                             } else {
+                                               cat("No new features to register\n")
+                                               return(FALSE)
+                                             }
+                                           }
+                                         },
+                                         assign_feature_ids = function(){
+                                           cat("assign_feature_ids()"); self$print_level()
+                                           super$assign_feature_ids(feature_type = 'probeset',
+                                                                    column_in_file = 'probeset_id')
+                                         }))
 
 ##### DataLoaderVariant #####
 DataLoaderVariant = R6::R6Class(classname = 'DataLoaderVariant',
