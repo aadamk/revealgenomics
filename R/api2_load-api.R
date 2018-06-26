@@ -35,7 +35,7 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
                                    dataset_id = numeric(0),
                                    dataset_version = numeric(0))
   # Work on one project at a time
-  for (proj_idx in df0$project_id) {
+  for (proj_idx in unique(df0$project_id)) {
     cat("====Working on project idx", proj_idx, "of worksheet\n")
     dfi = df0[df0$project_id == proj_idx, ]
 
