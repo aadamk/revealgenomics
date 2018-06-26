@@ -183,7 +183,8 @@ template_helper_enforce_columns_defined = function(data_df, definitions) {
 #' by consulting the relevant column (e.g. attribute_in_Subjects, attribute_in_Samples)
 template_helper_extract_definitions = function(sheetName, def) {
   col_for_pick = paste0("attribute_in_", sheetName)
-  defi = def[def[, col_for_pick], ]
+  defi = def[def[, col_for_pick] & 
+               !is.na(def[, col_for_pick]), ]
   cat("From", nrow(def), "rows of definitions sheet, picked out", nrow(defi), "rows for current entity\n")
   defi
 }
