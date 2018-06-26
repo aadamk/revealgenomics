@@ -517,6 +517,11 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = 
            DataLoaderRNAQuantRNASeqCufflinksIsoform$new(data_df = data_df,
                                                   reference_object = reference_object),
+         "{[Affymetrix]-[Microarray] Affymetrix Bioconductor CDF v3.2.0}{gene}" = ,
+         "{[Affymetrix]-[Microarray] UMich Alt CDF v20.0.0}{gene}" =
+           DataLoaderRNAQuantMicroarray$new(data_df = data_df, 
+                                            reference_object = reference_object,
+                                            feature_annotation_df = feature_annotation_df),
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: GATK + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: GATK + PoN + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
@@ -528,8 +533,6 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[Fusion] Tophat Fusion}{gene}" = 
            DataLoaderFusionTophat$new(data_df = data_df,
                                            reference_object = reference_object),
-         "{[external]-[Fusion] Defuse}{gene}" =
-           NULL,
          stop("Need to add loader for choice:\n", temp_string)
   )
 }
