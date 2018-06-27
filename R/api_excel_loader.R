@@ -29,7 +29,8 @@
 #'                                    Default value is `all` i.e. all measurement-types are loaded
 #' @export
 register_entities_excel = function(study_worksheet, 
-                                  register_upto_entity = c('all', 'ONTOLOGY', 'DATASET', 'DEFINITION'),
+                                  register_upto_entity = c('all', 'ONTOLOGY', 'DATASET', 'DEFINITION',
+                                                           'INDIVIDUAL', 'BIOSAMPLE', 'MEASUREMENTSET'),
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
                                                                   'FUSION', 'COPYNUMBER_SEG', 'COPYNUMBER_MAT'),
                                   con = NULL) {
@@ -86,16 +87,25 @@ register_entities_excel = function(study_worksheet,
     # INDIVIDUAL
     cat("#### Registering INDIVIDUAL ####\n")
     indiv_rec = api_register_individuals(workbook = workbook, record = record, def = def)
+    if (abort_condition_met(register_upto_entity, check_with_entity = .ghEnv$meta$arrIndividuals)) {
+      next
+    }
     
     # BIOSAMPLE
     cat("#### Registering BIOSAMPLE ####\n")
     bios_rec = api_register_biosamples(workbook = workbook, record = record, def = def)
+    if (abort_condition_met(register_upto_entity, check_with_entity = .ghEnv$meta$arrBiosample)) {
+      next
+    }
     
     # EXPERIMENTSET and MEASUREMENTSET
     cat("#### Registering FEATURESET, EXPERIMENTSET and MEASUREMENTSET ####\n")
     expset_msmtset_rec = api_register_featuresets_experimentsets_measurementsets(workbook = workbook, 
                                                                      record = record, 
                                                                      def = def)
+    if (abort_condition_met(register_upto_entity, check_with_entity = .ghEnv$meta$arrMeasurementSet)) {
+      next
+    }
     
     cat("#### Registering MEASUREMENT-DATA ####\n")
     # ==========================
