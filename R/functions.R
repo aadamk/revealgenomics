@@ -1370,12 +1370,19 @@ join_info_ontology_and_unpivot = function(qq, arrayname,
 
 unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
   idname = get_idname(arrayname)
-  
+
+  print("DEBUG: df")
+  print(head(df))
+  print(class(df))
   dt = data.table(df)
   setkeyv(dt, c(idname, key_col))
+  print("DEBUG: dt")
+  print(class(dt))
+  print(head(dt))
   x2s = dt[,val, by=c(idname, key_col)]
-  head(x2s)
-  
+  print("DEBUG: x2s")
+  print(head(x2s))
+  print(class(x2s))
   x2t = as.data.frame(spread(x2s, "key", value = "val"))
   # head(x2t)
   x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
