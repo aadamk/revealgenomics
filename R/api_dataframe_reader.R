@@ -131,7 +131,7 @@ DataReaderRNAQuant = R6::R6Class(classname = 'DataReaderRNAQuant',
 
 ##### DataReaderRNAQuantRNASeqCufflinks #####
 DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantRNASeqCufflinks',
-                                inherit = DataReaderRNASeq,
+                                inherit = DataReaderRNAQuant,
                                 public = list(
                                   print_level = function() {cat("----(Level: DataReaderRNAQuantRNASeqCufflinks)\n")},
                                   load_data_from_file = function() {
@@ -171,7 +171,7 @@ DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantR
                                         return(TRUE)
                                       })
                                     } else { # 
-                                      cat("multiple pipeline information row for file. Attempting to use aggregate file loader")
+                                      cat("multiple pipeline information row for file. Attempting to use aggregate file loader\n")
                                       tryAggregateLoader = TRUE
                                     }
                                     
