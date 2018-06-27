@@ -191,9 +191,38 @@ DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantR
                                   }
                                 ))
 
+##### DataReaderRNAQuantRNASeqRSEM #####
+DataReaderRNAQuantRNASeqRSEM = R6::R6Class(classname = 'DataReaderRNAQuantRNASeqRSEM',
+                                                inherit = DataReaderRNAQuant,
+                                                public = list(
+                                                  print_level = function() {cat("----(Level: DataReaderRNAQuantRNASeqRSEM)\n")},
+                                                  load_data_from_file = function() {
+                                                    super$load_data_from_file()
+                                                    cat("load_data_from_file()"); self$print_level()
+                                                    
+                                                    # - if 1 pipeline info row for a file, try per-sample reader. 
+                                                    #     + if that fails, try aggregate reader
+                                                    # - if multiple pipeline info rows for a file, try aggregate reader
+                                                    if (nrow(private$.pipeline_df) == 1) {
+                                                      stop("Need to fill in code for RSEM per-sample loader")
+                                                    } else { # 
+                                                      cat("multiple pipeline information row for file. Attempting to use aggregate file loader")
+                                                      tryAggregateLoader = TRUE
+                                                    }
+                                                    
+                                                    if (tryAggregateLoader) {
+                                                      # code for aggregate file loader
+                                                      column_names = colnames(private$.data_df)
+                                                      
+                                                      colnames(private$.data_df)[1] = 'tracking_id'
+                                                      
+                                                      super$convert_wide_to_tall_skinny()
+                                                    }
+                                                  }
+                                                ))
 ##### DataReaderRNAQuantRNASeqHTSeq #####
 DataReaderRNAQuantRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNAQuantRNASeqHTSeq',
-                                    inherit = DataReaderRNASeq,
+                                    inherit = DataReaderRNAQuant,
                                     public = list(
                                       print_level = function() {cat("----(Level: DataReaderRNAQuantRNASeqHTSeq)\n")},
                                       load_data_from_file = function() {
@@ -309,9 +338,12 @@ createDataReader = function(pipeline_df, measurement_set){
   switch(temp_string,
          "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = ,
-         "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" =
+         "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = 
              DataReaderRNAQuantRNASeqCufflinks$new(pipeline_df = pipeline_df,
                                            measurement_set = measurement_set),
+         "{(internal)-(RNA-Seq) RSEM}{gene}" =
+           DataReaderRNAQuantRNASeqRSEM$new(pipeline_df = pipeline_df,
+                                                 measurement_set = measurement_set),
          "{[external]-[RNA-seq] HTSeq}{gene}" = 
              DataReaderRNAQuantRNASeqHTSeq$new(pipeline_df = pipeline_df,
                                        measurement_set = measurement_set),
