@@ -9,8 +9,8 @@
 DataLoader
 }
 \description{
-compare with `featureset_id` of the current measurementSet
-and update the feature stored in `reference_object` if there has been a change in `featureset_id`
+compare with \code{featureset_id} of the current measurementSet
+and update the feature stored in \code{reference_object} if there has been a change in \code{featureset_id}
 register new features (if any)
 }
 \details{

@@ -7,10 +7,9 @@
 populate_measurements(dataset_id, dataset_version, con = NULL)
 }
 \description{
-The function should be called after loading the `MeasurementData` arrays` (e.g. Variant, RNA-seq etc.).
-The `MEASUREMENT` entity records one entry for each entry in a `MeasurementData` array per biosample,
+The function should be called after loading the \code{MeasurementData} arrays\code{(e.g. Variant, RNA-seq etc.). The}MEASUREMENT\code{entity records one entry for each entry in a}MeasurementData` array per biosample,
 per pipeline
 }
 \details{
-(A `MEASUREMENT` combines both Experiment and Pipeline information)
+(A \code{MEASUREMENT} combines both Experiment and Pipeline information)
 }

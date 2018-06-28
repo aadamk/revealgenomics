@@ -8,6 +8,6 @@ search_versioned_secure_metadata_entity(entity, dataset_id, dataset_version,
   all_versions, con = NULL)
 }
 \description{
-internal function for `search_individuals()`, `search_biosamples()` etc.
-search of a metadata entry by `dataset_id`
+internal function for \code{search_individuals()}, \code{search_biosamples()} etc.
+search of a metadata entry by \code{dataset_id}
 }

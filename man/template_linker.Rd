@@ -10,6 +10,6 @@ template_linker
 }
 \description{
 what columns link FeatureSets between featureset_choices sheet and Pipelines sheet
-`api_choices_col` is same as `choices_col` if not specified
+\code{api_choices_col} is same as \code{choices_col} if not specified
 }
 \keyword{datasets}

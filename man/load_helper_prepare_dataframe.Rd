@@ -8,6 +8,6 @@ load_helper_prepare_dataframe(workbook, record, def, sheetName, entityName,
   worksheet_fields, con = NULL)
 }
 \description{
-Applicable to `Individuals`, `Biosamples` and `Measurements` that are directly loaded 
-from each row of `Subjects`, `Samples` and `Pipelines` sheet
+Applicable to \code{Individuals}, \code{Biosamples} and \code{Measurements} that are directly loaded
+from each row of \code{Subjects}, \code{Samples} and \code{Pipelines} sheet
 }

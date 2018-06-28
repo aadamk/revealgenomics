@@ -5,24 +5,25 @@
 \title{register entities via Excel sheet}
 \usage{
 register_entities_excel(study_worksheet, register_upto_entity = c("all",
-  "ONTOLOGY", "DATASET", "DEFINITION"), register_measurement_entity = c("all",
+  "ONTOLOGY", "DATASET", "DEFINITION", "INDIVIDUAL", "BIOSAMPLE",
+  "MEASUREMENTSET"), register_measurement_entity = c("all",
   "RNAQUANTIFICATION", "VARIANT", "FUSION", "COPYNUMBER_SEG", "COPYNUMBER_MAT"),
   con = NULL)
 }
 \arguments{
 \item{register_upto_entity}{use this parameter to restrict load up to an user-specified entity.
-e.g. you can load up to `Ontology`, `Dataset` (and `Project`), 
-`Definition` and not load the rest. The ordering is same
+e.g. you can load up to \code{Ontology}, \code{Dataset} (and \code{Project}),
+\code{Definition} and not load the rest. The ordering is same
 as in the parameter definition below.
-Default value is `all` i.e. all entities are loaded}
+Default value is \code{all} i.e. all entities are loaded}
 
-\item{register_measurement_entity}{use this parameter to restrict which measurement-data types 
-should be loaded by the function. 
-Default value is `all` i.e. all measurement-types are loaded}
+\item{register_measurement_entity}{use this parameter to restrict which measurement-data types
+should be loaded by the function.
+Default value is \code{all} i.e. all measurement-types are loaded}
 }
 \description{
-Register entities using Excel sheet. 
-Excel sheet has complete data about metadata (`PROJECT`, `DATASET`, `INDIVIDUAL`, ...) ,
-and links to files storing the `MeasurementData` entities 
-(e.g. `RNASeq`, `Variant` etc.)
+Register entities using Excel sheet.
+Excel sheet has complete data about metadata (\code{PROJECT}, \code{DATASET}, \code{INDIVIDUAL}, ...) ,
+and links to files storing the \code{MeasurementData} entities
+(e.g. \code{RNASeq}, \code{Variant} etc.)
 }

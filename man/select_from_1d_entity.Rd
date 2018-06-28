@@ -8,7 +8,7 @@ select_from_1d_entity(entitynm, id, dataset_version = NULL,
   mandatory_fields_only = FALSE, con = NULL)
 }
 \description{
-function to select from metadata entities. Used by 
-`get_project()` (does not have dataset_version as a dimension), and
-`get_dataset()`, `get_biosamples()` etc. (that have dataset_version as a dimension)
+function to select from metadata entities. Used by
+\code{get_project()} (does not have dataset_version as a dimension), and
+\code{get_dataset()}, \code{get_biosamples()} etc. (that have dataset_version as a dimension)
 }

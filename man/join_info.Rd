@@ -10,8 +10,8 @@ join_info(qq, arrayname, mandatory_fields_only = FALSE,
 \arguments{
 \item{replicate_query_on_info_array}{when joining info array, replicate query carried
 out on primary array
-e.g. `filter(gh_secure.BIOSAMPLE, dataset_id=32)`
-replicates to `filter(gh_secure.BIOSAMPLE_INFO, dataset_id=32)`.
+e.g. \code{filter(gh_secure.BIOSAMPLE, dataset_id=32)}
+replicates to \code{filter(gh_secure.BIOSAMPLE_INFO, dataset_id=32)}.
 Turned off by default}
 }
 \description{

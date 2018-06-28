@@ -9,7 +9,7 @@ join_info_ontology_and_unpivot(qq, arrayname, mandatory_fields_only = FALSE,
   con = NULL)
 }
 \arguments{
-\item{replicate_query_on_info_array}{see description at [join_info()]}
+\item{replicate_query_on_info_array}{see description at \code{\link[=join_info]{join_info()}}}
 }
 \description{
 Join flex fields, unpivot and convert ontology fields

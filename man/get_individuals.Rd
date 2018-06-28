@@ -9,7 +9,9 @@ get_individuals(individual_id = NULL, dataset_version = NULL,
 }
 \description{
 get_ENTITY can be used to retrive
-- one individual (e.g. `individual_id = 33`)
-- more than one individual (e.g. `individual_id = c(33, 44)`)
-- all individuals visible to user (e.g. `get_individuals()`)
+\itemize{
+\item one individual (e.g. \code{individual_id = 33})
+\item more than one individual (e.g. \code{individual_id = c(33, 44)})
+\item all individuals visible to user (e.g. \code{get_individuals()})
+}
 }

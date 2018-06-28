@@ -10,7 +10,7 @@ formulate_versioned_selection_query(entity, base_selection_query,
 \arguments{
 \item{entity}{entity on which filtering is to be run}
 
-\item{base_selection_query}{typically the output of running `formulate_base_selection_query`
+\item{base_selection_query}{typically the output of running \code{formulate_base_selection_query}
 e.g. (individual_id>=1 AND individual_id<=3)}
 
 \item{dataset_version}{the version at which to filter}

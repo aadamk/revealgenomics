@@ -12,6 +12,6 @@ myExcelLoader(filename, use_readxl = TRUE)
 \item{use_readxl}{use readxl package (default), otherwise XLConnect package}
 }
 \description{
-To be used in conjunction with `myExcelReader()`
+To be used in conjunction with \code{myExcelReader()}
 `
 }

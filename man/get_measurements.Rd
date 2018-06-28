@@ -2,12 +2,12 @@
 % Please edit documentation in R/measurements.R
 \name{get_measurements}
 \alias{get_measurements}
-\title{Retrieve data from `Measurement` entity}
+\title{Retrieve data from \code{Measurement} entity}
 \usage{
 get_measurements(measurement_id = NULL, dataset_version = NULL,
   all_versions = TRUE, con = NULL)
 }
 \description{
-Function `populate_measurements()` must be called before calling this function.
-See more details about `Measurement` entity in documentation for `populate_measurements()`
+Function \code{populate_measurements()} must be called before calling this function.
+See more details about \code{Measurement} entity in documentation for \code{populate_measurements()}
 }

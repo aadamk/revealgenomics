@@ -7,7 +7,7 @@
 set_permissions(con = NULL, user_name, dataset_names, allowed)
 }
 \description{
-to be run only by scidbadmin, or user 
+to be run only by scidbadmin, or user
 with Read / Write capability to permissions and secured namespaces
 }
 \details{

@@ -7,6 +7,6 @@
 show_dataset_permissions(con = NULL, dataset_name)
 }
 \description{
-to be run only by scidbadmin, or user 
+to be run only by scidbadmin, or user
 with Read capability to permissions and secured namespaces
 }

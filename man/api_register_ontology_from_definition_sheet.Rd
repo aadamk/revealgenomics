@@ -8,7 +8,7 @@ api_register_ontology_from_definition_sheet(workbook = NULL, def = NULL,
   con = NULL)
 }
 \description{
-gather the terms from controlled_vocabulary column, 
+gather the terms from controlled_vocabulary column,
 categorize by attribute_name, and
 assign them ontology_id-s
 }

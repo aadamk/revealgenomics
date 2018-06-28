@@ -10,7 +10,7 @@ template_helper_extract_record_related_rows(workbook, sheetName, record)
 Helper function for template Excel sheet.
 }
 \details{
-Given a project-study record [project_id, dataset_id, dataset_version]
+Given a project-study record \link{project_id, dataset_id, dataset_version}
 find the information from a target sheet (e.g. Subjects, Samples, Pipelines) pertaining
 to that record
 }

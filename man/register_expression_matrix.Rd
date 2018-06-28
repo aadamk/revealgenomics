@@ -9,5 +9,5 @@ register_expression_matrix(filepath, measurementset_id, featureset_id,
 }
 \description{
 filepath must exist on SciDB server. Altrnatively use
-`register_expression_matrix_client`
+\code{register_expression_matrix_client}
 }

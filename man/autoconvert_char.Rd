@@ -11,7 +11,9 @@ autoconvert_char(df1, convert_logicals = TRUE)
 }
 \description{
 Custom function
-- should not autopromote non-character columns for VARIANT data
-- for columns that are interpreted as logical, should use strict checking for TRUE/True, or FALSE/False
+\itemize{
+\item should not autopromote non-character columns for VARIANT data
+\item for columns that are interpreted as logical, should use strict checking for TRUE/True, or FALSE/False
 ('T' is a valid character in genomic data)
+}
 }

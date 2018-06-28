@@ -9,7 +9,7 @@ search_variants_scidb(arrayname, measurementset_id, biosample_id = NULL,
   variants_in_one_array, con = NULL)
 }
 \arguments{
-\item{use_cross_join}{use `cross_join` if TRUE, else use `equi_join`}
+\item{use_cross_join}{use \code{cross_join} if TRUE, else use \code{equi_join}}
 }
 \description{
 Inner function for searching variants

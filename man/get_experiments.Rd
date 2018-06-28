@@ -7,7 +7,7 @@
 get_experiments(con = NULL)
 }
 \description{
-joins `Measurement`, `Dataset` (for `study category` field if available), and `ExperimentSet` arrays
+joins \code{Measurement}, \code{Dataset} (for \code{study category} field if available), and \code{ExperimentSet} arrays
 to return experiment information to user
 }
 \examples{

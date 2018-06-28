@@ -2,17 +2,17 @@
 % Please edit documentation in R/search.R
 \name{dao_search_rnaquantification}
 \alias{dao_search_rnaquantification}
-\title{Faster implementation of `search_rnaquantification` for UI development}
+\title{Faster implementation of \code{search_rnaquantification} for UI development}
 \usage{
 dao_search_rnaquantification(measurementset, biosample_ref, feature = NULL,
   formExpressionSet = TRUE, con = NULL)
 }
 \arguments{
-\item{biosample_ref}{Reference dataframe containing at least the biosample data for 
-current study (e.g. by calling 
-`search_biosamples(dataset_id = measurementset$dataset_id)`). 
+\item{biosample_ref}{Reference dataframe containing at least the biosample data for
+current study (e.g. by calling
+\code{search_biosamples(dataset_id = measurementset$dataset_id)}).
 OK if more biosample rows are provided (e.g. by calling
-`get_biosamples()`)}
+\code{get_biosamples()})}
 }
 \description{
 Here, there is no option to select by specific biosamples

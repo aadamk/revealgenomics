@@ -7,13 +7,13 @@
 myExcelReader(workbook, sheet_name)
 }
 \arguments{
-\item{workbook}{Workbook must be of type `XLConnect::workbook` (loaded by `XLConnect::loadWorkbook()`) 
-or of type `list` (loaded by `scidb4gh::myExcelLoader()`)}
+\item{workbook}{Workbook must be of type \code{XLConnect::workbook} (loaded by \code{XLConnect::loadWorkbook()})
+or of type \code{list} (loaded by \code{scidb4gh::myExcelLoader()})}
 
 \item{sheet_name}{name of sheet to read from workbook}
 }
 \description{
-To be used in conjunction with `myExcelLoader()`
+To be used in conjunction with \code{myExcelLoader()}
 }
 \details{
 Note usage of the useCachedValues parameter

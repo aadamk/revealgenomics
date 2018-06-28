@@ -8,6 +8,6 @@ search_individuals(dataset_id = NULL, dataset_version = NULL,
   all_versions = FALSE, con = NULL)
 }
 \description{
-`search_individuals()` can be used to retrive
+\code{search_individuals()} can be used to retrive
 all individuals in a particular dataset
 }

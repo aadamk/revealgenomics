@@ -8,6 +8,8 @@ custom_scan()
 }
 \description{
 use this as a switch to choose between
-- secure_scan (apply study-level security on dataset_id; must have permissions.dataset_id array)
-- scan (just use regular scan of arrays)
+\itemize{
+\item secure_scan (apply study-level security on dataset_id; must have permissions.dataset_id array)
+\item scan (just use regular scan of arrays)
+}
 }

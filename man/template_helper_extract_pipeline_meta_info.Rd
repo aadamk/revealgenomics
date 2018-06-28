@@ -7,14 +7,14 @@
 template_helper_extract_pipeline_meta_info(pipelines_df, choicesObj, record)
 }
 \arguments{
-\item{pipelines_df}{data-frame containing rows in Pipelines sheet corresponding to a 
-`[project_id, study_id, study_version]` record}
+\item{pipelines_df}{data-frame containing rows in Pipelines sheet corresponding to a
+\code{[project_id, study_id, study_version]} record}
 
 \item{choicesObj}{list containing instantiated objects of PipelineChoices, FilterChoices
 and FeaturesetChoices classes}
 }
 \description{
 Given rows from Pipelines sheet, extract the unique keys for pipeline, filter and featurset-s.
-Then find the matching and relevant rows in `pipeline_choices`, `filter_choices` and 
-`featureset_choices`
+Then find the matching and relevant rows in \code{pipeline_choices}, \code{filter_choices} and
+\code{featureset_choices}
 }

@@ -3,10 +3,10 @@
 \name{as.scidb_int64_cols}
 \alias{as.scidb_int64_cols}
 \title{wrapper for as.scidb when supplying int64 types
- 
- When type argument of as.scidb has int64-s, there are issues uploading 
- with both `input` and `aio_input` (see https://github.com/Paradigm4/SciDBR/issues/189)
- Avoid this by converting int64 fields in R before upload.}
+
+When type argument of as.scidb has int64-s, there are issues uploading
+with both \code{input} and \code{aio_input} (see https://github.com/Paradigm4/SciDBR/issues/189)
+Avoid this by converting int64 fields in R before upload.}
 \usage{
 as.scidb_int64_cols(db, df1, int64_cols, ...)
 }
@@ -19,8 +19,8 @@ as.scidb_int64_cols(db, df1, int64_cols, ...)
 }
 \description{
 wrapper for as.scidb when supplying int64 types
- 
- When type argument of as.scidb has int64-s, there are issues uploading 
- with both `input` and `aio_input` (see https://github.com/Paradigm4/SciDBR/issues/189)
- Avoid this by converting int64 fields in R before upload.
+
+When type argument of as.scidb has int64-s, there are issues uploading
+with both \code{input} and \code{aio_input} (see https://github.com/Paradigm4/SciDBR/issues/189)
+Avoid this by converting int64 fields in R before upload.
 }
