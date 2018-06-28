@@ -224,11 +224,46 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
 
 ##################### MEASUREMENTDATA ###########################################################
 
+#' Search gene expression data 
+#' 
+#' Function to search gene expression data array; allows slicing across multiple 
+#' dimensions. However `measurementset` (i.e. pipeline) must be supplied 
+#' (currently allows searching one pipeline at a time)
+#' 
+#' @param measurementset (Mandatory) dataframe containing pipeline information; 
+#'                       typically output of a 
+#'                       `get_measurementsets(measurementset_id = ...)` or 
+#'                       `search_measurementsets(dataset_id = ..)` call
+#' @param biosample (Optional) dataframe containing biosample information; 
+#'                  typically output of a 
+#'                  `search_biosamples(dataset_id = ..)` call.
+#'                  If not specified, function returns all biosamples available 
+#'                  by other search parameters
+#' @param feature (Optional) dataframe containing feature information;
+#'                typically output of a 
+#'                `search_features(gene_symbol = ...)` call.
+#'                If not specified, function returns all features available 
+#'                by other search parameters
+#' @param formExpressionSet (default: TRUE) whether to return result as a Bioconductor
+#'                          ExpressionSet object
+#' @param biosample_ref (Optional) data-frame containing all biosamples in a study,
+#'                      i.e. typically output of `search_biosamples(dataset_id = ..)` call,
+#'                      or all biosamples available to logged in user,
+#'                      i.e. output of `get_biosamples(biosample_id = NULL)`.
+#'                      When not searching by `biosample`, and when requesting
+#'                      to return an ExpressionSet object, supplying this parameter can
+#'                      optimize function exection time because function does not have to
+#'                      do biosample lookup internally
+#' @param con (Optional) database connection object; typically output of `gh_connect2()` 
+#'            call. If not specified, connection object is formulated from internally stored
+#'            values of `gh_connect()` call
+#'            
 #' @export
 search_rnaquantification = function(measurementset = NULL,
                                     biosample = NULL,
                                     feature = NULL,
                                     formExpressionSet = TRUE,
+                                    biosample_ref = NULL,
                                     con = NULL){
   if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
     stop("measurementset must be supplied"); measurementset_id = NULL
@@ -257,47 +292,72 @@ search_rnaquantification = function(measurementset = NULL,
     feature_id = NULL
   }
   
-  if (exists('debug_trace')) cat("retrieving expression data from server\n")
-  res = search_rnaquantification_scidb(arrayname,
-                                       measurementset_id,
-                                       biosample_id,
-                                       feature_id,
-                                       dataset_version = dataset_version,
-                                       dataset_id = dataset_id, 
-                                       con = con)
-  if (nrow(res) == 0) return(NULL)
-  if (!formExpressionSet) return(res)
-  
-  # If user did not provide biosample, then query the server for it, or retrieve from global biosample list
+  optPathBiosamples = FALSE
   if (is.null(biosample)) {
-    biosample_id = unique(res$biosample_id)
-    if (FALSE) { # avoiding this path right now (might be useful when the download of all accessible biosamples is prohibitive)
-      cat("query the server for matching biosamples\n")
-      biosample = get_biosamples(biosample_id, con = con)
-    } else{
-      biosample_ref = get_biosamples_from_cache(con = con)
-      biosample = biosample_ref[biosample_ref$biosample_id %in% biosample_id, ]
-      biosample = drop_na_columns(biosample)
+    if (formExpressionSet & is.null(biosample_ref)) {
+      message("WARNING! You are trying to 
+         - search by one pipeline 
+         - search by zero or more features 
+         - you are NOT slicing by biosample
+         - You want to return data as ExpressionSet
+         To use optimized search path, supply `biosample_ref` parameter, or 
+              set `formExpressionSet = FALSE`.\n")
+    } else {
+      optPathBiosamples = TRUE
     }
   }
   
-  # If user did not provide feature, then query the server for it, or retrieve from global feature list
-  if (is.null(feature)) {
-    feature_id = unique(res$feature_id)
-    if (FALSE) { # avoiding this path for now (the download of all features registered on the system is not expected to be too time-consuming)
-      cat("query the server for matching features\n")
-      feature = get_features(feature_id, con = con)
-    } else{
-      feature_ref = get_feature_from_cache(con = con)
-      
-      feature = feature_ref[feature_ref$feature_id %in% feature_id, ]
-      feature = drop_na_columns(feature)
+  if (optPathBiosamples) { # use optimized function when not searching by biosample
+    cat("Not searching by biosample; Using optimized search path\n")
+    dao_search_rnaquantification(measurementset = measurementset, 
+                                 biosample_ref = biosample_ref, 
+                                 feature = feature, 
+                                 formExpressionSet = formExpressionSet, 
+                                 con = con)
+    
+  } else {
+    if (exists('debug_trace')) cat("retrieving expression data from server\n")
+    res = search_rnaquantification_scidb(arrayname,
+                                         measurementset_id,
+                                         biosample_id,
+                                         feature_id,
+                                         dataset_version = dataset_version,
+                                         dataset_id = dataset_id, 
+                                         con = con)
+    if (nrow(res) == 0) return(NULL)
+    if (!formExpressionSet) return(res)
+    
+    # If user did not provide biosample, then query the server for it, or retrieve from global biosample list
+    if (is.null(biosample)) {
+      biosample_id = unique(res$biosample_id)
+      if (FALSE) { # avoiding this path right now (might be useful when the download of all accessible biosamples is prohibitive)
+        cat("query the server for matching biosamples\n")
+        biosample = get_biosamples(biosample_id, con = con)
+      } else{
+        biosample_ref = get_biosamples_from_cache(con = con)
+        biosample = biosample_ref[biosample_ref$biosample_id %in% biosample_id, ]
+        biosample = drop_na_columns(biosample)
+      }
     }
+    
+    # If user did not provide feature, then query the server for it, or retrieve from global feature list
+    if (is.null(feature)) {
+      feature_id = unique(res$feature_id)
+      if (FALSE) { # avoiding this path for now (the download of all features registered on the system is not expected to be too time-consuming)
+        cat("query the server for matching features\n")
+        feature = get_features(feature_id, con = con)
+      } else{
+        feature_ref = get_feature_from_cache(con = con)
+        
+        feature = feature_ref[feature_ref$feature_id %in% feature_id, ]
+        feature = drop_na_columns(feature)
+      }
+    }
+    
+    expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, measurementset, biosample, feature)
+    
+    return(expressionSet)
   }
-  
-  expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, measurementset, biosample, feature)
-  
-  return(expressionSet)
 }
 
 formulate_list_expression_set = function(expr_df, dataset_version, measurementset, biosample, feature){
@@ -410,11 +470,12 @@ search_rnaquantification_scidb = function(arrayname,
 #'                      OK if more biosample rows are provided (e.g. by calling
 #'                      `get_biosamples()`)
 #' 
-#' @export
 dao_search_rnaquantification = function(measurementset, 
                                         biosample_ref, 
                                         feature = NULL, 
-                                        con) {
+                                        formExpressionSet = TRUE, 
+                                        con = NULL) {
+  con = use_ghEnv_if_null(con = con)
   stopifnot(nrow(measurementset) == 1)
   rqs_id = unique(measurementset$measurementset_id)
   stopifnot(length(rqs_id)==1)
@@ -487,6 +548,7 @@ dao_search_rnaquantification = function(measurementset,
     res = iquery(con$db, query = qq2, binary = TRUE, return = TRUE)
   }
   
+  if (!formExpressionSet) return(res)
   
   # Retrieved biosamples
   biosample_id = unique(res$biosample_id)

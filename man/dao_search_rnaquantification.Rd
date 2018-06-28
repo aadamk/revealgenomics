@@ -5,7 +5,7 @@
 \title{Faster implementation of `search_rnaquantification` for UI development}
 \usage{
 dao_search_rnaquantification(measurementset, biosample_ref, feature = NULL,
-  con)
+  formExpressionSet = TRUE, con = NULL)
 }
 \arguments{
 \item{biosample_ref}{Reference dataframe containing at least the biosample data for 
