@@ -12,6 +12,8 @@
 # END_COPYRIGHT
 #
 
+#' @import data.table
+
 #' @export
 gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https"){
   # SciDB connection and R API --
