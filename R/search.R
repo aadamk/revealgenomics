@@ -482,6 +482,7 @@ dao_search_rnaquantification = function(measurementset,
   
   dataset_version = unique(measurementset$dataset_version)
   stopifnot(length(dataset_version) == 1)
+  if (dataset_version != 1) stop("Need to add in `dataset_version` parameter to AFL queries below")
   
   dataset_id = unique(measurementset$dataset_id)
   stopifnot(length(dataset_id) == 1)
@@ -529,6 +530,10 @@ dao_search_rnaquantification = function(measurementset,
                  ", ", get_base_idname(.ghEnv$meta$arrMeasurementSet), 
                  "=", measurementset$measurementset_id, 
                  ")")
+    req_ids = get_base_idname(.ghEnv$meta$arrRnaquantification)
+    req_ids = req_ids[ !(req_ids %in% get_base_idname(.ghEnv$meta$arrMeasurementSet)) ]
+    apply_str = paste0(req_ids, ",", req_ids, collapse = ", ")
+    qq3 = paste0("apply(", qq2, ", ", apply_str, ")")
     cat("Estimating download size: ")
     download_size = iquery(con$db, 
                            query = 
@@ -545,7 +550,7 @@ dao_search_rnaquantification = function(measurementset,
           Post an issue at https://github.com/Paradigm4/scidb4gh/issues\n")
       return(NULL)
     }
-    res = iquery(con$db, query = qq2, binary = TRUE, return = TRUE)
+    res = iquery(con$db, query = qq3, binary = TRUE, only_attributes = TRUE, return = TRUE)
   }
   
   if (!formExpressionSet) return(res)
