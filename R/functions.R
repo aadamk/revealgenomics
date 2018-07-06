@@ -1039,13 +1039,13 @@ get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
     
     qq = arrayname
     if (!is.null(feature_id)) {
-      qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), feature_id)
+      qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), as.integer(feature_id))
       
       # URL length restriction enforce by apache (see https://github.com/Paradigm4/<CUSTOMER>/issues/53)
       THRESH_query_len = 270000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
       
       if (stringi::stri_length(qq) >= THRESH_query_len) {
-        selector = data.frame(feature_id = feature_id, 
+        selector = data.frame(feature_id = as.integer(feature_id), 
                               val = 1,
                               stringsAsFactors = FALSE)
         xx = as.scidb(con$db, selector,
