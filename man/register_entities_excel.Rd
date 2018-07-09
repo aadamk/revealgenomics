@@ -8,7 +8,7 @@ register_entities_excel(study_worksheet, register_upto_entity = c("all",
   "ONTOLOGY", "DATASET", "DEFINITION", "INDIVIDUAL", "BIOSAMPLE",
   "MEASUREMENTSET"), register_measurement_entity = c("all",
   "RNAQUANTIFICATION", "VARIANT", "FUSION", "COPYNUMBER_SEG", "COPYNUMBER_MAT"),
-  con = NULL)
+  pipeline_name_filter = NULL, con = NULL)
 }
 \arguments{
 \item{register_upto_entity}{use this parameter to restrict load up to an user-specified entity.
@@ -20,6 +20,9 @@ Default value is \code{all} i.e. all entities are loaded}
 \item{register_measurement_entity}{use this parameter to restrict which measurement-data types
 should be loaded by the function.
 Default value is \code{all} i.e. all measurement-types are loaded}
+
+\item{pipeline_name_filter}{use this filter to restrict data-loading to pipelines with fully/partially
+matched names. Default value is \code{NULL} (i.e. no checking by name done)}
 }
 \description{
 Register entities using Excel sheet.

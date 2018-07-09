@@ -27,12 +27,15 @@
 #' @param register_measurement_entity use this parameter to restrict which measurement-data types 
 #'                                    should be loaded by the function. 
 #'                                    Default value is `all` i.e. all measurement-types are loaded
+#' @param pipeline_name_filter use this filter to restrict data-loading to pipelines with fully/partially
+#'                             matched names. Default value is `NULL` (i.e. no checking by name done)
 #' @export
 register_entities_excel = function(study_worksheet, 
                                   register_upto_entity = c('all', 'ONTOLOGY', 'DATASET', 'DEFINITION',
                                                            'INDIVIDUAL', 'BIOSAMPLE', 'MEASUREMENTSET'),
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
                                                                   'FUSION', 'COPYNUMBER_SEG', 'COPYNUMBER_MAT'),
+                                  pipeline_name_filter = NULL,
                                   con = NULL) {
   register_upto_entity = match.arg(register_upto_entity)                                          
   register_measurement_entity = match.arg(register_measurement_entity)                                          
@@ -137,6 +140,16 @@ register_entities_excel = function(study_worksheet,
         cat("User chose to load entity of type:", register_measurement_entity, "only.\nSkipping measurementset_id",
             reference_object$measurement_set$measurementset_id, "of type:", reference_object$measurement_set$entity, "\n")
         next
+      }
+      if (!is.null(pipeline_name_filter)) {
+        if (! (length(grep(pipeline_name_filter, 
+                           reference_object$measurement_set$name,
+                           ignore.case = TRUE)) > 0) ) {
+          cat(paste0("User restricted loading to pipelines matching the string: '", pipeline_name_filter, 
+                     "' only.\nSkipping current pipeline: ",
+              reference_object$measurement_set$name, "\n"))
+          next
+        }
       }
       cat("Working on measurementset_id:", msmtset_id_sel,
           "(", reference_object$measurement_set$name,")\n")
