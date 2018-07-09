@@ -252,6 +252,39 @@ DataLoaderRNAQuantRNASeqCufflinksGene = R6::R6Class(classname = "DataLoaderRNAQu
                                              inherit = DataLoaderRNAQuantRNASeq,
                                              public = list(
                                                print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeqCufflinksGene)\n")},
+                                               register_new_features = function() {
+                                                 cat("register_new_features()"); self$print_level()
+                                                 col_match_ftr_name = 'tracking_id'
+                                                 browser()
+                                                 if (col_match_ftr_name %in% colnames(private$.data_df)) {
+                                                   matchTarget = unique(private$.reference_object$pipeline_df[, 
+                                                                                                              template_linker$featureset$choices_col])
+                                                   stopifnot(length(matchTarget) == 1)
+                                                   fsets_scidb = private$.reference_object$featureset
+                                                   fset = drop_na_columns(fsets_scidb[match(matchTarget, 
+                                                                                            fsets_scidb[,
+                                                                                                        template_linker$featureset$choices_col]), ])
+                                                   stopifnot(nrow(fset) == 1)
+                                                   
+                                                   cat("Matching features in file by feature-names in DB at featureset_id", 
+                                                       fset$featureset_id, "\n")
+                                                   features_sel = private$.reference_object$feature
+                                                   m1 = find_matches_and_return_indices(private$.data_df[, col_match_ftr_name], 
+                                                                                        features_sel$name)
+                                                   
+                                                   if (length(m1$source_unmatched_idx) > 0) {
+                                                     stop("Need to implement this code-path. Follow template for `DataLoaderRNAQuantMicroarray::register_new_features()`")
+                                                     ftr_ann_df = data.frame(name = "...", stringsAsFactors = FALSE)
+
+                                                     register_feature(df = ftr_ann_df, 
+                                                                      register_gene_synonyms = FALSE)
+                                                     return(TRUE)
+                                                   } else {
+                                                     cat("No new features to register\n")
+                                                     return(FALSE)
+                                                   }
+                                                 }
+                                               },
                                                assign_feature_ids = function(){
                                                  cat("assign_feature_ids()"); self$print_level()
                                                  super$assign_feature_ids(feature_type = 'gene',
@@ -513,7 +546,8 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[RNA-seq] HTSeq}{gene}" = ,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = ,
            DataLoaderRNAQuantRNASeqCufflinksGene$new(data_df = data_df,
-                                                     reference_object = reference_object),
+                                                     reference_object = reference_object,
+                                                     feature_annotation_df = feature_annotation_df),
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = 
            DataLoaderRNAQuantRNASeqCufflinksIsoform$new(data_df = data_df,
                                                   reference_object = reference_object),
@@ -532,8 +566,7 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
                                                     reference_object = reference_object),
          "{[external]-[Fusion] Tophat Fusion}{gene}" = 
            DataLoaderFusionTophat$new(data_df = data_df,
-                                           reference_object = reference_object),
-         stop("Need to add loader for choice:\n", temp_string)
+                                           reference_object = reference_object)
   )
 }
 
