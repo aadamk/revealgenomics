@@ -177,8 +177,33 @@ DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantR
                                     
                                     if (tryAggregateLoader) {
                                       # code for aggregate file loader
-                                      column_names = colnames(private$.data_df)
 
+                                      # Cufflinks file has feature annotation as well as expression data
+                                      # Step 1 of 2 -- Extract annotation data
+                                      ftr_col = 'gene'
+                                      stopifnot(length(unique(private$.data_df[, ftr_col])) == 
+                                                  nrow(private$.data_df[, ftr_col]))
+                                      ftr_ann_columns = c(ftr_col, 'mrna', 'refseq', 'ucscid', 
+                                                          'description', 'entrez', 
+                                                          'chr', 'beg', 'end')
+                                      private$.feature_annotation_df = private$.data_df[, ftr_ann_columns]
+                                      colnames(private$.feature_annotation_df) = c('gene_symbol', 
+                                                                                   'mrna', 
+                                                                                   'refseq', 
+                                                                                   'ucscid', 
+                                                                                   'description', 
+                                                                                   'entrez', 
+                                                                                   'chromosome', 
+                                                                                   'start', 
+                                                                                   'end')
+                                      
+                                      # Step 2 of 2 -- Extract expression data
+                                      private$.data_df = private$.data_df[, 
+                                                                          c(ftr_col, 
+                                                                            colnames(private$.data_df)[!(colnames(private$.data_df) %in% 
+                                                                                                           ftr_ann_columns)])]
+                                      column_names = colnames(private$.data_df)
+                                      
                                       # There is a "_0" suffix in all column names -- remove that
                                       cat("Local rule 1\n")
                                       cat("============\n")
@@ -186,6 +211,11 @@ DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantR
                                       stopifnot(length(grep("_0$", column_names)) == (length(column_names) -1))
                                       colnames(private$.data_df) = gsub("_[0-9]$", "", column_names)
                                       
+                                      cat("Local rule 2\n")
+                                      cat("============\n")
+                                      cat("\tColumn name for feature; renaming as tracking id\n")
+                                      colnames(private$.data_df)[1] = 'tracking_id'
+
                                       super$convert_wide_to_tall_skinny()
                                     }
                                   }
@@ -268,7 +298,7 @@ DataReaderRNAQuantRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNAQuantRNASe
                                         
                                         cat("Local rule 2\n")
                                         cat("============\n")
-                                        cat("\tEmpty column name for feature; renaming as tracking id\n")
+                                        cat("\tColumn name for feature; renaming as tracking id\n")
                                         colnames(private$.data_df)[1] = 'tracking_id'
                                         
                                         super$convert_wide_to_tall_skinny()

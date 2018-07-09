@@ -255,7 +255,6 @@ DataLoaderRNAQuantRNASeqCufflinksGene = R6::R6Class(classname = "DataLoaderRNAQu
                                                register_new_features = function() {
                                                  cat("register_new_features()"); self$print_level()
                                                  col_match_ftr_name = 'tracking_id'
-                                                 browser()
                                                  if (col_match_ftr_name %in% colnames(private$.data_df)) {
                                                    matchTarget = unique(private$.reference_object$pipeline_df[, 
                                                                                                               template_linker$featureset$choices_col])
