@@ -250,11 +250,15 @@ DataReaderRNAQuantRNASeqRSEM = R6::R6Class(classname = 'DataReaderRNAQuantRNASeq
                                                     }
                                                   }
                                                 ))
-##### DataReaderRNAQuantRNASeqHTSeq #####
-DataReaderRNAQuantRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNAQuantRNASeqHTSeq',
+##### DataReaderRNASeqGeneFormatA #####
+# Reader that is being used to cover gene matrix files for
+# - Salmon
+# - HTSeq
+# - Sailfish
+DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneFormatA',
                                     inherit = DataReaderRNAQuant,
                                     public = list(
-                                      print_level = function() {cat("----(Level: DataReaderRNAQuantRNASeqHTSeq)\n")},
+                                      print_level = function() {cat("----(Level: DataReaderRNASeqGeneFormatA)\n")},
                                       load_data_from_file = function() {
                                         super$load_data_from_file()
                                         cat("load_data_from_file()"); self$print_level()
@@ -403,7 +407,7 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[RNA-seq] HTSeq}{gene}" = ,
          "{[external]-[RNA-seq] Salmon}{gene}" = ,
          "{[external]-[RNA-seq] Sailfish}{gene}" = 
-             DataReaderRNAQuantRNASeqHTSeq$new(pipeline_df = pipeline_df,
+             DataReaderRNASeqGeneFormatA$new(pipeline_df = pipeline_df,
                                        measurement_set = measurement_set),
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: GATK + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,

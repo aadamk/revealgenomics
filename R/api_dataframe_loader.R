@@ -275,11 +275,13 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                       }
                                     }
                                   }))
-##### DataLoaderRNAQuantRNASeqCufflinksGene #####
-DataLoaderRNAQuantRNASeqCufflinksGene = R6::R6Class(classname = "DataLoaderRNAQuantRNASeqCufflinksGene",
+##### DataLoaderRNASeqGeneFormat #####
+# loader corresponding to output of all DataReaderRNASeqGene* types 
+# e.g. DataReaderRNASeqGeneFormatA, DataReaderRNAQuantRNASeqCufflinks
+DataLoaderRNASeqGeneFormat = R6::R6Class(classname = "DataLoaderRNASeqGeneFormat",
                                              inherit = DataLoaderRNAQuantRNASeq,
                                              public = list(
-                                               print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeqCufflinksGene)\n")},
+                                               print_level = function() {cat("----(Level: DataLoaderRNASeqGeneFormat)\n")},
                                                register_new_features = function() {
                                                  cat("register_new_features()"); self$print_level()
                                                  col_match_ftr_name = 'tracking_id'
@@ -574,7 +576,7 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[RNA-seq] Salmon}{gene}" = ,
          "{[external]-[RNA-seq] Sailfish}{gene}" = ,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = ,
-           DataLoaderRNAQuantRNASeqCufflinksGene$new(data_df = data_df,
+           DataLoaderRNASeqGeneFormat$new(data_df = data_df,
                                                      reference_object = reference_object,
                                                      feature_annotation_df = feature_annotation_df),
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = 
