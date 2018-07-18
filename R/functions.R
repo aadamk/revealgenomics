@@ -610,9 +610,8 @@ update_mandatory_and_info_fields = function(df, arrayname, con = NULL){
 #' 
 #' Wrapper function that 
 #' (1) registers mandatory fields, 
-#' (2) updates lookup array (based on flag), always FALSE in secure_scan branch
-#' (3) registers flex fields
-register_tuple_update_lookup = function(df, arrayname, con = NULL){
+#' (2) registers flex fields
+register_mandatory_and_flex_fields = function(df, arrayname, con = NULL){
   con = use_ghEnv_if_null(con)
   
   idname = get_idname(arrayname)
@@ -687,7 +686,7 @@ register_tuple_return_id = function(df,
       if (entitynm == .ghEnv$meta$arrDataset) stop("use increment_dataset() for incrementing dataset versions")
       cat("Entity does not have any entry at current version number\n")
       cat("Registering new versions of", nrow(df[matching_idx, ]), "entries into", arrayname, "at version", dataset_version, "\n")
-      register_tuple_update_lookup(df = df[matching_idx, ], arrayname = arrayname, con = con)
+      register_mandatory_and_flex_fields(df = df[matching_idx, ], arrayname = arrayname, con = con)
     } else {
       # code to handle versioning while registering entries that have matching entries at other versions
       
@@ -701,7 +700,7 @@ register_tuple_return_id = function(df,
       cat("Matching entries already exist for", nrow(dfx[matching_idx_at_version, ]), "rows of",  arrayname, "at version", dataset_version, " -- returning matching ID's\n")
       if (length(nonmatching_idx_at_version) > 0) {
         cat("Registering new versions of", nrow(dfx[nonmatching_idx_at_version, ]), "entries into", arrayname, "at version", dataset_version, "\n")
-        register_tuple_update_lookup(df = dfx[nonmatching_idx_at_version, ], arrayname = arrayname, con = con)
+        register_mandatory_and_flex_fields(df = dfx[nonmatching_idx_at_version, ], arrayname = arrayname, con = con)
       }
     }
   } else {
@@ -715,7 +714,7 @@ register_tuple_return_id = function(df,
     new_id = get_max_id(arrayname, con = con) + 1:nrow(df[nonmatching_idx, ])
     df[nonmatching_idx, get_base_idname(arrayname)] = new_id
     
-    register_tuple_update_lookup(df = df[nonmatching_idx, ], arrayname = arrayname, 
+    register_mandatory_and_flex_fields(df = df[nonmatching_idx, ], arrayname = arrayname, 
                                  con = con)
   } else {
     cat("--- no completely new entries to register\n")
