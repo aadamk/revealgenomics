@@ -270,7 +270,7 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj, 
 #' 
 #' Helper function for template Excel sheet. 
 #' 
-#' Given a project-study record [project_id, dataset_id, dataset_version]
+#' Given a project-study record `project_id, dataset_id, dataset_version`
 #' find the information from a target sheet (e.g. Subjects, Samples, Pipelines) pertaining
 #' to that record
 template_helper_extract_record_related_rows = function(workbook, sheetName, record) {
