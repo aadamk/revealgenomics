@@ -200,10 +200,26 @@ DataLoaderRNAQuant = R6::R6Class(classname = "DataLoaderRNAQuant",
                                   print_level = function() {cat("----(Level: DataLoaderRNAQuant)\n")},
                                   load_data = function(){
                                     cat("load_data()"); self$print_level()
-                                    register_expression_dataframe(df1 = private$.data_df, 
-                                                                  dataset_version = private$.reference_object$record$dataset_version)
-                                    
+                                    df_size_mb = as.integer(object.size(private$.data_df))/1024/1024
+                                    upload_chunk_max = 200 # 200 MB
+                                    if (df_size_mb < upload_chunk_max) {
+                                      register_expression_dataframe(df1 = private$.data_df, 
+                                                                    dataset_version = private$.reference_object$record$dataset_version)
+                                    } else{
+                                      factorLarger = round(df_size_mb/upload_chunk_max)
+                                      cat("Dataframe is of size:", df_size_mb, "Mb. Uploading in", factorLarger, "pieces\n")
+                                      stepSize = round(nrow(private$.data_df)/factorLarger)
+                                      starts = seq(1, nrow(private$.data_df), stepSize)
+                                      ends = starts + stepSize - 1
+                                      ends[length(ends)] = nrow(private$.data_df)
+                                      for (idx in 1:factorLarger) {
+                                        cat("Uploading data.frame sub-chunk #", idx, "\n")
+                                        register_expression_dataframe(df1 = private$.data_df[c(starts[idx]:ends[idx]), ], 
+                                                                      dataset_version = private$.reference_object$record$dataset_version)
+                                      }
+                                    }
                                   },
+                                  
                                   assign_feature_ids = function(feature_type, column_in_file) {
                                     super$assign_feature_ids()
                                     cat("assign_feature_ids()"); self$print_level()
