@@ -4,11 +4,11 @@
 \alias{register_tuple_update_lookup}
 \title{Register the mandatory fields and update lookup}
 \usage{
-register_tuple_update_lookup(df, arrayname, updateLookup, con = NULL)
+register_tuple_update_lookup(df, arrayname, con = NULL)
 }
 \description{
 Wrapper function that
 (1) registers mandatory fields,
-(2) updates lookup array (based on flag), \link{always FALSE in secure_scan branch}
+(2) updates lookup array (based on flag), always FALSE in secure_scan branch
 (3) registers flex fields
 }

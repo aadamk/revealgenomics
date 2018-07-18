@@ -12,7 +12,7 @@ register_genelist_gene(genelist_id = NULL, gene_symbols = NULL, df = NULL,
 
 \item{gene_symbols}{the gene-symbols to be stored in a gene-list (e.g. \code{c('TSPAN6', 'KCNIP2', 'CFAP58', 'GOT1', 'CPN1', 'PSIP1P1')})}
 
-\item{df}{(optional) a data-frame containing \link{genelist_id, gene_symbol}}
+\item{df}{(optional) a data-frame containing \code{genelist_id, gene_symbol}}
 }
 \description{
 Preferred method of registering gene symbols in a genelist is to
@@ -20,7 +20,7 @@ provide the target genelist_id and the symbols to be registered
 (one genelist at a time)
 }
 \details{
-Alternatively, one can supply a data.frame with \link{genelist_id, gene_symbol}
+Alternatively, one can supply a data.frame with \code{genelist_id, gene_symbol}
 }
 \examples{
 register_genelist_gene(genelist_id = 11, # must already exist in `genelist` table

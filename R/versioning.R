@@ -38,7 +38,7 @@ increment_dataset_version = function(df){
   register_tuple_update_lookup(df = prep_df_fields(df,
                                                    c(mandatory_fields,
                                                      get_idname(.ghEnv$meta$arrDataset))),
-                               arrayname = arrayname, updateLookup = FALSE)
+                               arrayname = arrayname)
   return(df[, c(get_idname(arrayname))])
 }
 

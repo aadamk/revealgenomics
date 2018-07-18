@@ -14,7 +14,7 @@ register_genelist(genelist_name = NULL, genelist_description = NULL,
 
 \item{isPublic}{bool to denote if the genelist is public}
 
-\item{df}{(optional) a data-frame containing \link{name, description} of the genelist}
+\item{df}{(optional) a data-frame containing \code{name, description} of the genelist}
 }
 \description{
 Preferred method of registering genelist-s is to
@@ -22,6 +22,6 @@ provide one genelist_name and genelist_description
 at a time.
 }
 \details{
-Alternatively, you can supply a data.frame with \link{name, description}
+Alternatively, you can supply a data.frame with \code{name, description]}
 of one or more genelist(s)
 }

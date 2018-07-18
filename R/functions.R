@@ -412,13 +412,13 @@ register_gene_symbol = function(df, only_test = FALSE, con = NULL){
 #' provide one genelist_name and genelist_description
 #' at a time.
 #' 
-#' Alternatively, you can supply a data.frame with [name, description] 
+#' Alternatively, you can supply a data.frame with `name, description]`
 #' of one or more genelist(s)
 #' 
 #' @param genelist_name the name of the geneliest
 #' @param genelist_description the description for the genelist
 #' @param isPublic bool to denote if the genelist is public
-#' @param df (optional) a data-frame containing [name, description] of the genelist
+#' @param df (optional) a data-frame containing `name, description` of the genelist
 #' 
 #' @export
 register_genelist = function(genelist_name = NULL, 
@@ -459,11 +459,11 @@ register_genelist = function(genelist_name = NULL,
 #' provide the target genelist_id and the symbols to be registered
 #' (one genelist at a time)
 #' 
-#' Alternatively, one can supply a data.frame with [genelist_id, gene_symbol] 
+#' Alternatively, one can supply a data.frame with `genelist_id, gene_symbol`
 #'  
 #' @param genelist_id the id of the genelist (returned by `register_genelist()`)
 #' @param gene_symbols the gene-symbols to be stored in a gene-list (e.g. `c('TSPAN6', 'KCNIP2', 'CFAP58', 'GOT1', 'CPN1', 'PSIP1P1')`)
-#' @param df (optional) a data-frame containing [genelist_id, gene_symbol]
+#' @param df (optional) a data-frame containing `genelist_id, gene_symbol`
 #'
 #' @examples 
 #' register_genelist_gene(genelist_id = 11, # must already exist in `genelist` table
@@ -610,12 +610,10 @@ update_mandatory_and_info_fields = function(df, arrayname, con = NULL){
 #' 
 #' Wrapper function that 
 #' (1) registers mandatory fields, 
-#' (2) updates lookup array (based on flag), [always FALSE in secure_scan branch] 
+#' (2) updates lookup array (based on flag), always FALSE in secure_scan branch
 #' (3) registers flex fields
-register_tuple_update_lookup = function(df, arrayname, updateLookup, con = NULL){
+register_tuple_update_lookup = function(df, arrayname, con = NULL){
   con = use_ghEnv_if_null(con)
-  
-  if (updateLookup) stop("unexpected in secure_scan branch")
   
   idname = get_idname(arrayname)
   if (any(is.na(df[, idname]))) stop("Dimensions: ", paste(idname, collapse = ", "), " should have had non null values at upload time!")
@@ -689,7 +687,7 @@ register_tuple_return_id = function(df,
       if (entitynm == .ghEnv$meta$arrDataset) stop("use increment_dataset() for incrementing dataset versions")
       cat("Entity does not have any entry at current version number\n")
       cat("Registering new versions of", nrow(df[matching_idx, ]), "entries into", arrayname, "at version", dataset_version, "\n")
-      register_tuple_update_lookup(df = df[matching_idx, ], arrayname = arrayname, updateLookup = FALSE, con = con)
+      register_tuple_update_lookup(df = df[matching_idx, ], arrayname = arrayname, con = con)
     } else {
       # code to handle versioning while registering entries that have matching entries at other versions
       
@@ -703,7 +701,7 @@ register_tuple_return_id = function(df,
       cat("Matching entries already exist for", nrow(dfx[matching_idx_at_version, ]), "rows of",  arrayname, "at version", dataset_version, " -- returning matching ID's\n")
       if (length(nonmatching_idx_at_version) > 0) {
         cat("Registering new versions of", nrow(dfx[nonmatching_idx_at_version, ]), "entries into", arrayname, "at version", dataset_version, "\n")
-        register_tuple_update_lookup(df = dfx[nonmatching_idx_at_version, ], arrayname = arrayname, updateLookup = FALSE, con = con)
+        register_tuple_update_lookup(df = dfx[nonmatching_idx_at_version, ], arrayname = arrayname, con = con)
       }
     }
   } else {
@@ -718,7 +716,7 @@ register_tuple_return_id = function(df,
     df[nonmatching_idx, get_base_idname(arrayname)] = new_id
     
     register_tuple_update_lookup(df = df[nonmatching_idx, ], arrayname = arrayname, 
-                                 updateLookup = FALSE, con = con)
+                                 con = con)
   } else {
     cat("--- no completely new entries to register\n")
     new_id = NULL
