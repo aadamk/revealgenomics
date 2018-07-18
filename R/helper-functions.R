@@ -108,13 +108,17 @@ convert_factors_to_char = function(dfx){
 }
 
 #' Pretty print a large vector of strings, integers etc. 
+#' 
+#' @param vec vector that is to be pretty printed
+#' @param prettify_after prettify output if length of vector is longer than this limit
 #' @export
 pretty_print = function(vec, prettify_after = 7) {
+  prettify_after = ifelse(prettify_after >= 7, prettify_after, 7) # force parameter to have a minimum value of 7
   ifelse(length(vec) <= prettify_after,
          paste(vec, collapse = ", "),
-         paste(pretty_print(head(vec, 2)),
+         paste(pretty_print(head(vec, ceiling((prettify_after-3)/2))),
                "...(Total: ", length(vec), ")... ",
-               pretty_print(tail(vec, 2)),
+               pretty_print(tail(vec, ceiling((prettify_after-3)/2))),
                sep = ""))}
 
 

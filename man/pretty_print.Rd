@@ -6,6 +6,11 @@
 \usage{
 pretty_print(vec, prettify_after = 7)
 }
+\arguments{
+\item{vec}{vector that is to be pretty printed}
+
+\item{prettify_after}{prettify output if length of vector is longer than this limit}
+}
 \description{
 Pretty print a large vector of strings, integers etc.
 }
