@@ -259,47 +259,73 @@ DataReaderRNAQuantRNASeqHTSeq = R6::R6Class(classname = 'DataReaderRNAQuantRNASe
                                         super$load_data_from_file()
                                         cat("load_data_from_file()"); self$print_level()
                                         
+                                        cat("Automatically interpreting specific format of data by matching with biosample names\n")
+                                        bios = search_biosamples(dataset_id = private$.measurement_set$dataset_id, 
+                                                                 dataset_version = private$.measurement_set$dataset_version)
+                                        
+                                        sample_from_manifest = bios[grep("__RNA", bios$name), ]$original_sample_name
+                                        m1 = lapply(colnames(private$.data_df), 
+                                                    function(colnm) {grep(colnm, sample_from_manifest)})
+                                        m1_len = sapply(m1, function(elem) {length(elem)})
+                                        if (!all(unique(m1_len) %in% c(0,1))) {
+                                          stop("Expected columns to be either feature annotation or unique biosample names.
+                                               Received data that has some non-unique biosample names:\n\t",
+                                               pretty_print(colnames(private$.data_df), prettify_after = 15))
+                                        }
+                                        sample_manifest_matched_pos = unlist(m1)
+                                        potential_sample_col_pos = which(m1_len == 1)
+                                        first_sample_col_pos = min(potential_sample_col_pos)
+                                        stopifnot(first_sample_col_pos >= 2)
+                                        
+                                        potential_sample_cols = colnames(private$.data_df)[potential_sample_col_pos]
+                                        ftr_ann_columns       = colnames(private$.data_df)[1:(first_sample_col_pos - 1)]
+                                        potential_sample_names_manifest = sample_from_manifest[sample_manifest_matched_pos]
+                                        if (identical(ftr_ann_columns, 
+                                                      c('gene', 'mrna', 'refseq', 'ucscid', 
+                                                                 'description', 'entrez', 
+                                                                 'chr', 'beg', 'end'))) {
+                                          ftr_col = 'gene'
+                                          ftr_ann_columns_replace = c('gene_symbol', 
+                                                                      'mrna', 
+                                                                      'refseq', 
+                                                                      'ucscid', 
+                                                                      'description', 
+                                                                      'entrez', 
+                                                                      'chromosome', 
+                                                                      'start', 
+                                                                      'end')
+                                        } else if (ftr_ann_columns == 'GENE_ID') {
+                                          ftr_col = 'GENE_ID'
+                                          ftr_ann_columns_replace = c('gene_symbol')
+                                        } else {
+                                          stop("Case not covered. Feature annotation columns:", ftr_ann_columns)
+                                        }
                                         # HTSeq file has feature annotation as well as expression data
                                         # Step 1 of 2 -- Extract annotation data
-                                        ftr_col = 'gene'
                                         stopifnot(length(unique(private$.data_df[, ftr_col])) == 
                                                     nrow(private$.data_df[, ftr_col]))
-                                        ftr_ann_columns = c(ftr_col, 'mrna', 'refseq', 'ucscid', 
-                                                            'description', 'entrez', 
-                                                            'chr', 'beg', 'end')
-                                        private$.feature_annotation_df = private$.data_df[, ftr_ann_columns]
-                                        colnames(private$.feature_annotation_df) = c('gene_symbol', 
-                                                                                     'mrna', 
-                                                                                     'refseq', 
-                                                                                     'ucscid', 
-                                                                                     'description', 
-                                                                                     'entrez', 
-                                                                                     'chromosome', 
-                                                                                     'start', 
-                                                                                     'end')
+                                        if (length(ftr_ann_columns) == 1) {
+                                          private$.feature_annotation_df = data.frame(ftr_ann_columns = 
+                                                                                        private$.data_df[, ftr_ann_columns],
+                                                                                      stringsAsFactors = FALSE)
+                                        } else {
+                                          private$.feature_annotation_df = private$.data_df[, ftr_ann_columns]
+                                        }
+                                        colnames(private$.feature_annotation_df) = ftr_ann_columns_replace
                                         
                                         # Step 2 of 2 -- Extract expression data
                                         private$.data_df = private$.data_df[, 
                                                             c(ftr_col, 
-                                                              colnames(private$.data_df)[!(colnames(private$.data_df) %in% 
-                                                                               ftr_ann_columns)])]
-                                        column_names = colnames(private$.data_df)
+                                                              potential_sample_cols)]
 
-                                        # Now work on the expression data matrix
-                                        # There is a 'xxx/' prefix in all column names -- remove that
-                                        cat("Local rule 1\n")
-                                        cat("============\n")
-                                        cat("\tThere is a 'xxx/' prefix  in all column names -- remove that\n")
-                                        stopifnot(length(grep("/", column_names)) == (length(column_names) -1))
-                                        colnames(private$.data_df) = c(
-                                          column_names[1],
-                                          sapply(strsplit(tail(column_names,-1), "/"), function(vec) vec[2])
-                                        )
-                                        
-                                        cat("Local rule 2\n")
+                                        # column renames 
+                                        cat("Local rule(s)\n")
                                         cat("============\n")
                                         cat("\tColumn name for feature; renaming as tracking id\n")
-                                        colnames(private$.data_df)[1] = 'tracking_id'
+                                        cat("============\n")
+                                        cat("\tRename the sample columns in the format that matched with the sample manifest\n")
+
+                                        colnames(private$.data_df) = c('tracking_id', potential_sample_names_manifest)
                                         
                                         super$convert_wide_to_tall_skinny()
                                       }
