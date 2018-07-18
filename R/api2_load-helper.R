@@ -126,15 +126,35 @@ load_helper_do_entity_specific_work = function(data_df, entity, record, con = NU
     }
     if (! 'species_' %in% colnames(data_df)) data_df$species_ = 'homo sapiens'
     
+    manage_ont_sex = TRUE # flag: if set to TRUE, need to manage mandatory ontology term with default
+                          # if set to FALSE, that means that 'SEX' or 'sex' column was found in Excel sheet 'Individuals' sheets
     if ('SEX' %in% colnames(data_df)) {
-      data_df$SEX = sapply(data_df$SEX,
-                          function(term) {
-                            switch(term, 'F' = 'female', 'M' = 'male','gender-unknown')
-                          })
+      if (!all(unique(data_df$SEX) %in% c('M', 'F', 'male', 'female', '', NA))) {
+        stop("Expected 'SEX' column in Excel file Individuals sheet to have values among:
+             'M', 'F', 'male', 'female', '' and NA.
+             Provided values include: ", pretty_print(unique(data_df$SEX)))
+      }
+      if (any(c('F', 'M') %in% unique(data_df$SEX))) {
+        data_df$SEX = sapply(data_df$SEX,
+                             function(term) {
+                               switch(term, 'F' = 'female', 'M' = 'male','gender-unknown')
+                             })
+      }
+      manage_ont_sex = FALSE
     }
     if ('sex' %in% colnames(data_df)) { # TODO: More elegant solution possible here
+      if (!all(unique(data_df$sex) %in% c('male', 'female', '', NA))) {
+        stop("Expected 'sex' column in Excel file Individuals sheet to have values among:
+             'male', 'female', '' and NA.
+             Provided values include: ", pretty_print(unique(data_df$sex)))
+      }
       cat("Preparing: SEX/sex ==> sex_")
       data_df = plyr::rename(data_df, c('sex' = 'SEX'))
+      manage_ont_sex = FALSE
+    }
+    if (manage_ont_sex) {
+      cat("manage mandatory ontology term with default\n")
+      data_df$SEX = 'gender-unknown'
     }
     data_df$SEX[is.na(data_df$SEX)] = 'gender-unknown'
     if (any(is.na(data_df$SEX))) stop("Should not have NA here")
