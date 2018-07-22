@@ -544,7 +544,7 @@ dao_search_rnaquantification = function(measurementset,
                                    "), bytes)"), 
                            return = TRUE)$bytes
     cat(download_size/1024/1024, " MB\n")
-    download_limit_mb = 500
+    download_limit_mb = 1000
     if (download_size > download_limit_mb * 1024 * 1024) {
       cat("Trying to download more than", download_limit_mb, "MB at a time! 
           Post an issue at https://github.com/Paradigm4/scidb4gh/issues\n")
@@ -568,6 +568,7 @@ dao_search_rnaquantification = function(measurementset,
     feature_sel = get_features(feature_id = feature_id, fromCache = FALSE,
                                con = con)
   }
+  cat("Forming ExpressionSet\n")
   expressionSet = formulate_list_expression_set(expr_df = res, 
                                                 dataset_version = dataset_version, 
                                                 measurementset = measurementset,
