@@ -24,13 +24,13 @@ DataLoader = R6::R6Class(classname = "DataLoader",
             cat("assign_biosample_ids()"); self$print_level()
             bios_ref = private$.reference_object$biosample
             if (private$.reference_object$measurement_set$entity %in% c(.ghEnv$meta$arrRnaquantification)) {
-              suffix = "__RNA"
+              suffix = "RNA"
             } else if (private$.reference_object$measurement_set$entity %in% 
                        c(.ghEnv$meta$arrVariant,
                          .ghEnv$meta$arrFusion)) {
-              suffix = "__DNA"
+              suffix = "DNA"
             } else {
-              stop("Assigning suffix '__DNA' or '__RNA' based on entity type. 
+              stop("Assigning suffix 'DNA' or 'RNA' based on entity type. 
                    Suffix needs to be assigned for current entity:", private$.reference_object$measurement_set$entity)
             }
             bios_ref = bios_ref[grep(suffix, bios_ref$name), ]
