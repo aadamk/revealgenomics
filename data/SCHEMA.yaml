@@ -548,7 +548,7 @@ array:
     unique_fields:
       - dataset_id
       - attribute_name
-    search_by_entity: DEFINITION
+    search_by_entity: DATASET
     delete_by_entity: DEFINITION
     infoArray: TRUE
     infoArray_max_keys: 1000

@@ -266,8 +266,16 @@ get_dataset_subelements <- function(dataset_id, datasetVersion, con = NULL, ...)
                                   & !is.na(db_schema$search_by_entity), ]$entity
 
   for (next.entity in as.character(entities_to_search)) {
-    dataset_subelements[[next.entity]] <- try(search_entity(entity = next.entity, id = dataset_id, 
-                                                            dataset_version = datasetVersion, con = con, ...), silent = SEARCH_SILENTLY)
+    if (next.entity == .ghEnv$meta$arrDefinition) {
+      # all child-entries of a DATASET are versioned, except the DEFINITIONS entity
+      dataset_subelements[[next.entity]] <- try(search_entity(entity = next.entity, id = dataset_id, 
+                                                              con = con, ...), 
+                                                silent = SEARCH_SILENTLY)
+    } else {
+      dataset_subelements[[next.entity]] <- try(search_entity(entity = next.entity, id = dataset_id, 
+                                                              dataset_version = datasetVersion, con = con, ...), 
+                                                silent = SEARCH_SILENTLY)
+    }
   }
   
   
