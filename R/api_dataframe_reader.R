@@ -291,26 +291,56 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
                                         potential_sample_cols = colnames(private$.data_df)[potential_sample_col_pos]
                                         ftr_ann_columns       = colnames(private$.data_df)[1:(first_sample_col_pos - 1)]
                                         potential_sample_names_manifest = sample_from_manifest[sample_manifest_matched_pos]
-                                        if (identical(ftr_ann_columns, 
-                                                      c('gene', 'mrna', 'refseq', 'ucscid', 
-                                                                 'description', 'entrez', 
-                                                                 'chr', 'beg', 'end'))) {
-                                          ftr_col = 'gene'
-                                          ftr_ann_columns_replace = c('gene_symbol', 
-                                                                      'mrna', 
-                                                                      'refseq', 
-                                                                      'ucscid', 
-                                                                      'description', 
-                                                                      'entrez', 
-                                                                      'chromosome', 
-                                                                      'start', 
-                                                                      'end')
-                                        } else if (ftr_ann_columns == 'GENE_ID') {
-                                          ftr_col = 'GENE_ID'
-                                          ftr_ann_columns_replace = c('gene_symbol')
+                                        # Match with library of feature annotation choices (most restrictive first)
+                                        feature_library = list(
+                                          'transcript_feature_cols_1' = 
+                                            list(
+                                              source = c('transcript', 'gene', 'mrna', 'refseq', 'ucscid', 
+                                                          'description', 'entrez', 
+                                                          'chr', 'beg', 'end'),
+                                              replace = c('transcript', 'gene_symbol', 'mrna', 'refseq', 'ucscid', 
+                                                          'description', 'entrez', 
+                                                          'chromosome', 'start', 'end'),
+                                              feature_col = 'transcript'
+                                            ),
+                                          'gene_feature_cols_1' =
+                                            list(
+                                              source = c('gene', 'mrna', 'refseq', 'ucscid', 
+                                                         'description', 'entrez', 
+                                                         'chr', 'beg', 'end'),
+                                              replace = c('gene_symbol', 'mrna', 'refseq', 'ucscid', 
+                                                          'description', 'entrez', 
+                                                          'chromosome', 'start', 'end'),
+                                              feature_col = 'gene'
+                                            ),
+                                          'transcript_feature_cols_2' = 
+                                            list(
+                                              source = c('TRANSCRIPT_ID'),
+                                              replace = c('transcript'),
+                                              feature_col = 'TRANSCRIPT_ID'
+                                            ),
+                                          'gene_feature_cols_2' = 
+                                            list(
+                                              source = c('GENE_ID'),
+                                              replace = c('gene_symbol'),
+                                              feature_col = 'GENE_ID'
+                                            )
+                                        )
+                                        matches = which(
+                                          sapply(names(feature_library), 
+                                                 function(idx) {
+                                                   all(feature_library[[idx]]$source %in% ftr_ann_columns)
+                                                   })
+                                          )
+                                        if (length(matches) > 0) {
+                                          matching_key = names(matches[1])
                                         } else {
-                                          stop("Case not covered. Feature annotation columns:", ftr_ann_columns)
+                                          stop("Case not covered. Feature annotation columns:\n\t", 
+                                               pretty_print(ftr_ann_columns))
                                         }
+                                        ftr_ann_columns =         feature_library[[matching_key]]$source
+                                        ftr_col =                 feature_library[[matching_key]]$feature_col
+                                        ftr_ann_columns_replace = feature_library[[matching_key]]$replace
                                         # HTSeq file has feature annotation as well as expression data
                                         # Step 1 of 2 -- Extract annotation data
                                         stopifnot(length(unique(private$.data_df[, ftr_col])) == 
@@ -404,7 +434,6 @@ createDataReader = function(pipeline_df, measurement_set){
                        measurement_set$quantification_level, "}")
   switch(temp_string,
          "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
-         "{[external]-[RNA-seq] Cufflinks}{transcript}" = ,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = 
              DataReaderRNAQuantRNASeqCufflinks$new(pipeline_df = pipeline_df,
                                            measurement_set = measurement_set),
@@ -413,8 +442,11 @@ createDataReader = function(pipeline_df, measurement_set){
                                                  measurement_set = measurement_set),
          "{[external]-[RNA-seq] HTSeq}{gene}" = ,
          "{[external]-[RNA-seq] Salmon}{gene}" = ,
-         "{[external]-[RNA-seq] Sailfish}{gene}" = 
-             DataReaderRNASeqGeneFormatA$new(pipeline_df = pipeline_df,
+         "{[external]-[RNA-seq] Sailfish}{gene}" = ,
+         "{[external]-[RNA-seq] Cufflinks}{transcript}" = ,
+         "{[external]-[RNA-seq] Salmon}{transcript}" = ,
+         "{[external]-[RNA-seq] Sailfish}{transcript}" = 
+          DataReaderRNASeqGeneFormatA$new(pipeline_df = pipeline_df,
                                        measurement_set = measurement_set),
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: GATK + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
