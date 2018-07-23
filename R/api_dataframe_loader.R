@@ -277,7 +277,37 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                         cat("No new features to register\n")
                                         return(FALSE)
                                       }
+                                    } else if ('tracking_id' %in% colnames(private$.data_df)) {
+                                      col_match_ftr_name = 'tracking_id'
+                                      matchTarget = unique(private$.reference_object$pipeline_df[, 
+                                                                                                 template_linker$featureset$choices_col])
+                                      stopifnot(length(matchTarget) == 1)
+                                      fsets_scidb = private$.reference_object$featureset
+                                      fset = drop_na_columns(fsets_scidb[match(matchTarget, 
+                                                                               fsets_scidb[,
+                                                                                           template_linker$featureset$choices_col]), ])
+                                      stopifnot(nrow(fset) == 1)
+                                      
+                                      cat("Matching features in file by feature-names in DB at featureset_id", 
+                                          fset$featureset_id, "\n")
+                                      features_sel = private$.reference_object$feature
+                                      m1 = find_matches_and_return_indices(private$.data_df[, col_match_ftr_name], 
+                                                                           features_sel$name)
+                                      
+                                      if (length(m1$source_unmatched_idx) > 0) {
+                                        stop("Need to implement this code-path. Follow template for `DataLoaderRNAQuantMicroarray::register_new_features()`")
+                                        ftr_ann_df = data.frame(name = "...", stringsAsFactors = FALSE)
+                                        
+                                        register_feature(df = ftr_ann_df, 
+                                                         register_gene_synonyms = FALSE)
+                                        return(TRUE)
+                                      } else {
+                                        cat("No new features to register\n")
+                                        return(FALSE)
+                                      }
                                     }
+                                    
+                                      
                                   }))
 ##### DataLoaderRNASeqGeneFormat #####
 # loader corresponding to output of all DataReaderRNASeqGene* types 
@@ -286,49 +316,17 @@ DataLoaderRNASeqGeneFormat = R6::R6Class(classname = "DataLoaderRNASeqGeneFormat
                                              inherit = DataLoaderRNAQuantRNASeq,
                                              public = list(
                                                print_level = function() {cat("----(Level: DataLoaderRNASeqGeneFormat)\n")},
-                                               register_new_features = function() {
-                                                 cat("register_new_features()"); self$print_level()
-                                                 col_match_ftr_name = 'tracking_id'
-                                                 if (col_match_ftr_name %in% colnames(private$.data_df)) {
-                                                   matchTarget = unique(private$.reference_object$pipeline_df[, 
-                                                                                                              template_linker$featureset$choices_col])
-                                                   stopifnot(length(matchTarget) == 1)
-                                                   fsets_scidb = private$.reference_object$featureset
-                                                   fset = drop_na_columns(fsets_scidb[match(matchTarget, 
-                                                                                            fsets_scidb[,
-                                                                                                        template_linker$featureset$choices_col]), ])
-                                                   stopifnot(nrow(fset) == 1)
-                                                   
-                                                   cat("Matching features in file by feature-names in DB at featureset_id", 
-                                                       fset$featureset_id, "\n")
-                                                   features_sel = private$.reference_object$feature
-                                                   m1 = find_matches_and_return_indices(private$.data_df[, col_match_ftr_name], 
-                                                                                        features_sel$name)
-                                                   
-                                                   if (length(m1$source_unmatched_idx) > 0) {
-                                                     stop("Need to implement this code-path. Follow template for `DataLoaderRNAQuantMicroarray::register_new_features()`")
-                                                     ftr_ann_df = data.frame(name = "...", stringsAsFactors = FALSE)
-
-                                                     register_feature(df = ftr_ann_df, 
-                                                                      register_gene_synonyms = FALSE)
-                                                     return(TRUE)
-                                                   } else {
-                                                     cat("No new features to register\n")
-                                                     return(FALSE)
-                                                   }
-                                                 }
-                                               },
                                                assign_feature_ids = function(){
                                                  cat("assign_feature_ids()"); self$print_level()
                                                  super$assign_feature_ids(feature_type = 'gene',
                                                                           column_in_file = 'tracking_id')
                                                }))
 
-##### DataLoaderRNAQuantRNASeqCufflinksIsoform #####
-DataLoaderRNAQuantRNASeqCufflinksIsoform = R6::R6Class(classname = "DataLoaderRNAQuantRNASeqCufflinksIsoform",
+##### DataLoaderRNASeqTranscriptFormat #####
+DataLoaderRNASeqTranscriptFormat = R6::R6Class(classname = "DataLoaderRNASeqTranscriptFormat",
                                                 inherit = DataLoaderRNAQuantRNASeq,
                                                 public = list(
-                                                  print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeqCufflinksIsoform)\n")},
+                                                  print_level = function() {cat("----(Level: DataLoaderRNASeqTranscriptFormat)\n")},
                                                   assign_feature_ids = function(){
                                                     cat("assign_feature_ids()"); self$print_level()
                                                     super$assign_feature_ids(feature_type = 'transcript',
