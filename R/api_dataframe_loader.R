@@ -1,6 +1,7 @@
 #' convenience function for matching features between database and file
 match_features = function(features_in_file, df_features_db, feature_type, column_in_db) {
-  df_features_db = df_features_db[df_features_db$feature_type == feature_type, ]
+  df_features_db = df_features_db[df_features_db$feature_type == feature_type | 
+                                    df_features_db$feature_type == 'controls', ]
   
   print(head(as.character(features_in_file)))
   matchL = find_matches_and_return_indices(features_in_file, df_features_db[, column_in_db])
