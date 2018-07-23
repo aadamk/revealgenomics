@@ -269,7 +269,14 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
                                         
                                         sample_from_manifest = bios[grep("__RNA", bios$name), ]$original_sample_name
                                         m1 = lapply(colnames(private$.data_df), 
-                                                    function(colnm) {grep(colnm, sample_from_manifest)})
+                                                    function(colnm) {
+                                                      x2 = sapply(1:length(sample_from_manifest), 
+                                                                  function(pos) {
+                                                                    subelem = sample_from_manifest[pos]; 
+                                                                    xx = grep(subelem, colnm); 
+                                                                    ifelse(length(xx) == 0, NA, pos)})
+                                                      x2[!is.na(x2)]
+                                                      })
                                         m1_len = sapply(m1, function(elem) {length(elem)})
                                         if (!all(unique(m1_len) %in% c(0,1))) {
                                           stop("Expected columns to be either feature annotation or unique biosample names.
