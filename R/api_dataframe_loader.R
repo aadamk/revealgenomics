@@ -201,7 +201,10 @@ DataLoaderRNAQuant = R6::R6Class(classname = "DataLoaderRNAQuant",
                                   print_level = function() {cat("----(Level: DataLoaderRNAQuant)\n")},
                                   load_data = function(){
                                     cat("load_data()"); self$print_level()
-                                    df_size_mb = as.integer(object.size(private$.data_df))/1024/1024
+                                    df_size_mb = as.integer(
+                                      as.double(object.size(
+                                        private$.data_df)
+                                        )/1024/1024)
                                     upload_chunk_max = 200 # 200 MB
                                     if (df_size_mb < upload_chunk_max) {
                                       register_expression_dataframe(df1 = private$.data_df, 
