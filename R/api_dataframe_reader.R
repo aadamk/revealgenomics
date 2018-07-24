@@ -442,13 +442,13 @@ createDataReader = function(pipeline_df, measurement_set){
   temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
                        measurement_set$quantification_level, "}")
   switch(temp_string,
-         "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = 
              DataReaderRNAQuantRNASeqCufflinks$new(pipeline_df = pipeline_df,
                                            measurement_set = measurement_set),
          "{(internal)-(RNA-Seq) RSEM}{gene}" =
            DataReaderRNAQuantRNASeqRSEM$new(pipeline_df = pipeline_df,
                                                  measurement_set = measurement_set),
+         "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
          "{[external]-[RNA-seq] HTSeq}{gene}" = ,
          "{[external]-[RNA-seq] Salmon}{gene}" = ,
          "{[external]-[RNA-seq] Sailfish}{gene}" = ,
