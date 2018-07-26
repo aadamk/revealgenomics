@@ -64,10 +64,10 @@ script:
   - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/reveal-genomics-docs/ontology_v2/04-load-api.Rmd", destfile = "/tmp/load-api-example.Rmd")'
   - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/reveal-genomics-docs/ontology_v2/06-updating-deleting.Rmd", destfile = "/tmp/updating-deleting.Rmd")'
   - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/reveal-genomics-docs/ontology_v2/07-experiments-measurements.Rmd", destfile = "/tmp/experiments-measurements.Rmd")'
-  - R -e 'rmarkdown::render(input = "/tmp/load-api-example.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
-  - R -e 'rmarkdown::render(input = "/tmp/download-api-example.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
-  - R -e 'rmarkdown::render(input = "/tmp/updating-deleting.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
-  - R -e 'rmarkdown::render(input = "/tmp/experiments-measurements.Rmd", output_file = "/tmp/load-api-example.html", params = list(force_init_db = TRUE))'
+  - R -e 'rmarkdown::render(input = "/tmp/load-api-example.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
+  - R -e 'rmarkdown::render(input = "/tmp/download-api-example.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
+  - R -e 'rmarkdown::render(input = "/tmp/updating-deleting.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
+  - R -e 'rmarkdown::render(input = "/tmp/experiments-measurements.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
   - R -e 'source(system.file("extdata", "travis-manual-tests.R", package="scidb4gh"))'
 
 after_failure:
