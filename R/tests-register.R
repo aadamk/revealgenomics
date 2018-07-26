@@ -56,40 +56,6 @@ test_return_carriage_in_df = function(df){
   }
 }
 
-#' Test that all ontology entries are non-null
-#' 
-#' @param df     data frame on which this test will be run
-#' @param suffix suffix for ontology columns. Default: "_" or "_term". 
-test_non_null_ontology_elements = function(df, suffix = c("_", "_term")) {
-  ont_cols = colnames(df)[grep(paste(suffix, "$", sep = "", collapse = "|"), 
-                               colnames(df))]
-  if (length(ont_cols) >= 1) {
-    dfx = df[, ont_cols]
-    if (length(ont_cols) > 1) {
-      if (class(dfx) != 'data.frame') stop("Expected data.frame class here")
-      if (nrow(dfx) > 1) {
-        check_for_null = apply(apply(dfx, 2, is.na), 2, any)
-      } else if (nrow(dfx) == 1) {
-        check_for_null = apply(dfx, 2, is.na)
-      } else {
-        stop("Zero row DF should not exist here")
-      }
-    } else if (length(ont_cols) == 1) {
-      if (!(class(dfx) %in% c('integer', 'numeric'))) {
-        stop("Expected integer or numeric class here")
-      }
-      check_for_null = any(is.na(dfx))
-      names(check_for_null) = ont_cols
-    } else {
-      stop("Expected length of ontology columns greater than 1 here")
-    }
-    if (any(check_for_null)) {
-      stop("Found null element in ontology fields: ", 
-           pretty_print(names(which(check_for_null))))
-    }
-  }
-}
-
 #' Run tests on data frame 
 run_tests_dataframe = function(entity, df, uniq, silent) {
   if (!identical(class(df), 'data.frame')) {
@@ -100,7 +66,6 @@ run_tests_dataframe = function(entity, df, uniq, silent) {
   test_dataframe_formatting(df)
   test_mandatory_fields(df, arrayname = entity, silent = silent)
   test_unique_fields(df, uniq)
-  test_non_null_ontology_elements(df)
 }
 
 test_register_project = function(df, uniq, silent = TRUE){

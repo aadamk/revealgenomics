@@ -124,51 +124,7 @@ load_helper_do_entity_specific_work = function(data_df, entity, record, con = NU
     if (class(data_df$subject_id) != 'character') {
       data_df$subject_id = as.character(data_df$subject_id)
     }
-    if (! 'species_' %in% colnames(data_df)) data_df$species_ = 'homo sapiens'
-    
-    manage_ont_sex = TRUE # flag: if set to TRUE, need to manage mandatory ontology term with default
-                          # if set to FALSE, that means that 'SEX' or 'sex' column was found in Excel sheet 'Individuals' sheets
-    if ('SEX' %in% colnames(data_df)) {
-      if (!all(unique(data_df$SEX) %in% c('M', 'F', 'male', 'female', '', NA))) {
-        stop("Expected 'SEX' column in Excel file Individuals sheet to have values among:
-             'M', 'F', 'male', 'female', '' and NA.
-             Provided values include: ", pretty_print(unique(data_df$SEX)))
-      }
-      if (any(c('F', 'M') %in% unique(data_df$SEX))) {
-        data_df$SEX = sapply(data_df$SEX,
-                             function(term) {
-                               switch(term, 'F' = 'female', 'M' = 'male','gender-unknown')
-                             })
-      }
-      manage_ont_sex = FALSE
-    }
-    if ('sex' %in% colnames(data_df)) { # TODO: More elegant solution possible here
-      if (!all(unique(data_df$sex) %in% c('male', 'female', '', NA))) {
-        stop("Expected 'sex' column in Excel file Individuals sheet to have values among:
-             'male', 'female', '' and NA.
-             Provided values include: ", pretty_print(unique(data_df$sex)))
-      }
-      cat("Preparing: SEX/sex ==> sex_")
-      data_df = plyr::rename(data_df, c('sex' = 'SEX'))
-      manage_ont_sex = FALSE
-    }
-    if (manage_ont_sex) {
-      cat("manage mandatory ontology term with default\n")
-      data_df$SEX = 'gender-unknown'
-    }
-    data_df$SEX[is.na(data_df$SEX)] = 'gender-unknown'
-    if (any(is.na(data_df$SEX))) stop("Should not have NA here")
-    data_df$SEX = search_ontology(terms = data_df$SEX)
   } else if (entity == .ghEnv$meta$arrBiosample) {
-    # handle ontology columns
-    if (! 'disease_' %in% colnames(data_df)) {
-      if ( 'sample_disease' %in% colnames(data_df)) {
-        data_df$disease_ = 'refer `sample_disease` column'
-      } else {
-        data_df$disease_ = 'disease-unknown' # ontology term already registered with SciDB
-      }
-    }
-    
     # BEGIN: assign individual_id based on subject_id
     cat("\t assigning individual_id-s to biosample-s\n")
     individuals = search_individuals(dataset_id = record$dataset_id, 
@@ -204,11 +160,11 @@ load_helper_assign_ontology_ids = function(data_df, definitions, entity, con = N
     cat("Following fields are controlled fields:", 
         pretty_print(controlled_fields), "\n")
     for (field in controlled_fields) {
-      if (field == 'SEX') {
-        cat("controlled vocabulary for gender has been enforced earlier -- see function:
-            `load_helper_do_entity_specific_work()` under `INDIVIDUAL` entity\n")
-        next
-      }
+      # if (field == 'SEX') {
+      #   cat("controlled vocabulary for gender has been enforced earlier -- see function:
+      #       `load_helper_do_entity_specific_work()` under `INDIVIDUAL` entity\n")
+      #   next
+      # }
       vec = as.character(data_df[, field])
       vec[is.na(vec)] = 'NA'
       
@@ -223,17 +179,6 @@ load_helper_assign_ontology_ids = function(data_df, definitions, entity, con = N
   } else {
     cat("No controlled fields specified by loader Excel file for entity:", entity, "\n")
   }
-  
-  # entity specific ontology fields
-  if (entity == .ghEnv$meta$arrIndividuals) {
-    data_df2$species_ = search_ontology(terms = data_df2$species_,
-                                        category = 'uncategorized',
-                                        con = con)
-  } else {
-    data_df2$disease_ = search_ontology(terms = data_df2$disease_,
-                                        category = 'uncategorized',
-                                        con = con)
-  }  
   
   data_df2
 }

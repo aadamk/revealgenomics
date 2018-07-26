@@ -63,8 +63,6 @@ array:
     attributes: 
       name: string
       description: string
-      species_: int64
-      sex_: int64
       created: string
       updated: string
     dims: 
@@ -100,7 +98,6 @@ array:
     attributes: 
       name: string
       description: string
-      disease_: int64
       individual_id: int64
       created: string
       updated: string
@@ -591,7 +588,6 @@ array:
       chromosome: string
       start: string
       end: string
-      strand_term: int64
       feature_type: string
       source: string
       created: string
@@ -729,7 +725,6 @@ array:
     attributes:
       name: string
       description: string
-      species_: int64
       assembly_id: string
       source_uri: string
       source_accessions: string

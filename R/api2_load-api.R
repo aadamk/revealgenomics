@@ -138,8 +138,7 @@ api_register_individuals = function(workbook, record, def, con = NULL) {
                                          sheetName = 'Subjects',
                                          entityName = .ghEnv$meta$arrIndividuals,
                                          worksheet_fields = 
-                                           c('dataset_id', 'subject_id', 'description', 
-                                             'species_', 'SEX'),
+                                           c('dataset_id', 'subject_id', 'description'),
                                          con = con)
   
   
@@ -160,7 +159,7 @@ api_register_biosamples = function(workbook, record, def, con = NULL) {
                                          entityName = .ghEnv$meta$arrBiosample,
                                          worksheet_fields = 
                                            c('dataset_id', 'sample_name', 
-                                             'description', 'disease_', 'individual_id'),
+                                             'description', 'individual_id'),
                                          con = con)
   
   data_df_record = register_biosample(df = data_df, 

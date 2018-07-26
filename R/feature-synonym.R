@@ -199,15 +199,6 @@ build_reference_gene_set = function( featureset_id,
   
   cat("Taking the non-alias fields and registering to get unique feature id-s\n")
   df1 = x12e[, which(!(colnames(x12e) %in% alias_fields))]
-  strand_term = search_ontology(terms = "strand_term_unspecified", con = con)
-  if (is.na(strand_term)) {
-    cat("Registering ontology term\n")
-    strand_term = register_ontology_term(df = data.frame(term = "strand_term_unspecified",
-                                                                                source_name = "...",
-                                                                                source_version = "...", 
-                                                                                stringsAsFactors = FALSE))
-  }
-  df1$strand_term = strand_term
   df1$feature_type = "gene"
   df1$featureset_id = featureset_id
 

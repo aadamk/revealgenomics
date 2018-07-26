@@ -7,7 +7,6 @@ test_that("register_biosample with reserved column `sample_name` fails", {
                                        dataset_id = 1000, 
                                        name = c('a', 'b'), 
                                        description = '...', 
-                                       disease_ = 1, 
                                        individual_id = 3))
     }, silent = TRUE)
   expect_true(class(e) == "try-error")

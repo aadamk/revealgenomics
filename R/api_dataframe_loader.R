@@ -259,7 +259,6 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                                            chromosome = 'unknown',
                                                            start = '...',
                                                            end = '...',
-                                                           strand_term = search_ontology(terms = 'strand_term_unspecified'),
                                                            feature_type = 'gene',
                                                            source = 'RNA-seq file',
                                                            stringsAsFactors = FALSE)
@@ -474,7 +473,6 @@ DataLoaderVariantGemini = R6::R6Class(classname = 'DataLoaderVariantGemini',
                                                                 gene_symbol = unmatched_genes,
                                                                 start = '...',
                                                                 end = '...',
-                                                                strand_term = search_ontology(terms = 'strand_term_unspecified'),
                                                                 feature_type = 'gene',
                                                                 source = 'GEMINI mutation file',
                                                                 stringsAsFactors = FALSE)
@@ -528,7 +526,6 @@ DataLoaderFusionTophat = R6::R6Class(classname = 'DataLoaderFusionTophat',
                                              chromosome = "unknown",
                                              start = '...', 
                                              end = '...',
-                                             strand_term = search_ontology('strand_term_unspecified'),
                                              feature_type = "gene",
                                              source = "Tophat fusion file")
                                            
