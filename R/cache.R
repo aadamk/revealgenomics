@@ -61,10 +61,12 @@ get_entity_from_cache = function(entitynm, id, updateCache, con = NULL) {
   if (!is.null(id)){
     matches = match(id, cache_df[, get_base_idname(entitynm)])
     matches = matches[which(!is.na(matches))]
-    cache_df[matches, ]
+    res_df = cache_df[matches, ]
   } else {
-    cache_df
+    res_df = cache_df
   }
+  row.names(res_df) = res_df[, get_base_idname(entitynm)]
+  res_df
 }
 
 # BASE FUNCTIONS: End
