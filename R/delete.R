@@ -126,6 +126,10 @@ delete_entity = function(entity, id, dataset_version = NULL, delete_by_entity = 
   if (infoArray){
     delete_info_fields(fullarrayname = arr, id = id, dataset_version = dataset_version, con = con)
   }
+  
+  if (is_entity_cached(entity)) {
+    update_entity_cache(entitynm = entity, con = con)
+  }
 }
 
 delete_info_fields = function(fullarrayname, id, dataset_version, delete_by_entity = NULL, con = NULL){
