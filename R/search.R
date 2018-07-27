@@ -34,9 +34,9 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
     stop(cat("Must specify project_id To retrieve all datasets, use get_datasets()", sep = ""))
   }
   
-  df = join_info_ontology_and_unpivot(qq,
-                                      entitynm,
-                                      con = con)
+  df = join_info_unpivot(qq,
+                          entitynm,
+                          con = con)
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
@@ -218,8 +218,8 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
     qq = paste("filter(", qq, ", ", subq, ")", sep="")
   }
   
-  join_info_ontology_and_unpivot(qq, arrayname, 
-                                 con = con)
+  join_info_unpivot(qq, arrayname, 
+                    con = con)
 }
 
 ##################### MEASUREMENTDATA ###########################################################
@@ -699,11 +699,11 @@ search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NU
       var_raw = iquery(con$db, query = query, return = TRUE)
       res = unpivot(df1 = var_raw, arrayname = .ghEnv$meta$arrVariant)
     } else {
-      res = join_info_ontology_and_unpivot(qq = var_nonflex_q, 
-                                           arrayname = strip_namespace(arrayname), 
-                                           replicate_query_on_info_array = TRUE, 
-                                           profile_timing = TRUE,
-                                           con = con)
+      res = join_info_unpivot(qq = var_nonflex_q, 
+                              arrayname = strip_namespace(arrayname), 
+                              replicate_query_on_info_array = TRUE, 
+                              profile_timing = TRUE,
+                              con = con)
     }
   } else { # VARIANT and VARIANT_INFO in one array
     if (!is.null(biosample_id)) stop("Code path not implemented: 

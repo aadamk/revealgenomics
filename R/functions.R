@@ -890,9 +890,9 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
     }
   }
   if (get_entity_infoArrayExists(entitynm)) {
-    join_info_ontology_and_unpivot(qq, arrayname = entitynm, 
-                                   mandatory_fields_only = mandatory_fields_only,
-                                   con = con)
+    join_info_unpivot(qq, arrayname = entitynm, 
+                      mandatory_fields_only = mandatory_fields_only,
+                      con = con)
   } else {
     iquery(con$db, qq, return = TRUE)
   }
@@ -1054,9 +1054,9 @@ get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
         qq = paste0("project(", x3, ", ",
                     paste0(names(.ghEnv$meta$L$array$FEATURE$attributes), collapse = ","), ")")
       }
-      join_info_ontology_and_unpivot(qq, 
-                                     arrayname, 
-                                     con = con)
+      join_info_unpivot(qq, 
+                        arrayname, 
+                        con = con)
     } else { # FASTER path when all data has to be downloaded
       ftr = iquery(con$db, qq, return = T)
       ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
@@ -1197,10 +1197,10 @@ filter_on_dataset_id_and_version = function(arrayname,
     stop(cat("Must specify dataset_id. To retrieve all ", tolower(arrayname), "s, use get_", tolower(arrayname), "s()", sep = ""))
   }
   
-  join_info_ontology_and_unpivot(qq = qq,
-                                 arrayname = arrayname,
-                                 replicate_query_on_info_array = TRUE,
-                                 con = con)
+  join_info_unpivot(qq = qq,
+                    arrayname = arrayname,
+                    replicate_query_on_info_array = TRUE,
+                    con = con)
 }
 
 #' internal function for search_METADATA()
@@ -1339,14 +1339,14 @@ join_info = function(qq, arrayname,
   x2
 }
 
-#' Join flex fields, unpivot and convert ontology fields
+#' Join flex fields and unpivot
 #' 
 #' @param replicate_query_on_info_array see description at [join_info()]
-join_info_ontology_and_unpivot = function(qq, arrayname, 
-                                          mandatory_fields_only = FALSE, 
-                                          replicate_query_on_info_array = FALSE,
-                                          profile_timing = FALSE,
-                                          con = NULL) {
+join_info_unpivot = function(qq, arrayname, 
+                              mandatory_fields_only = FALSE, 
+                              replicate_query_on_info_array = FALSE,
+                              profile_timing = FALSE,
+                              con = NULL) {
   if (profile_timing) {cat(paste0("Array: ", arrayname, "\n"))}
   t1 = proc.time()
   df1 = join_info(qq = qq, arrayname = arrayname, 
