@@ -300,6 +300,7 @@ array:
     delete_by_entity: VARIANT_KEY
     infoArray: FALSE
     compression_on: FALSE
+    cached: TRUE
   # VARIANT
   VARIANT:
     data_class:
@@ -514,6 +515,7 @@ array:
     infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: FALSE
+    cached: TRUE
   # DEFINITION
   DEFINITION:
     data_class:
@@ -550,6 +552,7 @@ array:
     infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: FALSE
+    cached: TRUE
   # FEATURESET
   FEATURESET:
     data_class:

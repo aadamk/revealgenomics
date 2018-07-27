@@ -134,6 +134,17 @@ is_entity_versioned = function(entitynm){
   "dataset_version" %in% get_idname(entitynm)
 }
 
+#' is entity cached
+#' 
+#' check if entity is cached
+#' 
+#' if no value is provided in schema file, then the entity is potentially not cached
+is_entity_cached = function(entitynm) {
+  val  = .ghEnv$meta$L$array[[entitynm]]$cached # read from SCHEMA file
+  # if no value for cached, then entity is potentially not cached
+  ifelse(is.null(val), FALSE, val) 
+}
+
 #' does infoArray exist for given entity
 #' 
 #' flexible fields
