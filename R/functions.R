@@ -1281,11 +1281,20 @@ unpivot = function(df1, arrayname) {
     if (exists('debug_trace')) {cat("unpivot:\n"); print( proc.time()-t1 )}
   } else {
     if (nrow(df1) > 0) {
-      x3 = df1[, c(idname,
-                  names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes))]
+      cols_to_pick =  c(idname,
+                        names(.ghEnv$meta$L$array[[strip_namespace(
+                          arrayname)]]$attributes))
     } else {
-      x3 = df1[, names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes)]
+      if (all(idname %in% colnames(df1))) {
+        cols_to_pick =  c(idname,
+                          names(.ghEnv$meta$L$array[[strip_namespace(
+                            arrayname)]]$attributes))
+      } else {
+        cols_to_pick =  names(.ghEnv$meta$L$array[[strip_namespace(
+                            arrayname)]]$attributes)
+      }
     }
+    x3 = df1[, cols_to_pick]
   }
   x3
 }
