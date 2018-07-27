@@ -839,13 +839,20 @@ count_unique_calls = function(variants){
 
 join_ontology_terms = function(df, terms = NULL, updateCache = FALSE, con = NULL){
   if (is.null(terms)) {
+    stop("This code-path should not be used after changes in
+         https://github.com/Paradigm4/reveal-genomics/pull/41")
     terms = grep(".*_$", colnames(df), value=TRUE)
+    # if (length(terms) > 0) {
+    #   stop("Will apply ontology rules for any column with trailing underscore ('_')")
+    # }
   } else {
     terms = terms[terms %in% colnames(df)]
   }
   df2 = df
   for (term in terms){
-    df2[, term] = get_ontology_from_cache(updateCache = updateCache, con = con)[df[, term], "term"]
+    df2[, term] = get_ontology_from_cache(ontology_id = NULL, 
+                                          updateCache = updateCache, 
+                                          con = con)[df[, term], "term"]
   }
   return(df2)
 }
@@ -1352,11 +1359,11 @@ join_info_ontology_and_unpivot = function(qq, arrayname,
   df2 = unpivot(df1, arrayname = arrayname)
   if (profile_timing) {cat(paste0("unpivot time: ", (proc.time()-t1)[3], "\n"))}
 
-  t1 = proc.time()
-  res = join_ontology_terms(df = df2, con = con)
-  if (profile_timing) {cat(paste0("join_ontology_terms time: ", (proc.time()-t1)[3], "\n"))}
+  # t1 = proc.time()
+  # res = join_ontology_terms(df = df2, con = con)
+  # if (profile_timing) {cat(paste0("join_ontology_terms time: ", (proc.time()-t1)[3], "\n"))}
   
-  res
+  df2
 }
 
 unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
