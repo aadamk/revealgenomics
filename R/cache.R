@@ -58,14 +58,23 @@ get_entity_from_cache = function(entitynm, id, updateCache, con = NULL) {
   } 
   
   cache_df = .ghEnv$cache[[entitynm]]
+  base_ids = get_base_idname(entitynm)
   if (!is.null(id)){
-    matches = match(id, cache_df[, get_base_idname(entitynm)])
+    matches = match(id, cache_df[, base_ids])
     matches = matches[which(!is.na(matches))]
     res_df = cache_df[matches, ]
   } else {
     res_df = cache_df
   }
-  row.names(res_df) = res_df[, get_base_idname(entitynm)]
+  if (length(base_ids) > 1) {
+    stop("This caching function currently supports entities with
+         one base idname only. Current entity: ", entitynm, 
+         "has multiple base ids: ", pretty_print(base_ids))
+  }
+  if (all(base_ids %in% 
+          colnames(res_df))) {
+    row.names(res_df) = res_df[, base_ids]
+  }
   res_df
 }
 
