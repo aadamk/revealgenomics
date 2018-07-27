@@ -5,7 +5,8 @@ test_that("Check that feature download works when feature_id is a long integer "
   e0 = tryCatch({gh_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = c(.ghEnv$meta$arrFeature, 
-                               .ghEnv$meta$arrGeneSymbol), force = TRUE)
+                               .ghEnv$meta$arrGeneSymbol,
+                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
     feature_id = register_feature(df = data.frame(name = "dummyFeature", 
                                      gene_symbol = "dummySymbol",
                                      featureset_id = 1000, 
@@ -24,7 +25,8 @@ test_that("Check that feature download works when feature_id is a long integer "
     
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrFeature, 
-                               .ghEnv$meta$arrGeneSymbol), force = TRUE)
+                               .ghEnv$meta$arrGeneSymbol,
+                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
     
   }
 })

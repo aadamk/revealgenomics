@@ -24,5 +24,8 @@ test_that("Check that cache is automatically updated while registering or deleti
     ont3 = get_ontology()
     stopifnot(nrow(ont3) == nrow(ont1))
     stopifnot(nrow(get_ontology(ontology_id = new_ont_id)) == 0)
+    
+    # Clean-up
+    init_db(arrays_to_init = c(.ghEnv$meta$arrOntology), force = TRUE)
   }
 })
