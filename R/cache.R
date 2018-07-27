@@ -40,7 +40,14 @@ update_entity_cache = function(entitynm, con = NULL) {
   }
 }
 
-get_entity_from_cache = function(entitynm, updateCache, con = NULL) {
+#' get_ENTITY for cached entities
+#' 
+#' Currently works for ONTOLOGY, DEFINITION, VARIANT_KEY
+#' 
+#' @param cache_df typically result of a `get_entity_from_cache()` call
+#' @param entitynm entity name
+#' @param id       the id-s to be selected (can be `NULL`)
+get_entity_from_cache = function(entitynm, id, updateCache, con = NULL) {
   con = use_ghEnv_if_null(con)
   
   if (updateCache | is.null(.ghEnv$cache[[entitynm]])){
@@ -50,40 +57,64 @@ get_entity_from_cache = function(entitynm, updateCache, con = NULL) {
     update_entity_cache(entitynm = entitynm, con = con)
   } 
   
-  return(.ghEnv$cache[[entitynm]])
+  cache_df = .ghEnv$cache[[entitynm]]
+  if (!is.null(id)){
+    matches = match(id, cache_df[, get_base_idname(entitynm)])
+    matches = matches[which(!is.na(matches))]
+    cache_df[matches, ]
+  } else {
+    cache_df
+  }
 }
+
 # BASE FUNCTIONS: End
 ###################################################################################
-# VARIANT_KEY 
+
+##### VARIANT_KEY #####
 update_variant_key_cache = function(con = NULL){
   update_entity_cache(entitynm = .ghEnv$meta$arrVariantKey, 
                       con = con)
 }
 
-get_variant_key_from_cache = function(updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrVariantKey, updateCache = updateCache, 
+get_variant_key_from_cache = function(variant_key_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrVariantKey, 
+                        id = variant_key_id, 
+                        updateCache = updateCache, 
                         con = con)
 }
 
-# DEFINITION
+##### DEFINITION ##### 
 update_definition_cache = function(con = NULL){
   update_entity_cache(entitynm = .ghEnv$meta$arrDefinition, 
                       con = con)
 }
 
-get_definition_from_cache = function(updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrDefinition, updateCache = updateCache, 
+get_definition_from_cache = function(definition_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrDefinition, 
+                        id = definition_id,
+                        updateCache = updateCache, 
                         con = con)
 }
 
-# ONTOLOGY
+##### ONTOLOGY ##### 
 update_ontology_cache = function(con = NULL){
   update_entity_cache(entitynm = .ghEnv$meta$arrOntology, 
                       con = con)
 }
 
-get_ontology_from_cache = function(updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrOntology, updateCache = updateCache, 
+get_ontology_from_cache = function(ontology_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrOntology, 
+                        id = ontology_id, 
+                        updateCache = updateCache, 
                         con = con)
+}
+
+##### FEATURE-SYNONYM ##### 
+update_feature_synonym_cache = function(con = NULL){
+  con = use_ghEnv_if_null(con)
+  
+  .ghEnv$cache$dfFeatureSynonym = iquery(con$db, 
+                                         full_arrayname(.ghEnv$meta$arrFeatureSynonym), 
+                                         return = TRUE)
 }
 

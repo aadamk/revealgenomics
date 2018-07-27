@@ -201,24 +201,23 @@ update_biosample_cache = function(con = NULL){
 
 #' @export
 get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
-  dfOntology = get_ontology_from_cache(updateCache, con = con)
-  if (!is.null(ontology_id)){
-    matches = match(ontology_id, dfOntology$ontology_id)
-    matches = matches[which(!is.na(matches))]
-    dfOntology[matches, ]
-  } else {
-    dfOntology
-  }
+  get_ontology_from_cache(ontology_id = ontology_id, 
+                          updateCache = updateCache, 
+                          con = con)
 }
 
 #' @export
-get_variant_key = function(updateCache = FALSE, con = NULL){
-  get_variant_key_from_cache(updateCache, con = con)
+get_variant_key = function(variant_key_id = NULL, updateCache = FALSE, con = NULL){
+  get_variant_key_from_cache(variant_key_id = variant_key_id, 
+                             updateCache = updateCache, 
+                             con = con)
 }
 
 #' @export
-get_definitions = function(updateCache = FALSE, con = NULL){
-  get_definition_from_cache(updateCache, con = con)
+get_definitions = function(definition_id = NULL, updateCache = FALSE, con = NULL){
+  get_definition_from_cache(definition_id = definition_id, 
+                            updateCache = updateCache, 
+                            con = con)
 }
 
 find_namespace = function(entitynm) {
@@ -241,13 +240,6 @@ get_feature_synonym_from_cache = function(updateCache = FALSE, con = NULL){
     update_feature_synonym_cache(con = con)
   }
   return(.ghEnv$cache$dfFeatureSynonym)
-}
-update_feature_synonym_cache = function(con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  .ghEnv$cache$dfFeatureSynonym = iquery(con$db, 
-                                         full_arrayname(.ghEnv$meta$arrFeatureSynonym), 
-                                         return = TRUE)
 }
 
 get_max_id = function(arrayname, con = NULL){
