@@ -21,7 +21,7 @@ test_that("Check that feature download works when feature_id is a long integer "
     ff = get_features(feature_id = seq(70000,800000,10))
     expect_true(nrow(ff) == 0) # in tests, currently do not expect to upload 700K+ features
     
-    expect_try(nrow(get_features()) == 1)
+    expect_true(nrow(get_features()) == 1)
     
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrFeature, 
