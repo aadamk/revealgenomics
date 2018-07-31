@@ -418,6 +418,9 @@ DataLoaderVariant = R6::R6Class(classname = 'DataLoaderVariant',
                                      ))
 
 ##### DataLoaderVariantGemini #####
+#' loader corresponding to GEMINI files
+#' - May need to use feature-synonym for feature matching, but current implementation is inefficient
+#' - also has hard-coded links to column names used for feature matching (e.g. `gene`)
 DataLoaderVariantGemini = R6::R6Class(classname = 'DataLoaderVariantGemini',
                                      inherit = DataLoaderVariant,
                                      public = list(
@@ -438,6 +441,10 @@ DataLoaderVariantGemini = R6::R6Class(classname = 'DataLoaderVariantGemini',
                                          stopifnot(length(m2$source_unmatched_idx) == 0)
                                          
                                          private$.data_df$feature_id = fsyn_sel$feature_id[m2$target_matched_idx]
+                                         if ('scidb_feature_col' %in% colnames(private$.data_df)) {
+                                           cat("Dropping extra column `scidb_feature_col` \n")
+                                           private$.data_df$scidb_feature_col = NULL
+                                         }
                                        },
                                        
                                        register_new_features = function() {
