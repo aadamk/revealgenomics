@@ -494,6 +494,64 @@ DataLoaderVariantGemini = R6::R6Class(classname = 'DataLoaderVariantGemini',
                                        }
                                      ))
 
+##### DataLoaderVariantFormatA #####
+#' loader to try and handle various variant formats
+#' - currently assumes that features in the data-file are previously registered from a GTF file
+#' - may use the `feature_annotation_df` data.frame to figure out action related to feature matching
+DataLoaderVariantFormatA = R6::R6Class(classname = 'DataLoaderVariantFormatA',
+                                      inherit = DataLoaderVariant,
+                                      public = list(
+                                        print_level = function() {cat("----(Level: DataLoaderVariant)\n")},
+                                        assign_feature_ids = function(){
+                                          cat("assign_feature_ids()"); self$print_level()
+                                          super$assign_feature_ids()
+                                          
+                                          column_in_file = 'scidb_feature_col'
+                                          feature_type = 'gene' # so far, all variant data files link to gene features only
+                                          column_names = colnames(private$.feature_annotation_df)
+                                          cat("Feature annotation dataframe has columns:",
+                                              paste0(column_names,
+                                                     collapse = ", "), 
+                                              "\n\tWill match with first column\n")
+                                          private$.data_df$feature_id = match_features(
+                                            features_in_file = private$.data_df[, column_in_file],
+                                            df_features_db = private$.reference_object$feature,
+                                            feature_type = feature_type,
+                                            column_in_db = column_names[1])
+                                          private$.data_df[, column_in_file] = NULL
+                                        },
+                                        
+                                        register_new_features = function() {
+                                          cat("Function: Register new features (Level: DataLoaderVariantFormatA)\n")
+                                          super$register_new_features()
+                                          
+                                          fset_id = private$.reference_object$measurement_set$featureset_id
+                                          cat("Match features in file to features at featureset_id =", fset_id, "\n")
+                                          
+                                          ftrs = private$.reference_object$feature
+                                          stopifnot(unique(ftrs$featureset_id) == fset_id)
+                                          
+                                          column_names = colnames(private$.feature_annotation_df)
+                                          cat("Feature annotation dataframe has columns:",
+                                              paste0(column_names,
+                                                     collapse = ", "), 
+                                              "\n\tWill match with first column\n")
+                                          m1 = find_matches_and_return_indices(
+                                            private$.data_df$scidb_feature_col,
+                                            ftrs[, column_names[1]]
+                                          )
+                                          if (length(m1$source_unmatched_idx) > 0) {
+                                            stop("currently assumes that features in the data-file are 
+                                                 previously registered from a GTF file")
+                                            return(TRUE)
+                                          } else {
+                                            cat("No new features to register\n")
+                                            return(FALSE)
+                                          }
+                                          invisible(self)
+                                        }
+                                      ))
+
 ##### DataLoaderFusionTophat #####
 DataLoaderFusionTophat = R6::R6Class(classname = 'DataLoaderFusionTophat',
                                      inherit = DataLoader,
