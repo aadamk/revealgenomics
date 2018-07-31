@@ -703,7 +703,13 @@ register_tuple_return_id = function(df,
   if (length(nonmatching_idx) > 0 ) {
     cat("---", length(nonmatching_idx), "rows need to be registered from total of", nrow(df), "rows provided by user\n")
     # if (length(nonmatching_idx) != nrow(df)) {stop("Need to check code here")}
-    new_id = get_max_id(arrayname, con = con) + 1:nrow(df[nonmatching_idx, ])
+    if (length(colnames(df)) > 1) { # common case 
+      lenToAdd = nrow(df[nonmatching_idx, ])
+    } else if (length(colnames(df)) == 1) { # selection from one-column data-frame creates a vector (avoid that)
+      lenToAdd = nrow(data.frame(col1 = df[nonmatching_idx, ],
+                          stringsAsFactors = FALSE))
+    }
+    new_id = get_max_id(arrayname, con = con) + 1:lenToAdd
     df[nonmatching_idx, get_base_idname(arrayname)] = new_id
     
     register_mandatory_and_flex_fields(df = df[nonmatching_idx, ], arrayname = arrayname, 
