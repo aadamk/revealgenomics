@@ -50,11 +50,19 @@ DataReaderVariant = R6::R6Class(classname = 'DataReaderVariant',
                                   print_level = function() {cat("----(Level: DataReaderVariant)\n")}
                                 ))
 
-##### DataReaderVariantGemini #####
-DataReaderVariantGemini = R6::R6Class(classname = 'DataReaderVariantGemini',
+##### DataReaderVariantFormatA #####
+#' generic variant loader that aims to work with multiple formats
+#' - makes sure the mandatory fields for registering variants are named accordingly
+#' - for biosample matching, preps a column called `biosample_id`
+#' - for feature matching
+#'     + creates a column called `scidb_feature_column`
+#'     + stores annotation information in `feature_annotation_df` slot
+#'       (column name of this data.frame describes whether feature `name` or `gene_symbol` 
+#'       should be used for matching)
+DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                       inherit = DataReaderVariant,
                                       public = list(
-                                        print_level = function() {cat("----(Level: DataReaderVariantGemini)\n")},
+                                        print_level = function() {cat("----(Level: DataReaderVariantFormatA)\n")},
                                         load_data_from_file = function() {
                                           cat("load_data_from_file()"); self$print_level()
                                           
@@ -82,31 +90,86 @@ DataReaderVariantGemini = R6::R6Class(classname = 'DataReaderVariantGemini',
                                             
                                           super$load_data_from_file()
                                           
+                                          cols_library = list(
+                                            option1 = list(
+                                              annotation_col = c('ref', 'alt', 'chrom', 'vcf_id'),
+                                              ftr_col    = 'gene',
+                                              ftr_compare_col = 'gene_symbol',
+                                              sample_col = 'Analysis_Barcode',
+                                              start_col = 'start',
+                                              end_col = 'end'
+                                            ), 
+                                            option2 = list(
+                                              annotation_col = c('REF', 'ALT', '#CHROM', 'ID'),
+                                              ftr_col    = 'ANN[*].GENEID',
+                                              ftr_compare_col = 'name',
+                                              sample_col = 'Sample',
+                                              start_col = 'POS',
+                                              end_col = 'POS'
+                                            )
+                                          )
+                                          
+                                          matchWithLibrary = sapply(cols_library, function(item) {
+                                            all(c(item$annotation_col, item$ftr_col,
+                                                  item$sample_col, 
+                                                  item$start_col, item$end_col) 
+                                                %in% colnames(private$.data_df))}
+                                            )
+                                          if (!any(matchWithLibrary)) {
+                                            stop("Expected match with at least one of the library options")
+                                          }
+                                          colsMatched = cols_library[[names(which(matchWithLibrary))]]
+                                          
                                           cat("Rule 1:\n")
-                                          mandatory_columns = c('ref', 'alt', 'chrom', 'gene', 'vcf_id')
+                                          mandatory_columns = colsMatched$annotation_col
                                           cat("======\n\t test presence of columns:\n\t\t", 
                                               pretty_print(mandatory_columns), "\n")
                                           stopifnot(mandatory_columns %in% colnames(private$.data_df))
                                           
                                           cat("Rule 2:\n")
-                                          column_rename = c('ref' = 'reference',
-                                                            'alt' = 'alternate',
-                                                            'chrom' = 'chromosome',
-                                                            'vcf_id' = 'id')
+                                          column_rename = c('reference',
+                                                            'alternate',
+                                                            'chromosome',
+                                                            'id')
+                                          names(column_rename) = mandatory_columns
                                           cat("======\n\t rename columns:\n\t\t", 
                                               pretty_print(names(column_rename)), "==>", 
                                               pretty_print(column_rename), "\n")
                                           private$.data_df = plyr::rename(private$.data_df, 
                                                                           column_rename)
                                           
+                                          cat("Rule 3:\n")
+                                          cat("======\nFeature column in data is at column:", colsMatched$ftr_col,
+                                              "\n\tMatch with scidb feature column:", colsMatched$ftr_compare_col, "\n")
+                                          private$.data_df[, 'scidb_feature_col'] = 
+                                            private$.data_df[, colsMatched$ftr_col]
+                                          private$.feature_annotation_df = data.frame(
+                                            col1 = private$.data_df[, colsMatched$ftr_col],
+                                            stringsAsFactors = FALSE
+                                          )
+                                          colnames(private$.feature_annotation_df) = colsMatched$ftr_compare_col
+                                          
+                                          cat("Rule 3:\n")
+                                          cat("======\nstart and end columns\n")
+                                          cat("start col:", colsMatched$start_col, "\n")
+                                          cat("end col:",   colsMatched$end_col, "\n")
+                                          private$.data_df[, 'start'] = private$.data_df[, 
+                                                                                         colsMatched$start_col]
+                                          private$.data_df[, 'end'] = private$.data_df[, 
+                                                                                         colsMatched$end_col]
+                                          
+                                          
+                                          cat("Rule 5:\n======\nHandling sample name (if present)\n")
                                           if (nrow(private$.pipeline_df) > 1) {
-                                            cat("This is a summarized GEMINI file\n")
-                                            cat("Expecting 'Analysis_Barcode' column to hold the sample name\n")
-                                            stopifnot('Analysis_Barcode' %in% colnames(private$.data_df) )
+                                            cat("This is a summarized variant file\n")
+                                            cat(paste0("Expecting '", colsMatched$sample_col, 
+                                                       "' column to hold the sample name\n"))
+                                            stopifnot(colsMatched$sample_col %in% colnames(private$.data_df) )
                                             if ('biosample_name' %in% colnames(private$.data_df)) {
                                               stop("Did not expect `biosample_name` column in variant file\n")
                                             }
-                                            private$.data_df$biosample_name = private$.data_df$Analysis_Barcode
+                                            private$.data_df$biosample_name = private$.data_df[, 
+                                                                                               colsMatched$sample_col]
                                           }
                                         }
                                       ))
