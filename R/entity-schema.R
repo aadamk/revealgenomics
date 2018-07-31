@@ -56,9 +56,10 @@ get_mandatory_fields_for_register_entity = function(arrayname){
   if (entity_class == 'metadata') {
     if (!(entitynm %in% c(.ghEnv$meta$arrProject,
                           .ghEnv$meta$arrDataset,
-                          .ghEnv$meta$arrOntology))) {
+                          .ghEnv$meta$arrOntology,
+                          .ghEnv$meta$arrVariantKey))) {
       mandatory_fields = c('dataset_id', attrs)
-    } else { # PROJECT, DATASET, ONTOLOGY
+    } else { # PROJECT, DATASET, ONTOLOGY, VARIANT_KEY
       mandatory_fields = attrs
     }
   } else if (entity_class == 'featuredata') {
