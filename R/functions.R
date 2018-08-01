@@ -788,6 +788,7 @@ register_variant = function(df1, dataset_version = NULL, only_test = FALSE, con 
                                      c(cols_dimensions, cols_attr_mandatory))]
   #' Step 2
   #' Run tests
+  cat("Step 2 -- run tests\n")
   test_register_variant(df1, variant_attr_cols = cols_attr_mandatory)
   if (!only_test) {
     #' Step 3
@@ -810,7 +811,7 @@ register_variant = function(df1, dataset_version = NULL, only_test = FALSE, con 
     #' Step 5A
     #' Introduce `key_id` and `val` columns i.e. handle VariantKeys 
     #' -- First register any new keys
-    cat("Register the variant attribute columns as variant keys\n")
+    cat("Step 5A -- Register the variant attribute columns as variant keys\n")
     variant_key_id = register_variant_key(
       df1 = data.frame(
         key = c(cols_attr_mandatory, cols_attr_flex), 
@@ -823,6 +824,7 @@ register_variant = function(df1, dataset_version = NULL, only_test = FALSE, con 
     
     #' Step 5B
     #' Match key with key_id-s
+    cat("Step 5B -- Converting wide data.frame to tall data.frame\n")
     VAR_KEY = get_variant_key()
     var_gather = tidyr::gather(data = df1, key = "key", value = "val", 
                                c(cols_attr_mandatory, cols_attr_flex))
@@ -834,6 +836,7 @@ register_variant = function(df1, dataset_version = NULL, only_test = FALSE, con 
     
     #' Step 6
     #' Remove rows that are effectively empty
+    cat("Step 6 -- Calculating empty markers\n")
     empty_markers = c('.', 'None')
     non_null_indices = which(!(var_gather$val %in% empty_markers))
     if (length(non_null_indices) != nrow(var_gather)) {
@@ -845,18 +848,31 @@ register_variant = function(df1, dataset_version = NULL, only_test = FALSE, con 
     
     #' Step 7
     #' Upload and insert the data
-    UPLOAD_N = 250000
+    cat("Step 7 -- Upload and insert the data\n")
+    UPLOAD_N = 5000000
+    return_sub_indices = function(bigN, fac) {
+      starts = seq(1, bigN, fac)
+      ends   = c(tail(seq(0, bigN-1, fac), -1), bigN)
+      stopifnot(length(starts) == length(ends))
+      lapply(1:length(starts), function(idx) {c(starts[idx]: ends[idx])})
+    }
+    steps = return_sub_indices(bigN = nrow(var_gather), fac = UPLOAD_N)
+    
     arrayname = full_arrayname(.ghEnv$meta$arrVariant)
-    x = as.scidb_int64_cols(db = con$db, 
-                            df1 = var_gather, 
-                            int64_cols = colnames(var_gather)[!(colnames(var_gather) %in% 'val')])
-    qq = paste0("redimension(", x@name, ", ", scidb::schema(scidb(con$db, arrayname)), ")")
-    
-    query = paste("insert(", qq, ", ", arrayname, ")", sep="")
-    cat("Redimension and insert\n")
-    iquery(con$db, query)
-    
-    remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrVariant, con = con)
+    for (upidx in 1:length(steps)) {
+      step = steps[[upidx]]
+      cat(paste0("Uploading variants. Sub-segment ", 
+                 upidx, " of ", length(steps), " segments\n\t", 
+                 "Rows: ", step[1], "-", tail(step, 1), "\n"))
+      var_sc = as.scidb_int64_cols(db = con$db, 
+                                   df1 = var_gather[c(step[1]:tail(step, 1)), ],
+                                   int64_cols = colnames(var_gather)[!(colnames(var_gather) %in% 'val')])
+      cat("Redimension and insert\n")
+      iquery(con$db, paste0("insert(redimension(",
+                        var_sc@name,
+                        ", ", arrayname, "), ", arrayname, ")"))
+      remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrVariant, con = con)
+    }
   } # end of if (!only_test)
 }
 
