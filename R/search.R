@@ -154,7 +154,7 @@ search_genelist_gene = function(genelist = NULL,
     stop("Use only one method for searching. Preferred method is using genelist")
   }
   
-  # API level security (TODO: replace with pscan() operator)
+  # API level security (TODO: replace with secure_scan() operator)
   if (is.null(genelist_id)) {
     genelist_id = genelist$genelist_id
   } else {
