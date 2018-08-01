@@ -713,23 +713,24 @@ search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NU
     
     if (is.null(feature_id)) stop("Expect feature_id to be non-null")
     
-    leftq = paste0("apply(build(<feature_id:int64>[i=0:*], '[", 
+    leftq = paste0("apply(build(<feature_id:int64>[idx_ftr=0:*], '[", 
                     paste0(sort(feature_id), collapse = ","), 
                     "]', true), measurementset_id, ", measurementset_id, 
                    ", dataset_version, ", dataset_version, ")")
     
     query = paste0("equi_join(", 
-                      custom_scan(), "(gh_secure.VARIANT_v3),",
+                      custom_scan(), "(", full_arrayname(.ghEnv$meta$arrVariant), "),",
                       leftq, ", 'left_names=feature_id,dataset_version,measurementset_id', 
                      'right_names=feature_id,dataset_version,measurementset_id', 
                      'algorithm=hash_replicate_right', 'keep_dimensions=1')")
     t1 = proc.time()
     var_raw = iquery(con$db, query, return = T, only_attributes = T)
-    cat("Selection from VARIANT_v3:", (proc.time()-t1)[3], "\n")
+    var_raw[, 'idx_ftr'] = NULL # drop the dimension added through the join
+    cat("Selection from variant array:", (proc.time()-t1)[3], "\n")
     
     t1 = proc.time()
     res = tidyr::spread(data = var_raw, key = "key_id", value = "val")
-    cat("Unpivot from VARIANT_v3:", (proc.time()-t1)[3], "\n")
+    cat("Unpivot:", (proc.time()-t1)[3], "\n")
     
     t1 = proc.time()
     VAR_KEY = get_variant_key(con = con)

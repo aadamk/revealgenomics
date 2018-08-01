@@ -310,12 +310,7 @@ array:
     namespace: 
       - gh_secure
     attributes:
-      chromosome: string
-      start: int64
-      end: int64
-      id: string
-      reference: string
-      alternate: string
+      val: string
     dims:
       dataset_version:
         start: 0
@@ -332,11 +327,6 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
-      biosample_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
       feature_id:
         start: 0
         end: Inf
@@ -347,10 +337,19 @@ array:
         end: Inf
         chunk_interval: 10000
         overlap: 0
+      key_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      biosample_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
     search_by_entity: MEASUREMENTSET
     delete_by_entity: MEASUREMENTSET
-    infoArray: TRUE
-    infoArray_max_keys: 1000
+    infoArray: FALSE
     compression_on: TRUE
   # FUSION
   FUSION:

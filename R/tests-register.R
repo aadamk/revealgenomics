@@ -195,18 +195,25 @@ test_register_expression_matrix = function(filepath,
   stopifnot(feature_type == 'gene' | feature_type == 'transcript')
 }
 
-test_register_variant = function(df){
+test_register_variant = function(df, variant_attr_cols){
   test_dataframe_formatting(df)
   if(length(unique(df$dataset_id))!=1) stop("Variants to be registered must belong to a single dataset/study")
   
-  # per_gene_variant_number is a mandatory field that is typically added later
-  # bypass the test as follows
+  #' `per_gene_variant_number`, `key_id` and `val` are mandatory fields that are typically added later --
+  #' -- hence run the test as follows
   df_temp = df
   df_temp$per_gene_variant_number = -1
+  df_temp$key_id = -1
+  df_temp$val = 'asdf'
   test_mandatory_fields(df_temp, arrayname = .ghEnv$meta$arrVariant)
 
-  stopifnot(c('measurementset_id', 'biosample_id', 'feature_id')
-            %in% colnames(df))
+  cols_to_check = c('measurementset_id', 'biosample_id', 'feature_id',
+                    variant_attr_cols)
+  if ( !all(cols_to_check  %in% colnames(df)) ) {
+    stop("Following columns expected but not present:\n\t",
+        pretty_print(cols_to_check[which(!(cols_to_check %in% colnames(df)))]), 
+        "\n")
+  }
   
   check_entity_exists_at_id(entity = .ghEnv$meta$arrMeasurementSet,
                             id = sort(unique(df$measurementset_id)))

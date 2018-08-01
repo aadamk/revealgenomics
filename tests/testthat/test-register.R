@@ -62,3 +62,103 @@ test_that("Check that variant_key registration works properly", {
     init_db(arrays_to_init = c(.ghEnv$meta$arrVariantKey), force = TRUE)
   }
 })
+
+test_that("Check that variant registration works properly", {
+  # cat("# Now connect to scidb\n")
+  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
+    init_db(arrays_to_init = c(
+      .ghEnv$meta$arrVariantKey,
+      .ghEnv$meta$arrVariant,
+      .ghEnv$meta$arrFeature,
+      .ghEnv$meta$arrFeatureSynonym,
+      .ghEnv$meta$arrBiosample,
+      .ghEnv$meta$arrMeasurementSet), 
+      force = TRUE)
+
+    # Register features at 1:3
+    ftr_id = register_feature(df = data.frame(
+      name = c('asdf1', 'asdf2', 'asdf3'), 
+      featureset_id = 1, 
+      gene_symbol = 'asdf', 
+      chromosome = 'X', 
+      start = 1, 
+      end = 10000, 
+      feature_type = 'dummy', 
+      source = 'api-test', 
+      stringsAsFactors = FALSE))
+    
+    # Register_biosamples at id 1
+    bios_id = register_biosample(df = data.frame(
+      name = 'dummy_biosample', 
+      dataset_id = 10000, 
+      description = '...', 
+      individual_id = 10000000, 
+      stringsAsFactors = FALSE))
+    
+    # Register measurementset at id 1, 2
+    ms_id = register_measurementset(df = data.frame(
+      name = c('dummy_measurementset1', 'dummy_measurementset2'), 
+      dataset_id = 10000, 
+      experimentset_id = 10000, 
+      entity = .ghEnv$meta$arrVariant, 
+      description = '...', 
+      featureset_id = 1, 
+      stringsAsFactors = FALSE))
+    
+    # Register variant
+    df_var1 = data.frame(
+      dataset_id = 1, 
+      measurementset_id = 1, 
+      feature_id = c(1, 1, 2), 
+      biosample_id = 1, 
+      chromosome = 'X', 
+      start = c(11,33, 44),  
+      end = c(11, 33, 44), 
+      id = 'asdf', 
+      reference = c('T', 'G', 'A'), 
+      alternate = c('G', 'T', 'C'), 
+      stringsAsFactors = FALSE)
+    
+    register_variant(df = df_var1)
+    df_var1_res = search_variants(
+      measurementset = get_measurementsets(measurementset_id = 1), 
+      feature = get_features(feature_id = 1:3))
+    expect_true(all.equal(
+      (dim(df_var1) + c(0,2)), #' two extra columns added are: `per_gene_variant_number`, `dataset_version` 
+      dim(df_var1_res)))
+    df_var1_res = df_var1_res[, colnames(df_var1)]
+    expect_true(all.equal(
+      as.matrix(df_var1_res), 
+      as.matrix(df_var1)))
+    
+    # Some extra columns added
+    df_var2 = cbind(df_var1, 
+                    data.frame(newColumn1 = 
+                                rep('333', nrow(df_var1)),
+                              newColumn2 = 
+                                c('asdf', 'jkl', 'ppp'), 
+                              stringsAsFactors = FALSE))
+    df_var2$measurementset_id = 2
+    register_variant(df = df_var2)
+    df_var2_res = search_variants(
+      measurementset = get_measurementsets(measurementset_id = 2), 
+      feature = get_features(feature_id = 1:3))
+    expect_true(all.equal(
+      (dim(df_var2) + c(0,2)),
+      dim(df_var2_res)))
+    df_var2_res = df_var2_res[, colnames(df_var2)]
+    expect_true(all.equal(
+      as.matrix(df_var2_res), 
+      as.matrix(df_var2)))
+
+    # Clean-up
+    init_db(arrays_to_init = c(
+      .ghEnv$meta$arrVariantKey,
+      .ghEnv$meta$arrVariant,
+      .ghEnv$meta$arrFeature,
+      .ghEnv$meta$arrFeatureSynonym,
+      .ghEnv$meta$arrBiosample,
+      .ghEnv$meta$arrMeasurementSet), force = TRUE)
+  }
+})

@@ -412,7 +412,7 @@ DataLoaderVariant = R6::R6Class(classname = 'DataLoaderVariant',
                                        print_level = function() {cat("----(Level: DataLoaderVariant)\n")},
                                        load_data = function() {
                                          cat("load_data()"); self$print_level()
-                                         register_variant(df = private$.data_df, 
+                                         register_variant(df1 = private$.data_df, 
                                                           dataset_version = private$.reference_object$record$dataset_version)
                                        }
                                      ))

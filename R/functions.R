@@ -772,51 +772,89 @@ register_copynumberset = function(df, dataset_version = NULL, only_test = FALSE,
 }
 
 #' @export
-register_variant = function(df, dataset_version = NULL, only_test = FALSE, con = NULL){
+register_variant = function(df1, dataset_version = NULL, only_test = FALSE, con = NULL){
   con = use_ghEnv_if_null(con)
-  
-  test_register_variant(df)
+  #' Step 1
+  #' Identify three groups of column-names
+  #' - `dimensions`: indices of the multi-dimensional array
+  #' - `attr_mandatory`: VCF attribute fields that are mandatory
+  #' - `attr_flex`: VCF attrubute fields that are not mandatory 
+  cols_dimensions = get_idname(.ghEnv$meta$arrVariant)[!(
+    get_idname(.ghEnv$meta$arrVariant) %in% 'key_id')]
+  cols_attr_mandatory = c('chromosome', 
+                          'start', 'end',
+                          'id', 'reference', 'alternate')
+  cols_attr_flex = colnames(df1)[!(colnames(df1) %in% 
+                                     c(cols_dimensions, cols_attr_mandatory))]
+  #' Step 2
+  #' Run tests
+  test_register_variant(df1, variant_attr_cols = cols_attr_mandatory)
   if (!only_test) {
-    if (!('per_gene_variant_number' %in% colnames(df))) {
+    #' Step 3
+    #' Introduce `per_gene_variant_number` column
+    if (!('per_gene_variant_number' %in% colnames(df1))) {
       # specify dplyr mutate as per https://stackoverflow.com/a/33593868
-      df = df %>% group_by(feature_id, biosample_id) %>% dplyr::mutate(per_gene_variant_number = row_number())
+      df1 = df1 %>% group_by(feature_id, biosample_id) %>% dplyr::mutate(per_gene_variant_number = row_number())
     }
-    df = as.data.frame(df)
+    df1 = as.data.frame(df1)
+    
+    #' Step 4
+    #' Introduce `dataset_version` column
     if (is.null(dataset_version)) {
-      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE, con = con)
+      dataset_version = get_dataset_max_version(dataset_id = unique(df1$dataset_id), updateCache = TRUE, con = con)
       if (is.null(dataset_version)) stop("Expected non-null dataset_version at this point")
-      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
+      cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df1$dataset_id), "\n")
     }
-    df$dataset_version = dataset_version
+    df1$dataset_version = dataset_version
+    
+    #' Step 5A
+    #' Introduce `key_id` and `val` columns i.e. handle VariantKeys 
+    #' -- First register any new keys
+    cat("Register the variant attribute columns as variant keys\n")
+    variant_key_id = register_variant_key(
+      df1 = data.frame(
+        key = c(cols_attr_mandatory, cols_attr_flex), 
+        stringsAsFactors = FALSE))
+    if (!identical(
+      get_variant_key(variant_key_id = variant_key_id)$key,
+      c(cols_attr_mandatory, cols_attr_flex))) {
+      stop("Faced issue registering variant keys")
+    }
+    
+    #' Step 5B
+    #' Match key with key_id-s
+    VAR_KEY = get_variant_key()
+    var_gather = tidyr::gather(data = df1, key = "key", value = "val", 
+                               c(cols_attr_mandatory, cols_attr_flex))
+    M = find_matches_and_return_indices(var_gather$key, VAR_KEY$key)
+    stopifnot(length(M$source_unmatched_idx) == 0)
+    var_gather$key_id = VAR_KEY$key_id[M$target_matched_idx]
+    var_gather$key = NULL # drop the key column
+    var_gather = var_gather[, c(cols_dimensions, 'key_id', 'val')]
+    
+    #' Step 6
+    #' Remove rows that are effectively empty
+    empty_markers = c('.', 'None')
+    non_null_indices = which(!(var_gather$val %in% empty_markers))
+    if (length(non_null_indices) != nrow(var_gather)) {
+      cat(paste0("From total: ", nrow(var_gather), " key-value pairs, retaining: ", 
+                 length(non_null_indices), " non-null pairs.\n\tSavings = ", 
+                 (nrow(var_gather) - length(non_null_indices)) / nrow(var_gather) * 100, "%\n"))
+      var_gather = var_gather[non_null_indices, ] 
+    }
+    
+    #' Step 7
+    #' Upload and insert the data
+    UPLOAD_N = 250000
     arrayname = full_arrayname(.ghEnv$meta$arrVariant)
-    
-    ids_int64_conv = c(get_idname(arrayname), get_int64fields(arrayname))
-    
-    ids_int64_conv = ids_int64_conv[(ids_int64_conv != "per_gene_variant_number")]
-    cat("Uploading\n")
-    non_info_cols = c(get_idname(strip_namespace(arrayname)), 
-                      mandatory_fields()[[strip_namespace(arrayname)]])
-    if (nrow(df) < 100000) {
-      x1 = as.scidb(con$db, df[, non_info_cols])
-    } else {
-      x1 = as.scidb(con$db, df[, non_info_cols], chunk_size=nrow(df))
-    }
-    
-    x = x1
-    for (idnm in ids_int64_conv){
-      x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
-    }
+    x = as.scidb_int64_cols(db = con$db, 
+                            df1 = var_gather, 
+                            int64_cols = colnames(var_gather)[!(colnames(var_gather) %in% 'val')])
     qq = paste0("redimension(", x@name, ", ", scidb::schema(scidb(con$db, arrayname)), ")")
     
     query = paste("insert(", qq, ", ", arrayname, ")", sep="")
     cat("Redimension and insert\n")
     iquery(con$db, query)
-    
-    cat("Now registering info fields\n")
-    register_info(df = prep_df_fields(df,
-                                      mandatory_fields = non_info_cols),
-                  idname = get_idname(arrayname), arrayname = arrayname, 
-                  con = con)
     
     remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrVariant, con = con)
   } # end of if (!only_test)
