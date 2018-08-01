@@ -20,7 +20,7 @@ test_that("Check that variant_key registration works properly", {
     init_db(arrays_to_init = .ghEnv$meta$arrVariantKey, force = TRUE)
     # Get the existing variant_key fields
     vk1 = get_variant_key()
-    stopifnot(nrow(vk1) == 0)
+    expect_true(nrow(vk1) == 0)
     
     # Register a dummy variant_key field
     dummy_val = "dummy"
@@ -28,34 +28,34 @@ test_that("Check that variant_key registration works properly", {
       df = data.frame(key = dummy_val, stringsAsFactors = FALSE))
     # Check that cache is increased by 1 element
     vk2 = get_variant_key()
-    stopifnot(nrow(vk2) == nrow(vk1) + 1)
+    expect_true(nrow(vk2) == nrow(vk1) + 1)
     
     # Verify that the dummy key was uploaded properly
-    stopifnot(get_variant_key(variant_key_id = new_variant_key_id)$key == dummy_val)
+    expect_true(get_variant_key(variant_key_id = new_variant_key_id)$key == dummy_val)
     
     # Delete the dummy variant_key field
     delete_entity(entity = .ghEnv$meta$arrVariantKey, id = new_variant_key_id)
     # Check that the cache is updated, and count has decreased by 1
     vk3 = get_variant_key()
-    stopifnot(nrow(vk3) == nrow(vk1))
-    stopifnot(nrow(get_variant_key(variant_key_id = new_variant_key_id)) == 0)
+    expect_true(nrow(vk3) == nrow(vk1))
+    expect_true(nrow(get_variant_key(variant_key_id = new_variant_key_id)) == 0)
     
     ###### PHASE 2A #####
     # Now upload two keys at a time
     dummy_val_2a = c("dummy1", "dummy2")
     new_variant_key_id_2a = register_variant_key(
       df = data.frame(key = dummy_val_2a, stringsAsFactors = FALSE))
-    stopifnot(length(new_variant_key_id_2a) == 2)
+    expect_true(length(new_variant_key_id_2a) == 2)
     
     # Now upload two keys at a time
     dummy_val_2b = c("dummy1", "dummy3")
     new_variant_key_id_2b = register_variant_key(
       df = data.frame(key = dummy_val_2b, stringsAsFactors = FALSE))
-    stopifnot(length(new_variant_key_id_2b) == 2)
-    stopifnot(all(
+    expect_true(length(new_variant_key_id_2b) == 2)
+    expect_true(all(
       get_variant_key(variant_key_id = new_variant_key_id_2b)$key %in% 
                c("dummy1", "dummy3")))
-    stopifnot(identical(sort(unique(get_variant_key()$key)), 
+    expect_true(identical(sort(unique(get_variant_key()$key)), 
                     sort(unique(c(dummy_val_2a, dummy_val_2b)))))
     
     # Clean-up
