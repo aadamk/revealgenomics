@@ -13,7 +13,6 @@ test_that("Check that feature download works when feature_id is a long integer "
                                      chromosome="...", 
                                      start="...", 
                                      end="...", 
-                                     strand_term = 1, 
                                      feature_type = "gene", 
                                      source = "...", 
                                      stringsAsFactors = FALSE))
