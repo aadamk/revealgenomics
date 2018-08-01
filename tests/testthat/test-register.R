@@ -73,9 +73,17 @@ test_that("Check that variant registration works properly", {
       .ghEnv$meta$arrFeature,
       .ghEnv$meta$arrFeatureSynonym,
       .ghEnv$meta$arrBiosample,
-      .ghEnv$meta$arrMeasurementSet), 
+      .ghEnv$meta$arrMeasurementSet,
+      .ghEnv$meta$arrDataset), 
       force = TRUE)
-
+    
+    # Register dummy dataset
+    dataset_id = register_dataset(df = data.frame(
+      name = 'dummyDataset', 
+      description = '...', 
+      project_id = 1, 
+      stringsAsFactors = FALSE))
+    
     # Register features at 1:3
     ftr_id = register_feature(df = data.frame(
       name = c('asdf1', 'asdf2', 'asdf3'), 
@@ -91,7 +99,7 @@ test_that("Check that variant registration works properly", {
     # Register_biosamples at id 1
     bios_id = register_biosample(df = data.frame(
       name = 'dummy_biosample', 
-      dataset_id = 10000, 
+      dataset_id = 1, 
       description = '...', 
       individual_id = 10000000, 
       stringsAsFactors = FALSE), 
@@ -100,7 +108,7 @@ test_that("Check that variant registration works properly", {
     # Register measurementset at id 1, 2
     ms_id = register_measurementset(df = data.frame(
       name = c('dummy_measurementset1', 'dummy_measurementset2'), 
-      dataset_id = 10000, 
+      dataset_id = 1, 
       experimentset_id = 10000, 
       entity = .ghEnv$meta$arrVariant, 
       description = '...', 
