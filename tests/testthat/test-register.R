@@ -82,8 +82,8 @@ test_that("Check that variant registration works properly", {
       featureset_id = 1, 
       gene_symbol = 'asdf', 
       chromosome = 'X', 
-      start = 1, 
-      end = 10000, 
+      start = '1', 
+      end = '10000', 
       feature_type = 'dummy', 
       source = 'api-test', 
       stringsAsFactors = FALSE))
@@ -94,7 +94,8 @@ test_that("Check that variant registration works properly", {
       dataset_id = 10000, 
       description = '...', 
       individual_id = 10000000, 
-      stringsAsFactors = FALSE))
+      stringsAsFactors = FALSE), 
+      dataset_version = 1)
     
     # Register measurementset at id 1, 2
     ms_id = register_measurementset(df = data.frame(
@@ -104,7 +105,8 @@ test_that("Check that variant registration works properly", {
       entity = .ghEnv$meta$arrVariant, 
       description = '...', 
       featureset_id = 1, 
-      stringsAsFactors = FALSE))
+      stringsAsFactors = FALSE), 
+      dataset_version = 1)
     
     # Register variant
     df_var1 = data.frame(
