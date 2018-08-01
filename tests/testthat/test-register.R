@@ -153,7 +153,7 @@ test_that("Check that variant registration works properly", {
     register_variant(df = df_var2)
     df_var2_res = search_variants(
       measurementset = get_measurementsets(measurementset_id = 2), 
-      feature = get_features(feature_id = 1:3))
+      feature = get_features(feature_id = 1:3, fromCache = FALSE))
     expect_true(all.equal(
       (dim(df_var2) + c(0,2)),
       dim(df_var2_res)))
