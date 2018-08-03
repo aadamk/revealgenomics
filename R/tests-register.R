@@ -199,8 +199,8 @@ test_register_variant = function(df, variant_attr_cols){
   test_dataframe_formatting(df)
   if(length(unique(df$dataset_id))!=1) stop("Variants to be registered must belong to a single dataset/study")
   
-  #' `per_gene_variant_number`, `key_id` and `val` are mandatory fields that are typically added later --
-  #' -- hence run the test as follows
+  # `per_gene_variant_number`, `key_id` and `val` are mandatory fields that are typically added later --
+  # -- hence run the test as follows
   df_temp = df
   df_temp$per_gene_variant_number = -1
   df_temp$key_id = -1
