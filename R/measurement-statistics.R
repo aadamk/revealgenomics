@@ -145,4 +145,87 @@ calculate_statistics_across_measurementsets = function(df_measurementset, con = 
   dplyr::bind_rows(L1)
 }
 
+#' Aggregate project, study info by phenotype column(s)
+#' 
+#' Aggregate project, study info by phenotype column(s)
+#' 
+#' Aggregate project and study information by selected phenotype columns
+#' For example, `disease` is phenotype related information that is retained under the
+#' `BIOSAMPLE` entity. If we specify `filter_column = 'primary_disease'`, then 
+#' the function aggregates counts by disease by study. Function also joins in 
+#' project id and name
+#' 
+#' @param filter_column one or more filte rcolumns to aggregate by
+#' 
+#' @examples aggr_proj_study_by_pheno(filter_column = c('sample_cell_type', 'sample_molecule_type'))
+#'           returns
+#'           study_id study_version project_id  project_name          study_name     filter_column     filter_value      total
+#'           528      237             1          1 MMRF CoMMpass MMRF CoMMpass IA13a primary_disease   multiple myeloma  2035
+#'           529      238             1          1 MMRF CoMMpass MMRF CoMMpass IA14a primary_disease   multiple myeloma  2072
+#' @export           
+aggr_proj_study_by_pheno = function(
+  filter_column, con = NULL
+) {
+  con = scidb4gh:::use_ghEnv_if_null(con = con)
+  query0 = paste0("key='", filter_column, "'", collapse = " OR ")
+  query1 = paste0(
+    "grouped_aggregate(
+    filter(",
+    scidb4gh:::full_arrayname(.ghEnv$meta$arrBiosample), "_INFO, ",
+    query0, "), 
+    min(key) AS filter_column, 
+    count(*) AS total, 
+    dataset_id, dataset_version, val)"
+  )
+  query2 = paste0(
+    "equi_join(",
+    query1, ", ", 
+    "project(apply(", 
+    scidb4gh:::full_arrayname(.ghEnv$meta$arrDataset), ", ",
+    "study_name, name), study_name, project_id), ",
+    "'left_names=dataset_id,dataset_version', 
+    'right_names=dataset_id,dataset_version', 'keep_dimensions=0'",
+    ")"
+  )
+  query3 = paste0(
+    "equi_join(",
+    query2, ", ", 
+    "project(apply(", 
+    scidb4gh:::full_arrayname(.ghEnv$meta$arrProject), ", ",
+    "project_name, name), project_name), ",
+    "'left_names=project_id', 
+    'right_names=project_id', 
+    'keep_dimensions=0'",
+    ")"
+  )
+  
+  res = iquery(con$db, 
+               query3, 
+               return = T, 
+               only_attributes=T)
+  res = plyr::rename(res, 
+                     c("dataset_id"      = "study_id",
+                       "dataset_version" = "study_version", 
+                       "val"             = "filter_value"))
+  def = get_definitions(con = con)
+  res2 = merge(
+    res, 
+    def[, c('dataset_id', 'attribute_name', 'controlled_vocabulary')], 
+    by.x = c('study_id', 'filter_column'), 
+    by.y = c('dataset_id', 'attribute_name'), 
+    all.x = TRUE)
+  
+  controlled_idx = which(!is.na(res2$controlled_vocabulary))
+  if (length(controlled_idx) > 0) {
+    controlled_idx_ont_ids = res2[controlled_idx, 'filter_value']
+    ont_df = get_ontology(ontology_id = unique(controlled_idx_ont_ids), con = con)
+    res2[controlled_idx, 'filter_value'] = 
+      ont_df[match(controlled_idx_ont_ids, ont_df$ontology_id), ]$term
+  }
+  # res2$controlled_vocabulary = NULL
+  res2 = res2[, c('study_id', 'study_version', 'project_id', 'project_name', 'study_name',
+                  'filter_column', 'filter_value', 'total')]
+  
+  return(res2)
+}
 
