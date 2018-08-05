@@ -1,4 +1,4 @@
-Package: scidb4gh
+Package: revealgenomics
 Type: Package
 Title: SciDB REVEAL/Genomics API
 Version: 0.3

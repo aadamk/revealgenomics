@@ -1,7 +1,7 @@
 rm(list=ls())
 source('~/.ga4gh_config.R')
 
-library(scidb4gh)
+library(revealgenomics)
 
 # Register genelists
 gh_connect(username = "secure_user", password = secure_password)

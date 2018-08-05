@@ -170,11 +170,11 @@ build_reference_gene_set = function( featureset_id,
                                      con = NULL) {
   if (is.null(gene_annotation_file_path)) {
     gene_annotation_file_path = system.file("extdata", 
-                                            "gene__hugo__hgnc_complete_set.txt.gz", package="scidb4gh")
+                                            "gene__hugo__hgnc_complete_set.txt.gz", package="revealgenomics")
   }
   if (is.null(gene_location_file_path)) {
     gene_location_file_path = system.file("extdata", 
-                                          "gene__grch38_release85_homosap_gene__newGene.tsv.gz", package="scidb4gh")
+                                          "gene__grch38_release85_homosap_gene__newGene.tsv.gz", package="revealgenomics")
   }
   cat("Reading following files and merging into one dataframe. \nAnnotation: ", gene_annotation_file_path, 
       "\nGene location: ", gene_location_file_path, "\n")

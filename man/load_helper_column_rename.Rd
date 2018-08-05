@@ -4,8 +4,8 @@
 \alias{load_helper_column_rename}
 \title{helper function to rename columns}
 \usage{
-load_helper_column_rename(dfx, scidb4gh_fields, worksheet_fields)
+load_helper_column_rename(dfx, revealgenomics_fields, worksheet_fields)
 }
 \description{
-rename columns from excel template into scidb4gh format
+rename columns from excel template into revealgenomics format
 }

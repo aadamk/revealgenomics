@@ -3,27 +3,27 @@
 #' Available package options (you can override the defaults with the \code{options} function):
 #'
 #' \itemize{
-#' \item \code{scidb4gh.dummy_option=7999}
+#' \item \code{revealgenomics.dummy_option=7999}
 #' }
 #' Placeholder for documentation
 #'
-#' @name scidb4gh
+#' @name revealgenomics
 #' @seealso \code{\link{get_individuals}}, \code{\link{search_individuals}},  
 #' @docType package
 NULL
 
 .onAttach = function(libname, pkgname)
 {
-  packageStartupMessage("To get started see ?scidb4gh for a list of available functions. Each\nfunction has a detailed help page with examples.\nThe original PDF specification is available from vignette('scidb4gh')." , 
+  packageStartupMessage("To get started see ?revealgenomics for a list of available functions. Each\nfunction has a detailed help page with examples.\nThe original PDF specification is available from vignette('revealgenomics')." , 
                         domain = NULL, appendLF = TRUE)
-  options("scidb4gh.use_scidb_ee"=TRUE)
+  options("revealgenomics.use_scidb_ee"=TRUE)
 }
 
 # A global environment used to store the metadata information, and cache state by some functions
 #' @export
 .ghEnv = new.env(parent = emptyenv())
 
-.ghEnv$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="scidb4gh"))
+.ghEnv$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="revealgenomics"))
 
 .ghEnv$meta$arrProject = 'PROJECT'
 .ghEnv$meta$arrDataset = 'DATASET'

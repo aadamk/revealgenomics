@@ -1,4 +1,4 @@
 library(testthat)
-library(scidb4gh)
+library(revealgenomics)
 
-test_check("scidb4gh")
+test_check("revealgenomics")

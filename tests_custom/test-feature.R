@@ -1,6 +1,6 @@
 
 test_feature_synonym_registration = function() {
-  library(scidb4gh); gh_connect('root', 'Paradigm4')
+  library(revealgenomics); gh_connect('root', 'Paradigm4')
   
   # Any random referenceset
   refset = get_referenceset()

@@ -166,12 +166,12 @@ calculate_statistics_across_measurementsets = function(df_measurementset, con = 
 aggr_proj_study_by_pheno = function(
   filter_column, con = NULL
 ) {
-  con = scidb4gh:::use_ghEnv_if_null(con = con)
+  con = revealgenomics:::use_ghEnv_if_null(con = con)
   query0 = paste0("key='", filter_column, "'", collapse = " OR ")
   query1 = paste0(
     "grouped_aggregate(
     filter(",
-    scidb4gh:::full_arrayname(.ghEnv$meta$arrBiosample), "_INFO, ",
+    revealgenomics:::full_arrayname(.ghEnv$meta$arrBiosample), "_INFO, ",
     query0, "), 
     min(key) AS filter_column, 
     count(*) AS total, 
@@ -181,7 +181,7 @@ aggr_proj_study_by_pheno = function(
     "equi_join(",
     query1, ", ", 
     "project(apply(", 
-    scidb4gh:::full_arrayname(.ghEnv$meta$arrDataset), ", ",
+    revealgenomics:::full_arrayname(.ghEnv$meta$arrDataset), ", ",
     "study_name, name), study_name, project_id), ",
     "'left_names=dataset_id,dataset_version', 
     'right_names=dataset_id,dataset_version', 'keep_dimensions=0'",
@@ -191,7 +191,7 @@ aggr_proj_study_by_pheno = function(
     "equi_join(",
     query2, ", ", 
     "project(apply(", 
-    scidb4gh:::full_arrayname(.ghEnv$meta$arrProject), ", ",
+    revealgenomics:::full_arrayname(.ghEnv$meta$arrProject), ", ",
     "project_name, name), project_name), ",
     "'left_names=project_id', 
     'right_names=project_id', 

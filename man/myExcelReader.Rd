@@ -8,7 +8,7 @@ myExcelReader(workbook, sheet_name)
 }
 \arguments{
 \item{workbook}{Workbook must be of type \code{XLConnect::workbook} (loaded by \code{XLConnect::loadWorkbook()})
-or of type \code{list} (loaded by \code{scidb4gh::myExcelLoader()})}
+or of type \code{list} (loaded by \code{revealgenomics::myExcelLoader()})}
 
 \item{sheet_name}{name of sheet to read from workbook}
 }

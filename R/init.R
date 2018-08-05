@@ -47,7 +47,7 @@ init_db = function(arrays_to_init, force = FALSE, con = NULL){
     return(FALSE)
   }
   
-  if (as.logical(options('scidb4gh.use_scidb_ee'))) {
+  if (as.logical(options('revealgenomics.use_scidb_ee'))) {
     if (identical(arrays_to_init, get_entity_names())) {
       cat("You asked to initialize all arrays. Should I initialize the permissions array too?\n")
       resp_perm <- readline("(Y)es/(N)o: ")
