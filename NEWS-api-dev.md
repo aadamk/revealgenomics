@@ -1,3 +1,13 @@
+## Version 0.4
+
+- package name changed from `scidb4gh` to `revealgenomics`
+- Github repo changed from `reveal-genomics` to `revealgenomics`
+- for more details, see [https://github.com/Paradigm4/revealgenomics/issues/44](https://github.com/Paradigm4/revealgenomics/issues/44)
+
+## Version 0.3
+
+- improved ontology management
+  + Following terms dropped: REFERENCESET.species_, FEATURE.strand_term, BIOSAMPLE.disease_, INDIVIDUAL.sex_, INDIVIDUAL.species_
 
 ## At commit 352afe9
 
