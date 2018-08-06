@@ -16,7 +16,7 @@ test_that("Check that feature download works when feature_id is a long integer "
                                      feature_type = "gene", 
                                      source = "...", 
                                      stringsAsFactors = FALSE))
-    # https://github.com/Paradigm4/reveal-genomics/issues/40
+    # https://github.com/Paradigm4/revealgenomics/issues/40
     ff = get_features(feature_id = seq(70000,800000,10))
     expect_true(nrow(ff) == 0) # in tests, currently do not expect to upload 700K+ features
     

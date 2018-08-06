@@ -28,7 +28,7 @@ test_that("For data loaded via Excel template, check that biosamples associated 
         ms_stat = iquery(.ghEnv$db, 
                          paste0("aggregate(
                                  filter(", 
-                                scidb4gh:::full_arrayname(ms$measurement_entity),
+                                revealgenomics:::full_arrayname(ms$measurement_entity),
                                 ", measurementset_id = ", ms$measurementset_id, 
                                 "), count(*), biosample_id)"),
                          return = TRUE)

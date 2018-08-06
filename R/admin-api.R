@@ -265,16 +265,16 @@ grant_initial_access = function(con = NULL, user_name) {
 #' - scan (just use regular scan of arrays)
 custom_scan = function() {
   # Use secure_scan for SciDB enterprise edition only
-  ifelse(options("scidb4gh.use_scidb_ee"), 
+  ifelse(options("revealgenomics.use_scidb_ee"), 
          "secure_scan",
          "scan")
 }
 
 #' placeholder to be filled in
 add_user_to_data_loaders = function(con) {
- # iquery -aq "create_role('scidb4gh_data_loaders')"
- # iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_secure', 'ruld')"
- # iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public', 'ruld')"
- # iquery -aq "set_role_permissions('scidb4gh_data_loaders', 'namespace', 'gh_public_rw', 'ruld')"
- # iquery -aq "add_user_to_role('secure_user', 'scidb4gh_data_loaders')"
+ # iquery -aq "create_role('revealgenomics_data_loaders')"
+ # iquery -aq "set_role_permissions('revealgenomics_data_loaders', 'namespace', 'gh_secure', 'ruld')"
+ # iquery -aq "set_role_permissions('revealgenomics_data_loaders', 'namespace', 'gh_public', 'ruld')"
+ # iquery -aq "set_role_permissions('revealgenomics_data_loaders', 'namespace', 'gh_public_rw', 'ruld')"
+ # iquery -aq "add_user_to_role('secure_user', 'revealgenomics_data_loaders')"
 }

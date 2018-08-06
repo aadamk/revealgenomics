@@ -17,16 +17,16 @@
 
 #' helper function to rename columns
 #' 
-#' rename columns from excel template into scidb4gh format
+#' rename columns from excel template into revealgenomics format
 #' 
 #' 
-load_helper_column_rename = function(dfx, scidb4gh_fields, worksheet_fields) {
+load_helper_column_rename = function(dfx, revealgenomics_fields, worksheet_fields) {
   stopifnot(worksheet_fields %in% colnames(dfx))
   cat("Renaming columns:\n\t")
-  cat(paste(worksheet_fields[worksheet_fields != scidb4gh_fields], 
-            scidb4gh_fields[worksheet_fields != scidb4gh_fields], sep = " --> ", collapse = "\n\t"))
+  cat(paste(worksheet_fields[worksheet_fields != revealgenomics_fields], 
+            revealgenomics_fields[worksheet_fields != revealgenomics_fields], sep = " --> ", collapse = "\n\t"))
   cat("\n")
-  x = scidb4gh_fields
+  x = revealgenomics_fields
   names(x) = worksheet_fields
   
   plyr::rename(dfx, replace = x)
@@ -70,9 +70,9 @@ load_helper_prepare_dataframe = function(workbook, record, def,
                                             entity = entityName,
                                             con = con)
   
-  # Rename columns from external custom fields to scidb4gh fields
+  # Rename columns from external custom fields to revealgenomics fields
   data_df = load_helper_column_rename(dfx = data_df,
-                              scidb4gh_fields = mandatory_fields()[[entityName]], 
+                              revealgenomics_fields = mandatory_fields()[[entityName]], 
                               worksheet_fields = worksheet_fields)
   
   # Handle duplicates

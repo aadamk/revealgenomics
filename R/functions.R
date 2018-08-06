@@ -98,7 +98,7 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
   }
 
   if (unset_scidb_ee_flag) {
-    if (!is.null(con$db)) options(scidb4gh.use_scidb_ee = FALSE)
+    if (!is.null(con$db)) options(revealgenomics.use_scidb_ee = FALSE)
   }  
   # Store a copy of connection object in .ghEnv
   # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
@@ -222,7 +222,7 @@ get_definitions = function(definition_id = NULL, updateCache = FALSE, con = NULL
 
 find_namespace = function(entitynm) {
   # Use secure_scan for SciDB enterprise edition only
-  ifelse(options("scidb4gh.use_scidb_ee"), 
+  ifelse(options("revealgenomics.use_scidb_ee"), 
         .ghEnv$meta$L$array[[entitynm]]$namespace,
         'public')
 }
@@ -900,7 +900,7 @@ count_unique_calls = function(variants){
 join_ontology_terms = function(df, terms = NULL, updateCache = FALSE, con = NULL){
   if (is.null(terms)) {
     stop("This code-path should not be used after changes in
-         https://github.com/Paradigm4/reveal-genomics/pull/41")
+         https://github.com/Paradigm4/revealgenomics/pull/41")
     terms = grep(".*_$", colnames(df), value=TRUE)
     # if (length(terms) > 0) {
     #   stop("Will apply ontology rules for any column with trailing underscore ('_')")

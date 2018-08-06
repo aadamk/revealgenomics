@@ -137,7 +137,7 @@ myExcelLoader = function(filename, use_readxl=TRUE) {
 #' otherwise, was throwing warnings about the concatenation field
 #' 
 #' @param workbook Workbook must be of type `XLConnect::workbook` (loaded by `XLConnect::loadWorkbook()`) 
-#'                 or of type `list` (loaded by `scidb4gh::myExcelLoader()`)
+#'                 or of type `list` (loaded by `revealgenomics::myExcelLoader()`)
 #' @param sheet_name name of sheet to read from workbook
 #' @export
 myExcelReader = function(workbook, sheet_name) {
@@ -155,7 +155,7 @@ myExcelReader = function(workbook, sheet_name) {
     }
   } else {
     stop("Workbook must be of type `XLConnect::workbook` (loaded by `XLConnect::loadWorkbook()`)\n 
-         or of type `list` (loaded by `scidb4gh::myExcelLoader()`)")
+         or of type `list` (loaded by `revealgenomics::myExcelLoader()`)")
   }
 }
 

@@ -1,3 +1,13 @@
+## Version 0.4
+
+- package name changed from `scidb4gh` to `revealgenomics`
+- Github repo changed from `reveal-genomics` to `revealgenomics`
+- for more details, see [https://github.com/Paradigm4/revealgenomics/issues/44](https://github.com/Paradigm4/revealgenomics/issues/44)
+
+## Version 0.3
+
+- improved ontology management
+  + Following terms dropped: REFERENCESET.species_, FEATURE.strand_term, BIOSAMPLE.disease_, INDIVIDUAL.sex_, INDIVIDUAL.species_
 
 ## At commit 352afe9
 
@@ -40,17 +50,17 @@ parameter `ids` is now called `id`
 4. Two internal API to infer hierarchy and delete preferences
 ```R
 ## parent entity by which one would search an entity 
-scidb4gh:::get_search_by_entity(entity = 'RNAQUANTIFICATION')
+revealgenomics:::get_search_by_entity(entity = 'RNAQUANTIFICATION')
 # [1] "MEASUREMENTSET"
-scidb4gh:::get_search_by_entity(entity = 'MEASUREMENTSET')
+revealgenomics:::get_search_by_entity(entity = 'MEASUREMENTSET')
 # [1] "DATASET"
 ```
     
 ```R
 ## entity by which one would delete an entity 
-scidb4gh:::get_delete_by_entity(entity = 'RNAQUANTIFICATION')
+revealgenomics:::get_delete_by_entity(entity = 'RNAQUANTIFICATION')
 # [1] "MEASUREMENTSET"
-scidb4gh:::get_delete_by_entity(entity = 'MEASUREMENTSET')
+revealgenomics:::get_delete_by_entity(entity = 'MEASUREMENTSET')
 # [1] "MEASUREMENTSET"
 ```
 5. `search_copynumberset(dataset_id = ..)` was throwing an error earlier when there 

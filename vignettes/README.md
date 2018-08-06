@@ -3,6 +3,6 @@ For vignettes for uploading and downloading data via REVEAL/Genomics API, consul
 - Chapter: Loading data to SciDB
 - Chapter: Downloading data from SciDB
 
-https://paradigm4.github.io/reveal-genomics-docs/
+https://paradigm4.github.io/revealgenomics-docs/
 
 

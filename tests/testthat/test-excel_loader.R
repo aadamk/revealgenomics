@@ -3,7 +3,7 @@ context("test-excel_loader.R")
 test_that("Check that upload fails if user does not use data.frame", {
   scidb_tmpl_path = system.file("extdata",
                                 "scidb_metadata_template.xlsx", 
-                                package="scidb4gh")
+                                package="revealgenomics")
   dfDefn = readxl::read_excel(scidb_tmpl_path, sheet = 'Definitions', trim_ws = TRUE)
   dfDefn$dataset_id = 9999
   dfDefn$Notes = '...'
@@ -26,7 +26,7 @@ test_that("Check that upload works for `Definitions` sheet of Excel template ", 
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     scidb_tmpl_path = system.file("extdata",
                                   "scidb_metadata_template.xlsx", 
-                                  package="scidb4gh")
+                                  package="revealgenomics")
     dfDefn = readxl::read_excel(scidb_tmpl_path, sheet = 'Definitions', trim_ws = TRUE)
     dfDefn$dataset_id = 9999
     dfDefn$Notes = '...'

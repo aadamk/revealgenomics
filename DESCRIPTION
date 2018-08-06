@@ -1,7 +1,7 @@
-Package: scidb4gh
+Package: revealgenomics
 Type: Package
 Title: SciDB REVEAL/Genomics API
-Version: 0.3
+Version: 0.4
 Date: 2018-02-22
 Author: Kriti Sen Sharma
 Maintainer: Kriti Sen Sharma <ksen@paradigm4.com>

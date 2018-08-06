@@ -52,7 +52,7 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
     }
     
     dfi_proj = load_helper_column_rename(dfx = dfi_proj,
-                                 scidb4gh_fields = mandatory_fields()[[.ghEnv$meta$arrProject]],
+                                 revealgenomics_fields = mandatory_fields()[[.ghEnv$meta$arrProject]],
                                  worksheet_fields = wksht_fields_proj
                                 )
     
@@ -67,12 +67,12 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
     # --------------------------    
     # DATASET  
     dfi$project_id = project_id
-    scidb4gh_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]]
+    revealgenomics_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]]
     wksht_fields_study = c('study_name', 'study_description', 'project_id', 'is_study_public')
     stopifnot(all(c(wksht_fields_study, 'study_version') %in% colnames(df0)))
     
     dfi_st = load_helper_column_rename(dfx = dfi, 
-                               scidb4gh_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]], 
+                               revealgenomics_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]], 
                                worksheet_fields = wksht_fields_study)
     
     # if (!(length(unique(dfi_st$name)) == 1 &
@@ -299,7 +299,7 @@ api_register_featuresets_experimentsets_measurementsets = function(workbook, rec
   }
   msmtset_df$featureset_id = fsets$featureset_id[matchL$target_matched_idx]
   
-  # Rename columns from external custom fields to scidb4gh fields
+  # Rename columns from external custom fields to revealgenomics fields
   msmtset_df = plyr::rename(msmtset_df, 
                             c('measurement_entity' = 'entity'))
   msmtset_df$name = paste0(msmtset_df$pipeline_source_title, ": ", msmtset_df$filter_name)

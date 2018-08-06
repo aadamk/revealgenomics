@@ -1,12 +1,12 @@
 rm(list=ls())
-library(scidb4gh)
+library(revealgenomics)
 try({
   # Try to connect without security
   cat("Trying to connect without authentication")
   gh_connect()
-  stopifnot(options('scidb4gh.use_scidb_ee') == FALSE)
+  stopifnot(options('revealgenomics.use_scidb_ee') == FALSE)
 })
-if (options('scidb4gh.use_scidb_ee')) {
+if (options('revealgenomics.use_scidb_ee')) {
   source('~/.ga4gh_config.R')
   con1 = gh_connect2('root', password = rootpassword)
   con2 = gh_connect2('secure_user', password = secure_password)
@@ -40,8 +40,8 @@ if (options('scidb4gh.use_scidb_ee')) {
             get_featuresets(con = con2))
   
   
-  fsyn1 = scidb4gh:::get_feature_synonym(con = con1)
-  fsyn2 = scidb4gh:::get_feature_synonym(con = con2)
+  fsyn1 = revealgenomics:::get_feature_synonym(con = con1)
+  fsyn2 = revealgenomics:::get_feature_synonym(con = con2)
   identical(fsyn1, fsyn2)
   
   r2 = get_measurementsets(con = con2)

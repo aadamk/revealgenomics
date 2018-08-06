@@ -547,7 +547,7 @@ dao_search_rnaquantification = function(measurementset,
     download_limit_mb = 1000
     if (download_size > download_limit_mb * 1024 * 1024) {
       cat("Trying to download more than", download_limit_mb, "MB at a time! 
-          Post an issue at https://github.com/Paradigm4/scidb4gh/issues\n")
+          Post an issue at https://github.com/Paradigm4/revealgenomics/issues\n")
       return(NULL)
     }
     res = iquery(con$db, query = qq3, binary = TRUE, only_attributes = TRUE, return = TRUE)

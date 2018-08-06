@@ -1,6 +1,6 @@
 rm(list=ls())
-library(scidb4gh)
-source('~/coding/downloads/scidb4gh/R/delete.R')
+library(revealgenomics)
+source('~/coding/downloads/revealgenomics/R/delete.R')
 gh_connect('root', 'Paradigm4')
 
 # Get the current list of projects
