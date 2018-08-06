@@ -900,7 +900,7 @@ count_unique_calls = function(variants){
 join_ontology_terms = function(df, terms = NULL, updateCache = FALSE, con = NULL){
   if (is.null(terms)) {
     stop("This code-path should not be used after changes in
-         https://github.com/Paradigm4/reveal-genomics/pull/41")
+         https://github.com/Paradigm4/revealgenomics/pull/41")
     terms = grep(".*_$", colnames(df), value=TRUE)
     # if (length(terms) > 0) {
     #   stop("Will apply ontology rules for any column with trailing underscore ('_')")

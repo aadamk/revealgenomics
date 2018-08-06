@@ -112,7 +112,7 @@ This API's R package can be installed in two ways:
 ### If you are just using the package
 
 ```{sh}
-sudo R --slave -e "devtools::install_github('Paradigm4/reveal-genomics')"
+sudo R --slave -e "devtools::install_github('Paradigm4/revealgenomics')"
 ```
 
 ### If you are working on package development on the target machine 
