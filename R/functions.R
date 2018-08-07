@@ -137,8 +137,6 @@ get_entity = function(entity, id, ...){
   if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
   if (entity == 'ONTOLOGY') {
     f(id, updateCache = TRUE, ...)
-  } else if (entity == 'FEATURE') {
-    f(id, fromCache =  FALSE, ...)
   } else { 
     f(id, ...) 
   }
@@ -1069,7 +1067,7 @@ get_genelist = function(genelist_id = NULL, con = NULL) {
 
 
 #' @export
-get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
+get_features = function(feature_id = NULL, con = NULL){
   con = use_ghEnv_if_null(con)
   
   entitynm = .ghEnv$meta$arrFeature

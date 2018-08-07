@@ -189,7 +189,7 @@ search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NU
   f1 = syn[syn$synonym %in% synonym, ]
   if (!is.null(id_type)) {f1 = f1[f1$source == id_type, ]}
   if (!is.null(featureset_id)) {f1 = f1[f1$featureset_id == f1$featureset_id, ]}
-  get_features(feature_id = unique(f1$feature_id), fromCache = !updateCache, con = con)
+  get_features(feature_id = unique(f1$feature_id), con = con)
 }
 
 #' @export
@@ -558,7 +558,7 @@ dao_search_rnaquantification = function(measurementset,
     feature_sel = feature[feature$feature_id %in% feature_id, ]
   } else { # user has not supplied features; need to download features from DB
     cat("Downloading features to form ExpressionSet\n")
-    feature_sel = get_features(feature_id = feature_id, fromCache = FALSE,
+    feature_sel = get_features(feature_id = feature_id, 
                                con = con)
   }
   cat("Forming ExpressionSet\n")
