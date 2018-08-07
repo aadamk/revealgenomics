@@ -201,6 +201,12 @@ get_definitions = function(definition_id = NULL, updateCache = FALSE, con = NULL
                             con = con)
 }
 
+get_feature_synonym = function(feature_synonym_id = NULL, updateCache = FALSE, con = NULL){
+  get_feature_synonym_from_cache(feature_synonym_id = feature_synonym_id, 
+                                 updateCache = updateCache, 
+                                 con = con)
+}
+
 find_namespace = function(entitynm) {
   # Use secure_scan for SciDB enterprise edition only
   ifelse(options("revealgenomics.use_scidb_ee"), 
@@ -213,14 +219,6 @@ find_namespace = function(entitynm) {
 #' @export
 full_arrayname = function(entitynm) {
   paste0(find_namespace(entitynm), ".", entitynm)
-}
-
-
-get_feature_synonym_from_cache = function(updateCache = FALSE, con = NULL){
-  if (updateCache | is.null(.ghEnv$cache$dfFeatureSynonym)){
-    update_feature_synonym_cache(con = con)
-  }
-  return(.ghEnv$cache$dfFeatureSynonym)
 }
 
 get_max_id = function(arrayname, con = NULL){
@@ -487,6 +485,9 @@ register_feature_synonym = function(df, only_test = FALSE, con = NULL){
   if (!only_test) {
     arrayname = full_arrayname(.ghEnv$meta$arrFeatureSynonym)
     register_tuple_return_id(df, arrayname, uniq, con = con)
+    
+    # force update the cache
+    update_feature_synonym_cache(con = con)
   } # end of if (!only_test)
 }
 
@@ -1022,12 +1023,6 @@ get_featuresets= function(featureset_id = NULL, con = NULL){
                         id = featureset_id, con = con)
 }
 
-get_feature_synonym = function(feature_synonym_id = NULL, con = NULL){
-  select_from_1d_entity(entitynm = .ghEnv$meta$arrFeatureSynonym, 
-                        id = feature_synonym_id, con = con)
-}
-
-
 #' @export
 get_referenceset = function(referenceset_id = NULL, con = NULL){
   select_from_1d_entity(entitynm = .ghEnv$meta$arrReferenceset, id = 
@@ -1535,8 +1530,7 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
     xx = df
     
     if (!all(c('feature_id_left', 'feature_id_right') %in% colnames(xx))) {
-      update_feature_synonym_cache(con = con)
-      syn = get_feature_synonym_from_cache(con = con)
+      syn = get_feature_synonym(con = con)
       syn = syn[syn$featureset_id == measurementset$featureset_id, ]
       
       # Now register the left and right genes with system feature_id-s

@@ -185,7 +185,7 @@ search_genelist_gene = function(genelist = NULL,
 #' @return feature(s) associated with provided synonym
 #' @export
 search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NULL, updateCache = FALSE, con = NULL){
-  syn = get_feature_synonym_from_cache(updateCache = updateCache, con = con)
+  syn = get_feature_synonym(updateCache = updateCache, con = con)
   f1 = syn[syn$synonym %in% synonym, ]
   if (!is.null(id_type)) {f1 = f1[f1$source == id_type, ]}
   if (!is.null(featureset_id)) {f1 = f1[f1$featureset_id == f1$featureset_id, ]}
