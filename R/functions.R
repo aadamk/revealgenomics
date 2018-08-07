@@ -484,10 +484,12 @@ register_feature_synonym = function(df, only_test = FALSE, con = NULL){
   test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = full_arrayname(.ghEnv$meta$arrFeatureSynonym)
-    register_tuple_return_id(df, arrayname, uniq, con = con)
+    ids = register_tuple_return_id(df, arrayname, uniq, con = con)
     
     # force update the cache
     update_feature_synonym_cache(con = con)
+    
+    return(ids)
   } # end of if (!only_test)
 }
 
