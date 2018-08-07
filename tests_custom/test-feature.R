@@ -22,8 +22,8 @@ test_feature_synonym_registration = function() {
                       gene_symbol = c('null', 'null'),
                       featureset_id = fset_id,
                       chromosome = "debug_test_chromosome",
-                      start = -1,
-                      end = -1,
+                      start = '-1',
+                      end = '-1',
                       feature_type = "gene",
                       source = "...")
   
