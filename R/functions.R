@@ -170,23 +170,6 @@ search_entity = function(entity, id, ...){
   }
 }
 
-# cat("Downloading reference dataframes for fast ExpressionSet formation\n")
-get_feature_from_cache = function(updateCache = FALSE, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  if (updateCache | is.null(.ghEnv$cache$feature_ref)){
-    update_feature_cache(con = con)
-  }
-  return(.ghEnv$cache$feature_ref)
-}
-
-update_feature_cache = function(con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  .ghEnv$cache$feature_ref = NULL
-  .ghEnv$cache$feature_ref = get_features(fromCache = FALSE, con = con)
-}
-
 get_biosamples_from_cache = function(updateCache = FALSE, con = NULL){
   if (updateCache | is.null(.ghEnv$cache$biosample_ref)){
     update_biosample_cache(con = con)
@@ -1089,52 +1072,40 @@ get_genelist = function(genelist_id = NULL, con = NULL) {
 get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
   con = use_ghEnv_if_null(con)
   
-  if (!fromCache | is.null(.ghEnv$cache$feature_ref)){ # work from SciDB directly
-    entitynm = .ghEnv$meta$arrFeature
-    arrayname = full_arrayname(entitynm)
+  entitynm = .ghEnv$meta$arrFeature
+  arrayname = full_arrayname(entitynm)
+  
+  qq = arrayname
+  if (!is.null(feature_id)) {
+    qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), as.integer(feature_id))
     
-    qq = arrayname
-    if (!is.null(feature_id)) {
-      qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), as.integer(feature_id))
+    # URL length restriction enforce by apache (see https://github.com/Paradigm4/<CUSTOMER>/issues/53)
+    THRESH_query_len = 270000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
+    
+    if (stringi::stri_length(qq) >= THRESH_query_len) {
+      selector = data.frame(feature_id = as.integer(feature_id), 
+                            val = 1,
+                            stringsAsFactors = FALSE)
+      xx = as.scidb(con$db, selector,
+                    types = c('int64', 'int32'))
       
-      # URL length restriction enforce by apache (see https://github.com/Paradigm4/<CUSTOMER>/issues/53)
-      THRESH_query_len = 270000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
-      
-      if (stringi::stri_length(qq) >= THRESH_query_len) {
-        selector = data.frame(feature_id = as.integer(feature_id), 
-                              val = 1,
-                              stringsAsFactors = FALSE)
-        xx = as.scidb(con$db, selector,
-                      types = c('int64', 'int32'))
-        
-        x2 = paste0("redimension(", xx@name, ", <val:int32>[feature_id])")
-        x3 = paste0("cross_join(", arrayname, " as X, ", 
-                    x2, " as Y, ", 
-                    "X.feature_id, Y.feature_id)")
-        qq = paste0("project(", x3, ", ",
-                    paste0(names(.ghEnv$meta$L$array$FEATURE$attributes), collapse = ","), ")")
-      }
-      join_info_unpivot(qq, 
-                        arrayname, 
-                        con = con)
-    } else { # FASTER path when all data has to be downloaded
-      ftr = iquery(con$db, qq, return = T)
-      ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
-      ftr = merge(ftr, ftr_info, by = get_idname(arrayname), all.x = T)
-      allfeatures = unpivot_key_value_pairs(ftr, arrayname, key_col = "key", val = "val")
-      if (is.null(.ghEnv$cache$feature_ref)) { # the first time (when feature cache has never been filled)
-        .ghEnv$cache$feature_ref = allfeatures
-      }
-      allfeatures
+      x2 = paste0("redimension(", xx@name, ", <val:int32>[feature_id])")
+      x3 = paste0("cross_join(", arrayname, " as X, ", 
+                  x2, " as Y, ", 
+                  "X.feature_id, Y.feature_id)")
+      qq = paste0("project(", x3, ", ",
+                  paste0(names(.ghEnv$meta$L$array$FEATURE$attributes), collapse = ","), ")")
     }
-  } else { # read from cache
-    feature_ref = get_feature_from_cache()
-    if (is.null(feature_id)){
-      return(drop_na_columns(feature_ref))
-    } else {
-      return(drop_na_columns(feature_ref[match(feature_id, feature_ref$feature_id),  ]))
-    }
+    result = join_info_unpivot(qq, 
+                      arrayname, 
+                      con = con)
+  } else { # FASTER path when all data has to be downloaded
+    ftr = iquery(con$db, qq, return = T)
+    ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
+    ftr = merge(ftr, ftr_info, by = get_idname(arrayname), all.x = T)
+    result = unpivot_key_value_pairs(ftr, arrayname, key_col = "key", val = "val")
   }
+  result
 }
 
 form_selector_query_secure_array = function(arrayname, selected_ids, dataset_version){

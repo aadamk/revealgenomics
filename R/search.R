@@ -343,15 +343,8 @@ search_rnaquantification = function(measurementset = NULL,
     # If user did not provide feature, then query the server for it, or retrieve from global feature list
     if (is.null(feature)) {
       feature_id = unique(res$feature_id)
-      if (FALSE) { # avoiding this path for now (the download of all features registered on the system is not expected to be too time-consuming)
-        cat("query the server for matching features\n")
-        feature = get_features(feature_id, con = con)
-      } else{
-        feature_ref = get_feature_from_cache(con = con)
-        
-        feature = feature_ref[feature_ref$feature_id %in% feature_id, ]
-        feature = drop_na_columns(feature)
-      }
+      cat("query the server for matching features\n")
+      feature = get_features(feature_id, con = con)
     }
     
     expressionSet = formulate_list_expression_set(expr_df = res, dataset_version, measurementset, biosample, feature)
