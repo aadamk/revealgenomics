@@ -504,6 +504,10 @@ register_feature = function(df, register_gene_synonyms = TRUE, only_test = FALSE
     gene_ftrs = df[df$feature_type == 'gene', ]
     if (register_gene_synonyms & nrow(gene_ftrs) > 0){
       cat("Working on gene synonyms\n")
+      if (length(fid) != nrow(gene_ftrs)) {
+        stop("More than one type of feature_type being registered at one time. 
+             Need to sub-select `fid` accordingly.")
+      }
       df_syn = data.frame(synonym = gene_ftrs$name, 
                           feature_id = fid,
                           featureset_id = unique(gene_ftrs$featureset_id),
