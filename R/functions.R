@@ -1260,7 +1260,7 @@ search_versioned_secure_metadata_entity = function(entity,
 
 
 # dataset_version: can be "NULL" or any single integral value (if "NULL", then all versions would be returned back)
-cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, dataset_version, con = NULL){
+cross_join_select_by_two_dims = function(qq, tt, val1, val2, selected_names, dataset_version, con = NULL){
   con = use_ghEnv_if_null(con)
   
   selector = merge(
@@ -1275,15 +1275,10 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
                            df1 = selector,
                            int64_cols = colnames(selector))
   xx1 = xx
-  # for (attr in selected_names_all){
-  #   xx1 = convert_attr_double_to_int64(arr = xx1, attrname = attr, con = con)
-  # }
-  # xx1
-  
+
   dims0 = scidb::schema(tt, "dimensions")$name
   selectpos = which(dims0 %in% selected_names)
   stopifnot(dims0[selectpos] == selected_names)
-  # dims0[selectpos]
   cs = scidb::schema(tt, "dimensions")$chunk
   diminfo = data.frame(start = scidb::schema(tt, "dimensions")$start,
                        end = scidb::schema(tt, "dimensions")$end, stringsAsFactors = FALSE)

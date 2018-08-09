@@ -48,7 +48,6 @@ sudo rpm -i extra-scidb-libs-18.1-1-1.x86_64.rpm
 1. Shim is configured using a file under `/var/lib/shim/conf`. 
 2. Any configuration changes need a restart for shim via `sudo service shimsvc restart`
 3. Other plugins required for project are:
-    + `sg_free_cross_between`
     + `secure_scan`
 
 # Package installation

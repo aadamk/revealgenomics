@@ -392,51 +392,38 @@ search_rnaquantification_scidb = function(arrayname,
                 data.frame(measurementset_id = as.integer(measurementset_id))),
           data.frame(biosample_id = as.integer(biosample_id))),
         data.frame(feature_id = as.integer(feature_id)))
-      if (TRUE){ # Return data using join
-        selector$dataset_id = dataset_id
-        selector$flag = -1
-        # t1 = proc.time()
-        xx = as.scidb_int64_cols(db = con$db, df1 = selector, 
-                                 int64_cols = colnames(selector))
-        qq2 = paste0("redimension(", xx@name, 
-                    ", <flag:int64>[", 
-                                   paste0(get_idname(.ghEnv$meta$arrRnaquantification), collapse = ", "),
-                                  "])")
+      # Return data using join
+      selector$dataset_id = dataset_id
+      selector$flag = -1
+      # t1 = proc.time()
+      xx = as.scidb_int64_cols(db = con$db, df1 = selector, 
+                               int64_cols = colnames(selector))
+      qq2 = paste0("redimension(", xx@name, 
+                  ", <flag:int64>[", 
+                                 paste0(get_idname(.ghEnv$meta$arrRnaquantification), collapse = ", "),
+                                "])")
 
-        qq = paste("join(",
-                   qq, ",",
-                   qq2, ")")
-        qq = paste("project(", qq, ", value)")
-        res = iquery(con$db, qq, return = T)
-      } else { # Return data using cross_between_
-        stop("Code needs to be added here to support inclusion of `dataset_version` in expression matrix schema")
-        df = selector[order(selector$measurementset_id, selector$biosample_id, selector$feature_id), ]
-        sqq = NULL
-        for (nn in 1:nrow(df)){
-          row = df[nn, ]
-          si = paste(row, collapse = ", ")
-          si = paste(si, si, sep = ", ")
-          sqq = paste(sqq, si, sep=ifelse(is.null(sqq), "", ", "))
-        }
-        qq = paste("cross_between_(", qq, ", ", sqq, ")")
-        res = iquery(con$db, qq, return = T)
-      }
+      qq = paste("join(",
+                 qq, ",",
+                 qq2, ")")
+      qq = paste("project(", qq, ", value)")
+      res = iquery(con$db, qq, return = T)
     }
   } else if (!is.null(measurementset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected rqs and bs, not f
     selected_names = c('measurementset_id', 'biosample_id')
     val1 = measurementset_id
     val2 = biosample_id
-    res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
+    res = cross_join_select_by_two_dims(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
   } else if (is.null(measurementset_id) & !is.null(biosample_id) & !is.null(feature_id)) { # user selected bs and f, not rqs
     selected_names = c('biosample_id', 'feature_id')
     val1 = biosample_id
     val2 = feature_id
-    res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
+    res = cross_join_select_by_two_dims(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
   } else if (!is.null(measurementset_id) & is.null(biosample_id) & !is.null(feature_id)) { # user selected rqs and f, not bs
     selected_names = c('measurementset_id', 'feature_id')
     val1 = measurementset_id
     val2 = feature_id
-    res = cross_between_select_on_two(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
+    res = cross_join_select_by_two_dims(qq, tt, val1, val2, selected_names, dataset_version = dataset_version, con = con)
   } else if (!is.null(measurementset_id) & is.null(biosample_id) & is.null(feature_id)) { # user selected rqs only
     if (exists('debug_trace')) cat("Only measurementset is selected.\n")
     if (length(measurementset_id) == 1){
