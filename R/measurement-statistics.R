@@ -324,10 +324,115 @@ aggr_proj_study_by_pheno = function(
        
        project(apply(filter(gh_secure.BIOSAMPLE_INFO, key='sample_molecule_type'), sample_molecule_type, val), sample_molecule_type))), 5)", return = T)
     }
-  }
-}
+  } else if (method == 3) {
+    if ('sample_molecule_type' %in% filter_column) {
+      stop("`sample_molecule_type` as a reserved column. 
+         Do not use as filter_column")
+    }
+    filter_column = c(filter_column, 'sample_molecule_type')
+    na_term = '000' #search_ontology(terms = 'NA', category = 'sample_molecule_type')
+    stopifnot(length(na_term) == 1)
+    {
+    # MANUALLY WRITTEN DEMO QUERY
+    query1 = paste0(
+      "grouped_aggregate(
+        aggregate(
+          apply(", revealgenomics:::full_arrayname(.ghEnv$meta$arrBiosample), "_INFO, ", 
+      "primary_disease_val,     iif(key = 'primary_disease' OR key = 'primary disease', val, '", na_term, "'), 
+            sample_cell_type_val,     iif(key = 'sample_cell_type', val, '", na_term, "'), 
+            sample_molecule_type_val, iif(key = 'sample_molecule_type', val, '", na_term, "')), 
+          max(sample_cell_type_val) AS sample_cell_type, 
+          max(primary_disease_val) AS primary_disease, 
+          max(sample_molecule_type_val) AS sample_molecule_type, 
+          dataset_version, dataset_id, biosample_id), 
+        count(*), dataset_version, dataset_id, sample_molecule_type, sample_cell_type, primary_disease)"
+    )
+    }
 
-aggr_proj_study_by_pheno_v2 = function(
-  filter_column, con = NULL
-) {
+    # compose the iif query -- bunch `primary_disease` and `primary disease` into one category
+    query1_res = sapply(
+      filter_column, 
+      function(arg) {
+        if (arg == 'primary_disease') {
+          filter_arg = c('primary_disease', 'primary disease')
+        } else if (arg == 'primary disease') {
+          return(NA)
+        } else {
+          filter_arg = arg
+        }
+        filter_condn = paste0(
+          "key='", filter_arg, "'", collapse = " OR "
+          ) 
+        paste0(arg, "_val, iif(", filter_condn, ", val, '", na_term, "')")
+      })
+    query1_res = query1_res[!is.na(query1_res)]
+
+    # Compose the first aggregate query to find out unique values for filter columns
+    args_aggr_expr = names(query1_res)    
+    aggr_expr = paste0("max(", args_aggr_expr, "_val) AS ", args_aggr_expr, collapse = ", ")
+    query2 = paste0(
+      "aggregate(
+      apply(", revealgenomics:::full_arrayname(.ghEnv$meta$arrBiosample), "_INFO, ", 
+      paste0(query1_res, collapse = ", "), "), ", 
+      aggr_expr, 
+      ", dataset_version, dataset_id, biosample_id)"
+    )
+    
+    # Compose aggregate counts by study
+    query3 = paste0(
+      "grouped_aggregate(", 
+      query2, 
+      ", count(*), dataset_version, dataset_id, ", 
+      paste0(args_aggr_expr, collapse = ", "), ")"
+    )
+    
+    # Join with study and project
+    query4 = paste0(
+      "equi_join(",
+      query3, ", ", 
+      "project(apply(", 
+      revealgenomics:::full_arrayname(.ghEnv$meta$arrDataset), ", ",
+      "study_name, name), study_name, project_id), ",
+      "'left_names=dataset_id,dataset_version', 
+      'right_names=dataset_id,dataset_version', 'keep_dimensions=0'",
+      ")"
+    )
+    query5 = paste0(
+      "equi_join(",
+      query4, ", ", 
+      "project(apply(", 
+      revealgenomics:::full_arrayname(.ghEnv$meta$arrProject), ", ",
+      "project_name, name), project_name), ",
+      "'left_names=project_id', 
+    'right_names=project_id', 
+    'keep_dimensions=0'",
+      ")"
+    )
+    zz = iquery(con$db, query5, return = T, only_attributes = T)
+    
+    def = get_definitions(con = con)
+    def = def[!is.na(def$controlled_vocabulary), ]
+    controlled_cols = args_aggr_expr[args_aggr_expr %in% def$attribute_name]
+    
+    for (colnm in args_aggr_expr) {
+      zz[zz[, colnm] == na_term, colnm] = 'NA'
+      if (colnm %in% controlled_cols) {
+        controlled_idx = which(zz[, colnm] != na_term)
+        controlled_idx_ont_ids = zz[controlled_idx, colnm]
+        ont_df = get_ontology(ontology_id = unique(controlled_idx_ont_ids), con = con)
+        zz[controlled_idx, colnm] = 
+          ont_df[match(controlled_idx_ont_ids, ont_df$ontology_id), ]$term
+      }
+    }
+    
+    # table(zz$sample_molecule_type)
+    zz = plyr::rename(zz, 
+                      c('dataset_id' = 'study_id',
+                        'dataset_version' = 'study_version'))
+    colnm_order = c('study_id', 'study_version', 'project_id',
+                    'project_name', 'study_name')
+    colnms = colnames(zz)
+    zz[, c(colnm_order, 
+           colnms[!(colnms %in% colnm_order)])]
+  }
 }
