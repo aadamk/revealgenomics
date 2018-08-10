@@ -137,12 +137,12 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     spotCheckDf3b = search_feature_by_synonym(synonym = "CCDS48128")
     expect_equal(spotCheckDf3a$gene_symbol, spotCheckDf3b$gene_symbol)
     spotCheckDf3c = search_features(gene_symbol = spotCheckDf3a$gene_symbol)
-    expect_equal(spotCheckDf3b, 
-                 spotCheckDf3c[spotCheckDf3c$feature_id == 
-                                 spotCheckDf3b$feature_id, ])
-    expect_equal(spotCheckDf3a, 
-                 spotCheckDf3c[spotCheckDf3c$feature_id == 
-                                 spotCheckDf3a$feature_id, ])
+    expect_equal(as.character(spotCheckDf3a), 
+                 as.character(spotCheckDf3c[spotCheckDf3c$feature_id == 
+                                              spotCheckDf3a$feature_id, ]))
+    expect_equal(as.character(spotCheckDf3a), 
+                 as.character(spotCheckDf3c[spotCheckDf3c$feature_id == 
+                                 spotCheckDf3a$feature_id, ]))
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
                                .ghEnv$meta$arrFeatureset, 
