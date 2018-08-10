@@ -5,7 +5,8 @@
 \title{Upload expression matrix file}
 \usage{
 register_expression_matrix_client(filepath, measurementset, featureset,
-  file_format, biosample_ref = NULL, feature_ref = NULL, con = NULL)
+  file_format = c("tall", "wide"), biosample_ref = NULL,
+  feature_ref = NULL, con = NULL)
 }
 \arguments{
 \item{filepath}{can exist on SciDB server or client}
@@ -20,7 +21,7 @@ retrieve using \code{get_featureset(featureset_id = featureset_id)}}
 
 \item{biosample_ref}{(optional) reference data-frame containing information for all biosamples in current study / dataset}
 
-\item{feature_ref}{(optional) reference data-frame containing information for all features in current study / dataset}
+\item{feature_ref}{(optional) reference data-frame containing information for all features in current featureSet}
 }
 \description{
 This wrapper function shows an example of how to call the internal upload function

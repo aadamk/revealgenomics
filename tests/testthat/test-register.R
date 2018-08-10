@@ -134,7 +134,7 @@ test_that("Check that variant registration works properly", {
     register_variant(df = df_var1)
     df_var1_res = search_variants(
       measurementset = get_measurementsets(measurementset_id = 1), 
-      feature = get_features(feature_id = ftr_id, fromCache = FALSE))
+      feature = get_features(feature_id = ftr_id))
     expect_true(all.equal(
       (dim(df_var1) + c(0,2)), #' two extra columns added are: `per_gene_variant_number`, `dataset_version` 
       dim(df_var1_res)))
@@ -154,7 +154,7 @@ test_that("Check that variant registration works properly", {
     register_variant(df = df_var2)
     df_var2_res = search_variants(
       measurementset = get_measurementsets(measurementset_id = 2), 
-      feature = get_features(feature_id = ftr_id, fromCache = FALSE))
+      feature = get_features(feature_id = ftr_id))
     expect_true(all.equal(
       (dim(df_var2) + c(0,2)),
       dim(df_var2_res)))

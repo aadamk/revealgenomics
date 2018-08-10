@@ -264,21 +264,22 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
 #'                       retrieve using `get_featureset(featureset_id = featureset_id)`
 #' @param file_format must be `tall` or `wide`
 #' @param biosample_ref (optional) reference data-frame containing information for all biosamples in current study / dataset
-#' @param feature_ref (optional) reference data-frame containing information for all features in current study / dataset
+#' @param feature_ref (optional) reference data-frame containing information for all features in current featureSet
 #' 
 #' @export
 register_expression_matrix_client = function(filepath,
                                              measurementset,
                                              featureset,
-                                             file_format,
+                                             file_format = c('tall', 'wide'),
                                              biosample_ref = NULL,
                                              feature_ref = NULL,
                                              con = NULL) {
   con = use_ghEnv_if_null(con = con)
+  file_format = match.arg(file_format)                                          
+  if (length(file_format) != 1) stop("file_format parameter must be `tall` or `wide")
   
   stopifnot(nrow(measurementset) == 1)
   stopifnot(nrow(featureset) == 1)
-  if (length(file_format) != 1) stop("file_format parameter must be `tall` or `wide")
   
   dataset_id = measurementset$dataset_id
   dataset_version = measurementset$dataset_version

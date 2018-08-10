@@ -122,10 +122,13 @@ get_ontology_from_cache = function(ontology_id, updateCache, con = NULL){
 
 ##### FEATURE-SYNONYM ##### 
 update_feature_synonym_cache = function(con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  .ghEnv$cache$dfFeatureSynonym = iquery(con$db, 
-                                         full_arrayname(.ghEnv$meta$arrFeatureSynonym), 
-                                         return = TRUE)
+  update_entity_cache(entitynm = .ghEnv$meta$arrFeatureSynonym, 
+                      con = con)
 }
 
+get_feature_synonym_from_cache = function(feature_synonym_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrFeatureSynonym, 
+                        id = feature_synonym_id, 
+                        updateCache = updateCache, 
+                        con = con)
+}

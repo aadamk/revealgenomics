@@ -137,8 +137,6 @@ get_entity = function(entity, id, ...){
   if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
   if (entity == 'ONTOLOGY') {
     f(id, updateCache = TRUE, ...)
-  } else if (entity == 'FEATURE') {
-    f(id, fromCache =  FALSE, ...)
   } else { 
     f(id, ...) 
   }
@@ -168,23 +166,6 @@ search_entity = function(entity, id, ...){
     if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
     f(id, ...) 
   }
-}
-
-# cat("Downloading reference dataframes for fast ExpressionSet formation\n")
-get_feature_from_cache = function(updateCache = FALSE, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  if (updateCache | is.null(.ghEnv$cache$feature_ref)){
-    update_feature_cache(con = con)
-  }
-  return(.ghEnv$cache$feature_ref)
-}
-
-update_feature_cache = function(con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  .ghEnv$cache$feature_ref = NULL
-  .ghEnv$cache$feature_ref = get_features(fromCache = FALSE, con = con)
 }
 
 get_biosamples_from_cache = function(updateCache = FALSE, con = NULL){
@@ -220,6 +201,12 @@ get_definitions = function(definition_id = NULL, updateCache = FALSE, con = NULL
                             con = con)
 }
 
+get_feature_synonym = function(feature_synonym_id = NULL, updateCache = FALSE, con = NULL){
+  get_feature_synonym_from_cache(feature_synonym_id = feature_synonym_id, 
+                                 updateCache = updateCache, 
+                                 con = con)
+}
+
 find_namespace = function(entitynm) {
   # Use secure_scan for SciDB enterprise edition only
   ifelse(options("revealgenomics.use_scidb_ee"), 
@@ -232,14 +219,6 @@ find_namespace = function(entitynm) {
 #' @export
 full_arrayname = function(entitynm) {
   paste0(find_namespace(entitynm), ".", entitynm)
-}
-
-
-get_feature_synonym_from_cache = function(updateCache = FALSE, con = NULL){
-  if (updateCache | is.null(.ghEnv$cache$dfFeatureSynonym)){
-    update_feature_synonym_cache(con = con)
-  }
-  return(.ghEnv$cache$dfFeatureSynonym)
 }
 
 get_max_id = function(arrayname, con = NULL){
@@ -505,7 +484,12 @@ register_feature_synonym = function(df, only_test = FALSE, con = NULL){
   test_register_feature_synonym(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = full_arrayname(.ghEnv$meta$arrFeatureSynonym)
-    register_tuple_return_id(df, arrayname, uniq, con = con)
+    ids = register_tuple_return_id(df, arrayname, uniq, con = con)
+    
+    # force update the cache
+    update_feature_synonym_cache(con = con)
+    
+    return(ids)
   } # end of if (!only_test)
 }
 
@@ -522,6 +506,10 @@ register_feature = function(df, register_gene_synonyms = TRUE, only_test = FALSE
     gene_ftrs = df[df$feature_type == 'gene', ]
     if (register_gene_synonyms & nrow(gene_ftrs) > 0){
       cat("Working on gene synonyms\n")
+      if (length(fid) != nrow(gene_ftrs)) {
+        stop("More than one type of feature_type being registered at one time. 
+             Need to sub-select `fid` accordingly.")
+      }
       df_syn = data.frame(synonym = gene_ftrs$name, 
                           feature_id = fid,
                           featureset_id = unique(gene_ftrs$featureset_id),
@@ -1041,12 +1029,6 @@ get_featuresets= function(featureset_id = NULL, con = NULL){
                         id = featureset_id, con = con)
 }
 
-get_feature_synonym = function(feature_synonym_id = NULL, con = NULL){
-  select_from_1d_entity(entitynm = .ghEnv$meta$arrFeatureSynonym, 
-                        id = feature_synonym_id, con = con)
-}
-
-
 #' @export
 get_referenceset = function(referenceset_id = NULL, con = NULL){
   select_from_1d_entity(entitynm = .ghEnv$meta$arrReferenceset, id = 
@@ -1086,55 +1068,43 @@ get_genelist = function(genelist_id = NULL, con = NULL) {
 
 
 #' @export
-get_features = function(feature_id = NULL, fromCache = TRUE, con = NULL){
+get_features = function(feature_id = NULL, con = NULL){
   con = use_ghEnv_if_null(con)
   
-  if (!fromCache | is.null(.ghEnv$cache$feature_ref)){ # work from SciDB directly
-    entitynm = .ghEnv$meta$arrFeature
-    arrayname = full_arrayname(entitynm)
+  entitynm = .ghEnv$meta$arrFeature
+  arrayname = full_arrayname(entitynm)
+  
+  qq = arrayname
+  if (!is.null(feature_id)) {
+    qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), as.integer(feature_id))
     
-    qq = arrayname
-    if (!is.null(feature_id)) {
-      qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), as.integer(feature_id))
+    # URL length restriction enforce by apache (see https://github.com/Paradigm4/<CUSTOMER>/issues/53)
+    THRESH_query_len = 270000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
+    
+    if (stringi::stri_length(qq) >= THRESH_query_len) {
+      selector = data.frame(feature_id = as.integer(feature_id), 
+                            val = 1,
+                            stringsAsFactors = FALSE)
+      xx = as.scidb(con$db, selector,
+                    types = c('int64', 'int32'))
       
-      # URL length restriction enforce by apache (see https://github.com/Paradigm4/<CUSTOMER>/issues/53)
-      THRESH_query_len = 270000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
-      
-      if (stringi::stri_length(qq) >= THRESH_query_len) {
-        selector = data.frame(feature_id = as.integer(feature_id), 
-                              val = 1,
-                              stringsAsFactors = FALSE)
-        xx = as.scidb(con$db, selector,
-                      types = c('int64', 'int32'))
-        
-        x2 = paste0("redimension(", xx@name, ", <val:int32>[feature_id])")
-        x3 = paste0("cross_join(", arrayname, " as X, ", 
-                    x2, " as Y, ", 
-                    "X.feature_id, Y.feature_id)")
-        qq = paste0("project(", x3, ", ",
-                    paste0(names(.ghEnv$meta$L$array$FEATURE$attributes), collapse = ","), ")")
-      }
-      join_info_unpivot(qq, 
-                        arrayname, 
-                        con = con)
-    } else { # FASTER path when all data has to be downloaded
-      ftr = iquery(con$db, qq, return = T)
-      ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
-      ftr = merge(ftr, ftr_info, by = get_idname(arrayname), all.x = T)
-      allfeatures = unpivot_key_value_pairs(ftr, arrayname, key_col = "key", val = "val")
-      if (is.null(.ghEnv$cache$feature_ref)) { # the first time (when feature cache has never been filled)
-        .ghEnv$cache$feature_ref = allfeatures
-      }
-      allfeatures
+      x2 = paste0("redimension(", xx@name, ", <val:int32>[feature_id])")
+      x3 = paste0("cross_join(", arrayname, " as X, ", 
+                  x2, " as Y, ", 
+                  "X.feature_id, Y.feature_id)")
+      qq = paste0("project(", x3, ", ",
+                  paste0(names(.ghEnv$meta$L$array$FEATURE$attributes), collapse = ","), ")")
     }
-  } else { # read from cache
-    feature_ref = get_feature_from_cache()
-    if (is.null(feature_id)){
-      return(drop_na_columns(feature_ref))
-    } else {
-      return(drop_na_columns(feature_ref[match(feature_id, feature_ref$feature_id),  ]))
-    }
+    result = join_info_unpivot(qq, 
+                      arrayname, 
+                      con = con)
+  } else { # FASTER path when all data has to be downloaded
+    ftr = iquery(con$db, qq, return = T)
+    ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
+    ftr = merge(ftr, ftr_info, by = get_idname(arrayname), all.x = T)
+    result = unpivot_key_value_pairs(ftr, arrayname, key_col = "key", val = "val")
   }
+  result
 }
 
 form_selector_query_secure_array = function(arrayname, selected_ids, dataset_version){
@@ -1290,7 +1260,7 @@ search_versioned_secure_metadata_entity = function(entity,
 
 
 # dataset_version: can be "NULL" or any single integral value (if "NULL", then all versions would be returned back)
-cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, dataset_version, con = NULL){
+cross_join_select_by_two_dims = function(qq, tt, val1, val2, selected_names, dataset_version, con = NULL){
   con = use_ghEnv_if_null(con)
   
   selector = merge(
@@ -1305,15 +1275,10 @@ cross_between_select_on_two = function(qq, tt, val1, val2, selected_names, datas
                            df1 = selector,
                            int64_cols = colnames(selector))
   xx1 = xx
-  # for (attr in selected_names_all){
-  #   xx1 = convert_attr_double_to_int64(arr = xx1, attrname = attr, con = con)
-  # }
-  # xx1
-  
+
   dims0 = scidb::schema(tt, "dimensions")$name
   selectpos = which(dims0 %in% selected_names)
   stopifnot(dims0[selectpos] == selected_names)
-  # dims0[selectpos]
   cs = scidb::schema(tt, "dimensions")$chunk
   diminfo = data.frame(start = scidb::schema(tt, "dimensions")$start,
                        end = scidb::schema(tt, "dimensions")$end, stringsAsFactors = FALSE)
@@ -1566,8 +1531,7 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
     xx = df
     
     if (!all(c('feature_id_left', 'feature_id_right') %in% colnames(xx))) {
-      update_feature_synonym_cache(con = con)
-      syn = get_feature_synonym_from_cache(con = con)
+      syn = get_feature_synonym(con = con)
       syn = syn[syn$featureset_id == measurementset$featureset_id, ]
       
       # Now register the left and right genes with system feature_id-s

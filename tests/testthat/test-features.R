@@ -1,5 +1,6 @@
 context("test-download.R")
 
+#### feature download works when feature_id is a long integer ####
 test_that("Check that feature download works when feature_id is a long integer ", {
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({gh_connect()}, error = function(e) {e})
@@ -24,6 +25,128 @@ test_that("Check that feature download works when feature_id is a long integer "
     
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrFeature, 
+                               .ghEnv$meta$arrGeneSymbol,
+                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
+    
+  }
+})
+
+#### Simple test: feature registration ####
+test_that("Simple check that feature registration handles synonyms appropriately", {
+  # cat("# Now connect to scidb\n")
+  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
+    init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
+                               .ghEnv$meta$arrFeatureset, 
+                               .ghEnv$meta$arrFeature, 
+                               .ghEnv$meta$arrGeneSymbol,
+                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
+    # Any random referenceset
+    refset = get_referenceset()
+    if (nrow(refset) >= 1) { # If ReferenceSet has been  filled by this time
+      refset_id = refset[1, ]$referenceset_id
+    } else {
+      refset_id = -1
+    }
+    
+    fset_id = register_featureset(df = data.frame(referenceset_id = refset_id,
+                                                  name = "debug_test_featureset",
+                                                  description = "...",
+                                                  source_uri = "...", 
+                                                  stringsAsFactors = FALSE))
+    
+    test_gene_names = c('debug_test_ASDF', 'debug_test_JKL')
+    
+    df_ftr = data.frame(name = test_gene_names,
+                        gene_symbol = c('ASDF', 'JKL'),
+                        featureset_id = fset_id,
+                        chromosome = "debug_test_chromosome",
+                        start = '-1',
+                        end = '-1',
+                        feature_type = "gene",
+                        source = "...")
+    
+    feature_record = register_feature(df = df_ftr, register_gene_synonyms = TRUE)
+    
+    res1 = search_feature_by_synonym(synonym = test_gene_names[1], 
+                                     featureset_id = fset_id,
+                                     updateCache = TRUE)
+    res2 = search_feature_by_synonym(synonym = test_gene_names[2], 
+                                     featureset_id = fset_id)
+    
+    expect_true(all(c(res1$feature_id, res2$feature_id) %in% 
+                feature_record$feature_id))
+    
+    # Clean-up
+    init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
+                               .ghEnv$meta$arrFeatureset, 
+                               .ghEnv$meta$arrFeature, 
+                               .ghEnv$meta$arrGeneSymbol,
+                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
+    
+  }
+})
+
+#### Advanced test: feature registration ####
+test_that("Advanced check that feature registration handles synonyms appropriately", {
+  # cat("# Now connect to scidb\n")
+  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
+    init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
+                               .ghEnv$meta$arrFeatureset, 
+                               .ghEnv$meta$arrFeature, 
+                               .ghEnv$meta$arrGeneSymbol,
+                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
+    # Any random referenceset
+    refset = get_referenceset()
+    if (nrow(refset) >= 1) { # If ReferenceSet has been  filled by this time
+      refset_id = refset[1, ]$referenceset_id
+    } else {
+      refset_id = -1
+    }
+    
+    fset_id = register_featureset(df = data.frame(referenceset_id = refset_id,
+                                                  name = "debug_test_featureset",
+                                                  description = "...",
+                                                  source_uri = "...", 
+                                                  stringsAsFactors = FALSE))
+    
+    feature_record = build_reference_gene_set(featureset_id = fset_id)
+    
+    ftrs = get_features()
+    fsyn = revealgenomics:::get_feature_synonym()
+    
+    expect_true(length(unique(fsyn$feature_id)) == nrow(ftrs))
+    expect_true(nrow(ftrs) == 54843)
+    expect_true(nrow(fsyn) == 527341)
+    
+    cat("Check that HGNC:1 is a synonym of A12M1; https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=1\n")
+    spotCheckDf1 = search_feature_by_synonym(synonym = 'HGNC:1')
+    expect_true(spotCheckDf1$name == 'A12M1')
+    
+    cat("Check that EGFR links to Ensembl ID ENSG00000146648; https://useast.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000146648;r=7:55019021-55211628\n")
+    spotCheckDf2a = search_feature_by_synonym(synonym = 'EGFR')
+    spotCheckDf2b = search_feature_by_synonym(synonym = spotCheckDf2a$name)
+    expect_true(spotCheckDf2a$name == 'ENSG00000146648')
+    expect_identical(spotCheckDf2a, spotCheckDf2b)
+    
+    cat("Check that CCDS48126 and CCDS48128 point to the same gene-symbol;
+        http://useast.ensembl.org/Homo_sapiens/Transcript/Summary?g=ENSG00000204382;r=X:52512080-52520803;t=ENST00000518075;
+        http://useast.ensembl.org/Homo_sapiens/Transcript/Summary?g=ENSG00000204382;r=X:52512077-52517057;t=ENST00000375613")
+    spotCheckDf3a = search_feature_by_synonym(synonym = "CCDS48126")
+    spotCheckDf3b = search_feature_by_synonym(synonym = "CCDS48128")
+    expect_equal(spotCheckDf3a$gene_symbol, spotCheckDf3b$gene_symbol)
+    spotCheckDf3c = search_features(gene_symbol = spotCheckDf3a$gene_symbol)
+    expect_equal(as.character(spotCheckDf3a), 
+                 as.character(spotCheckDf3c[spotCheckDf3c$feature_id == 
+                                              spotCheckDf3a$feature_id, ]))
+    expect_equal(as.character(spotCheckDf3a), 
+                 as.character(spotCheckDf3c[spotCheckDf3c$feature_id == 
+                                 spotCheckDf3a$feature_id, ]))
+    # Clean-up
+    init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
+                               .ghEnv$meta$arrFeatureset, 
+                               .ghEnv$meta$arrFeature, 
                                .ghEnv$meta$arrGeneSymbol,
                                .ghEnv$meta$arrFeatureSynonym), force = TRUE)
     
