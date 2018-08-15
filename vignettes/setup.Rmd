@@ -34,7 +34,7 @@ Consult [this gist](https://gist.github.com/ksens/27c21f25246f1e6ef2e5d5cde09096
 
 # Plugins and shim
 
-Install via extra-scidb-libs https://github.com/Paradigm4/extra-scidb-libs
+Install via [extra-scidb-libs](https://github.com/Paradigm4/extra-scidb-libs)
 
 **NOTE**
 
