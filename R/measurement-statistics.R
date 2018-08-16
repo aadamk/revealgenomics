@@ -329,6 +329,12 @@ aggr_proj_study_by_pheno = function(
       stop("`sample_molecule_type` as a reserved column. 
          Do not use as filter_column")
     }
+    filter_columns_with_spaces = filter_column[grepl("\\s", filter_column)]
+    if (!identical(filter_columns_with_spaces, 'primary disease')) {
+      stop("Need to handle case where filter_column has spaces;
+           filter column = 'primary disease' already handled. Following not handled:\n", 
+           filter_columns_with_spaces[filter_columns_with_spaces != 'primary disease'])
+    }
     filter_column = c(filter_column, 'sample_molecule_type')
     na_term = '000' #search_ontology(terms = 'NA', category = 'sample_molecule_type')
     stopifnot(length(na_term) == 1)
@@ -410,6 +416,7 @@ aggr_proj_study_by_pheno = function(
     )
     zz = iquery(con$db, query5, return = T, only_attributes = T)
     
+    # Replace controlled vocabulary terms
     def = get_definitions(con = con)
     def = def[!is.na(def$controlled_vocabulary), ]
     controlled_cols = args_aggr_expr[args_aggr_expr %in% def$attribute_name]
@@ -425,12 +432,24 @@ aggr_proj_study_by_pheno = function(
       }
     }
     
-    # table(zz$sample_molecule_type)
+    # Reformating data in desired format
     zz = plyr::rename(zz, 
                       c('dataset_id' = 'study_id',
                         'dataset_version' = 'study_version'))
+    zz = dplyr::bind_rows(
+      lapply(filter_column[filter_column != 'primary disease'], 
+             function(colnm) {
+               zz %>% group_by(
+                 study_id, study_version, project_id, project_name, study_name, 
+                 .data[[colnm]], sample_molecule_type) %>% 
+                 summarise(newCount = sum(count)) %>% 
+                 mutate(sample_molecule_type = 
+                          ifelse(is.na(sample_molecule_type), 'uncategorized', sample_molecule_type)) %>% 
+                 spread(key = sample_molecule_type, value = newCount) %>% 
+                 dplyr::rename(filter_value = colnm) %>% 
+                 mutate(filter_column = colnm)}))
     colnm_order = c('study_id', 'study_version', 'project_id',
-                    'project_name', 'study_name')
+                    'project_name', 'study_name', 'filter_column', 'filter_value')
     colnms = colnames(zz)
     zz[, c(colnm_order, 
            colnms[!(colnms %in% colnm_order)])]
