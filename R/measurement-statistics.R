@@ -424,7 +424,7 @@ aggr_proj_study_by_pheno = function(
     for (colnm in args_aggr_expr) {
       zz[zz[, colnm] == na_term, colnm] = 'NA'
       if (colnm %in% controlled_cols) {
-        controlled_idx = which(zz[, colnm] != na_term)
+        controlled_idx = which(zz[, colnm] %in% as.character(get_ontology(con = con)$ontology_id))
         controlled_idx_ont_ids = zz[controlled_idx, colnm]
         ont_df = get_ontology(ontology_id = unique(controlled_idx_ont_ids), con = con)
         zz[controlled_idx, colnm] = 
