@@ -4,8 +4,8 @@
 \alias{search_feature_by_synonym}
 \title{Search features by synonym}
 \usage{
-search_feature_by_synonym(synonym, id_type = NULL, featureset_id = NULL,
-  updateCache = FALSE, con = NULL)
+search_feature_by_synonym(synonym, id_type = NULL,
+  featureset_id = NULL, updateCache = FALSE, con = NULL)
 }
 \arguments{
 \item{synonym:}{A name for a gene by any convention e.g. ensembl_gene_id, entrez_id, vega_id}

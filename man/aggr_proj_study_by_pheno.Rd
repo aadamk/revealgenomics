@@ -4,7 +4,7 @@
 \alias{aggr_proj_study_by_pheno}
 \title{Aggregate project, study info by phenotype column(s)}
 \usage{
-aggr_proj_study_by_pheno(filter_column, con = NULL)
+aggr_proj_study_by_pheno(filter_column, method = 1, con = NULL)
 }
 \arguments{
 \item{filter_column}{one or more filte rcolumns to aggregate by}

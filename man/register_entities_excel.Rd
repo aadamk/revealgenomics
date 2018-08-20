@@ -7,8 +7,8 @@
 register_entities_excel(study_worksheet, register_upto_entity = c("all",
   "ONTOLOGY", "DATASET", "DEFINITION", "INDIVIDUAL", "BIOSAMPLE",
   "MEASUREMENTSET"), register_measurement_entity = c("all",
-  "RNAQUANTIFICATION", "VARIANT", "FUSION", "COPYNUMBER_SEG", "COPYNUMBER_MAT"),
-  pipeline_name_filter = NULL, con = NULL)
+  "RNAQUANTIFICATION", "VARIANT", "FUSION", "COPYNUMBER_SEG",
+  "COPYNUMBER_MAT"), pipeline_name_filter = NULL, con = NULL)
 }
 \arguments{
 \item{register_upto_entity}{use this parameter to restrict load up to an user-specified entity.
