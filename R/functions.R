@@ -1248,6 +1248,7 @@ search_versioned_secure_metadata_entity = function(entity,
                                         con = con)
   # reorder the output by the dimensions
   # from https://stackoverflow.com/questions/17310998/sort-a-dataframe-in-r-by-a-dynamic-set-of-columns-named-in-another-data-frame
+  if (nrow(df1) == 0) return(df1)
   df1 = df1[do.call(order, df1[get_idname(entity)]), ] 
 
   df1 = apply_definition_constraints(df1 = df1,
