@@ -11,15 +11,14 @@ knitr::opts_chunk$set(eval=FALSE)
 
 The API assumes the following:
 - SciDB EE (enterprise edition) is installed. 
-(Install instructions are [here](https://downloads.paradigm4.com/enterprise/16.9/SciDB-Installation-v16.9.pdf).
+(Install instructions are [here](https://downloads.paradigm4.com/enterprise/18.1/SciDB-Installation-v18.1.pdf).
 Contact support@paradigm4.com for login credentials)
 
 Follow the steps below to set up the security settings for the API to work:
 
-1. Turn on security for SciDB by following instructions at
-https://paradigm4.atlassian.net/wiki/display/ESD169/More+Info
-2. Set up the root user (instructions at 
-https://paradigm4.atlassian.net/wiki/display/ESD169/Setting+up+the+Root+User)
+1. Turn on security for SciDB, set up root user by following instructions at
+https://paradigm4.atlassian.net/wiki/spaces/scidb/pages/242843706/Using+iquery+in+Security+Mode
+https://paradigm4.atlassian.net/wiki/spaces/scidb/pages/242909237/Enabling+Security+Mode
 
 At this point, you should be able to run the following:
 ```{sh}
