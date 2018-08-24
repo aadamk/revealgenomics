@@ -536,14 +536,52 @@ DataLoaderVariantFormatA = R6::R6Class(classname = 'DataLoaderVariantFormatA',
                                               paste0(column_names,
                                                      collapse = ", "), 
                                               "\n\tWill match with first column\n")
+                                          # =========== Level 1 matching: match with gene symbols ===========
                                           m1 = find_matches_and_return_indices(
                                             private$.data_df$scidb_feature_col,
                                             ftrs[, column_names[1]]
                                           )
                                           if (length(m1$source_unmatched_idx) > 0) {
-                                            stop("currently assumes that features in the data-file are 
-                                                 previously registered from a GTF file")
-                                            return(TRUE)
+                                            cat("Level 1 matching with gene symbols is insufficient;
+                                                Proceeding to match with synonyms\n")
+                                            ftrs_unmatched_v1 = private$.data_df$scidb_feature_col[
+                                              m1$source_unmatched_idx]
+                                            if (!all(ftrs_unmatched_v1 %in% "STL")) {
+                                              stop("Put a browser here and check case when synonyms other than 
+                                                   STL exist in the data file")
+                                              # The subsequent code should work for gene synonyms 
+                                              # but it does not hurt to walk through and check
+                                              browser()
+                                            }
+                                            fsyn = private$.reference_object$feature_synonym
+                                            fsyn = fsyn[fsyn$featureset_id == fset_id, ]
+                                            
+                                            # =========== Level 2 matching: match with gene synonyms ===========
+                                            m2 = find_matches_and_return_indices(
+                                              ftrs_unmatched_v1, 
+                                              fsyn$synonym
+                                            )
+                                            if (length(m2$source_unmatched_idx) > 0) {
+                                              stop("currently assumes that features in the data-file are 
+                                                 previously registered from a GTF file,
+                                                   match with standard hugo gene symbol list, 
+                                                   or match with gene synonyms")
+                                              return(TRUE)
+                                            }
+                                            matched_syn_feature_id = fsyn[m2$target_matched_idx, ]$feature_id
+                                            syn_ftrs = get_features(feature_id = fsyn[m2$target_matched_idx, ]$feature_id)
+                                            syn_ftrs = syn_ftrs[match(matched_syn_feature_id, 
+                                                           syn_ftrs$feature_id), ]
+                                            stopifnot(nrow(syn_ftrs) == length(m1$source_unmatched_idx))
+                                            
+                                            cat("Now overwriting synonym in data with standard hugo symbol:\n\t",
+                                                pretty_print(unique(ftrs_unmatched_v1)),
+                                                "==>", 
+                                                pretty_print(unique(syn_ftrs$gene_symbol)), 
+                                                "\n")
+                                            private$.data_df[m1$source_unmatched_idx, ]$scidb_feature_col = 
+                                              syn_ftrs$gene_symbol
+                                            return(FALSE)
                                           } else {
                                             cat("No new features to register\n")
                                             return(FALSE)
