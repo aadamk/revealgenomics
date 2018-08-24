@@ -180,7 +180,7 @@ delete_project <- function(project_id, con = NULL) {
   }
   ## Note, incorrect projectIDs will be caught by the call to "search_datasets()".
 
-  projectExists = try({check_entity_exists_at_id(entity = 'PROJECT', id = project_id)},
+  projectExists = try({check_entity_exists_at_id(entity = .ghEnv$meta$arrProject, id = project_id)},
                       silent = TRUE)
   if (class(projectExists) == 'try-error') {
     cat("Project ", project_id, " does not exist. Nothing to delete.\n")
@@ -234,7 +234,7 @@ delete_project <- function(project_id, con = NULL) {
                ## Delete all of the datasets and their sub-elements.
                for (i in 1:length(datasetStructures.lst)) {
                  nextDatasetStructure <- datasetStructures.lst[[i]]
-                 delete_dataset(dataset_id = attr(nextDatasetStructure, "dataset_id"),
+                 delete_dataset_internal(dataset_id = attr(nextDatasetStructure, "dataset_id"),
                                 datasetVersion = attr(nextDatasetStructure, "datasetVersion"),
                                 datasetStructure = nextDatasetStructure, 
                                 con = con)
@@ -246,6 +246,83 @@ delete_project <- function(project_id, con = NULL) {
                            con = con)
              },
            "no" = {  message("Project ", project_id, " was NOT deleted. \n", sep = "") },
+           { message("Please respond with yes or no"); userResponse <- NA })
+  }
+}
+
+#' @export
+delete_dataset <- function(dataset_id, con = NULL) {
+  ##---------------=
+  ## If there is more than one dataset_id, or it is not a valid ID, then give an error.
+  ##---------------=
+  if (!length(dataset_id) == 1) {
+    stop("You can only specify one dataset ID at a time to 'delete_dataset()'.")
+  }
+  
+  datasetExists = try({check_entity_exists_at_id(entity = .ghEnv$meta$arrDataset, id = dataset_id)},
+                      silent = TRUE)
+  if (class(datasetExists) == 'try-error') {
+    cat("dataset ", dataset_id, " does not exist. Nothing to delete.\n")
+    return(invisible(NULL))
+  }
+  ##---------------=
+  ## Get the datasets under this project.
+  ##---------------=
+  datasets <- get_datasets(dataset_id = dataset_id, con = con)
+  
+  datasetStructures.lst <- list()
+  
+  if (nrow(datasets) > 0) {
+    ## First re-order the datasets by ascending dataset number and descending version 
+    ##  number (so the most recent version of each dataset is first).
+    datasets <-  datasets[order(datasets[,"dataset_id"], -datasets[,"dataset_version"]), ]
+    
+    datasetNames <- apply(datasets[, c("dataset_id", "dataset_version")],  
+                          MARGIN = 1,  
+                          FUN = function(x) { paste(x, collapse = "_ver")})
+    cat("Requested to delete:  \t", paste(datasetNames, collapse=", "), "\n\n", sep="")
+    
+    
+    
+    ##---------------=
+    ## For each dataset, call "get_dataset_subelements", to print the list of subelements
+    ##  of each dataset.
+    ##---------------=
+    for (i in 1:nrow(datasets)) {
+      nextDataset <- datasets[i, "dataset_id"]
+      nextDatasetVersion <- datasets[i, "dataset_version"]
+      # nextDatasetName <- paste0(nextDataset, "_v", nextDatasetVersion)
+      datasetStructures.lst[[ datasetNames[i] ]] <- print_dataset_subelements(nextDataset, nextDatasetVersion, con = con)
+    }
+  } else {
+    ## If there are no datasests, then indicate that there are no datasets underneath.
+    cat("dataset", dataset_id, "does not exist \n\n")
+  }
+  
+  
+  
+  ##---------------=
+  ## Ask the user to confirm that they want to delete this project.
+  ## If the user said to procede, then delete the datasets.
+  ##---------------=
+  userResponse <- NA
+  while(is.na(userResponse) | nchar(userResponse) == 0) { 
+    userResponse <- readline(prompt = "Do you want to continue deleting this dataset? (yes/no): \n  ")
+    switch(tolower(userResponse), 
+           "yes" = {  
+             # cat("Deleting dataset ", project_id, "... \n", sep = "")
+             if (length(datasetStructures.lst) > 0) {
+               ## Delete all of the datasets and their sub-elements.
+               for (i in 1:length(datasetStructures.lst)) {
+                 nextDatasetStructure <- datasetStructures.lst[[i]]
+                 delete_dataset_internal(dataset_id = attr(nextDatasetStructure, "dataset_id"),
+                                         datasetVersion = attr(nextDatasetStructure, "datasetVersion"),
+                                         datasetStructure = nextDatasetStructure, 
+                                         con = con)
+               }
+             }
+           },
+           "no" = {  message("dataset ", dataset_id, " was NOT deleted. \n", sep = "") },
            { message("Please respond with yes or no"); userResponse <- NA })
   }
 }
@@ -361,7 +438,7 @@ print_dataset_subelements <- function(dataset_id, datasetVersion, print.nonexist
 ##  dataset, but for the moment it will only delete the metadata.  It will
 ##  eventually delete the actual measurement data as well.
 ##-----------------------------------------------------------------------------=
-delete_dataset <- function(dataset_id, datasetVersion, datasetStructure = NULL, con = NULL) {
+delete_dataset_internal <- function(dataset_id, datasetVersion, datasetStructure = NULL, con = NULL) {
   
   ## Get the list of sub-entities.
   ## If the dataset's structure is provided, then use that structure, otherwise call
