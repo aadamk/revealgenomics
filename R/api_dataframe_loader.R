@@ -662,7 +662,8 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[DNAnexus]-[DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" = 
            DataLoaderVariantGemini$new(data_df = data_df,
                                        reference_object = reference_object),
-         "{[external]-[Single Nucleotide Variant] MuTect / seurat / strelka}{DNA}" =
+         "{[external]-[Single Nucleotide Variant] MuTect / seurat / strelka}{DNA}" =,
+         "{[external]-[Single Nucleotide Variant] custom pipeline - Pharmacyclics LLC}{DNA}" =
            DataLoaderVariantFormatA$new(data_df = data_df,
                                         reference_object = reference_object, 
                                         feature_annotation_df = feature_annotation_df),

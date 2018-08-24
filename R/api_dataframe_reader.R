@@ -106,8 +106,24 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                               sample_col = 'Sample',
                                               start_col = 'POS',
                                               end_col = 'POS'
+                                            ),
+                                            option3 = list( # Personalis panel
+                                              annotation_col = c('REF', 'ALT', 'Sequence', 'Variant ID'),
+                                              ftr_col    = 'Gene Symbol',
+                                              ftr_compare_col = 'gene_symbol',
+                                              sample_col = 'biosample_name', # this will be manually introduced below
+                                              start_col = 'POS',
+                                              end_col = 'POS'
                                             )
                                           )
+                                          
+                                          potential_sample_cols = sapply(cols_library, function(item) item$sample_col)
+                                          if (!(any(potential_sample_cols %in% colnames(private$.data_df)))) {
+                                            if (nrow(private$.pipeline_df) == 1) {
+                                              cat("One sample per file. Manually attaching sample information\n")
+                                              private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
+                                            }
+                                          }
                                           
                                           matchWithLibrary = sapply(cols_library, function(item) {
                                             all(c(item$annotation_col, item$ftr_col,
@@ -157,7 +173,6 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                                                                          colsMatched$start_col]
                                           private$.data_df[, 'end'] = private$.data_df[, 
                                                                                          colsMatched$end_col]
-                                          
                                           
                                           cat("Rule 5:\n======\nHandling sample name (if present)\n")
                                           if (nrow(private$.pipeline_df) > 1) {
@@ -526,7 +541,8 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[DNAnexus]-[Variant_Custom: VarScan + Annotate] VarScan / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" = ,
-         "{[external]-[Single Nucleotide Variant] MuTect / seurat / strelka}{DNA}" =
+         "{[external]-[Single Nucleotide Variant] MuTect / seurat / strelka}{DNA}" = ,
+         "{[external]-[Single Nucleotide Variant] custom pipeline - Pharmacyclics LLC}{DNA}" =
              DataReaderVariantFormatA$new(pipeline_df = pipeline_df,
                                                  measurement_set = measurement_set),
          "{[external]-[Fusion] Tophat Fusion}{gene}" = 
