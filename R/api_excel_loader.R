@@ -19,6 +19,22 @@
 #' and links to files storing the `MeasurementData` entities 
 #' (e.g. `RNASeq`, `Variant` etc.)
 #' 
+#' @param study_worksheet path to Excel worksheet
+#' @param ... refer parameters for function \code{\link{register_entities_workbook}}
+#' @export
+register_entities_excel = function(study_worksheet, 
+                                   ...) {
+  workbook = myExcelLoader(filename = study_worksheet)
+  register_entities_workbook(workbook = workbook, ...)
+}
+
+#' register entities via list of R data-frames
+#' 
+#' Register entities using list of R data-frames
+#' list of R data-frames has complete data about metadata (`PROJECT`, `DATASET`, `INDIVIDUAL`, ...) ,
+#' and links to files storing the `MeasurementData` entities 
+#' (e.g. `RNASeq`, `Variant` etc.)
+#' 
 #' @param register_upto_entity use this parameter to restrict load up to an user-specified entity.  
 #'                         e.g. you can load up to `Ontology`, `Dataset` (and `Project`), 
 #'                         `Definition` and not load the rest. The ordering is same
@@ -30,7 +46,7 @@
 #' @param pipeline_name_filter use this filter to restrict data-loading to pipelines with fully/partially
 #'                             matched names. Default value is `NULL` (i.e. no checking by name done)
 #' @export
-register_entities_excel = function(study_worksheet, 
+register_entities_workbook = function(workbook, 
                                   register_upto_entity = c('all', 'ONTOLOGY', 'DATASET', 'DEFINITION',
                                                            'INDIVIDUAL', 'BIOSAMPLE', 'MEASUREMENTSET'),
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
@@ -52,7 +68,6 @@ register_entities_excel = function(study_worksheet,
       return(FALSE)
     }
   }
-  workbook = myExcelLoader(filename = study_worksheet)
   def = myExcelReader(workbook, sheet_name = 'Definitions')
   
   # Should need to do this only once across studies 
@@ -176,7 +191,7 @@ register_entities_excel = function(study_worksheet,
         reference_object$pipeline_df = pip_sel[pip_sel$file_path == file_path, ]
         readerObj = createDataReader(pipeline_df = reference_object$pipeline_df,
                                      measurement_set = reference_object$measurement_set)
-        class(readerObj)
+        cat("Selected reader class:", class(readerObj), "\n")
         if (all(class(readerObj) =='NULL')) {
           cat("No reader for file:", file_path, "\n")
           next
@@ -195,7 +210,7 @@ register_entities_excel = function(study_worksheet,
         loaderObj = createDataLoader(data_df = readerObj$get_data(), 
                                      reference_object = reference_object, 
                                      feature_annotation_df = readerObj$get_feature_annotation())
-        class(loaderObj)
+        cat("Selected loader class:", class(loaderObj), "\n")
         errorStatus = tryCatch(expr = {
           loaderObj$assign_biosample_ids()
         }, error = function(e) {

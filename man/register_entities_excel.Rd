@@ -4,25 +4,12 @@
 \alias{register_entities_excel}
 \title{register entities via Excel sheet}
 \usage{
-register_entities_excel(study_worksheet, register_upto_entity = c("all",
-  "ONTOLOGY", "DATASET", "DEFINITION", "INDIVIDUAL", "BIOSAMPLE",
-  "MEASUREMENTSET"), register_measurement_entity = c("all",
-  "RNAQUANTIFICATION", "VARIANT", "FUSION", "COPYNUMBER_SEG",
-  "COPYNUMBER_MAT"), pipeline_name_filter = NULL, con = NULL)
+register_entities_excel(study_worksheet, ...)
 }
 \arguments{
-\item{register_upto_entity}{use this parameter to restrict load up to an user-specified entity.
-e.g. you can load up to \code{Ontology}, \code{Dataset} (and \code{Project}),
-\code{Definition} and not load the rest. The ordering is same
-as in the parameter definition below.
-Default value is \code{all} i.e. all entities are loaded}
+\item{study_worksheet}{path to Excel worksheet}
 
-\item{register_measurement_entity}{use this parameter to restrict which measurement-data types
-should be loaded by the function.
-Default value is \code{all} i.e. all measurement-types are loaded}
-
-\item{pipeline_name_filter}{use this filter to restrict data-loading to pipelines with fully/partially
-matched names. Default value is \code{NULL} (i.e. no checking by name done)}
+\item{...}{refer parameters for function \code{\link{register_entities_workbook}}}
 }
 \description{
 Register entities using Excel sheet.
