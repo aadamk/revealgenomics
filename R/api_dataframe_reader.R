@@ -189,6 +189,139 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                         }
                                       ))
 
+##### DataReaderFMI #####
+DataReaderFMI = R6::R6Class(
+  classname = 'DataReaderFMI',
+  inherit = DataReader,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderFMI)\n")},
+    load_data_from_file = function() {
+      cat("load_data_from_file()"); self$print_level()
+      
+      super$load_data_from_file()
+      
+      cols_to_discard = c('ANALYSIS_FILE_LOCATION', # discard as this data is linked to other entities
+                          'patient_id',
+                          'visit_desc',
+                          'Specimen',
+                          'Gene_Panel',
+                          'Sample_Condition')
+      cat("Discarding columns:", pretty_print(cols_to_discard), "\n")
+      private$.data_df = private$.data_df[, 
+                  !(colnames(private$.data_df) %in% cols_to_discard)]
+      discard_na_columns = function(data_df, 
+                                    na_marker = '-') {
+        # name of columns where all values are equal to `na_marker`
+        cols_to_keep = names(
+          which(
+            apply(data_df == na_marker, 
+                  FUN = function(elem) !all(elem), 
+                  MARGIN = 2)
+            )
+          )
+        data_df[, cols_to_keep]
+      }
+      cat("Splitting file into separate data frames for
+          Variant, Fusion and CNV\n")
+      data_df_list = list(
+        variant_data = discard_na_columns(private$.data_df[
+          private$.data_df$`VARIANT-TYPE` == 'short-variant', 
+        ]),
+        cnv_data = discard_na_columns(private$.data_df[
+          private$.data_df$`VARIANT-TYPE` == 'copy-number-alteration', 
+          ]),
+        fusion_data = discard_na_columns(private$.data_df[
+          private$.data_df$`VARIANT-TYPE` == 'rearrangement', 
+          ])
+      )
+      data_df_list$variant_data$`VARIANT-TYPE` = NULL
+      data_df_list$cnv_data$`VARIANT-TYPE` = NULL
+      data_df_list$fusion_data$`VARIANT-TYPE` = NULL
+      
+      private$.data_df = data_df_list
+    }
+  )
+)
+
+##### DataReaderFMIVariant #####
+DataReaderFMIVariant = R6::R6Class(
+  classname = 'DataReaderFMIVariant',
+  inherit = DataReaderFMI,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderFMIVariant)\n")},
+    load_data_from_file = function() {
+      cat("load_data_from_file()"); self$print_level()
+      
+      super$load_data_from_file()
+      
+      cat("Extracting variant data\n")
+      private$.data_df = private$.data_df$variant_data
+      
+      cat("(Extracted) Dimensions:", dim(private$.data_df), "\n")
+      
+      cat("Applying rules specific to FMI data\n")
+      chr_pos_split = stringi::stri_split(
+        str = private$.data_df$`SV-GENOME-POSITION`,
+        fixed = ":")
+      if (
+        unique(sapply(chr_pos_split, FUN = function(elem) length(elem))) != 2) {
+        stop("Expect each row to contain chromosome and position (no more no less)\n
+             Data has entries that do not satisfy this rule:\n\t", 
+             pretty_print(
+               private$.data_df$`SV-GENOME-POSITION`[
+                 sapply(chr_pos_split, FUN = function(elem) length(elem)) != 2]
+             ),
+             "\nNeed to write handler for this case")
+      }
+      
+      cat("Extracting chromosome, start, end information\n")
+      private$.data_df$chromosome = sapply(chr_pos_split, 
+                                           function(elem) elem[1])
+      private$.data_df$start = sapply(chr_pos_split, 
+                                           function(elem) elem[2])
+      private$.data_df$end = sapply(chr_pos_split, 
+                                      function(elem) elem[2])
+      
+      cat("Extracting reference, alternate information\n")
+      
+      stopifnot(!('reference' %in% colnames(private$.data_df)))
+      stopifnot(!('alternate' %in% colnames(private$.data_df)))
+      
+      private$.data_df$reference = NA
+      private$.data_df$alternate = NA
+      
+      ref_alt_split = stringi::stri_split(str = private$.data_df$`SV-CDS-CHANGE`, fixed = ">")
+      split_len = sapply(ref_alt_split, function(elem) length(elem))
+      
+      valid_pos = which(split_len == 2)
+      private$.data_df$alternate[valid_pos] = sapply(
+        ref_alt_split[valid_pos], 
+        function(elem) elem[2])
+      private$.data_df$reference[valid_pos] = sapply(
+        ref_alt_split[valid_pos], 
+        function(elem) {
+          xx = elem[1]
+          substr(xx, str_length(xx), str_length(xx))
+        })
+      
+      cat("Supplying NA for id\n")
+      private$.data_df$id = NA
+      
+      biosample_name_col = 'analytical_accession'
+      cat("Assigning values for biosample name using column:", biosample_name_col, "\n")
+      private$.data_df[, 'biosample_name'] = private$.data_df[, biosample_name_col]
+      
+      feature_col = 'GENE'
+      cat("Assigning values for feature name using column:", feature_col, "\n")
+      private$.data_df[, 'scidb_feature_col'] = private$.data_df[, feature_col]
+      
+      cat("Storing the feature annotation information\n")
+      private$.feature_annotation_df = data.frame(gene_symbol = private$.data_df[, feature_col], 
+                                                  stringsAsFactors = FALSE)
+    }
+  )
+)
+
 ##### DataReaderRNAQuant #####
 DataReaderRNAQuant = R6::R6Class(classname = 'DataReaderRNAQuant',
                                inherit = DataReader,
@@ -545,6 +678,9 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Single Nucleotide Variant] custom pipeline - Pharmacyclics LLC}{DNA}" =
              DataReaderVariantFormatA$new(pipeline_df = pipeline_df,
                                                  measurement_set = measurement_set),
+         "{[external]-[Single Nucleotide Variant] custom pipeline - Foundation Medicine}{DNA}" =
+           DataReaderFMIVariant$new(pipeline_df = pipeline_df,
+                             measurement_set = measurement_set),
          "{[external]-[Fusion] Tophat Fusion}{gene}" = 
              DataReaderFusionTophat$new(pipeline_df = pipeline_df,
                                         measurement_set = measurement_set),
