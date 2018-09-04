@@ -354,3 +354,29 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
     df1$api_name[m1$target_matched_idx]
   }
 }
+
+#' Convert entity to suffix
+#' 
+#' === Entity-name        Suffix ===
+#' RNAQUANTIFICATION      RNA
+#' VARIANT                DNA
+#' FUSION                 DNA
+#' COPYNUMBER_MAT         DNA
+#' PROTEOMICS             Protein
+template_helper_suffix_by_entity = function(entity) {
+  names_suffixes = c(.ghEnv$meta$arrRnaquantification, 
+                     .ghEnv$meta$arrProteomics,
+                     .ghEnv$meta$arrVariant,
+                     .ghEnv$meta$arrFusion
+  )
+  suffixes = c('RNA', 'Protein',
+               rep('DNA', length(names_suffixes)-2))
+  names(suffixes) = names_suffixes
+  if (!all(entity %in% names(suffixes))) {
+    stop("Assigning suffix 'DNA', 'RNA', 'Protein' based on entity type.
+                   Suffix needs to be assigned for entity:\n\t", 
+         entity[which(!(entity %in% names(suffixes)))])
+  }
+  return(suffixes[entity])
+}
+
