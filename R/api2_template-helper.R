@@ -329,11 +329,13 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
     api_names = c(.ghEnv$meta$arrRnaquantification,
                   .ghEnv$meta$arrVariant, 
                   .ghEnv$meta$arrFusion,
-                  .ghEnv$meta$arrCopynumber_mat),
+                  .ghEnv$meta$arrCopynumber_mat,
+                  .ghEnv$meta$arrProteomics),
     external_name = c('Gene Expression',
                       'Variant',
                       'Rearrangement',
-                      'Copy Number Variation'),
+                      'Copy Number Variation',
+                      'Proteomics'),
     stringsAsFactors = FALSE
   )
   if (!is.null(api_name)) {

@@ -42,6 +42,7 @@ NULL
 .ghEnv$meta$arrVariant = 'VARIANT'
 .ghEnv$meta$arrVariantKey = 'VARIANT_KEY'
 .ghEnv$meta$arrFusion = 'FUSION'
+.ghEnv$meta$arrProteomics = 'PROTEOMICS'
 .ghEnv$meta$arrCopynumber_seg = 'COPYNUMBER_SEG'
 .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
 .ghEnv$meta$arrExperimentSet = 'EXPERIMENTSET'
