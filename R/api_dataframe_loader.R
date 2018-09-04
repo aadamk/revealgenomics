@@ -542,17 +542,10 @@ DataLoaderVariantFormatA = R6::R6Class(classname = 'DataLoaderVariantFormatA',
                                             ftrs[, column_names[1]]
                                           )
                                           if (length(m1$source_unmatched_idx) > 0) {
-                                            cat("Level 1 matching with gene symbols is insufficient;
+                                            cat("Level 1 matching with gene symbols is insufficient;\n\t
                                                 Proceeding to match with synonyms\n")
                                             ftrs_unmatched_v1 = private$.data_df$scidb_feature_col[
                                               m1$source_unmatched_idx]
-                                            if (!all(ftrs_unmatched_v1 %in% "STL")) {
-                                              stop("Put a browser here and check case when synonyms other than 
-                                                   STL exist in the data file")
-                                              # The subsequent code should work for gene synonyms 
-                                              # but it does not hurt to walk through and check
-                                              browser()
-                                            }
                                             fsyn = private$.reference_object$feature_synonym
                                             fsyn = fsyn[fsyn$featureset_id == fset_id, ]
                                             
