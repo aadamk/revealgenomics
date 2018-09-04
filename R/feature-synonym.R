@@ -204,14 +204,15 @@ build_reference_gene_set = function( featureset_id,
   df1$featureset_id = featureset_id
 
   cat("Handling exceptional case of one pipe separated feature\n")
-  # The entry is "CCDS48126|CCDS48128"
-  pipe_sep_locn = grep("|", df1$name, fixed = TRUE)
-  stopifnot(length(pipe_sep_locn) == 1)
-  sep_ftrs = stringi::stri_split(df1[pipe_sep_locn, ]$name, fixed = "|")[[1]]
-  stopifnot(length(sep_ftrs) == 2)
-  df1 = rbind(df1, df1[pipe_sep_locn, ])
-  df1[pipe_sep_locn, ]$name = sep_ftrs[1]
-  df1[nrow(df1), ]$name = sep_ftrs[2]
+  # There are entries like "CCDS48126|CCDS48128"
+  pipe_sep_locns = grep("|", df1$name, fixed = TRUE)
+  for (pipe_sep_locn in pipe_sep_locns) {
+    sep_ftrs = stringi::stri_split(df1[pipe_sep_locn, ]$name, fixed = "|")[[1]]
+    stopifnot(length(sep_ftrs) == 2)
+    df1 = rbind(df1, df1[pipe_sep_locn, ])
+    df1[pipe_sep_locn, ]$name = sep_ftrs[1]
+    df1[nrow(df1), ]$name = sep_ftrs[2]
+  }
   
   # Register the features (without the alias fields)
   feature_id = register_feature(df = df1, 
