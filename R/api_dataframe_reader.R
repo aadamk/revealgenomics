@@ -537,7 +537,7 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
                                               feature_col = 'GENE_ID'
                                             )
                                         )
-                                        if (c('GENE_ID', 'Location') %in% colnames(private$.data_df)) {
+                                        if (all(c('GENE_ID', 'Location') %in% colnames(private$.data_df))) {
                                           cat("Manual handling of case where matrix annotation file has c('GENE_ID', 'Location') columns\n",
                                               "\tFor entries with duplicated GENE_ID, concatenating Location information...",
                                               "\n\tThe concatenated entries must have been registered previously by a one-time script\n")
