@@ -171,6 +171,7 @@ build_reference_gene_set = function( featureset_id,
   if (is.null(gene_annotation_file_path)) {
     gene_annotation_file_path = system.file("extdata", 
                                             "gene__hugo__hgnc_complete_set.txt.gz", package="revealgenomics")
+    # file was downloaded on 2018-08-23 from ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv/hgnc_complete_set.txt
   }
   if (is.null(gene_location_file_path)) {
     gene_location_file_path = system.file("extdata", 
