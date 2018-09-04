@@ -484,7 +484,7 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
                                                       x2 = sapply(1:length(sample_from_manifest), 
                                                                   function(pos) {
                                                                     subelem = sample_from_manifest[pos]; 
-                                                                    xx = grep(subelem, colnm); 
+                                                                    xx = grep(subelem, colnm, fixed = TRUE); 
                                                                     ifelse(length(xx) == 0, NA, pos)})
                                                       x2[!is.na(x2)]
                                                       })
