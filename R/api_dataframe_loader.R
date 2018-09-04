@@ -294,11 +294,35 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                                                            features_sel$name)
                                       
                                       if (length(m1$source_unmatched_idx) > 0) {
-                                        stop("Need to implement this code-path. Follow template for `DataLoaderRNAQuantMicroarray::register_new_features()`")
-                                        ftr_ann_df = data.frame(name = "...", stringsAsFactors = FALSE)
+                                        unmatched_ftrs = unique(private$.data_df[m1$source_unmatched_idx,
+                                                                                 col_match_ftr_name])
+                                        ftr_ann_df = private$.feature_annotation_df
                                         
-                                        register_feature(df = ftr_ann_df, 
-                                                         register_gene_synonyms = FALSE)
+                                        if (ncol(ftr_ann_df) == 1) {
+                                          ftr_ann_df_unmatched = data.frame(name = ftr_ann_df[
+                                            match(unmatched_ftrs, ftr_ann_df[, 'feature_name']), ],  # matches for RSEM type
+                                            stringsAsFactors = FALSE)
+                                        } else {
+                                          stop("Need to implement this code-path. Follow template for `DataLoaderRNAQuantMicroarray::register_new_features()`")
+                                        }
+                                        
+                                        ftr_ann_df_unmatched$featureset_id = fset$featureset_id
+                                        ftr_ann_df_unmatched$gene_symbol = 'NA'
+                                        ftr_ann_df_unmatched$chromosome = 'NA'
+                                        ftr_ann_df_unmatched$start = 'NA'
+                                        ftr_ann_df_unmatched$end = 'NA'
+                                        if (length(grep("gene", 
+                                                        private$.reference_object$measurement_set$filter_name)) == 1) {
+                                          ftr_ann_df_unmatched$feature_type = 'gene'
+                                        } else if (length(grep("transcript", 
+                                                               private$.reference_object$measurement_set$filter_name)) == 1) {
+                                          ftr_ann_df_unmatched$feature_type = 'transcript'
+                                        }
+                                        ftr_ann_df_unmatched$source = 'rnaseq_file'
+                                        
+                                        stopifnot(nrow(ftr_ann_df_unmatched) == length(unmatched_ftrs))
+                                        register_feature(df = ftr_ann_df_unmatched, 
+                                                         register_gene_synonyms = TRUE)
                                         return(TRUE)
                                       } else {
                                         cat("No new features to register\n")
@@ -670,6 +694,7 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[RNA-seq] HTSeq}{gene}" = ,
          "{[external]-[RNA-seq] Salmon}{gene}" = ,
          "{[external]-[RNA-seq] Sailfish}{gene}" = ,
+         "{[internal]-[RNA-Seq] RSEM}{gene}" = ,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = 
            DataLoaderRNASeqGeneFormat$new(data_df = data_df,
                                           reference_object = reference_object,

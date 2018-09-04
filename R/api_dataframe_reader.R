@@ -535,6 +535,12 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
                                               source = c('GENE_ID'),
                                               replace = c('gene_symbol'),
                                               feature_col = 'GENE_ID'
+                                            ),
+                                          'gene_feature_cols_3' =  # RSEM file
+                                            list(
+                                              source = c('ENSG'),
+                                              replace = c('feature_name'),
+                                              feature_col = 'ENSG'
                                             )
                                         )
                                         if (all(c('GENE_ID', 'Location') %in% colnames(private$.data_df))) {
@@ -656,17 +662,17 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = 
              DataReaderRNAQuantRNASeqCufflinks$new(pipeline_df = pipeline_df,
                                            measurement_set = measurement_set),
-         "{(internal)-(RNA-Seq) RSEM}{gene}" =
-           DataReaderRNAQuantRNASeqRSEM$new(pipeline_df = pipeline_df,
-                                                 measurement_set = measurement_set),
+           # DataReaderRNAQuantRNASeqRSEM$new(pipeline_df = pipeline_df,
+           #                                       measurement_set = measurement_set),
          "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
          "{[external]-[RNA-seq] HTSeq}{gene}" = ,
          "{[external]-[RNA-seq] Salmon}{gene}" = ,
          "{[external]-[RNA-seq] Sailfish}{gene}" = ,
          "{[external]-[RNA-seq] Cufflinks}{transcript}" = ,
          "{[external]-[RNA-seq] Salmon}{transcript}" = ,
-         "{[external]-[RNA-seq] Sailfish}{transcript}" = 
-          DataReaderRNASeqGeneFormatA$new(pipeline_df = pipeline_df,
+         "{[external]-[RNA-seq] Sailfish}{transcript}" = ,
+         "{[internal]-[RNA-Seq] RSEM}{gene}" = 
+         DataReaderRNASeqGeneFormatA$new(pipeline_df = pipeline_df,
                                        measurement_set = measurement_set),
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: GATK + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
