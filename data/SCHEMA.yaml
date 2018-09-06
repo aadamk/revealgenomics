@@ -196,6 +196,7 @@ array:
       - dataset_id
       - entity
       - name
+      - featureset_id
     search_by_entity: DATASET
     delete_by_entity: MEASUREMENTSET
     infoArray: TRUE

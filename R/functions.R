@@ -635,9 +635,15 @@ register_tuple_return_id = function(df,
   }
   
   # Find matches by set of unique fields provided by user
+  if (entitynm == .ghEnv$meta$arrMeasurementSet) {
+    projected_attrs = paste0(uniq[!(uniq %in% c('dataset_id'))], # dataset_id is a dimension, and does not need to be projected
+                             collapse = ",")
+  } else {
+    projected_attrs = paste0(uniq[!(uniq %in% c('dataset_id', 'featureset_id'))], # dataset_id and featureset_id are dimensions, and do not need to be projected
+                             collapse = ",")
+  }
   xx = iquery(con$db, paste0("project(", arrayname, ", ", 
-                            paste0(uniq[!(uniq %in% c('dataset_id', 'featureset_id'))], # dataset_id and featureset_id are dimensions, and do not need to be projected
-                                   collapse = ","), ")"), return = TRUE)
+                             projected_attrs, ")"), return = TRUE)
   matching_entity_ids = find_matches_with_db(df_for_upload = df, df_in_db = xx, unique_fields = uniq)
   nonmatching_idx = which(is.na(matching_entity_ids))
   matching_idx = which(!is.na(matching_entity_ids))
