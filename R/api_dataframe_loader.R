@@ -16,6 +16,40 @@ match_features = function(features_in_file, df_features_db, feature_type, column
   df_features_db$feature_id[matchL$target_matched_idx]
 }
 
+#' find featureset from Pipeline sheet info
+#' 
+#' Row or row(s) of Pipeline sheet are used to load data. Unique choice
+#' of featureset name is used to subselect a specific featureset registered
+#' in the database. 
+find_matching_featureset = function(
+  pipeline_df, # row(s) of Pipeline sheets that are being loaded
+  featureset_link_col, # column linking selection in Pipelines sheet to featureset definition
+  fsets_scidb # dataframe containing all featuresets registered with system
+) {
+  matchTarget = unique(pipeline_df[, featureset_link_col])
+  stopifnot(length(matchTarget) == 1)
+  fset = drop_na_columns(fsets_scidb[match(matchTarget, 
+                                           fsets_scidb[,
+                                                       featureset_link_col]), ])
+  stopifnot(nrow(fset) == 1)
+  fset
+}
+
+#' Level 1 feature matching
+#' 
+#' Match column in file with feature names
+#' Return result is a structure with matched and unmatched indices
+feature_matching_level1 = function(data_df, # data-frame containing feature and measurement values
+                                   col_match_ftr_name, # column in data to match with scidb features
+                                   fset, # specific featureset to be used for matching
+                                   feature_df # features data frame at specific featureset_id
+) {
+  cat("Matching features in file by feature-names in DB at featureset_id", 
+      fset$featureset_id, "\n")
+  find_matches_and_return_indices(data_df[, col_match_ftr_name], 
+                                  feature_df$name)
+}       
+
 ##### DataLoader #####
 DataLoader = R6::R6Class(classname = "DataLoader", 
         public = list(
@@ -269,20 +303,15 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                       }
                                     } else if ('tracking_id' %in% colnames(private$.data_df)) {
                                       col_match_ftr_name = 'tracking_id'
-                                      matchTarget = unique(private$.reference_object$pipeline_df[, 
-                                                                                                 template_linker$featureset$choices_col])
-                                      stopifnot(length(matchTarget) == 1)
-                                      fsets_scidb = private$.reference_object$featureset
-                                      fset = drop_na_columns(fsets_scidb[match(matchTarget, 
-                                                                               fsets_scidb[,
-                                                                                           template_linker$featureset$choices_col]), ])
-                                      stopifnot(nrow(fset) == 1)
-                                      
-                                      cat("Matching features in file by feature-names in DB at featureset_id", 
-                                          fset$featureset_id, "\n")
-                                      features_sel = private$.reference_object$feature
-                                      m1 = find_matches_and_return_indices(private$.data_df[, col_match_ftr_name], 
-                                                                           features_sel$name)
+                                      fset = find_matching_featureset(pipeline_df = private$.reference_object$pipeline_df,
+                                                                      featureset_link_col = template_linker$featureset$choices_col,
+                                                                      fsets_scidb = private$.reference_object$featureset
+                                      )
+                                      m1 = feature_matching_level1(data_df = private$.data_df,
+                                                                   col_match_ftr_name = col_match_ftr_name,
+                                                                   fset = fset,
+                                                                   feature_df = private$.reference_object$feature
+                                                              )
                                       
                                       if (length(m1$source_unmatched_idx) > 0) {
                                         unmatched_ftrs = unique(private$.data_df[m1$source_unmatched_idx,
