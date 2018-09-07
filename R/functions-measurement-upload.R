@@ -217,11 +217,28 @@ register_expression_matrix = function(filepath,
   } # end of if (!only_test)
 }
 
+#' Upload data into gene expression, protein expression arrays
+#' 
 #' @export
 register_expression_dataframe = function(df1, dataset_version, con = NULL){
   con = use_ghEnv_if_null(con)
   
   test_register_expression_dataframe(df1)
+  
+  ms_id = unique(df1$measurementset_id)
+  if (length(ms_id) != 1) {
+    stop("Expected to upload data for one measurementset_id (pipeline) at a time")
+  }
+  mset = get_measurementsets(measurementset_id = ms_id, 
+                             con = con)
+  stopifnot(nrow(mset) == 1)
+  entity = mset$entity
+  if (!(entity %in% c(.ghEnv$meta$arrRnaquantification, 
+                    .ghEnv$meta$arrProteomics))) {
+    stop("Expect to use this function to upload data for: ",
+         pretty_print(c(.ghEnv$meta$arrRnaquantification,
+                        .ghEnv$meta$arrProteomics)), " only")
+  }
   
   df1 = df1[, c('dataset_id', 'measurementset_id', 'biosample_id', 
                 'feature_id', 'value')]
@@ -241,7 +258,7 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
                ", value, float(value__)", 
                ", dataset_version, ", dataset_version, ")")
   
-  fullnm = full_arrayname(.ghEnv$meta$arrRnaquantification)
+  fullnm = full_arrayname(entitynm = entity)
   qq2 = paste0("redimension(", qq2, ", ", fullnm, ")")
   
   cat("inserting data for", nrow(df1), "expression values into", fullnm, 
@@ -249,7 +266,7 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   iquery(con$db, paste("insert(", qq2, ", ", fullnm, ")"))
   iquery(con$db, paste0("remove(", temp_arr_nm, ")"))
   
-  remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrRnaquantification, con = con)
+  remove_old_versions_for_entity(entitynm = entity, con = con)
 }
 
 #' Upload expression matrix file 
