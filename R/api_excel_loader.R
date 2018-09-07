@@ -50,7 +50,8 @@ register_entities_workbook = function(workbook,
                                   register_upto_entity = c('all', 'ONTOLOGY', 'DATASET', 'DEFINITION',
                                                            'INDIVIDUAL', 'BIOSAMPLE', 'MEASUREMENTSET'),
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
-                                                                  'FUSION', 'COPYNUMBER_SEG', 'COPYNUMBER_MAT'),
+                                                                  'FUSION', 'PROTEOMICS', 
+                                                                  'COPYNUMBER_SEG', 'COPYNUMBER_MAT'),
                                   pipeline_name_filter = NULL,
                                   con = NULL) {
   register_upto_entity = match.arg(register_upto_entity)                                          
