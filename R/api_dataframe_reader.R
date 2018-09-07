@@ -607,7 +607,29 @@ DataReaderRNAQuantMicroarray = R6::R6Class(classname = 'DataReaderRNAQuantMicroa
                                  ), 
                                  private = list(
                                  ))
-                                   
+##### DataReaderProteomicsMaxQuant #####
+DataReaderProteomicsMaxQuant = R6::R6Class(
+  classname = 'DataReaderProteomicsMaxQuant',
+  inherit = DataReaderExpressionMatrix,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderRNASeqGeneFormatA)\n")},
+    load_data_from_file = function() {
+      super$load_data_from_file()
+      cat("load_data_from_file()"); self$print_level()
+      
+      private$.data_df = as.data.frame(t(private$.data_df))
+      private$.data_df = cbind(
+        data.frame(tracking_id = rownames(private$.data_df), 
+                   stringsAsFactors = FALSE),
+        private$.data_df)
+      super$convert_wide_to_tall_skinny()
+      cat("Dimensions:", dim(private$.data_df), "\n")
+    }
+  ), 
+  private = list()
+)
+                                     
+                                     
 ##### DataReaderFusionTophat #####
 DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                      inherit = DataReader,
@@ -666,6 +688,9 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[Affymetrix]-[Microarray] UMich Alt CDF v20.0.0}{gene}" =
            DataReaderRNAQuantMicroarray$new(pipeline_df = pipeline_df,
                           measurement_set = measurement_set),
+         "{[internal]-[Proteomics] MaxQuant}{Protein}" = 
+           DataReaderProteomicsMaxQuant$new(pipeline_df = pipeline_df,
+                                            measurement_set = measurement_set),
          stop("Need to add reader for choice:\n", temp_string)
          )
 }
