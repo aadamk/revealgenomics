@@ -230,6 +230,22 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
 
 #' Search gene expression data 
 #' 
+#' This function is kept around for backward compatibility. 
+#' Use \code{\link{search_expression}} instead. 
+#' 
+#' Function to search gene expression data array; allows slicing across multiple 
+#' dimensions. However `measurementset` (i.e. pipeline) must be supplied 
+#' (currently allows searching one pipeline at a time)
+#' 
+#' @param ... refer parameters for function \code{\link{search_expression}}           
+#' @export
+search_rnaquantification = function(...) {
+  search_expression(...)
+}
+
+#' Search expression data (to be called by \code{\link{search_rnaquantification}}, 
+#' and \link{search_proteomics})
+#' 
 #' Function to search gene expression data array; allows slicing across multiple 
 #' dimensions. However `measurementset` (i.e. pipeline) must be supplied 
 #' (currently allows searching one pipeline at a time)
@@ -263,12 +279,12 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
 #'            values of `gh_connect()` call
 #'            
 #' @export
-search_rnaquantification = function(measurementset = NULL,
-                                    biosample = NULL,
-                                    feature = NULL,
-                                    formExpressionSet = TRUE,
-                                    biosample_ref = NULL,
-                                    con = NULL){
+search_expression = function(measurementset = NULL,
+                             biosample = NULL,
+                             feature = NULL,
+                             formExpressionSet = TRUE,
+                             biosample_ref = NULL,
+                             con = NULL){
   if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
     stop("measurementset must be supplied"); measurementset_id = NULL
   }
@@ -281,7 +297,10 @@ search_rnaquantification = function(measurementset = NULL,
     stopifnot(length(unique(biosample$dataset_version))==1)
     stopifnot(unique(biosample$dataset_version)==dataset_version)
   }
-  arrayname = full_arrayname(.ghEnv$meta$arrRnaquantification)
+  entity = unique(measurementset$entity)
+  stopifnot(entity %in% c(.ghEnv$meta$arrRnaquantification,
+                          .ghEnv$meta$arrProteomics))
+  arrayname = full_arrayname(entity)
   if (!is.null(biosample)) {
     biosample_id = biosample$biosample_id
     if (dataset_id != unique(biosample$dataset_id)) {
@@ -313,11 +332,12 @@ search_rnaquantification = function(measurementset = NULL,
   
   if (optPathBiosamples) { # use optimized function when not searching by biosample
     cat("Not searching by biosample; Using optimized search path\n")
-    dao_search_rnaquantification(measurementset = measurementset, 
-                                 biosample_ref = biosample_ref, 
-                                 feature = feature, 
-                                 formExpressionSet = formExpressionSet, 
-                                 con = con)
+    dao_search_expression(entity = entity,
+                          measurementset = measurementset, 
+                          biosample_ref = biosample_ref, 
+                          feature = feature, 
+                          formExpressionSet = formExpressionSet, 
+                          con = con)
     
   } else {
     if (exists('debug_trace')) cat("retrieving expression data from server\n")
@@ -444,7 +464,7 @@ search_rnaquantification_scidb = function(arrayname,
 }
 
 
-#' Faster implementation of `search_rnaquantification` for UI development
+#' Faster implementation of `search_expression` for UI development
 #' 
 #' Here, there is no option to select by specific biosamples
 #' 
@@ -454,11 +474,14 @@ search_rnaquantification_scidb = function(arrayname,
 #'                      OK if more biosample rows are provided (e.g. by calling
 #'                      `get_biosamples()`)
 #' 
-dao_search_rnaquantification = function(measurementset, 
-                                        biosample_ref, 
-                                        feature = NULL, 
-                                        formExpressionSet = TRUE, 
-                                        con = NULL) {
+dao_search_expression = function(entity, 
+                                 measurementset, 
+                                 biosample_ref, 
+                                 feature = NULL, 
+                                 formExpressionSet = TRUE, 
+                                 con = NULL) {
+  stopifnot(entity %in% c(.ghEnv$meta$arrRnaquantification, 
+                          .ghEnv$meta$arrProteomics))
   con = use_ghEnv_if_null(con = con)
   stopifnot(nrow(measurementset) == 1)
   rqs_id = unique(measurementset$measurementset_id)
@@ -471,7 +494,7 @@ dao_search_rnaquantification = function(measurementset,
   dataset_id = unique(measurementset$dataset_id)
   stopifnot(length(dataset_id) == 1)
   
-  arr0 = full_arrayname(.ghEnv$meta$arrRnaquantification)
+  arr0 = full_arrayname(entity)
   
   qq = paste0(custom_scan(), "(", arr0, ")")
   
@@ -514,7 +537,7 @@ dao_search_rnaquantification = function(measurementset,
                  ", ", get_base_idname(.ghEnv$meta$arrMeasurementSet), 
                  "=", measurementset$measurementset_id, 
                  ")")
-    req_ids = get_base_idname(.ghEnv$meta$arrRnaquantification)
+    req_ids = get_base_idname(entity)
     req_ids = req_ids[ !(req_ids %in% get_base_idname(.ghEnv$meta$arrMeasurementSet)) ]
     apply_str = paste0(req_ids, ",", req_ids, collapse = ", ")
     qq3 = paste0("apply(", qq2, ", ", apply_str, ")")

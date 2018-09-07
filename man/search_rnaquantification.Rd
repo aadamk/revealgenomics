@@ -4,45 +4,16 @@
 \alias{search_rnaquantification}
 \title{Search gene expression data}
 \usage{
-search_rnaquantification(measurementset = NULL, biosample = NULL,
-  feature = NULL, formExpressionSet = TRUE, biosample_ref = NULL,
-  con = NULL)
+search_rnaquantification(...)
 }
 \arguments{
-\item{measurementset}{(Mandatory) dataframe containing pipeline information;
-typically output of a
-\code{get_measurementsets(measurementset_id = ...)} or
-\code{search_measurementsets(dataset_id = ..)} call}
-
-\item{biosample}{(Optional) dataframe containing biosample information;
-typically output of a
-\code{search_biosamples(dataset_id = ..)} call.
-If not specified, function returns all biosamples available
-by other search parameters}
-
-\item{feature}{(Optional) dataframe containing feature information;
-typically output of a
-\code{search_features(gene_symbol = ...)} call.
-If not specified, function returns all features available
-by other search parameters}
-
-\item{formExpressionSet}{(default: TRUE) whether to return result as a Bioconductor
-ExpressionSet object}
-
-\item{biosample_ref}{(Optional) data-frame containing all biosamples in a study,
-i.e. typically output of \code{search_biosamples(dataset_id = ..)} call,
-or all biosamples available to logged in user,
-i.e. output of \code{get_biosamples(biosample_id = NULL)}.
-When not searching by \code{biosample}, and when requesting
-to return an ExpressionSet object, supplying this parameter can
-optimize function exection time because function does not have to
-do biosample lookup internally}
-
-\item{con}{(Optional) database connection object; typically output of \code{gh_connect2()}
-call. If not specified, connection object is formulated from internally stored
-values of \code{gh_connect()} call}
+\item{...}{refer parameters for function \code{\link{search_expression}}}
 }
 \description{
+This function is kept around for backward compatibility.
+Use \code{\link{search_expression}} instead.
+}
+\details{
 Function to search gene expression data array; allows slicing across multiple
 dimensions. However \code{measurementset} (i.e. pipeline) must be supplied
 (currently allows searching one pipeline at a time)
