@@ -219,11 +219,15 @@ DataLoader = R6::R6Class(classname = "DataLoader",
           .feature_annotation_df = NULL, 
           .reference_object = NULL
         ))
-##### DataLoaderRNAQuant #####
-DataLoaderRNAQuant = R6::R6Class(classname = "DataLoaderRNAQuant",
+##### DataLoaderExpression #####
+# class to be shared between loaders for
+# - GeneExpression (RNAQuantRNASeq), 
+# - ProteinExpression
+# - etc.
+DataLoaderExpression = R6::R6Class(classname = "DataLoaderExpression",
                                 inherit = DataLoader,
                                 public = list(
-                                  print_level = function() {cat("----(Level: DataLoaderRNAQuant)\n")},
+                                  print_level = function() {cat("----(Level: DataLoaderExpression)\n")},
                                   load_data = function(){
                                     cat("load_data()"); self$print_level()
                                     df_size_mb = as.integer(
@@ -261,10 +265,10 @@ DataLoaderRNAQuant = R6::R6Class(classname = "DataLoaderRNAQuant",
                                     private$.data_df[, column_in_file] = NULL
                                   }
                                 ))
-                                  
+
 ##### DataLoaderRNAQuantRNASeq #####
 DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
-                                inherit = DataLoaderRNAQuant, 
+                                inherit = DataLoaderExpression, 
                                 public = list(
                                   print_level = function() {cat("----(Level: DataLoaderRNAQuantRNASeq)\n")},
                                   register_new_features = function() {
@@ -379,7 +383,7 @@ DataLoaderRNASeqTranscriptFormat = R6::R6Class(classname = "DataLoaderRNASeqTran
 
 ##### DataLoaderRNAQuantMicroarray #####
 DataLoaderRNAQuantMicroarray = R6::R6Class(classname = "DataLoaderRNAQuantMicroarray",
-                                       inherit = DataLoaderRNAQuant, 
+                                       inherit = DataLoaderExpression, 
                                        public = list(
                                          print_level = function() {cat("----(Level: DataLoaderRNAQuantMicroarray)\n")},
                                          register_new_features = function() {

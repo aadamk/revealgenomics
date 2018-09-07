@@ -322,11 +322,11 @@ DataReaderFMIVariant = R6::R6Class(
   )
 )
 
-##### DataReaderRNAQuant #####
-DataReaderRNAQuant = R6::R6Class(classname = 'DataReaderRNAQuant',
+##### DataReaderExpressionMatrix #####
+DataReaderExpressionMatrix = R6::R6Class(classname = 'DataReaderExpressionMatrix',
                                inherit = DataReader,
                                public = list(
-                                 print_level = function() {cat("----(Level: DataReaderRNAQuant)\n")}
+                                 print_level = function() {cat("----(Level: DataReaderExpressionMatrix)\n")}
                                ), 
                                private = list(
                                  convert_wide_to_tall_skinny = function() {
@@ -342,7 +342,7 @@ DataReaderRNAQuant = R6::R6Class(classname = 'DataReaderRNAQuant',
 
 ##### DataReaderRNAQuantRNASeqCufflinks #####
 DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantRNASeqCufflinks',
-                                inherit = DataReaderRNAQuant,
+                                inherit = DataReaderExpressionMatrix,
                                 public = list(
                                   print_level = function() {cat("----(Level: DataReaderRNAQuantRNASeqCufflinks)\n")},
                                   load_data_from_file = function() {
@@ -438,7 +438,7 @@ DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantR
 # - HTSeq
 # - Sailfish
 DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneFormatA',
-                                    inherit = DataReaderRNAQuant,
+                                    inherit = DataReaderExpressionMatrix,
                                     public = list(
                                       print_level = function() {cat("----(Level: DataReaderRNASeqGeneFormatA)\n")},
                                       load_data_from_file = function() {
@@ -573,7 +573,7 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
 
 ##### DataReaderRNAQuantMicroarray #####
 DataReaderRNAQuantMicroarray = R6::R6Class(classname = 'DataReaderRNAQuantMicroarray',
-                                 inherit = DataReaderRNAQuant,
+                                 inherit = DataReaderExpressionMatrix,
                                  public = list(
                                    print_level = function() {cat("----(Level: DataReaderRNAQuantMicroarray)\n")},
                                    load_data_from_file = function() {
