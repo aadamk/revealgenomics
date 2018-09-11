@@ -182,16 +182,49 @@ register_biosample = function(df,
 }
 
 #' @export
-register_feature = function(df, register_gene_synonyms = TRUE, only_test = FALSE, con = NULL){
+register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALSE, con = NULL){
   con = use_ghEnv_if_null(con)
   
   uniq = unique_fields()[[.ghEnv$meta$arrFeature]]
-  test_register_feature(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  test_register_feature(df1, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
+    # Register gene symbols for incoming set of features
+    cat("Register gene symbols for incoming set of features\n")
+    if ('gene_symbol_id' %in% colnames(df1)) {
+      stop("did not expect `gene_symbol_id` column in feature data. 
+           This is assigned by functions")
+    }
+    if ('full_name' %in% colnames(df1)) {
+      gene_syms = unique(df1[, 'gene_symbol'])
+      
+      ff2 = df1[!is.na(df1$full_name), ]
+      full_names = ff2[match(gene_syms, ff2$gene_symbol), ]$full_name
+      
+      df_gs = data.frame(gene_symbol = gene_syms,
+                         full_name = full_names,
+                         stringsAsFactors = FALSE)
+    } else {
+      df_gs = data.frame(
+        gene_symbol = unique(df1[, 'gene_symbol']),
+        full_name = as.character(NA),
+        stringsAsFactors = FALSE
+      )
+    }
+    gs_id = register_gene_symbol(df = df_gs, con = con)
+    df_gs_all = get_gene_symbol(con = con)
+    
+    m1 = find_matches_and_return_indices(
+      source = df1$gene_symbol,
+      target = df_gs_all$gene_symbol
+    )
+    stopifnot(length(m1$source_unmatched_idx) == 0)
+    df1$gene_symbol_id = df_gs_all[m1$target_matched_idx, ]$gene_symbol_id
+    
+    cat("Register features\n")
     arrayname = full_arrayname(.ghEnv$meta$arrFeature)
-    fid = register_tuple_return_id(df, arrayname, uniq, con = con)
+    fid = register_tuple_return_id(df1, arrayname, uniq, con = con)
     fid = fid[, get_base_idname(.ghEnv$meta$arrFeature)]
-    gene_ftrs = df[df$feature_type == 'gene', ]
+    gene_ftrs = df1[df1$feature_type == 'gene', ]
     if (register_gene_synonyms & nrow(gene_ftrs) > 0){
       cat("Working on gene synonyms\n")
       if (length(fid) != nrow(gene_ftrs)) {
@@ -204,12 +237,12 @@ register_feature = function(df, register_gene_synonyms = TRUE, only_test = FALSE
                           source = gene_ftrs$source,
                           stringsAsFactors = F)
       ftr_syn_id = register_feature_synonym(df = df_syn, con = con)
-      output = list(feature_id = fid,
-                    feature_synonym_id = ftr_syn_id)
-      } else {
-        output = fid
-      }
-    output
+    } else {
+      ftr_syn_id = NULL
+    }
+    list(gene_symbol_id = gs_id, 
+         feature_id = fid,
+         feature_synonym_id = ftr_syn_id$feature_synonym_id)
   } # end of if (!only_test)
 }
 
