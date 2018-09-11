@@ -117,8 +117,8 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     fsyn = revealgenomics:::get_feature_synonym()
     
     expect_true(length(unique(fsyn$feature_id)) == nrow(ftrs))
-    expect_true(nrow(ftrs) == 54843)
-    expect_true(nrow(fsyn) == 527341)
+    expect_true(nrow(ftrs) == 55980)
+    expect_true(nrow(fsyn) == 544383)
     
     cat("Check that HGNC:1 is a synonym of A12M1; https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=1\n")
     spotCheckDf1 = search_feature_by_synonym(synonym = 'HGNC:1')
@@ -143,6 +143,23 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     expect_equal(as.character(spotCheckDf3a), 
                  as.character(spotCheckDf3c[spotCheckDf3c$feature_id == 
                                  spotCheckDf3a$feature_id, ]))
+    
+    cat("Check that gene symbols have been registered, and do some spot checks\n")
+    df_gs = get_gene_symbol()
+    expect_true(nrow(df_gs) == 55874)
+    expect_true(length(unique(df_gs$gene_symbol)) == nrow(df_gs))
+    expect_true(length(unique(df_gs$gene_symbol_id)) == nrow(df_gs))
+    
+    expect_true(
+      search_gene_symbols(gene_symbol = 'EGFR')$full_name == 
+        'epidermal growth factor receptor')
+    expect_true(
+      search_gene_symbols(gene_symbol = 'KRAS')$full_name == 
+        'KRAS proto-oncogene, GTPase')
+    expect_true(
+      search_gene_symbols(gene_symbol = 'TP53')$full_name == 
+        'tumor protein p53')
+    
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
                                .ghEnv$meta$arrFeatureset, 

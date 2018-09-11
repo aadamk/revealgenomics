@@ -85,7 +85,7 @@ test_that("Check that variant registration works properly", {
       stringsAsFactors = FALSE))
     
     # Register features at 1:3
-    ftr_id = register_feature(df = data.frame(
+    ftr_id_res = register_feature(df = data.frame(
       name = c('asdf1', 'asdf2', 'asdf3'), 
       featureset_id = 1, 
       gene_symbol = 'asdf', 
@@ -96,6 +96,8 @@ test_that("Check that variant registration works properly", {
       source = 'api-test', 
       stringsAsFactors = FALSE), 
       register_gene_synonyms = FALSE)
+    expect_true(length(ftr_id_res$feature_id) == 3)
+    expect_true(is.null(ftr_id_res$feature_synonym_id))
     
     # Register_biosamples at id 1
     bios_id = register_biosample(df = data.frame(
@@ -134,7 +136,7 @@ test_that("Check that variant registration works properly", {
     register_variant(df = df_var1)
     df_var1_res = search_variants(
       measurementset = get_measurementsets(measurementset_id = 1), 
-      feature = get_features(feature_id = ftr_id))
+      feature = get_features(feature_id = ftr_id_res$feature_id))
     expect_true(all.equal(
       (dim(df_var1) + c(0,2)), #' two extra columns added are: `per_gene_variant_number`, `dataset_version` 
       dim(df_var1_res)))
@@ -154,7 +156,7 @@ test_that("Check that variant registration works properly", {
     register_variant(df = df_var2)
     df_var2_res = search_variants(
       measurementset = get_measurementsets(measurementset_id = 2), 
-      feature = get_features(feature_id = ftr_id))
+      feature = get_features(feature_id = ftr_id_res$feature_id))
     expect_true(all.equal(
       (dim(df_var2) + c(0,2)),
       dim(df_var2_res)))
