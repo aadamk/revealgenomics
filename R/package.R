@@ -56,3 +56,4 @@ NULL
 .ghEnv$cache[[.ghEnv$meta$arrVariantKey]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrDefinition]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrFeatureSynonym]] = NULL
+.ghEnv$cache[[.ghEnv$meta$arrGeneSymbol]] = NULL

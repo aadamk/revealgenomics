@@ -207,6 +207,13 @@ get_feature_synonym = function(feature_synonym_id = NULL, updateCache = FALSE, c
                                  con = con)
 }
 
+#' @export
+get_gene_symbol = function(gene_symbol_id = NULL, updateCache = FALSE, con = NULL){
+  get_gene_symbol_from_cache(gene_symbol_id = gene_symbol_id, 
+                             updateCache = updateCache, 
+                             con = con)
+}
+
 find_namespace = function(entitynm) {
   # Use secure_scan for SciDB enterprise edition only
   ifelse(options("revealgenomics.use_scidb_ee"), 
@@ -371,8 +378,13 @@ register_gene_symbol = function(df, only_test = FALSE, con = NULL){
   test_register_gene_symbol(df, uniq, silent = ifelse(only_test, FALSE, TRUE))
   if (!only_test) {
     arrayname = full_arrayname(.ghEnv$meta$arrGeneSymbol)
-    register_tuple_return_id(df,
+    ids = register_tuple_return_id(df,
                              arrayname, uniq, con = con)
+    
+    # force update the ontology
+    update_gene_symbol_cache(con = con)
+    
+    return(ids)
   } # end of if (!only_test)
 }
 
@@ -1039,12 +1051,6 @@ get_featuresets= function(featureset_id = NULL, con = NULL){
 get_referenceset = function(referenceset_id = NULL, con = NULL){
   select_from_1d_entity(entitynm = .ghEnv$meta$arrReferenceset, id = 
                           referenceset_id, con = con)
-}
-
-#' @export
-get_gene_symbol = function(gene_symbol_id = NULL, con = NULL){
-  select_from_1d_entity(entitynm = .ghEnv$meta$arrGeneSymbol, 
-                        id = gene_symbol_id, con = con)
 }
 
 #' @export

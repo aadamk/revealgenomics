@@ -42,7 +42,8 @@ update_entity_cache = function(entitynm, con = NULL) {
 
 #' get_ENTITY for cached entities
 #' 
-#' Currently works for ONTOLOGY, DEFINITION, VARIANT_KEY
+#' Currently works for ONTOLOGY, DEFINITION, VARIANT_KEY, FEATURE_SYNONYM,
+#' GENE_SYMBOL
 #' 
 #' @param cache_df typically result of a `get_entity_from_cache()` call
 #' @param entitynm entity name
@@ -129,6 +130,19 @@ update_feature_synonym_cache = function(con = NULL){
 get_feature_synonym_from_cache = function(feature_synonym_id, updateCache, con = NULL){
   get_entity_from_cache(entitynm = .ghEnv$meta$arrFeatureSynonym, 
                         id = feature_synonym_id, 
+                        updateCache = updateCache, 
+                        con = con)
+}
+
+##### GENE-SYMBOLS ##### 
+update_gene_symbol_cache = function(con = NULL){
+  update_entity_cache(entitynm = .ghEnv$meta$arrGeneSymbol, 
+                      con = con)
+}
+
+get_gene_symbol_from_cache = function(gene_symbol_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrGeneSymbol, 
+                        id = gene_symbol_id, 
                         updateCache = updateCache, 
                         con = con)
 }
