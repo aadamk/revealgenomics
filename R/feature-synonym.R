@@ -215,8 +215,8 @@ build_reference_gene_set = function( featureset_id,
   }
   
   # Register the features (without the alias fields)
-  feature_id = register_feature(df = df1, 
-                                register_gene_synonyms = TRUE) # Manually do gene synonym registration below
+  feature_id_list = register_feature(df = df1, 
+                                register_gene_synonyms = TRUE) 
   
   # Now work on registering the alias values as synonyms
   cat("-------\nNow working on registering the alias values as synonyms\n")
@@ -256,8 +256,11 @@ build_reference_gene_set = function( featureset_id,
   cat("Registering", nrow(df6), "synonyms belonging to", length(alias_fields), 
       "alias_field-s mapping to", nrow(features_db), "features\n")
   ## Register with DB
-  feature_synonym_id = register_feature_synonym(df = df6)
-  l1 = list(feature_id, feature_synonym_id)
-  names(l1) = c('feature_id', 'feature_synonym_id')
-  l1
+  feature_synonym_res = register_feature_synonym(df = df6)
+  list(
+    feature_id = feature_id_list$feature_id, 
+    feature_synonym_id = c(
+      feature_id_list$feature_synonym_id,
+      feature_synonym_res$feature_synonym_id
+    ))
 }
