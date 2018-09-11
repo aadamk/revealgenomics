@@ -14,5 +14,6 @@ get_entity_from_cache(entitynm, id, updateCache, con = NULL)
 \item{cache_df}{typically result of a \code{get_entity_from_cache()} call}
 }
 \description{
-Currently works for ONTOLOGY, DEFINITION, VARIANT_KEY
+Currently works for ONTOLOGY, DEFINITION, VARIANT_KEY, FEATURE_SYNONYM,
+GENE_SYMBOL
 }

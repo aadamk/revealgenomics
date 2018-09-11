@@ -4,8 +4,8 @@
 \alias{api_register_ontology_from_definition_sheet}
 \title{automatically register ontology terms}
 \usage{
-api_register_ontology_from_definition_sheet(workbook = NULL,
-  def = NULL, con = NULL)
+api_register_ontology_from_definition_sheet(workbook = NULL, def = NULL,
+  con = NULL)
 }
 \description{
 gather the terms from controlled_vocabulary column,

@@ -7,12 +7,11 @@
 build_reference_gene_set(featureset_id, gene_annotation_file_path = NULL,
   gene_location_file_path = NULL, alias_fields = c("hgnc_id", "symbol",
   "alias_symbol", "prev_symbol", "entrez_id", "ensembl_gene_id", "vega_id",
-  "ucsc_id", "ena", "refseq_accession", "ccds_id", "uniprot_ids",
-  "pubmed_id", "mgd_id", "rgd_id", "cosmic", "omim_id", "mirbase",
-  "homeodb", "snornabase", "bioparadigms_slc", "orphanet",
-  "pseudogene.org", "horde_id", "merops", "imgt", "iuphar",
-  "kznf_gene_catalog", "mamit.trnadb", "cd", "lncrnadb", "enzyme_id",
-  "intermediate_filament_db"), hierarchy = c("ensembl_gene_id",
+  "ucsc_id", "ena", "refseq_accession", "ccds_id", "uniprot_ids", "pubmed_id",
+  "mgd_id", "rgd_id", "cosmic", "omim_id", "mirbase", "homeodb", "snornabase",
+  "bioparadigms_slc", "orphanet", "pseudogene.org", "horde_id", "merops",
+  "imgt", "iuphar", "kznf_gene_catalog", "mamit.trnadb", "cd", "lncrnadb",
+  "enzyme_id", "intermediate_filament_db"), hierarchy = c("ensembl_gene_id",
   "vega_id", "ucsc_id", "ccds_id", "gene_symbol", "hgnc_id"), con = NULL)
 }
 \arguments{

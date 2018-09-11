@@ -5,9 +5,8 @@
 \title{Search expression data (to be called by \code{\link{search_rnaquantification}},
 and \link{search_proteomics})}
 \usage{
-search_expression(measurementset = NULL, biosample = NULL,
-  feature = NULL, formExpressionSet = TRUE, biosample_ref = NULL,
-  con = NULL)
+search_expression(measurementset = NULL, biosample = NULL, feature = NULL,
+  formExpressionSet = TRUE, biosample_ref = NULL, con = NULL)
 }
 \arguments{
 \item{measurementset}{(Mandatory) dataframe containing pipeline information;
