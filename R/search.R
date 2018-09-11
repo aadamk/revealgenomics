@@ -144,6 +144,27 @@ search_definitions = function(dataset_id, updateCache = FALSE, con = NULL) {
 }
 
 #' @export
+search_gene_symbols = function(gene_symbol, updateCache = FALSE, con = NULL) {
+  stopifnot(class(gene_symbol) == 'character')
+  df1 = get_gene_symbol(updateCache = updateCache, con = con)
+  m1 = find_matches_and_return_indices(
+    source = gene_symbol, 
+    target = df1$gene_symbol
+  )
+  if (length(m1$target_matched_idx) > 0) {
+    res = df1[m1$target_matched_idx, ]
+  } else {
+    res = data.frame(
+      gene_symbol_id = integer(),
+      gene_symbol = character(), 
+      full_name = character(), 
+      stringsAsFactors = FALSE
+    )
+  }
+  return(res)
+}
+  
+#' @export
 search_genelist_gene = function(genelist = NULL, 
                                 genelist_id = NULL, con = NULL){
   con = use_ghEnv_if_null(con)
