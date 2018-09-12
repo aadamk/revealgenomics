@@ -211,14 +211,14 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     expect_equal(
       length(unique(prot_probe_res2$feature_id)), 
       2)
-    expect_true(
+    expect_equal(
       sum(prot_probe_res2$feature_id %in% prot_probe_res$feature_id),
       2
     )
     expect_null(prot_probe_res2$feature_synonym_id)
     
     cat("Now check for downloads\n")
-    expect_true(
+    expect_equal(
       nrow(get_features(feature_id = prot_probe_res2$feature_id)),
       4
     )
