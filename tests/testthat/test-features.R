@@ -160,6 +160,80 @@ test_that("Advanced check that feature registration handles synonyms appropriate
       search_gene_symbols(gene_symbol = 'TP53')$full_name == 
         'tumor protein p53')
     
+    cat("Add one protein probe linked to two gene symbols\n
+        Make sure this registers two entries in Features DB but at same feature_id\n")
+    prot_probe_res = register_feature(df = data.frame(
+      name = "test_protein_probe_1", 
+      gene_symbol = c("GCF1", "KRAS"), 
+      featureset_id = 1, 
+      chromosome="...", 
+      start="...", end="...", 
+      feature_type = "protein_probe", 
+      source = "...",
+      flex_field1 = 'any_value_here',
+      flex_field2 = 'another_value_here',
+      stringsAsFactors = FALSE))
+    expect_equal(
+      sort(get_gene_symbol(gene_symbol_id = prot_probe_res$gene_symbol_id)$gene_symbol),
+      c("GCF1", "KRAS")
+    )
+    expect_equal(
+      nrow(prot_probe_res$feature_id_df),
+      2
+    )
+    expect_equal(
+      length(unique(prot_probe_res$feature_id)), 
+      1)
+    expect_null(prot_probe_res$feature_synonym_id)
+    
+    prot_probe_res2 = register_feature(
+      df = data.frame(
+        name = c("test_protein_probe_1", "test_protein_probe_1", "test_protein_probe_2"), 
+        gene_symbol = c("EGFR", "KRAS", "MYC"), 
+        featureset_id = 1, 
+        chromosome="...", 
+        start="...", 
+        end="...", 
+        feature_type = "protein_probe", 
+        source = "...",
+        flex_field1 = 'any_value_here',
+        flex_field2 = 'another_value_here',
+        flex_field3 = 'yet_another_value_here',
+        stringsAsFactors = FALSE))
+    expect_equal(
+      sort(get_gene_symbol(gene_symbol_id = prot_probe_res2$gene_symbol_id)$gene_symbol),
+      c("EGFR", "KRAS", "MYC")
+    )
+    expect_equal(
+      nrow(prot_probe_res2$feature_id_df),
+      3
+    )
+    expect_equal(
+      length(unique(prot_probe_res2$feature_id)), 
+      2)
+    expect_true(
+      sum(prot_probe_res2$feature_id %in% prot_probe_res$feature_id),
+      2
+    )
+    expect_null(prot_probe_res2$feature_synonym_id)
+    
+    cat("Now check for downloads\n")
+    expect_true(
+      nrow(get_features(feature_id = prot_probe_res2$feature_id)),
+      4
+    )
+    ftr1 = search_features(gene_symbol = 'EGFR', feature_type = 'protein_probe')
+    ftr2 = search_features(gene_symbol = 'KRAS', feature_type = 'protein_probe')
+    expect_equal(
+      ftr1$feature_id,
+      ftr2$feature_id
+    )
+    
+    expect_equal(
+      sort(search_features(gene_symbol = 'EGFR')$feature_type),
+      c("gene", "protein_probe")
+    )
+    
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
                                .ghEnv$meta$arrFeatureset, 

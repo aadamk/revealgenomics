@@ -222,11 +222,74 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
     
     cat("Register features\n")
     arrayname = full_arrayname(.ghEnv$meta$arrFeature)
-    fid = register_tuple_return_id(df = df1,
-                                   arrayname = arrayname,
-                                   uniq = uniq,
-                                   con = con)
-    fid = fid[, get_base_idname(.ghEnv$meta$arrFeature)]
+    ftr_type = unique(df1$feature_type)
+    stopifnot(length(ftr_type) == 1)
+    
+    if (ftr_type != 'protein_probe') {
+      # Usual handling as before
+      fid_df = register_tuple_return_id(df = df1,
+                                        arrayname = arrayname,
+                                        uniq = uniq,
+                                        con = con)
+    } else {
+      cat("**** Special handling for protein probes\n
+          One probe can map to multiple genes\n")
+      entitynm = strip_namespace(arrayname = arrayname)
+      fset_id = unique(df1$featureset_id)
+      stopifnot(length(fset_id) == 1)
+      uniq = unique_fields()[[.ghEnv$meta$arrFeature]]
+      df_in_db = iquery(con$db, 
+                        paste0("filter(", .ghEnv$meta$arrFeature, ", featureset_id=", fset_id, ")"), 
+                        return = TRUE)
+      matching_entity_ids = find_matches_with_db(df_for_upload = df1,
+                                                 df_in_db = df_in_db, 
+                                                 unique_fields = uniq)
+      nonmatching_idx = which(is.na(matching_entity_ids))
+      matching_idx = which(!is.na(matching_entity_ids))
+      
+      old_id = df_in_db[matching_entity_ids[matching_idx], get_base_idname(arrayname)]
+      
+      if (length(old_id) != 0) {
+        df1[matching_idx, get_base_idname(arrayname)] = old_id
+      }
+      if (length(nonmatching_idx) > 0) {
+        cat("---", length(nonmatching_idx), "rows need to be registered from total of", nrow(df), "rows provided by user\n")
+        curr_prot_probes = df_in_db[df_in_db$feature_type == ftr_type, ]
+        if (nrow(curr_prot_probes) == 0) {
+          df1[nonmatching_idx, 
+              get_base_idname(arrayname)] = 
+            get_max_id(arrayname, con = con) + 1:length(unique(df1$name))
+        } else {
+          m2 = find_matches_and_return_indices(
+            source = df1[nonmatching_idx, ]$name,
+            target = curr_prot_probes$name
+          )
+          base_idname = get_base_idname(entitynm)
+          if (length(m2$source_matched_idx) > 0) {
+            df1[nonmatching_idx, ][
+              m2$source_matched_idx, base_idname] = 
+              curr_prot_probes[m2$target_matched_idx, base_idname]
+          }
+          if (length(m2$source_unmatched_idx)) {
+            df1[nonmatching_idx, ][
+              m2$source_unmatched_idx, base_idname] = 
+              get_max_id(arrayname, con = con) + 
+              1:length(
+                unique(df1[nonmatching_idx, ][
+                  m2$source_unmatched_idx, ]$name))
+          }
+        }
+
+        register_mandatory_and_flex_fields(
+          df = prep_df_fields(df = df1[nonmatching_idx, ], 
+                              mandatory_fields = c(mandatory_fields()[['FEATURE']], 
+                                                   'feature_id', 'gene_symbol_id')),
+          arrayname = arrayname, 
+          con = con)
+        fid_df = df1[, get_idname(.ghEnv$meta$arrFeature)]
+      } # end of if length(nonmatchind_idx) > 0
+    } # end of handling for protein probes
+    fid = fid_df[, get_base_idname(.ghEnv$meta$arrFeature)]
     gene_ftrs = df1[df1$feature_type == 'gene', ]
     if (register_gene_synonyms & nrow(gene_ftrs) > 0){
       cat("Working on gene synonyms\n")
