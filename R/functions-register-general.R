@@ -192,7 +192,7 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
     cat("Register gene symbols for incoming set of features\n")
     if ('gene_symbol_id' %in% colnames(df1)) {
       stop("did not expect `gene_symbol_id` column in feature data. 
-           This is assigned by functions")
+           This is a database index assigned by the `register_feature()` function")
     }
     if ('full_name' %in% colnames(df1)) {
       gene_syms = unique(df1[, 'gene_symbol'])
@@ -245,6 +245,7 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
     }
     list(gene_symbol_id = gs_id, 
          feature_id = fid,
+         feature_id_df = fid_df, 
          feature_synonym_id = ftr_syn_id$feature_synonym_id)
   } # end of if (!only_test)
 }
