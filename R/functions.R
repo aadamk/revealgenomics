@@ -359,7 +359,11 @@ register_tuple_return_id = function(df,
   
   entitynm = strip_namespace(arrayname)
   mandatory_fields = mandatory_fields()[[entitynm]]
-
+  if (entitynm == .ghEnv$meta$arrFeature) { # FEATURE entity supplies gene_symbol_id as an extra
+                                            # mandatory column
+    mandatory_fields = c(mandatory_fields, 
+                         'gene_symbol_id')
+  }
   df = prep_df_fields(df, mandatory_fields)
   
   if (!is.null(dataset_version)) {
@@ -371,13 +375,16 @@ register_tuple_return_id = function(df,
   }
   
   # Find matches by set of unique fields provided by user
+  # dimensions, and do not need to be projected
   if (entitynm == .ghEnv$meta$arrMeasurementSet) {
-    projected_attrs = paste0(uniq[!(uniq %in% c('dataset_id'))], # dataset_id is a dimension, and does not need to be projected
-                             collapse = ",")
+    do_not_project = 'dataset_id'
+  } else if (entitynm == .ghEnv$meta$arrFeature) {
+    do_not_project = c('gene_symbol_id', 'featureset_id')
   } else {
-    projected_attrs = paste0(uniq[!(uniq %in% c('dataset_id', 'featureset_id'))], # dataset_id and featureset_id are dimensions, and do not need to be projected
-                             collapse = ",")
+    do_not_project = c('dataset_id', 'featureset_id')
   }
+  projected_attrs = paste0(uniq[!(uniq %in% do_not_project)], # dataset_id is a dimension, and does not need to be projected
+                           collapse = ",")
   xx = iquery(con$db, paste0("project(", arrayname, ", ", 
                              projected_attrs, ")"), return = TRUE)
   matching_entity_ids = find_matches_with_db(df_for_upload = df, df_in_db = xx, unique_fields = uniq)

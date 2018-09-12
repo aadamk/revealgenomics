@@ -222,7 +222,10 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
     
     cat("Register features\n")
     arrayname = full_arrayname(.ghEnv$meta$arrFeature)
-    fid = register_tuple_return_id(df1, arrayname, uniq, con = con)
+    fid = register_tuple_return_id(df = df1,
+                                   arrayname = arrayname,
+                                   uniq = uniq,
+                                   con = con)
     fid = fid[, get_base_idname(.ghEnv$meta$arrFeature)]
     gene_ftrs = df1[df1$feature_type == 'gene', ]
     if (register_gene_synonyms & nrow(gene_ftrs) > 0){
