@@ -258,9 +258,10 @@ build_reference_gene_set = function( featureset_id,
   ## Register with DB
   feature_synonym_res = register_feature_synonym(df = df6)
   list(
+    gene_symbol_id = feature_id_list$gene_symbol_id, 
     feature_id = feature_id_list$feature_id, 
-    feature_synonym_id = c(
+    feature_synonym_id = unique(c(
       feature_id_list$feature_synonym_id,
       feature_synonym_res$feature_synonym_id
-    ))
+    )))
 }
