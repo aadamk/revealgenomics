@@ -239,7 +239,7 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
       stopifnot(length(fset_id) == 1)
       uniq = unique_fields()[[.ghEnv$meta$arrFeature]]
       df_in_db = iquery(con$db, 
-                        paste0("filter(", .ghEnv$meta$arrFeature, ", featureset_id=", fset_id, ")"), 
+                        paste0("filter(", full_arrayname(.ghEnv$meta$arrFeature), ", featureset_id=", fset_id, ")"), 
                         return = TRUE)
       matching_entity_ids = find_matches_with_db(df_for_upload = df1,
                                                  df_in_db = df_in_db, 
