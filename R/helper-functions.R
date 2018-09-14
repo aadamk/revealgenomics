@@ -141,3 +141,20 @@ find_matches_and_return_indices = function(source, target){
        target_matched_idx = match_res[match_idx])
 }
 
+#' names to list of numbers by uniqueness
+#' 
+#' function to convert a list of names to
+#' a numbered vector \code{1:N} where \code{N} is the number of unique names
+#' (each unique name has a different number)
+#' 
+#' @example 
+#' names_to_numbered_vec_by_uniqueness(c('a', 'b', 'a', 'c')) # returns: 1, 2, 1, 3
+#' names_to_numbered_vec_by_uniqueness(c(11, 35, 44, 11, 35, 66)) # returns: 1, 2, 3, 1, 2, 4
+names_to_numbered_vec_by_uniqueness = function(names_vec) {
+  names_vec = as.character(names_vec)
+  lookup_idx = 1:length(unique(names_vec))
+  names(lookup_idx) = unique(names_vec)
+  
+  lookup_idx[names_vec]
+}
+
