@@ -255,10 +255,13 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
       if (length(nonmatching_idx) > 0) {
         cat("---", length(nonmatching_idx), "rows need to be registered from total of", nrow(df), "rows provided by user\n")
         curr_prot_probes = df_in_db[df_in_db$feature_type == ftr_type, ]
+
         if (nrow(curr_prot_probes) == 0) {
+          numbered_vec = names_to_numbered_vec_by_uniqueness(
+            names_vec = df1[nonmatching_idx, ]$name)
           df1[nonmatching_idx, 
               get_base_idname(arrayname)] = 
-            get_max_id(arrayname, con = con) + 1:length(unique(df1$name))
+            get_max_id(arrayname, con = con) + numbered_vec
         } else {
           m2 = find_matches_and_return_indices(
             source = df1[nonmatching_idx, ]$name,
@@ -271,12 +274,12 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
               curr_prot_probes[m2$target_matched_idx, base_idname]
           }
           if (length(m2$source_unmatched_idx)) {
+            numbered_vec = names_to_numbered_vec_by_uniqueness(
+              names_vec = df1[nonmatching_idx, ][
+                m2$source_unmatched_idx, ]$name)
             df1[nonmatching_idx, ][
               m2$source_unmatched_idx, base_idname] = 
-              get_max_id(arrayname, con = con) + 
-              1:length(
-                unique(df1[nonmatching_idx, ][
-                  m2$source_unmatched_idx, ]$name))
+              get_max_id(arrayname, con = con) + numbered_vec
           }
         }
 
@@ -286,8 +289,8 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
                                                    'feature_id', 'gene_symbol_id')),
           arrayname = arrayname, 
           con = con)
-        fid_df = df1[, get_idname(.ghEnv$meta$arrFeature)]
       } # end of if length(nonmatchind_idx) > 0
+      fid_df = df1[, get_idname(.ghEnv$meta$arrFeature)]
     } # end of handling for protein probes
     fid = fid_df[, get_base_idname(.ghEnv$meta$arrFeature)]
     gene_ftrs = df1[df1$feature_type == 'gene', ]
