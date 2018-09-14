@@ -4,7 +4,8 @@
 \alias{calculate_statistics_across_measurementsets}
 \title{Calculate summary statistics across measurementsets}
 \usage{
-calculate_statistics_across_measurementsets(df_measurementset, con = NULL)
+calculate_statistics_across_measurementsets(df_measurementset,
+  con = NULL)
 }
 \description{
 Calculate summary statistics across measurementsets

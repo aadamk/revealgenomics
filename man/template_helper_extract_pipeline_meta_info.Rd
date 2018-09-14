@@ -4,7 +4,8 @@
 \alias{template_helper_extract_pipeline_meta_info}
 \title{Extract pipeline meta information}
 \usage{
-template_helper_extract_pipeline_meta_info(pipelines_df, choicesObj, record)
+template_helper_extract_pipeline_meta_info(pipelines_df, choicesObj,
+  record)
 }
 \arguments{
 \item{pipelines_df}{data-frame containing rows in Pipelines sheet corresponding to a

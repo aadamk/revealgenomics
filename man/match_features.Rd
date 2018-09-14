@@ -4,7 +4,8 @@
 \alias{match_features}
 \title{convenience function for matching features between database and file}
 \usage{
-match_features(features_in_file, df_features_db, feature_type, column_in_db)
+match_features(features_in_file, df_features_db, feature_type,
+  column_in_db)
 }
 \description{
 convenience function for matching features between database and file

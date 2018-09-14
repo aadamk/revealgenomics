@@ -4,8 +4,8 @@
 \alias{merge_aux_info_from_file}
 \title{Get auxiliary information from a file, and merge as JSON strings into master dataframe}
 \usage{
-merge_aux_info_from_file(master_df, aux_file_path, aux_info_colname, by.master,
-  by.aux, verbose_read = TRUE, verbose_merge = FALSE)
+merge_aux_info_from_file(master_df, aux_file_path, aux_info_colname,
+  by.master, by.aux, verbose_read = TRUE, verbose_merge = FALSE)
 }
 \arguments{
 \item{master_df}{Dataframe containing master merge information (e.g. names of individuals)}

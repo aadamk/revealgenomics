@@ -5,7 +5,8 @@
 \title{Upload expression matrix file}
 \usage{
 register_expression_matrix(filepath, measurementset_id, featureset_id,
-  feature_type, dataset_version = NULL, only_test = FALSE, con = NULL)
+  feature_type, dataset_version = NULL, only_test = FALSE,
+  con = NULL)
 }
 \description{
 filepath must exist on SciDB server. Altrnatively use
