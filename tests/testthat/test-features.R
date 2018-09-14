@@ -162,9 +162,12 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     
     cat("Add one protein probe linked to two gene symbols\n
         Make sure this registers two entries in Features DB but at same feature_id\n")
-    prot_probe_res = register_feature(df = data.frame(
-      name = "test_protein_probe_1", 
-      gene_symbol = c("GCF1", "KRAS"), 
+    # First set of probes: No previously existing probes, so matching code is not invoked
+    # probe1 <==> (GCF1, KRAS)
+    # probe2 <==> (EGFR)
+    df_probe1 = data.frame(
+      name = c("probe1", "probe1", "probe2") ,
+      gene_symbol = c("GCF1", "KRAS", "EGFR"), 
       featureset_id = 1, 
       chromosome="...", 
       start="...", end="...", 
@@ -172,57 +175,82 @@ test_that("Advanced check that feature registration handles synonyms appropriate
       source = "...",
       flex_field1 = 'any_value_here',
       flex_field2 = 'another_value_here',
-      stringsAsFactors = FALSE))
+      stringsAsFactors = FALSE)
+    prot_probe_res = register_feature(df = df_probe1)
     expect_equal(
       sort(get_gene_symbol(gene_symbol_id = prot_probe_res$gene_symbol_id)$gene_symbol),
-      c("GCF1", "KRAS")
+      c("EGFR", "GCF1", "KRAS")
     )
     expect_equal(
       nrow(prot_probe_res$feature_id_df),
-      2
-    )
-    expect_equal(
-      length(unique(prot_probe_res$feature_id)), 
-      1)
-    expect_null(prot_probe_res$feature_synonym_id)
-    
-    prot_probe_res2 = register_feature(
-      df = data.frame(
-        name = c("test_protein_probe_1", "test_protein_probe_1", "test_protein_probe_2"), 
-        gene_symbol = c("EGFR", "KRAS", "MYC"), 
-        featureset_id = 1, 
-        chromosome="...", 
-        start="...", 
-        end="...", 
-        feature_type = "protein_probe", 
-        source = "...",
-        flex_field1 = 'any_value_here',
-        flex_field2 = 'another_value_here',
-        flex_field3 = 'yet_another_value_here',
-        stringsAsFactors = FALSE))
-    expect_equal(
-      sort(get_gene_symbol(gene_symbol_id = prot_probe_res2$gene_symbol_id)$gene_symbol),
-      c("EGFR", "KRAS", "MYC")
-    )
-    expect_equal(
-      nrow(prot_probe_res2$feature_id_df),
       3
     )
     expect_equal(
-      length(unique(prot_probe_res2$feature_id)), 
+      length(unique(prot_probe_res$feature_id)), 
       2)
+    expect_null(prot_probe_res$feature_synonym_id)
+    
+    # Next set of probes: Matching code will be invoked
+    # probe1 <==> (GCF1) # previously registered
+    # probe2 <==> (EGFR, MYC) # first one previously registered, but second not registered
+    # probe3 <==> (TP53)
+    df_probe2 = data.frame(
+      name = c("probe1", "probe2", "probe2", "probe3"), 
+      gene_symbol = c("GCF1", "EGFR", "MYC", "TP53"), 
+      featureset_id = 1, 
+      chromosome="...", 
+      start="...", 
+      end="...", 
+      feature_type = "protein_probe", 
+      source = "...",
+      flex_field1 = 'any_value_here',
+      flex_field2 = 'another_value_here',
+      flex_field3 = 'yet_another_value_here',
+      stringsAsFactors = FALSE)
+    prot_probe_res2 = register_feature(
+      df = df_probe2)
     expect_equal(
-      sum(prot_probe_res2$feature_id %in% prot_probe_res$feature_id),
+      sort(get_gene_symbol(gene_symbol_id = prot_probe_res2$gene_symbol_id)$gene_symbol),
+      sort(df_probe2$gene_symbol)
+    )
+    # unique number of feature ids assigned by upload-2 should be equal to 
+    # number of rows in input data frame
+    expect_equal(
+      nrow(prot_probe_res2$feature_id_df),
+      nrow(df_probe2)
+    )
+    # unique number of feature ids assigned by upload-2 should be equal to
+    # number of unique probe names
+    expect_equal(
+      length(unique(prot_probe_res2$feature_id)), 
+      length(unique(df_probe2$name)))
+    # Two of the feature ids in upload-2 should overlap with upload-1
+    expect_equal(
+      sum(unique(prot_probe_res2$feature_id) %in% prot_probe_res$feature_id),
       2
     )
     expect_null(prot_probe_res2$feature_synonym_id)
     
     cat("Now check for downloads\n")
+    # Total number of probes should be equal to unique probe-gene combinations
+    str1 = paste0(df_probe1$name, "__", df_probe1$gene_symbol)
+    str2 = paste0(df_probe2$name, "__", df_probe2$gene_symbol)
+    # Retrieve by search
     expect_equal(
-      nrow(get_features(feature_id = prot_probe_res2$feature_id)),
-      4
+      nrow(search_features(feature_type = 'protein_probe')),
+      length(unique(c(str1, str2)))
     )
-    ftr1 = search_features(gene_symbol = 'EGFR', feature_type = 'protein_probe')
+    # Retrieve by get
+    expect_equal(
+      nrow(get_features(
+        feature_id = unique(
+          c(prot_probe_res$feature_id, 
+            prot_probe_res2$feature_id)
+        ))),
+      length(unique(c(str1, str2)))
+    )
+    
+    ftr1 = search_features(gene_symbol = 'GCF1', feature_type = 'protein_probe')
     ftr2 = search_features(gene_symbol = 'KRAS', feature_type = 'protein_probe')
     expect_equal(
       ftr1$feature_id,
