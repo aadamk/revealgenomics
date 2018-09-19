@@ -4,8 +4,8 @@
 \alias{dao_search_expression}
 \title{Faster implementation of \code{search_expression} for UI development}
 \usage{
-dao_search_expression(entity, measurementset, biosample_ref, feature = NULL,
-  formExpressionSet = TRUE, con = NULL)
+dao_search_expression(entity, measurementset, biosample_ref,
+  feature = NULL, formExpressionSet = TRUE, con = NULL)
 }
 \arguments{
 \item{biosample_ref}{Reference dataframe containing at least the biosample data for

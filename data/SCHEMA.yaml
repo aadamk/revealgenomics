@@ -636,8 +636,9 @@ array:
       created: string
       updated: string
     unique_fields:
-      - name
       - featureset_id
+      - name
+      - gene_symbol
       - feature_type
     dims: 
       featureset_id:
@@ -645,10 +646,15 @@ array:
         end: Inf
         chunk_interval: 1
         overlap: 0
+      gene_symbol_id:
+        start: 0
+        end: Inf
+        chunk_interval: 5000
+        overlap: 0
       feature_id:
         start: 0
         end: Inf
-        chunk_interval: 10000
+        chunk_interval: 65536
         overlap: 0
     search_by_entity: FEATURESET
     delete_by_entity: FEATURE

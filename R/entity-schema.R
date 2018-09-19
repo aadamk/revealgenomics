@@ -166,8 +166,9 @@ get_base_idname = function(arrayname){
   dims = get_idname(entitynm)
   
   if (entitynm %in% c(.ghEnv$meta$arrFeature, .ghEnv$meta$arrFeatureSynonym)) {
-    # featuredata arrays that have featureset_id as dimension for faster slicing
-    dims[!(dims %in% c("featureset_id"))] 
+    # featuredata arrays that have featureset_id and/or gene_symbol_id 
+    # as dimensions for faster slicing
+    dims[!(dims %in% c("featureset_id", "gene_symbol_id"))] 
   } else if (entitynm != .ghEnv$meta$arrDataset) {
     dims[!(dims %in% c("dataset_id", "dataset_version"))]
   } else {
