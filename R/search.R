@@ -295,9 +295,9 @@ search_rnaquantification = function(...) {
 #'                      to return an ExpressionSet object, supplying this parameter can
 #'                      optimize function exection time because function does not have to
 #'                      do biosample lookup internally
-#' @param con (Optional) database connection object; typically output of `gh_connect2()` 
+#' @param con (Optional) database connection object; typically output of `rg_connect2()` 
 #'            call. If not specified, connection object is formulated from internally stored
-#'            values of `gh_connect()` call
+#'            values of `rg_connect()` call
 #'            
 #' @export
 search_expression = function(measurementset = NULL,

@@ -11,7 +11,7 @@
 #END_COPYRIGHT
 
 #USAGE:
-# con <- gh_connect2(...)
+# con <- rg_connect2(...)
 # list_users(con)
 # list_datasets(con)
 # show_user_permissions(con, 'todd')

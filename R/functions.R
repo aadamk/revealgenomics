@@ -15,7 +15,7 @@
 #' @import data.table
 
 #' @export
-gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https"){
+rg_connect = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https"){
   # SciDB connection and R API --
   
   if (is.null(username) & protocol != 'http') {
@@ -68,7 +68,7 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
           hostname = 'localhost'
           port = 8083
         } else {
-          cat("Cannot infer hostname from apache config. Need to supply hostname as parameter to gh_connect\n")
+          cat("Cannot infer hostname from apache config. Need to supply hostname as parameter to rg_connect\n")
           return(NULL)
         }
         if (is.null(hostname)) {
@@ -85,7 +85,7 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
             hostname = paste0(hostname, '/shim/')
           } else {
             print(hostname)
-            cat("Aborting gh_connect()\n")
+            cat("Aborting rg_connect()\n")
             return(NULL)
           }
         }
@@ -109,14 +109,14 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
     if (!is.null(con$db)) options(revealgenomics.use_scidb_ee = FALSE)
   }  
   # Store a copy of connection object in .ghEnv
-  # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
+  # Multi-session programs like Shiny, and the `rg_connect2` call need to explicitly delete this after rg_connect()
   .ghEnv$db = con$db
   return(con)
 }
 
 #' @export
-gh_connect2 = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https") {
-  con = gh_connect(username, password, host, port, protocol)
+rg_connect2 = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https") {
+  con = rg_connect(username, password, host, port, protocol)
   .ghEnv$db = NULL
   return(con)
 }

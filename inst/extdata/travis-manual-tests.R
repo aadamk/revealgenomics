@@ -3,7 +3,7 @@
 #' - `06-updating-deleting.Rmd`
 #' - `07-experiments-measurements.Rmd`
 library(scidb4gh)
-gh_connect()
+rg_connect()
 stopifnot(nrow(get_datasets()) == 1)
 stopifnot(nrow(get_experimentset()) == 1)
 stopifnot(nrow(get_experiments()) == 3)

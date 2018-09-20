@@ -1,7 +1,7 @@
 rm(list=ls())
 library(revealgenomics)
 source('~/coding/downloads/revealgenomics/R/delete.R')
-gh_connect('root', 'Paradigm4')
+rg_connect('root', 'Paradigm4')
 
 # Get the current list of projects
 p.list = get_projects()

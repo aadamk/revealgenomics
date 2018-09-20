@@ -39,9 +39,9 @@ to return an ExpressionSet object, supplying this parameter can
 optimize function exection time because function does not have to
 do biosample lookup internally}
 
-\item{con}{(Optional) database connection object; typically output of \code{gh_connect2()}
+\item{con}{(Optional) database connection object; typically output of \code{rg_connect2()}
 call. If not specified, connection object is formulated from internally stored
-values of \code{gh_connect()} call}
+values of \code{rg_connect()} call}
 }
 \description{
 Function to search gene expression data array; allows slicing across multiple

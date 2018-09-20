@@ -2,7 +2,7 @@ context("test-caching")
 
 test_that("Check that cache is automatically updated while registering or deleting cached entities", {
   # cat("# Now connect to scidb\n")
-  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = .ghEnv$meta$arrOntology, force = TRUE)
     # Get the existing ontology fields

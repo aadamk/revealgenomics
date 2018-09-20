@@ -22,7 +22,7 @@ test_that("Check that upload fails if user does not use data.frame", {
 
 test_that("Check that upload works for `Definitions` sheet of Excel template ", {
   # cat("# Now connect to scidb\n")
-  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     scidb_tmpl_path = system.file("extdata",
                                   "scidb_metadata_template.xlsx", 

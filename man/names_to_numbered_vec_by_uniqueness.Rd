@@ -11,3 +11,7 @@ function to convert a list of names to
 a numbered vector \code{1:N} where \code{N} is the number of unique names
 (each unique name has a different number)
 }
+\examples{
+names_to_numbered_vec_by_uniqueness(c('a', 'b', 'a', 'c')) # returns: 1, 2, 1, 3
+names_to_numbered_vec_by_uniqueness(c(11, 35, 44, 11, 35, 66)) # returns: 1, 2, 3, 1, 2, 4
+}
