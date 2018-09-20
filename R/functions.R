@@ -60,30 +60,38 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
         path2 = '/opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf'
         if (file.exists(path1) & !file.exists(path2)) {
           apache_conf_file = path1
+          port = NULL
         } else if (!file.exists(path1) & file.exists(path2)) {
           apache_conf_file = path2
+          port = NULL
+        } else if (!file.exists(path1) & !file.exists(path2)) {
+          hostname = 'localhost'
+          port = 8083
         } else {
           cat("Cannot infer hostname from apache config. Need to supply hostname as parameter to gh_connect\n")
           return(NULL)
         }
-        hostname = tryCatch({
-          system(paste0("grep ServerName ", apache_conf_file, " | awk '{print $2}'"), 
-                        intern = TRUE)
+        if (is.null(hostname)) {
+          hostname = tryCatch({
+            system(paste0("grep ServerName ", apache_conf_file, " | awk '{print $2}'"), 
+                   intern = TRUE)
           }, 
           error = function(e) {
             cat("Could not infer hostname from apache conf\n")
             return(e)
           }
-        )
-        if (! "error" %in% class(hostname)) {
-          hostname = paste0(hostname, '/shim/')
-        } else {
-          print(hostname)
-          cat("Aborting gh_connect()\n")
-          return(NULL)
+          )
+          if (! "error" %in% class(hostname)) {
+            hostname = paste0(hostname, '/shim/')
+          } else {
+            print(hostname)
+            cat("Aborting gh_connect()\n")
+            return(NULL)
+          }
         }
         cat("hostname was not provided. Connecting to", hostname, "\n")
-        con$db = scidbconnect(host = hostname, username = username, password = password, port = NULL, protocol = protocol)
+        con$db = scidbconnect(host = hostname, username = username, password = password, 
+                              port = port, protocol = protocol)
       } else {
         # If user specified host and port, try user supplied parameters
         con$db = scidbconnect(host = host, username = username, password = password, port = port, protocol = protocol)
