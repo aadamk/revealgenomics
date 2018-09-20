@@ -1090,9 +1090,11 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
       dplyr::arrange(feature_id) %>%
       dplyr::pull(name) %>%
       as.character(.)
-    message(
-      paste0("[convertToExpressionSet] ", NAs.found, "x empty entries found for feature_id ", names(NAs.found), " (", NAs.name, ")", sep="\n")
-    )
+    if (getOption("revealgenomics.debug", FALSE)) {
+      message(
+        paste0("[convertToExpressionSet] ", NAs.found, "x empty entries found for feature_id ", names(NAs.found), " (", NAs.name, ")", sep="\n")
+      )
+    }
   }
   
   # Convert column name to biosample id name

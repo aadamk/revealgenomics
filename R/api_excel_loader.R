@@ -283,16 +283,19 @@ apply_definition_constraints = function(df1 = df1,
       if (nrow(defi) != 0) {
         defi_contr = defi[!is.na(defi$controlled_vocabulary), ]
         if (nrow(defi_contr) > 0) {
-          cat(paste0("Applying constraint A: controlled-vocab fields (", 
-                     nrow(defi_contr), " of ", nrow(defi), ") definitions\n"))
-          
+          if (getOption("revealgenomics.debug", FALSE)) {
+            cat(paste0("Applying constraint A: controlled-vocab fields (", 
+                       nrow(defi_contr), " of ", nrow(defi), ") definitions\n"))
+          }
           df1 = join_ontology_terms(df = df1, 
                                     terms = defi_contr$attribute_name,
                                     updateCache = FALSE, 
                                     con = con)
         }
         
-        cat("Applying constraint B: Column ordering same as excel sheet\n")
+        if (getOption("revealgenomics.debug", FALSE)) {
+          cat("Applying constraint B: Column ordering same as excel sheet\n")
+        }
         allcols = colnames(df1)
         excel_defined_cols = defi$attribute_name[which((defi$attribute_name %in% allcols))]
         other_cols = allcols[!(allcols %in% excel_defined_cols)]

@@ -185,7 +185,9 @@ template_helper_extract_definitions = function(sheetName, def) {
   col_for_pick = paste0("attribute_in_", sheetName)
   defi = def[def[, col_for_pick] & 
                !is.na(def[, col_for_pick]), ]
-  cat("From", nrow(def), "rows of definitions sheet, picked out", nrow(defi), "rows for current entity\n")
+  if (getOption("revealgenomics.debug", FALSE)) {
+    cat("From", nrow(def), "rows of definitions sheet, picked out", nrow(defi), "rows for current entity\n")
+  }
   defi
 }
 

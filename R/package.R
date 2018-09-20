@@ -17,6 +17,7 @@ NULL
   packageStartupMessage("To get started see ?revealgenomics for a list of available functions. Each\nfunction has a detailed help page with examples.\nThe original PDF specification is available from vignette('revealgenomics')." , 
                         domain = NULL, appendLF = TRUE)
   options("revealgenomics.use_scidb_ee"=TRUE)
+  options("revealgenomics.debug"=FALSE)
 }
 
 # A global environment used to store the metadata information, and cache state by some functions
