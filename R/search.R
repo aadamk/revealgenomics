@@ -367,7 +367,9 @@ search_expression = function(measurementset = NULL,
   }
   
   if (optPathBiosamples) { # use optimized function when not searching by biosample
-    cat("Not searching by biosample; Using optimized search path\n")
+    if (getOption("revealgenomics.debug", FALSE)) {
+      cat("Not searching by biosample; Using optimized search path\n")
+    }
     dao_search_expression(entity = entity,
                           measurementset = measurementset, 
                           biosample_ref = biosample_ref, 
