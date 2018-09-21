@@ -218,7 +218,12 @@ search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NU
 }
 
 #' @export
-search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_id = NULL, con = NULL){
+search_features = function(
+  gene_symbol = NULL, 
+  feature_type = c('gene', 'probeset', 'transcript', 
+                   'protein_probe'), 
+  featureset_id = NULL, 
+  con = NULL) {
   arrayname = full_arrayname(.ghEnv$meta$arrFeature)
   
   qq = arrayname
@@ -230,21 +235,31 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
     } else {stop("Not covered yet")}
   }
   
-  if (!is.null(feature_type)){
-    if (length(feature_type)==1){
-      qq = paste("filter(", qq, ", feature_type = '", feature_type, "')", sep="")
-    } else if (length(feature_type)==2){
-      qq = paste("filter(", qq, ", feature_type = '", feature_type[1], "' OR feature_type = '", feature_type[2], "')", sep="")
-    } else {stop("Not covered yet")}
-  }
-  
   if (!is.null(gene_symbol)) {
-    subq = paste(sapply(gene_symbol, FUN = function(x) {paste("gene_symbol = '", x, "'", sep = "")}), collapse = " OR ")
+    gene_symbol_df = search_gene_symbols(gene_symbol = gene_symbol)
+    if (nrow(gene_symbol_df) > 0) {
+      subq = paste(
+        sapply(
+          gene_symbol_df$gene_symbol_id, 
+          FUN = function(x) {
+            paste0("gene_symbol_id=", x)
+            }), 
+        collapse = " OR ")
+    } else {
+      subq = 'FALSE'
+    }
     qq = paste("filter(", qq, ", ", subq, ")", sep="")
   }
   
-  join_info_unpivot(qq, arrayname, 
+  df1 = join_info_unpivot(qq, arrayname, 
+                    replicate_query_on_info_array = TRUE, 
                     con = con)
+  
+  if (!is.null(feature_type)){
+    df1[df1$feature_type %in% feature_type, ]
+  } else {
+    df1
+  }
 }
 
 ##################### MEASUREMENTDATA ###########################################################
