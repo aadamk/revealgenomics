@@ -58,12 +58,12 @@ script:
   - R CMD INSTALL *tar.gz
   - R -e 'install.packages("roxygen2")'
   - R -e "devtools::test()"
-  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/master/05-download-api.Rmd", destfile = "/tmp/download-api-example.Rmd")'
+  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/rg_connect/05-download-api.Rmd", destfile = "/tmp/download-api-example.Rmd")'
   - mkdir /tmp/img
-  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/master/img/caution.jpeg", destfile = "/tmp/img/caution.jpeg")'
-  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/master/04-load-api.Rmd", destfile = "/tmp/load-api-example.Rmd")'
-  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/master/06-updating-deleting.Rmd", destfile = "/tmp/updating-deleting.Rmd")'
-  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/master/07-experiments-measurements.Rmd", destfile = "/tmp/experiments-measurements.Rmd")'
+  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/rg_connect/img/caution.jpeg", destfile = "/tmp/img/caution.jpeg")'
+  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/rg_connect/04-load-api.Rmd", destfile = "/tmp/load-api-example.Rmd")'
+  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/rg_connect/06-updating-deleting.Rmd", destfile = "/tmp/updating-deleting.Rmd")'
+  - R -e 'download.file(url = "https://raw.githubusercontent.com/Paradigm4/revealgenomics-docs/rg_connect/07-experiments-measurements.Rmd", destfile = "/tmp/experiments-measurements.Rmd")'
   - R -e 'rmarkdown::render(input = "/tmp/load-api-example.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
   - R -e 'rmarkdown::render(input = "/tmp/download-api-example.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
   - R -e 'rmarkdown::render(input = "/tmp/updating-deleting.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
