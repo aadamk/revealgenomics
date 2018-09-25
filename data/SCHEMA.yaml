@@ -372,7 +372,6 @@ array:
       num_spanning_reads: int32
       num_mate_pairs: int32
       num_mate_pairs_fusion: int32
-      quality_score: double
       sample_name_unabbreviated: string
     dims:
       dataset_version:
