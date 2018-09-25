@@ -642,8 +642,7 @@ DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                                                         'gene_left', 'chromosome_left', 'pos_left',
                                                                         'gene_right', 'chromosome_right', 'pos_right',
                                                                         'num_spanning_reads', 'num_mate_pairs', 
-                                                                        'num_mate_pairs_fusion', 
-                                                                        'quality_score')
+                                                                        'num_mate_pairs_fusion')
                                        }
                                      ))
 ##### createDataReader #####
