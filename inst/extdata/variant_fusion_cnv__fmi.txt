@@ -33,3 +33,8 @@ s003_1	s003_1.01.vars.final.vr1.xml	short-variant	TOE1	unknown	A12V	35C>T	chr1:4
 s003_1	s003_1.01.vars.final.vr1.xml	short-variant	TP53	known	I254T	761T>C	chr17:7577520	392	5	-	-	-	-	-	-	-	-	-	-	-	1112-507-002	U973972	progression	PBMC	Heme	Frozen
 s003_1	s003_1.01.vars.final.vr1.xml	short-variant	TP53	known	R248W	742C>T	chr17:7577539	405	10	-	-	-	-	-	-	-	-	-	-	-	1112-507-002	U973972	progression	PBMC	Heme	Frozen
 s003_1	s003_1.01.vars.final.vr1.xml	short-variant	TP53	known	Y220C	659A>G	chr17:7578190	363	7	-	-	-	-	-	-	-	-	-	-	-	1112-507-002	U973972	progression	PBMC	Heme	Frozen
+s001_1	s001_1.01.vars.final.vr1.xml	copy-number-alteration	STAT6	unknown	-	-	-	-	-	0	23 of 23	0.49	loss	-	-	-	-	-	-	-	1112-032-005	R571445	WK1	CD19+	Heme	Frozen
+s003_1	s003_1.01.vars.final.vr1.xml	copy-number-alteration	CDKN2A	known	-	-	-	-	-	0	5 of 5	0.12	loss	-	-	-	-	-	-	-	1112-217-007	D239258	WK1	CD19+	Heme	Frozen
+s003_1	s003_1.01.vars.final.vr1.xml	copy-number-alteration	CDKN2B	known	-	-	-	-	-	0	5 of 5	0.13	loss	-	-	-	-	-	-	-	1112-217-007	D239258	WK1	CD19+	Heme	Frozen
+s001_2	s001_2.01.vars.final.vr1.xml	copy-number-alteration	CDKN2A	known	-	-	-	-	-	0	4 of 5	0.01	loss	-	-	-	-	-	-	-	1112-349-002	R571245	WK1	CD19+	Heme	Frozen
+s001_2	s001_2.01.vars.final.vr1.xml	copy-number-alteration	RB1	known	-	-	-	-	-	0	27 of 27	0.01	loss	-	-	-	-	-	-	-	1112-349-002	R571245	WK1	CD19+	Heme	Frozen
