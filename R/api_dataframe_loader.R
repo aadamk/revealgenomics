@@ -67,8 +67,6 @@ DataLoader = R6::R6Class(classname = "DataLoader",
               cat("Multiple Measurements combined into one file\n")
               cat("Replacing `biosample_name` with `biosample_id`\n")
               
-              mL0 = match(private$.reference_object$pipeline_df$original_sample_name,
-                          private$.data_df$biosample_name)
               cat("Summary file has", length(unique(private$.data_df$biosample_name)), "biosamples\n")
               stopifnot(length(private$.reference_object$pipeline_df$original_sample_name) ==
                           length(unique(private$.reference_object$pipeline_df$original_sample_name)))
