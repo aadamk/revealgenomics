@@ -177,6 +177,12 @@ register_entities_workbook = function(workbook,
       na_to_blank = function(terms) { # macro to convert empty location in Excel file (read as NA) into "" (blank)
         ifelse(is.na(terms), "", terms)
       }
+      # When testing R package, replace R_PKG_WKSP placeholder with actual path on system
+      if (identical(
+        unique(na_to_blank(pip_sel$local_project_folder_prefix)), 
+        "$(R_PKG_WKSP)")) {
+        pip_sel$local_project_folder_prefix = system.file("extdata", package = "revealgenomics")
+      }
       pip_sel$file_path = file.path(na_to_blank(pip_sel$local_project_folder_prefix), 
                                     na_to_blank(pip_sel$project_folder),
                                     na_to_blank(pip_sel$project_subfolder),
