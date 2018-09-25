@@ -301,7 +301,7 @@ DataReaderFMIVariant = R6::R6Class(
         ref_alt_split[valid_pos], 
         function(elem) {
           xx = elem[1]
-          substr(xx, str_length(xx), str_length(xx))
+          substr(xx, stringr::str_length(xx), stringr::str_length(xx))
         })
       
       cat("Supplying NA for id\n")
