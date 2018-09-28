@@ -23,13 +23,27 @@
 #' init_db(arrays = get_entity_names()) # Warning! This reinitializes all the arrays
 #' }
 #' @export
-init_db = function(arrays_to_init, force = FALSE, con = NULL){
+init_db = function(arrays_to_init = NULL, 
+                   pattern_array_names = NULL,
+                   force = FALSE, con = NULL){
   con = use_ghEnv_if_null(con)
   
   db = con$db
   L = .ghEnv$meta$L
   
-  arrays_to_init = arrays_to_init[arrays_to_init %in% names(L$array)]
+  if ((is.null(arrays_to_init) & is.null(pattern_array_names)) | 
+      (!is.null(arrays_to_init) & !is.null(pattern_array_names))) {
+    stop("Only one of the two parameters can have a non-null value:
+         `arrays_to_init` or `pattern_array_names`.
+         Both cannot be null.")
+  }
+  if (!is.null(arrays_to_init)) {
+    arrays_to_init = arrays_to_init[arrays_to_init %in% names(L$array)]
+  } else if (!is.null(pattern_array_names)) {
+    stopifnot(length(pattern_array_names) == 1)
+    arrays_to_init = names(L$array)[grep(pattern = pattern_array_names,
+                                         x = names(L$array))]
+  }
   
   if (length(arrays_to_init) == 0) {cat("ERROR: Check array names\n"); return(FALSE)}
     
