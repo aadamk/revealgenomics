@@ -2,7 +2,7 @@
 #' - `04-load-api.Rmd`
 #' - `06-updating-deleting.Rmd`
 #' - `07-experiments-measurements.Rmd`
-library(scidb4gh)
+library(revealgenomics)
 rg_connect()
 stopifnot(nrow(get_datasets()) == 1)
 stopifnot(nrow(get_experimentset()) == 1)
