@@ -68,7 +68,7 @@ script:
   - R -e 'rmarkdown::render(input = "/tmp/download-api-example.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
   - R -e 'rmarkdown::render(input = "/tmp/updating-deleting.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
   - R -e 'rmarkdown::render(input = "/tmp/experiments-measurements.Rmd", output_file = "/tmp/output.html", params = list(force_init_db = TRUE))'
-  - R -e 'source(system.file("extdata", "travis-manual-tests.R", package="revealenomics"))'
+  - R -e 'source(system.file("extdata", "travis-manual-tests.R", package="revealgenomics"))'
 
 after_failure:
   - docker logs scidb
