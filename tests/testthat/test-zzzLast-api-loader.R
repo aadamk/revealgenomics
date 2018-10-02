@@ -39,11 +39,12 @@ test_that("Register entities via workbook works OK", {
     
     # Now do some checks on the data load
     ftrs = search_features(gene_symbol = c('PARP2', 'RHOA', 'JAK2'))
-    v1 = search_variants(measurementset = ms[3, ], feature = ftrs)
+    ms = get_measurementsets()
+    v1 = search_variants(measurementset = ms[ms$entity == 'VARIANT', ], feature = ftrs)
     expect_true(all.equal(dim(v1), c(3, 21)))
     
     ftrs = search_features(gene_symbol = c('PARP2', 'RHOA', 'JAK2', 'TP53'))
-    v2 = search_variants(measurementset = ms[3, ], feature = ftrs)
+    v2 = search_variants(measurementset = ms[ms$entity == 'VARIANT', ], feature = ftrs)
     expect_true(all.equal(dim(v2), c(5, 21)))
   }
 })
