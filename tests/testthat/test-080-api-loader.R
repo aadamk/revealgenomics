@@ -2,7 +2,7 @@ context("test-api-loader.R")
 
 test_that("Register entities via workbook works OK", {
   # cat("# Now connect to scidb\n")
-  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = get_entity_names(),
             force = TRUE)
