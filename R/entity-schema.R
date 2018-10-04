@@ -54,7 +54,9 @@ get_mandatory_fields_for_register_entity = function(arrayname){
   entity_class = zz[zz$entity == entitynm, ]$class
   
   if (entity_class == 'metadata') {
-    if (!(entitynm %in% c(.ghEnv$meta$arrProject,
+    # Metadata entities that do not have to supply `dataset_id` at registration time
+    # PROJECT, DATASET, ONTOLOGY, VARIANT_KEY
+    if (entitynm %in% c(.ghEnv$meta$arrProject,
                           .ghEnv$meta$arrDataset,
                           .ghEnv$meta$arrOntology,
                           .ghEnv$meta$arrMetadataAttrKey, 
@@ -62,6 +64,8 @@ get_mandatory_fields_for_register_entity = function(arrayname){
       mandatory_fields = c('dataset_id', attrs)
     } else { # PROJECT, DATASET, ONTOLOGY, VARIANT_KEY
       mandatory_fields = attrs
+    } else { 
+      mandatory_fields = c('dataset_id', attrs)
     }
   } else if (entity_class == 'featuredata') {
     if (entitynm %in% c(.ghEnv$meta$arrFeature, .ghEnv$meta$arrFeatureSynonym)) {
