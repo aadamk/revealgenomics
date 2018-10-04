@@ -51,6 +51,7 @@ NULL
 .ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
 .ghEnv$meta$arrVariant = 'VARIANT'
 .ghEnv$meta$arrVariantKey = 'VARIANT_KEY'
+.ghEnv$meta$arrChromosomeKey = 'CHROMOSOME_KEY'
 .ghEnv$meta$arrFusion = 'FUSION'
 .ghEnv$meta$arrProteomics = 'PROTEOMICS'
 .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
@@ -62,6 +63,7 @@ NULL
 .ghEnv$cache$lookup = list()
 .ghEnv$cache[[.ghEnv$meta$arrOntology]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrVariantKey]] = NULL
+.ghEnv$cache[[.ghEnv$meta$arrChromosomeKey]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrDefinition]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrFeatureSynonym]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrGeneSymbol]] = NULL

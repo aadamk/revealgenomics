@@ -160,3 +160,16 @@ get_gene_symbol_from_cache = function(gene_symbol_id, updateCache, con = NULL){
                         updateCache = updateCache, 
                         con = con)
 }
+
+##### CHROMOSOME_KEY #####
+update_chromosome_key_cache = function(con = NULL){
+  update_entity_cache(entitynm = .ghEnv$meta$arrChromosomeKey, 
+                      con = con)
+}
+
+get_chromosome_key_from_cache = function(chromosome_key_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrChromosomeKey, 
+                        id = chromosome_key_id, 
+                        updateCache = updateCache, 
+                        con = con)
+}

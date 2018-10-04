@@ -427,6 +427,27 @@ array:
     delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
+  # CHROMOSOME_KEY
+  CHROMOSOME_KEY:
+    data_class:
+      metadata
+    namespace:
+      - gh_public
+    attributes:
+      chromosome: string
+    unique_fields:
+      - chromosome
+    dims:
+      chromosome_key_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    search_by_entity: CHROMOSOME_KEY
+    delete_by_entity: CHROMOSOME_KEY
+    infoArray: FALSE
+    compression_on: FALSE
+    cached: TRUE
   # FUSION
   FUSION:
     entity_id: 8003

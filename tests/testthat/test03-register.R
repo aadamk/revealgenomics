@@ -63,6 +63,56 @@ test_that("Check that variant_key registration works properly", {
   }
 })
 
+test_that("Check that chromosome_key registration works properly", {
+  # cat("# Now connect to scidb\n")
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
+  if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
+    init_db(arrays_to_init = .ghEnv$meta$arrChromosomeKey, force = TRUE)
+    # Get the existing chromosome_key fields
+    ck1 = revealgenomics:::get_chromosome_key()
+    expect_true(nrow(ck1) == 0)
+    
+    # Register a dummy chromosome_key field
+    dummy_val = "chrX"
+    new_chromosome_key_id = register_chromosome_key(
+      df = data.frame(chromosome = dummy_val, stringsAsFactors = FALSE))
+    # Check that cache is increased by 1 element
+    ck2 = revealgenomics:::get_chromosome_key()
+    expect_true(nrow(ck2) == nrow(ck1) + 1)
+    
+    # Verify that the dummy chromosome was uploaded properly
+    expect_true(revealgenomics:::get_chromosome_key(chromosome_key_id = new_chromosome_key_id)$chromosome == dummy_val)
+    
+    # Delete the dummy chromosome_key field
+    delete_entity(entity = .ghEnv$meta$arrChromosomeKey, id = new_chromosome_key_id)
+    # Check that the cache is updated, and count has decreased by 1
+    ck3 = get_chromosome_key()
+    expect_true(nrow(ck3) == nrow(ck1))
+    expect_true(nrow(get_chromosome_key(chromosome_key_id = new_chromosome_key_id)) == 0)
+    
+    ###### PHASE 2A #####
+    # Now upload two keys at a time
+    dummy_val_2a = c("chr1", "chr2")
+    new_chromosome_key_id_2a = register_chromosome_key(
+      df = data.frame(chromosome = dummy_val_2a, stringsAsFactors = FALSE))
+    expect_true(length(new_chromosome_key_id_2a) == 2)
+    
+    # Now upload two keys at a time
+    dummy_val_2b = c("chr1", "chr3")
+    new_chromosome_key_id_2b = register_chromosome_key(
+      df = data.frame(chromosome = dummy_val_2b, stringsAsFactors = FALSE))
+    expect_true(length(new_chromosome_key_id_2b) == 2)
+    expect_true(all(
+      revealgenomics:::get_chromosome_key(chromosome_key_id = new_chromosome_key_id_2b)$chromosome %in% 
+        c("chr1", "chr3")))
+    expect_true(identical(sort(unique(revealgenomics:::get_chromosome_key()$chromosome)), 
+                          sort(unique(c(dummy_val_2a, dummy_val_2b)))))
+    
+    # Clean-up
+    init_db(arrays_to_init = c(.ghEnv$meta$arrChromosomeKey), force = TRUE)
+  }
+})
+
 test_that("Check that variant registration works properly", {
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})

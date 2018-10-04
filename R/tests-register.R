@@ -157,6 +157,10 @@ test_register_variant_key = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrVariantKey, df, uniq, silent)
 }
 
+test_register_chromosome_key = function(df, uniq, silent = TRUE){
+  run_tests_dataframe(entity = .ghEnv$meta$arrChromosomeKey, df, uniq, silent)
+}
+
 test_register_featureset = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrFeatureset, df, uniq, silent)
 }

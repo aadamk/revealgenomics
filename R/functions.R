@@ -236,6 +236,12 @@ get_variant_key = function(variant_key_id = NULL, updateCache = FALSE, con = NUL
                              con = con)
 }
 
+get_chromosome_key = function(chromosome_key_id = NULL, updateCache = FALSE, con = NULL){
+  get_chromosome_key_from_cache(chromosome_key_id = chromosome_key_id, 
+                                updateCache = updateCache, 
+                                con = con)
+}
+
 #' @export
 get_definitions = function(definition_id = NULL, updateCache = FALSE, con = NULL){
   get_definition_from_cache(definition_id = definition_id, 

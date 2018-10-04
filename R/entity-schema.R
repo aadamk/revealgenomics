@@ -55,18 +55,17 @@ get_mandatory_fields_for_register_entity = function(arrayname){
   
   if (entity_class == 'metadata') {
     # Metadata entities that do not have to supply `dataset_id` at registration time
-    # PROJECT, DATASET, ONTOLOGY, VARIANT_KEY
-    if (entitynm %in% c(.ghEnv$meta$arrProject,
+    # PROJECT, DATASET, ONTOLOGY, VARIANT_KEY, ...
+    if (!(entitynm %in% c(.ghEnv$meta$arrProject,
                           .ghEnv$meta$arrDataset,
                           .ghEnv$meta$arrOntology,
                           .ghEnv$meta$arrMetadataAttrKey, 
-                          .ghEnv$meta$arrVariantKey))) {
+                          .ghEnv$meta$arrVariantKey, 
+                          .ghEnv$meta$arrChromosomeKey))) {
       mandatory_fields = c('dataset_id', attrs)
-    } else { # PROJECT, DATASET, ONTOLOGY, VARIANT_KEY
-      mandatory_fields = attrs
     } else { 
-      mandatory_fields = c('dataset_id', attrs)
-    }
+      mandatory_fields = attrs
+    } 
   } else if (entity_class == 'featuredata') {
     if (entitynm %in% c(.ghEnv$meta$arrFeature, .ghEnv$meta$arrFeatureSynonym)) {
       # arrays in which featureset_id is a dimension but also a mandatory field
