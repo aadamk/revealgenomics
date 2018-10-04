@@ -1009,6 +1009,141 @@ DataLoaderCyTOF = R6::R6Class(
   )
 )
 
+DataLoaderVariantExomic = R6::R6Class(
+  classname = 'DataLoaderVariantExomic',
+  inherit = DataLoader,
+  public = list(
+   print_level = function() {cat("----(Level: DataLoaderVariantExomic)\n")},
+   assign_feature_ids = function(){
+     # Empty function because this data class does not deal with features
+     cat("assign_feature_ids()"); self$print_level()
+   },
+   
+   register_new_features = function() {
+     # Empty function because this data class does not deal with features
+     cat("Function: Register new features"); self$print_level()
+     return(FALSE)
+   },
+   
+   assign_biosample_ids = function() {
+     cat("assign_biosample_ids()"); self$print_level()
+     bios_ref = private$.reference_object$biosample
+     suffix = template_helper_suffix_by_entity(entity = private$.reference_object$measurement_set$entity)
+     bios_ref = bios_ref[grep(suffix, bios_ref$name), ]
+     cat("Chose suffix:", suffix, "for entity:", private$.reference_object$measurement_set$entity, 
+         "\nRetained:", nrow(bios_ref), "of total:", nrow(private$.reference_object$biosample), "in manifest\n")
+     if (nrow(private$.reference_object$pipeline_df) > 1) { 
+       # multiple Measurements combined into one file
+       # ==> data must contain a column called `biosample_name`
+       stop("Path for multiple exomic variant measurements combined into one file 
+            not implemented yet\n")
+     } else if (nrow(private$.reference_object$pipeline_df) == 1) {
+       # One Measurement per file 
+       # ==> information about biosample will exist in `pipeline_df` reference object
+       cat("One Measurement per file\n")
+       
+       sample_name_in_file = private$.reference_object$pipeline_df$sample_name
+       
+       mL = find_matches_and_return_indices(sample_name_in_file,
+                                            bios_ref$name)
+       
+       if (length(mL$source_unmatched_idx) != 0) {
+         print(sample_name_in_file)
+         print(head(bios_ref$name))
+         stop("Excel sheet must provide link between sample in Pipelines sheet and Sample sheet under column `sample_name`")
+       }
+       
+       sample_id_db = bios_ref$biosample_id[mL$target_matched_idx]
+       cat("sample-name:", sample_name_in_file, "==> biosample_id:", 
+           sample_id_db, "\n")
+       attr(private$.data_df, 'biosample_id') = sample_id_db
+     }
+     invisible(self)   
+   },
+   download_features_for_featureset = function() {
+     # Empty function because this data class does not deal with features
+   },
+   #' assign dataset_id and measurementset_id
+   assign_other_ids = function(){
+     attr(private$.data_df, "dataset_id") = private$.reference_object$record$dataset_id
+     attr(private$.data_df, "dataset_version") = private$.reference_object$record$dataset_version
+     attr(private$.data_df, "measurementset_id") = private$.reference_object$measurement_set$measurementset_id
+   },
+   load_data = function() {
+     ##### FORMAT #####
+     format_str = unique(private$.data_df@gt[, 'FORMAT'])
+     if (length(format_str) != 1) {
+       stop("Expected unique format string per sample, but got", 
+            pretty_print(format_str))
+     }
+     format_df = data.frame(
+       measurementset_id = private$.data_df@measurementset_id,
+       format = format_str,
+       stringsAsFactors = FALSE
+     )
+     browser()
+     ##### PER PIPELINE data #####
+     if (!any(is.na(as.integer(vcfR::getPOS(private$.data_df))))) {
+       vcf_fix_start = as.integer(vcfR::getPOS(private$.data_df))
+       vcf_fix_end   = vcf_fix_start
+     }
+     if (!any(is.na(as.numeric(vcfR::getQUAL(private$.data_df))))) {
+       vcf_fix_qual = as.numeric(vcfR::getQUAL(private$.data_df))
+     }
+     per_pipeline_df = data.frame(
+       chromosome = vcfR::getCHROM(private$.data_df),
+       start      = vcf_fix_start, 
+       end        = vcf_fix_end,
+       id         = vcfR::getID(private$.data_df),
+       reference  = vcfR::getREF(private$.data_df),
+       alternate  = vcfR::getALT(private$.data_df),
+       stringsAsFactors = FALSE
+     )
+     if (ncol(private$.data_df@gt) == 2) {
+       per_sample_df = data.frame(
+         chromosome = vcfR::getCHROM(private$.data_df),
+         start      = vcf_fix_start, 
+         end        = vcf_fix_end,
+         id         = vcfR::getID(private$.data_df),
+         reference  = vcfR::getREF(private$.data_df),
+         alternate  = vcfR::getALT(private$.data_df),
+         quality    = vcf_fix_qual,
+         info       = vcfR::getINFO(private$.data_df),
+         call       = private$.data_df@gt[, 2],
+         stringsAsFactors = FALSE
+       )
+     } else if (ncol(private$.data_df@gt) == 3) {
+       stop("Not implemented tumor normal case yet")
+     } else {
+       stop("Unexpected number of columns in vcf GT dataframe: ", 
+            ncol(private$.data_df@gt))
+     }
+     assign_ids = function(df1,
+                             measurementset_id, 
+                             dataset_id,
+                             dataset_version) {
+       df1$measurementset_id = measurementset_id
+       df1$dataset_id = dataset_id
+       df1$dataset_version = dataset_version
+       df1
+     }
+     per_pipeline_df = assign_ids(
+       df1 = per_pipeline_df,
+       measurementset_id = attr(private$.data_df, "measurementset_id"),
+       dataset_id = attr(private$.data_df, "dataset_id"),
+       dataset_version = attr(private$.data_df, "dataset_version"))
+     per_sample_df = assign_ids(
+       df1 = per_sample_df,
+       measurementset_id = attr(private$.data_df, "measurementset_id"),
+       dataset_id = attr(private$.data_df, "dataset_id"),
+       dataset_version = attr(private$.data_df, "dataset_version"))
+     per_sample_df$biosample_id = attr(private$.data_df, "biosample_id")
+     browser()
+   }
+   
+  )
+)
+
 ##### createDataLoader #####
 #' @export      
 createDataLoader = function(data_df, reference_object, feature_annotation_df = NULL){
@@ -1059,6 +1194,10 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
            DataLoaderVariantFormatA$new(data_df = data_df,
                                         reference_object = reference_object, 
                                         feature_annotation_df = feature_annotation_df),
+         "{[internal]-[Germline Variants] HaplotypeCaller}{DNA}" =
+           DataLoaderVariantExomic$new(data_df = data_df,
+                                       reference_object = reference_object, 
+                                       feature_annotation_df = feature_annotation_df),
          "{[internal]-[Proteomics] MaxQuant}{Protein}" = 
            DataLoaderProteomicsMaxQuant$new(data_df = data_df,
                                             reference_object = reference_object),
