@@ -280,8 +280,8 @@ get_max_id = function(arrayname, con = NULL){
   con = use_ghEnv_if_null(con)
   
   max = iquery(con$db, paste("aggregate(apply(", arrayname,
-                             ", id, ", get_base_idname(arrayname), "), ",
-                             "max(id))", sep=""), return=TRUE)$id_max
+                             ", temp_id, ", get_base_idname(arrayname), "), ",
+                             "max(temp_id))", sep=""), return=TRUE)$temp_id_max
   if (is.na(max)) max = 0
   return(max)
 }
