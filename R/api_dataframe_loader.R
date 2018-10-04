@@ -1070,75 +1070,111 @@ DataLoaderVariantExomic = R6::R6Class(
      attr(private$.data_df, "measurementset_id") = private$.reference_object$measurement_set$measurementset_id
    },
    load_data = function() {
-     ##### FORMAT #####
-     format_str = unique(private$.data_df@gt[, 'FORMAT'])
-     if (length(format_str) != 1) {
-       stop("Expected unique format string per sample, but got", 
-            pretty_print(format_str))
-     }
-     format_df = data.frame(
-       measurementset_id = private$.data_df@measurementset_id,
-       format = format_str,
-       stringsAsFactors = FALSE
+     # ##### FORMAT #####
+     # format_str = unique(private$.data_df@gt[, 'FORMAT'])
+     # if (length(format_str) != 1) {
+     #   stop("Expected unique format string per sample, but got", 
+     #        pretty_print(format_str))
+     # }
+     # format_df = data.frame(
+     #   measurementset_id = private$.data_df@measurementset_id,
+     #   format = format_str,
+     #   stringsAsFactors = FALSE
+     # )
+     # 
+     
+     xx = private$.data_df
+     exomic_var_df = as.data.frame(xx@fix[, c("CHROM", "POS", "ID", "REF", "ALT")], 
+                                   stringsAsFactors = FALSE)
+     exomic_var_df = plyr::rename(
+       exomic_var_df,
+       c('CHROM' = 'chromosome',
+         'POS' = 'start',
+         'ID' = 'id',
+         'REF' = 'reference',
+         'ALT' = 'alternate')
      )
-     browser()
-     ##### PER PIPELINE data #####
-     if (!any(is.na(as.integer(vcfR::getPOS(private$.data_df))))) {
-       vcf_fix_start = as.integer(vcfR::getPOS(private$.data_df))
-       vcf_fix_end   = vcf_fix_start
-     }
-     if (!any(is.na(as.numeric(vcfR::getQUAL(private$.data_df))))) {
-       vcf_fix_qual = as.numeric(vcfR::getQUAL(private$.data_df))
-     }
-     per_pipeline_df = data.frame(
-       chromosome = vcfR::getCHROM(private$.data_df),
-       start      = vcf_fix_start, 
-       end        = vcf_fix_end,
-       id         = vcfR::getID(private$.data_df),
-       reference  = vcfR::getREF(private$.data_df),
-       alternate  = vcfR::getALT(private$.data_df),
-       stringsAsFactors = FALSE
-     )
-     if (ncol(private$.data_df@gt) == 2) {
-       per_sample_df = data.frame(
-         chromosome = vcfR::getCHROM(private$.data_df),
-         start      = vcf_fix_start, 
-         end        = vcf_fix_end,
-         id         = vcfR::getID(private$.data_df),
-         reference  = vcfR::getREF(private$.data_df),
-         alternate  = vcfR::getALT(private$.data_df),
-         quality    = vcf_fix_qual,
-         info       = vcfR::getINFO(private$.data_df),
-         call       = private$.data_df@gt[, 2],
+     chromosomes = naturalsort::naturalsort(unique(exomic_var_df$chromosome))
+     chromosome_key_id = register_chromosome_key(
+       df1 = data.frame(
+         chromosome = chromosomes, 
          stringsAsFactors = FALSE
-       )
-     } else if (ncol(private$.data_df@gt) == 3) {
-       stop("Not implemented tumor normal case yet")
-     } else {
-       stop("Unexpected number of columns in vcf GT dataframe: ", 
-            ncol(private$.data_df@gt))
-     }
-     assign_ids = function(df1,
-                             measurementset_id, 
-                             dataset_id,
-                             dataset_version) {
-       df1$measurementset_id = measurementset_id
-       df1$dataset_id = dataset_id
-       df1$dataset_version = dataset_version
-       df1
-     }
-     per_pipeline_df = assign_ids(
-       df1 = per_pipeline_df,
-       measurementset_id = attr(private$.data_df, "measurementset_id"),
-       dataset_id = attr(private$.data_df, "dataset_id"),
-       dataset_version = attr(private$.data_df, "dataset_version"))
-     per_sample_df = assign_ids(
-       df1 = per_sample_df,
-       measurementset_id = attr(private$.data_df, "measurementset_id"),
-       dataset_id = attr(private$.data_df, "dataset_id"),
-       dataset_version = attr(private$.data_df, "dataset_version"))
-     per_sample_df$biosample_id = attr(private$.data_df, "biosample_id")
-     browser()
+       ))
+     chrom_key_df = get_chromosome_key()
+     m1 = find_matches_and_return_indices(exomic_var_df$chromosome, 
+                                          chrom_key_df$chromosome)
+     stopifnot(length(m1$source_unmatched_idx) == 0)
+     exomic_var_df$chromosome_key_id = chrom_key_df[m1$target_matched_idx, ]$chromosome_key_id
+     exomic_var_df$chromosome = NULL
+     
+     exomic_var_df$end = exomic_var_df$start
+     
+     ms_id = attr(xx, "measurementset_id")
+     ms_df = get_measurementsets(measurementset_id = ms_id)
+     fset_df = get_featuresets(featureset_id = ms_df$featureset_id)
+     exomic_var_df$referenceset_id = fset_df$referenceset_id
+     
+     head(exomic_var_df)
+     
+     register_res = revealgenomics:::register_exomic_variant(df1 = exomic_var_df)
+     
+     # ##### PER PIPELINE data #####
+     # if (!any(is.na(as.integer(vcfR::getPOS(private$.data_df))))) {
+     #   vcf_fix_start = as.integer(vcfR::getPOS(private$.data_df))
+     #   vcf_fix_end   = vcf_fix_start
+     # }
+     # if (!any(is.na(as.numeric(vcfR::getQUAL(private$.data_df))))) {
+     #   vcf_fix_qual = as.numeric(vcfR::getQUAL(private$.data_df))
+     # }
+     # per_pipeline_df = data.frame(
+     #   chromosome = vcfR::getCHROM(private$.data_df),
+     #   start      = vcf_fix_start, 
+     #   end        = vcf_fix_end,
+     #   id         = vcfR::getID(private$.data_df),
+     #   reference  = vcfR::getREF(private$.data_df),
+     #   alternate  = vcfR::getALT(private$.data_df),
+     #   stringsAsFactors = FALSE
+     # )
+     # if (ncol(private$.data_df@gt) == 2) {
+     #   per_sample_df = data.frame(
+     #     chromosome = vcfR::getCHROM(private$.data_df),
+     #     start      = vcf_fix_start, 
+     #     end        = vcf_fix_end,
+     #     id         = vcfR::getID(private$.data_df),
+     #     reference  = vcfR::getREF(private$.data_df),
+     #     alternate  = vcfR::getALT(private$.data_df),
+     #     quality    = vcf_fix_qual,
+     #     info       = vcfR::getINFO(private$.data_df),
+     #     call       = private$.data_df@gt[, 2],
+     #     stringsAsFactors = FALSE
+     #   )
+     # } else if (ncol(private$.data_df@gt) == 3) {
+     #   stop("Not implemented tumor normal case yet")
+     # } else {
+     #   stop("Unexpected number of columns in vcf GT dataframe: ", 
+     #        ncol(private$.data_df@gt))
+     # }
+     # assign_ids = function(df1,
+     #                         measurementset_id, 
+     #                         dataset_id,
+     #                         dataset_version) {
+     #   df1$measurementset_id = measurementset_id
+     #   df1$dataset_id = dataset_id
+     #   df1$dataset_version = dataset_version
+     #   df1
+     # }
+     # per_pipeline_df = assign_ids(
+     #   df1 = per_pipeline_df,
+     #   measurementset_id = attr(private$.data_df, "measurementset_id"),
+     #   dataset_id = attr(private$.data_df, "dataset_id"),
+     #   dataset_version = attr(private$.data_df, "dataset_version"))
+     # per_sample_df = assign_ids(
+     #   df1 = per_sample_df,
+     #   measurementset_id = attr(private$.data_df, "measurementset_id"),
+     #   dataset_id = attr(private$.data_df, "dataset_id"),
+     #   dataset_version = attr(private$.data_df, "dataset_version"))
+     # per_sample_df$biosample_id = attr(private$.data_df, "biosample_id")
+     # browser()
    }
    
   )
