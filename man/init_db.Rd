@@ -4,7 +4,8 @@
 \alias{init_db}
 \title{(potentially delete and) initialize arrays managed by REVEAL/Genomics API}
 \usage{
-init_db(arrays_to_init, force = FALSE, con = NULL)
+init_db(arrays_to_init = NULL, pattern_array_names = NULL,
+  force = FALSE, con = NULL)
 }
 \description{
 The function requires that you are connected to SciDB as an user with admin privileges
