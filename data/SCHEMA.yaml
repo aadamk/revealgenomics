@@ -448,6 +448,45 @@ array:
     infoArray: FALSE
     compression_on: FALSE
     cached: TRUE
+  # EXOMIC_VARIANT
+  EXOMIC_VARIANT:
+    data_class:
+      featuredata
+    namespace:
+      - gh_public
+    attributes:
+      start: int64
+      end: int64
+      id: string
+      reference: string
+      alternate: string
+    unique_fields:
+      - referenceset_id
+      - chromosome_key_id
+      - start
+      - end
+      - reference
+      - alternate
+    dims:
+      referenceset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      chromosome_key_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      exomic_variant_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    search_by_entity: EXOMIC_VARIANT
+    delete_by_entity: EXOMIC_VARIANT
+    infoArray: FALSE
+    compression_on: TRUE
   # FUSION
   FUSION:
     entity_id: 8003

@@ -444,6 +444,8 @@ register_tuple_return_id = function(df,
     do_not_project = 'dataset_id'
   } else if (entitynm == .ghEnv$meta$arrFeature) {
     do_not_project = c('gene_symbol_id', 'featureset_id')
+  } else if (entitynm == .ghEnv$meta$arrExomicVariant) {
+    do_not_project = c('referenceset_id', 'chromosome_key_id')
   } else {
     do_not_project = c('dataset_id', 'featureset_id')
   }

@@ -52,6 +52,7 @@ NULL
 .ghEnv$meta$arrVariant = 'VARIANT'
 .ghEnv$meta$arrVariantKey = 'VARIANT_KEY'
 .ghEnv$meta$arrChromosomeKey = 'CHROMOSOME_KEY'
+.ghEnv$meta$arrExomicVariant = 'EXOMIC_VARIANT'
 .ghEnv$meta$arrFusion = 'FUSION'
 .ghEnv$meta$arrProteomics = 'PROTEOMICS'
 .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'

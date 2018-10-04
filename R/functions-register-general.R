@@ -69,6 +69,19 @@ register_referenceset = function(df, only_test = FALSE, con = NULL){
   } # end of if (!only_test)
 }
 
+#' @export
+register_exomic_variant = function(df1, only_test = FALSE, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
+  uniq = unique_fields()[[.ghEnv$meta$arrExomicVariant]]
+  test_register_exomic_variant(df1, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = full_arrayname(.ghEnv$meta$arrExomicVariant)
+    register_tuple_return_id(df1,
+                             arrayname, uniq, con = con)
+  } # end of if (!only_test)
+}
+
 #' Register genelist
 #' 
 #' Preferred method of registering genelist-s is to 
