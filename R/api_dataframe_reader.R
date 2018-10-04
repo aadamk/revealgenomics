@@ -734,6 +734,28 @@ DataReaderFMICopyNumberVariant = R6::R6Class(
   )
 )
 
+DataReaderVariantExomic = R6::R6Class(
+  classname = 'DataReaderVariantExomic',
+  inherit = DataReader,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderVariantExomic)\n")},
+    load_data_from_file = function() {
+      cat("load_data_from_file()"); self$print_level()
+      file_path = unique(private$.pipeline_df$file_path)
+      stopifnot(length(file_path) == 1)
+      cat(paste0("Reading *", switch(private$.separator,
+                                     '\t' = 'tab',
+                                     ',' = 'comma'), 
+                 "* VCF file:\n\t", file_path, "\n"))
+      private$.data_df = vcfR::read.vcfR(file = file_path)
+      cat("Preview:", vcfR::head(private$.data_df), "\n")
+      invisible(self)
+    }
+    ),
+  private = list(
+  )
+)
+                                           
 ##### DataReaderExpressionMatrix #####
 DataReaderExpressionMatrix = R6::R6Class(classname = 'DataReaderExpressionMatrix',
                                inherit = DataReaderAuto,
@@ -1296,6 +1318,9 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Single Nucleotide Variant] Targeted Region - DNA Analysis Pipeline for Cancer (Personalis)}{DNA}" =
              DataReaderVariantFormatA$new(pipeline_df = pipeline_df,
                                                  measurement_set = measurement_set),
+         "{[internal]-[Germline Variants] HaplotypeCaller}{DNA}" =
+           DataReaderVariantExomic$new(pipeline_df = pipeline_df,
+                                       measurement_set = measurement_set),
          "{[external]-[Single Nucleotide Variant] Targeted Region - FoundationOne Heme (FMI)}{DNA}" =
            DataReaderFMIVariant$new(pipeline_df = pipeline_df,
                              measurement_set = measurement_set),
