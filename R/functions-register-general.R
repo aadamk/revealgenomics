@@ -79,6 +79,7 @@ register_exomic_variant = function(df1, only_test = FALSE, con = NULL){
     arrayname = full_arrayname(.ghEnv$meta$arrExomicVariant)
     register_tuple_return_id(df1,
                              arrayname, uniq, con = con)
+    # remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrExomicVariant, con = con)
   } # end of if (!only_test)
 }
 
