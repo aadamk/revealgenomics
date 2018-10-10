@@ -30,8 +30,9 @@ test_that("Register entities via workbook works OK", {
     
     # Build up a featureset to be used for loading data
     fsets = get_featuresets()
-    stopifnot(nrow(fsets) == 1)
-    ftr_record = build_reference_gene_set(featureset_id = fsets$featureset_id)
+    stopifnot(nrow(fsets) == 2)
+    target_featureset_id = fsets$featureset_id[1]  # inspect the first featureset
+    ftr_record = build_reference_gene_set(featureset_id = target_featureset_id)  # why is ftr_record unused?
     
     # Now load the data
     data_flavor = 'VARIANT'
