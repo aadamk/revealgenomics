@@ -34,17 +34,18 @@ test_that("Register entities via workbook works OK", {
     ftr_record = build_reference_gene_set(featureset_id = fsets$featureset_id)
     
     # Now load the data
+    data_flavor = 'VARIANT'
     register_entities_workbook(workbook = wb, 
-                               register_measurement_entity = 'VARIANT')
+                               register_measurement_entity = data_flavor)
     
     # Now do some checks on the data load
     ftrs = search_features(gene_symbol = c('PARP2', 'RHOA', 'JAK2'))
     ms = get_measurementsets()
-    v1 = search_variants(measurementset = ms[ms$entity == 'VARIANT', ], feature = ftrs)
+    v1 = search_variants(measurementset = ms[ms$entity == data_flavor, ], feature = ftrs)
     expect_true(all.equal(dim(v1), c(3, 21)))
     
     ftrs = search_features(gene_symbol = c('PARP2', 'RHOA', 'JAK2', 'TP53'))
-    v2 = search_variants(measurementset = ms[ms$entity == 'VARIANT', ], feature = ftrs)
+    v2 = search_variants(measurementset = ms[ms$entity == data_flavor, ], feature = ftrs)
     expect_true(all.equal(dim(v2), c(5, 21)))
   }
 })
