@@ -61,9 +61,11 @@ rg_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
         if (file.exists(path1) & !file.exists(path2)) {
           apache_conf_file = path1
           port = NULL
+          hostname = NULL
         } else if (!file.exists(path1) & file.exists(path2)) {
           apache_conf_file = path2
           port = NULL
+          hostname = NULL
         } else if (!file.exists(path1) & !file.exists(path2)) {
           hostname = 'localhost'
           port = 8083
