@@ -231,7 +231,8 @@ DataReaderFMI = R6::R6Class(
           private$.data_df$`VARIANT-TYPE` == 'copy-number-alteration', 
           ]),
         fusion_data = discard_na_columns(private$.data_df[
-          private$.data_df$`VARIANT-TYPE` == 'rearrangement', 
+          (private$.data_df$`VARIANT-TYPE` == 'rearrangement' |
+           private$.data_df$`VARIANT-TYPE` == 'fusion'), 
           ])
       )
       data_df_list$variant_data$`VARIANT-TYPE` = NULL
@@ -318,6 +319,87 @@ DataReaderFMIVariant = R6::R6Class(
       cat("Storing the feature annotation information\n")
       private$.feature_annotation_df = data.frame(gene_symbol = private$.data_df[, feature_col], 
                                                   stringsAsFactors = FALSE)
+    }
+  )
+)
+
+##### DataReaderFMIFusion #####
+DataReaderFMIFusion = R6::R6Class(
+  classname = 'DataReaderFMIFusion',
+  inherit = DataReaderFMI,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderFMIFusion)\n")},
+    load_data_from_file = function() {
+      cat("load_data_from_file()"); self$print_level()
+      
+      super$load_data_from_file()
+      
+      cat("Extracting variant data\n")
+      private$.data_df = private$.data_df$fusion_data
+      
+      cat("(Extracted) Dimensions:", dim(private$.data_df), "\n")
+      
+      cat("Extracting chromosome, start, end information\n")
+      
+      # attribute: feature_id_left
+      # TODO: Don't see what column this could be in the spreadsheet
+      
+      # attribute: gene_left  (Column REARR-GENE1)
+      private$.data_df$gene_left = private$.data_df$`REARR-GENE1`
+      
+      # attributes: chromosome_left, pos_left  (Column REARR-POS1)
+      # REARR-POS1 column will have string like "chr12:103439097-103439635"
+      rearr_pos1 = stringi::stri_split(
+        str = private$.data_df$`REARR-POS1`,
+        fixed = ":")
+      private$.data_df$chromosome_left = sapply(rearr_pos1, function(elem) {elem[1]})
+      rearr_pos1_start_end = sapply(rearr_pos1, function(elem) {elem[2]})
+      rearr_pos1_start_end = sapply(rearr_pos1_start_end, function(elem) {stringi::stri_split(str = elem, fixed='-')})
+      rearr_pos1_start = sapply(rearr_pos1_start_end, function(elem) {elem[1]})
+      rearr_pos1_end = sapply(rearr_pos1_start_end, function(elem) {elem[2]})
+      private$.data_df$pos_left = rearr_pos1_start
+      # TODO: not sure what to do with rearr_pos1_end.  Should it be part of pos_left?  Is pos_left
+      # a range or is it one of the interval boundaries as I've picked here?
+
+      # attribute: gene_right  (Column REARR-GENE2)
+      private$.data_df$gene_right = private$.data_df$`REARR-GENE2`
+      
+      # attribute: feature_id_right
+      # TODO: Don't see what column this could be in the spreadsheet
+      
+      # attributes: chromosome_left, pos_left  (Column REARR-POS2)
+      # REARR-POS1 column will have string like "chr12:103439097-103439635"
+      rearr_pos2 = stringi::stri_split(
+        str = private$.data_df$`REARR-POS2`,
+        fixed = ":")
+      private$.data_df$chromosome_right = sapply(rearr_pos2, function(elem) {elem[1]})
+      rearr_pos2_start_end = sapply(rearr_pos2, function(elem) {elem[2]})
+      rearr_pos2_start_end = sapply(rearr_pos2_start_end, function(elem) {stringi::stri_split(str = elem, fixed='-')})
+      rearr_pos2_start = sapply(rearr_pos2_start_end, function(elem) {elem[1]})
+      rearr_pos2_end = sapply(rearr_pos2_start_end, function(elem) {elem[2]})
+      private$.data_df$pos_right = rearr_pos2_start
+      # TODO: not sure what to do with rearr_pos2_end.  Should it be part of pos_right?  Is pos_right
+      # a range or is it one of the interval boundaries as I've picked here?
+      
+      # attribute: num_spanning_reads (Column REARR-NUMBER-OF-READS)
+      private$.data_df$num_spanning_reads = private$.data_df$`REARR-NUMBER-OF-READS`
+      
+      # TODO: don't know where these values come from as they're not found in the sheet.
+      private$.data_df$num_mate_pairs = 0
+      private$.data_df$num_mate_pairs_fusion = 0
+      
+      biosample_name_col = 'analytical_accession'
+      cat("Assigning values for biosample name using column:", biosample_name_col, "\n")
+      private$.data_df[, 'biosample_name'] = private$.data_df[, biosample_name_col]
+      
+      feature_col = 'GENE'
+      cat("Assigning values for feature name using column:", feature_col, "\n")
+      private$.data_df[, 'scidb_feature_col'] = private$.data_df[, feature_col]
+      
+      cat("Storing the feature annotation information\n")
+      private$.feature_annotation_df = data.frame(gene_symbol = private$.data_df[, feature_col], 
+                                                  stringsAsFactors = FALSE)
+      cat("DataReaderFMIFusion::load_data_from_file() complete")
     }
   )
 )
@@ -690,6 +772,9 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[internal]-[Proteomics] MaxQuant}{Protein}" = 
            DataReaderProteomicsMaxQuant$new(pipeline_df = pipeline_df,
                                             measurement_set = measurement_set),
+         "{[external]-[Fusion] custom pipeline - Foundation Medicine}{gene}" =
+           DataReaderFMIFusion$new(pipeline_df = pipeline_df,
+                                   measurement_set = measurement_set),
          stop("Need to add reader for choice:\n", temp_string)
          )
 }

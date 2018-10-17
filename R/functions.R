@@ -267,7 +267,12 @@ update_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
 register_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
   con = use_ghEnv_if_null(con)
   
-  if (nrow(df) < 100000) {x1 = as.scidb(con$db, df)} else {x1 = as.scidb(con$db, df, chunk_size=nrow(df))}
+  if (nrow(df) < 100000) {
+    x1 = as.scidb(con$db, df)
+  }
+  else {
+    x1 = as.scidb(con$db, df, chunk_size=nrow(df))
+  }
   
   x = x1
   for (idnm in ids_int64_conv){

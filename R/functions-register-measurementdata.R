@@ -537,8 +537,8 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
       # Now register the left and right genes with system feature_id-s
       xx$feature_id_left = syn[match(xx$gene_left, syn$synonym), ]$feature_id
       xx$feature_id_right = syn[match(xx$gene_right, syn$synonym), ]$feature_id
-      stopifnot(!any(is.na(xx$feature_id_left)))
-      stopifnot(!any(is.na(xx$feature_id_right)))
+      #stopifnot(!any(is.na(xx$feature_id_left)))
+      #stopifnot(!any(is.na(xx$feature_id_right)))  # feature_id_right could be N/A as in the 
     }
     
     if (!('biosample_id' %in% colnames(xx))) {
@@ -549,9 +549,13 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
     }
     
     # Rename some columns
+    # Why is this done here and not in the data readers??  Everything should
+    # be normalized to a single internal representation before this method
+    # is entered.
     colnames(xx)[colnames(xx) == 'Sample'] = 'sample_name_unabbreviated'
     colnames(xx)[colnames(xx) == 'chrom_left'] = 'chromosome_left'
     colnames(xx)[colnames(xx) == 'chrom_right'] = 'chromosome_right'
+    colnames(xx)[colnames(xx) == 'REARR-IN-FRAME?'] = 'REARR-IN-FRAME'
     
     if (!('measurementset_id' %in% colnames(xx))) {
       xx$measurementset_id = measurementset$measurementset_id
@@ -568,6 +572,9 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
     }
     
     cat("registering", nrow(xx), "entries of fusion data into array", arrayname, "\n")
+    
+    # Why is this called register_tuple when we're actually registering a 
+    # dataframe containing many input rows (essentially, input tuples)??
     register_tuple(df = xx,
                    ids_int64_conv = c(
                      get_idname(arrayname), get_int64fields(arrayname)),

@@ -47,8 +47,8 @@ test_return_carriage_in_df = function(df){
   tt =sapply(df, FUN=function(col){grep("\n", col)})
   pos = which(lapply(tt, FUN=length)!=0)
   
-  report = "Need to remove return carriage '\\n' from data. Found at:\n"
   if (length(pos) > 0){
+    report = "Need to remove return carriage '\\n' from data. Found at:\n"
     for (posi in pos){
       report = paste(report, "Column name:", names(tt)[[posi]], " -- Row(s):", paste(tt[[posi]], collapse = ", "), "\n")
     }

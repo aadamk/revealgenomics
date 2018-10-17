@@ -662,6 +662,100 @@ DataLoaderVariantFormatA = R6::R6Class(classname = 'DataLoaderVariantFormatA',
                                         }
                                       ))
 
+##### DataLoaderFMIFusion #####
+#' loader to try and handle various variant formats
+#' - currently assumes that features in the data-file are previously registered from a GTF file
+#' - may use the `feature_annotation_df` data.frame to figure out action related to feature matching
+DataLoaderFMIFusion = R6::R6Class(classname = 'DataLoaderFMIFusion',
+                                       inherit = DataLoaderVariant,
+                                       public = list(
+                                         print_level = function() {cat("----(Level: DataLoaderFMIFusion)\n")},
+                                         assign_feature_ids = function(){
+                                           cat("assign_feature_ids()"); self$print_level()
+                                           super$assign_feature_ids()
+                                           
+                                           column_in_file = 'scidb_feature_col'
+                                           feature_type = 'gene' # so far, all variant data files link to gene features only
+                                           column_names = colnames(private$.feature_annotation_df)
+                                           cat("Feature annotation dataframe has columns:",
+                                               paste0(column_names,
+                                                      collapse = ", "), 
+                                               "\n\tWill match with first column\n")
+                                           private$.data_df$feature_id = match_features(
+                                             features_in_file = private$.data_df[, column_in_file],
+                                             df_features_db = private$.reference_object$feature,
+                                             feature_type = feature_type,
+                                             column_in_db = column_names[1])
+                                           private$.data_df[, column_in_file] = NULL
+                                         },
+                                         
+                                         register_new_features = function() {
+                                           cat("Function: Register new features (Level: DataLoaderFMIFusion)\n")
+                                           super$register_new_features()
+                                           
+                                           fset_id = private$.reference_object$measurement_set$featureset_id
+                                           cat("Match features in file to features at featureset_id =", fset_id, "\n")
+                                           
+                                           ftrs = private$.reference_object$feature
+                                           stopifnot(unique(ftrs$featureset_id) == fset_id)
+                                           
+                                           column_names = colnames(private$.feature_annotation_df)
+                                           cat("Feature annotation dataframe has columns:",
+                                               paste0(column_names,
+                                                      collapse = ", "), 
+                                               "\n\tWill match with first column\n")
+                                           # =========== Level 1 matching: match with gene symbols ===========
+                                           m1 = find_matches_and_return_indices(
+                                             private$.data_df$scidb_feature_col,
+                                             ftrs[, column_names[1]]
+                                           )
+                                           if (length(m1$source_unmatched_idx) > 0) {
+                                             cat("Level 1 matching with gene symbols is insufficient;\n\t
+                                                 Proceeding to match with synonyms\n")
+                                             ftrs_unmatched_v1 = private$.data_df$scidb_feature_col[
+                                               m1$source_unmatched_idx]
+                                             fsyn = private$.reference_object$feature_synonym
+                                             fsyn = fsyn[fsyn$featureset_id == fset_id, ]
+                                             
+                                             # =========== Level 2 matching: match with gene synonyms ===========
+                                             m2 = find_matches_and_return_indices(
+                                               ftrs_unmatched_v1, 
+                                               fsyn$synonym
+                                             )
+                                             if (length(m2$source_unmatched_idx) > 0) {
+                                               stop("currently assumes that features in the data-file are 
+                                                    previously registered from a GTF file,
+                                                    match with standard hugo gene symbol list, 
+                                                    or match with gene synonyms")
+                                               return(TRUE)
+                                             }
+                                             matched_syn_feature_id = fsyn[m2$target_matched_idx, ]$feature_id
+                                             syn_ftrs = get_features(feature_id = fsyn[m2$target_matched_idx, ]$feature_id)
+                                             syn_ftrs = syn_ftrs[match(matched_syn_feature_id, 
+                                                                       syn_ftrs$feature_id), ]
+                                             stopifnot(nrow(syn_ftrs) == length(m1$source_unmatched_idx))
+                                             
+                                             cat("Now overwriting synonym in data with standard hugo symbol:\n\t",
+                                                 pretty_print(unique(ftrs_unmatched_v1)),
+                                                 "==>", 
+                                                 pretty_print(unique(syn_ftrs$gene_symbol)), 
+                                                 "\n")
+                                             private$.data_df[m1$source_unmatched_idx, ]$scidb_feature_col = 
+                                               syn_ftrs$gene_symbol
+                                             return(FALSE)
+                                           } else {
+                                             cat("No new features to register\n")
+                                             return(FALSE)
+                                           }
+                                           invisible(self)
+                                           },
+                                         load_data = function() {
+                                           cat("load_data()"); self$print_level()
+                                           register_fusion_data(df = private$.data_df,
+                                                                measurementset = private$.reference_object$measurement_set)
+                                         }
+                                       ))
+
 ##### DataLoaderFusionTophat #####
 DataLoaderFusionTophat = R6::R6Class(classname = 'DataLoaderFusionTophat',
                                      inherit = DataLoader,
@@ -784,7 +878,11 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
                                            reference_object = reference_object),
          "{[internal]-[Proteomics] MaxQuant}{Protein}" = 
            DataLoaderProteomicsMaxQuant$new(data_df = data_df,
-                                            reference_object = reference_object)
+                                            reference_object = reference_object),
+         "{[external]-[Fusion] custom pipeline - Foundation Medicine}{gene}" =
+           DataLoaderFMIFusion$new(data_df = data_df,
+                                   reference_object = reference_object,
+                                   feature_annotation_df = feature_annotation_df)
   )
 }
 
