@@ -537,8 +537,13 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
       # Now register the left and right genes with system feature_id-s
       xx$feature_id_left = syn[match(xx$gene_left, syn$synonym), ]$feature_id
       xx$feature_id_right = syn[match(xx$gene_right, syn$synonym), ]$feature_id
+      
+      # TODO: Should there always be a feature_id_left?
       #stopifnot(!any(is.na(xx$feature_id_left)))
-      #stopifnot(!any(is.na(xx$feature_id_right)))  # feature_id_right could be N/A as in the 
+
+      # feature_id_right could be N/A as is the case in the FMI Fusion load, but
+      # let's not take this out just yet.
+      #stopifnot(!any(is.na(xx$feature_id_right)))
     }
     
     if (!('biosample_id' %in% colnames(xx))) {
@@ -564,6 +569,10 @@ register_fusion_data = function(df, measurementset, only_test = FALSE, con = NUL
     
     arrayname = full_arrayname(.ghEnv$meta$arrFusion)
     
+    if (NA %in% colnames(xx)) {
+      cat("Removing column with NA as its name from the dataframe\n")
+      xx = xx[!is.na(names(xx))]
+    }
     xx = xx %>% group_by(biosample_id) %>% mutate(fusion_id = row_number())
     xx = as.data.frame(xx)
     

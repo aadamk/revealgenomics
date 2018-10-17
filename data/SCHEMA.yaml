@@ -369,7 +369,7 @@ array:
       gene_right: string
       chromosome_right: string
       pos_right: int64
-      num_spanning_reads: string
+      num_spanning_reads: int64
       num_mate_pairs: int64
       num_mate_pairs_fusion: int64
     dims:

@@ -720,6 +720,7 @@ DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                        load_data_from_file = function() {
                                          private$.header = FALSE
                                          super$load_data_from_file()
+                                         # Hmm, these column names don't align with the fusion schema from SCHEMA.yaml
                                          colnames(private$.data_df) = c('biosample_name', 
                                                                         'gene_left', 'chromosome_left', 'pos_left',
                                                                         'gene_right', 'chromosome_right', 'pos_right',
