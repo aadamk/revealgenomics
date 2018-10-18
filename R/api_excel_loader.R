@@ -253,9 +253,18 @@ register_entities_workbook = function(workbook,
         
         loaderObj$assign_other_ids()
         
-        try({
+        #try({
+        #  loaderObj$load_data()
+        #})
+        errorStatus = tryCatch(expr = {
           loaderObj$load_data()
+        }, error = function(e) {
+          print(e)
+          return(e)
         })
+        if ("error" %in% class(errorStatus)) {
+          cat("failed loading data\n")
+        }
       } # end of loop through unique files in a measurementsets
     } # end of loop through measurementsets in a dataset record
   } # end of loop through dataset records

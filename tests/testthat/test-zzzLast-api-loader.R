@@ -39,12 +39,27 @@ test_that("Register entities via workbook works OK", {
                                register_measurement_entity = 'FUSION')
     
     # Now do some checks on the data load
-    ftrs = search_features(gene_symbol = c('TXNIP'))
     ms = get_measurementsets()
-    # TODO: walk all pipelines and verify data rather than cherry-picking just one.
-    ms = ms[ms$pipeline_scidb == '[external]-[Fusion] Tophat Fusion',]
-    ms = ms[ms$measurementset_id == 3,]
-    v1 = search_fusion(measurementset = ms, feature = ftrs)
+    
+    # TODO: walk all pipelines and measurementset IDs to verify data.
+    ftrs = search_features(gene_symbol = c('TXNIP'))
+    mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Tophat Fusion',]
+    mn = mn[mn$measurementset_id == 3,]
+    v1 = search_fusion(measurementset = mn, feature = ftrs)
+    cat('TXNIP feature search\n')
+    expect_true(all.equal(dim(v1), c(3, 16)))
+    
+    ftrs = search_features(gene_symbol = c('IGH'))
+    mn = ms[ms$pipeline_scidb == '[external]-[Fusion] custom pipeline - Foundation Medicine',]
+    mn = mn[mn$measurementset_id == 2,]
+    v1 = search_fusion(measurementset = mn, feature = ftrs)
+    cat('IGH feature search\n')
+    expect_true(all.equal(dim(v1), c(1, 16)))
+    
+    mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Defuse',]
+    mn = mn[mn$measurementset_id == 6,]
+    v1 = search_fusion(measurementset = mn, feature = ftrs)
+    cat('... feature search\n')
     expect_true(all.equal(dim(v1), c(3, 16)))
   }
 })

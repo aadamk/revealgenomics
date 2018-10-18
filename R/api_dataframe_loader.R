@@ -147,12 +147,15 @@ DataLoader = R6::R6Class(classname = "DataLoader",
             stopifnot(nrow(fset) == 1)
             # print(fset)
             
-            if (is.null(private$.reference_object$feature)) {
+            if (is.null(private$.reference_object$feature) ||
+                nrow(private$.reference_object$feature) == 0) {
               cat("feature_ref = NULL; downloading features for featureset", fset$featureset_id, "into loaderObject\n")
               private$.reference_object$feature = search_features(featureset_id = fset$featureset_id)
-            } else if (unique(private$.reference_object$feature$featureset_id) != fset$featureset_id) {
-              cat("featureset has changed; downloading features for featureset", fset$featureset_id, "into loaderObject\n")
-              private$.reference_object$feature = search_features(featureset_id = fset$featureset_id)
+            } else {
+              if (unique(private$.reference_object$feature$featureset_id) != fset$featureset_id) {
+                cat("featureset has changed; downloading features for featureset", fset$featureset_id, "into loaderObject\n")
+                private$.reference_object$feature = search_features(featureset_id = fset$featureset_id)
+              }
             }
           },
           
@@ -844,6 +847,80 @@ DataLoaderFusionTophat = R6::R6Class(classname = 'DataLoaderFusionTophat',
                                        }
                                      ))
 
+##### DataLoaderDeFuseTophat #####
+DataLoaderDeFuseTophat = R6::R6Class(classname = 'DataLoaderDeFuseTophat',
+                                     inherit = DataLoader,
+                                     public = list(
+                                       print_level = function() {cat("----(Level: DataLoaderDeFuseTophat)\n")},
+                                       register_new_features = function() {
+                                         fset_choice = unique(private$.reference_object$pipeline_df[,
+                                                                                                    template_linker$featureset$choices_col])
+                                         stopifnot(length(fset_choice) == 1)
+                                         fsets_scidb = private$.reference_object$featureset
+                                         fset = drop_na_columns(fsets_scidb[match(fset_choice, 
+                                                                                  fsets_scidb[,
+                                                                                              template_linker$featureset$choices_col]), ])
+                                         stopifnot(nrow(fset) == 1)
+                                         cat("Matching features in file by feature-synonyms in DB at featureset_id", 
+                                             fset$featureset_id, "\n")
+                                         fsyn_sel = private$.reference_object$feature_synonym[
+                                           private$.reference_object$feature_synonym$featureset_id == 
+                                             fset$featureset_id, ]
+                                         
+                                         list_of_features = unique(c(as.character(private$.data_df$gene_left), 
+                                                                     as.character(private$.data_df$gene_right)))
+                                         head(list_of_features)
+                                         
+                                         matches_synonym = find_matches_and_return_indices(list_of_features, 
+                                                                                           fsyn_sel$synonym)
+                                         
+                                         unmatched = matches_synonym$source_unmatched_idx
+                                         cat("Number of unmatched gene symbols:", length(unmatched), "\n e.g.", 
+                                             pretty_print(list_of_features[unmatched]), "\n")
+                                         
+                                         if (length(list_of_features[unmatched]) > 0) {
+                                           newfeatures = data.frame(
+                                             name = list_of_features[unmatched],
+                                             gene_symbol = 'NA',
+                                             featureset_id = fset$featureset_id,
+                                             chromosome = "unknown",
+                                             start = '...', 
+                                             end = '...',
+                                             feature_type = "gene",
+                                             source = "Tophat fusion file")
+                                           
+                                           feature_record = register_feature(df = newfeatures)
+                                           
+                                           return(TRUE)
+                                         } else {
+                                           cat("No new features to register\n")
+                                           return(FALSE)
+                                         }                                         
+                                       },
+                                       assign_feature_ids = function(){
+                                         cat("assign_feature_ids()"); self$print_level()
+                                         super$assign_feature_ids()
+                                         
+                                         syn = private$.reference_object$feature_synonym
+                                         syn = syn[syn$featureset_id == 
+                                                     private$.reference_object$measurement_set$featureset_id, ]
+                                         
+                                         # Now register the left and right genes with system feature_id-s
+                                         private$.data_df$feature_id_left = syn[match(private$.data_df$gene_left, syn$synonym), ]$feature_id
+                                         private$.data_df$feature_id_right = syn[match(private$.data_df$gene_right, syn$synonym), ]$feature_id
+                                         stopifnot(!any(is.na(private$.data_df$feature_id_left)))
+                                         stopifnot(!any(is.na(private$.data_df$feature_id_right)))
+                                       },
+                                       load_data = function() {
+                                         cat("load_data()"); self$print_level()
+                                         private$.data_df = plyr::rename(private$.data_df,
+                                                                         c('biosample_name' = 
+                                                                             'sample_name_unabbreviated'))
+                                         register_fusion_data(df = private$.data_df,
+                                                              measurementset = private$.reference_object$measurement_set)
+                                       }
+                                     ))
+
 ##### createDataLoader #####
 #' @export      
 createDataLoader = function(data_df, reference_object, feature_annotation_df = NULL){
@@ -896,7 +973,11 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[Fusion] custom pipeline - Foundation Medicine}{gene}" =
            DataLoaderFMIFusion$new(data_df = data_df,
                                    reference_object = reference_object,
-                                   feature_annotation_df = feature_annotation_df)
+                                   feature_annotation_df = feature_annotation_df),
+         "{[external]-[Fusion] Defuse}{gene}" =
+           DataLoaderDeFuseTophat$new(data_df = data_df,
+                                      reference_object = reference_object,
+                                      feature_annotation_df = feature_annotation_df)
   )
 }
 

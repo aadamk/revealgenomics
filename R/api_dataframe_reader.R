@@ -728,6 +728,34 @@ DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                                                         'num_mate_pairs_fusion')
                                        }
                                      ))
+
+##### DataReaderDeFuseTophat #####
+DataReaderDeFuseTophat = R6::R6Class(classname = 'DataReaderDeFuseTophat',
+                                     inherit = DataReader,
+                                     public = list(
+                                       print_level = function() {cat("----(Level: DataReaderDeFuseTophat)\n")},
+                                       load_data_from_file = function() {
+                                         private$.header = TRUE
+                                         super$load_data_from_file()
+                                         
+                                         # Translate columns from the spreadsheet into the normalized columns
+                                         # expected by the fusion data array.
+                                         private$.data_df$chromosome_left = private$.data_df$gene1
+                                         private$.data_df$gene_left = private$.data_df$gene_name1
+                                         private$.data_df$pos_left = private$.data_df$genomic_break_pos1 # TODO: should this be gene_start1 instead?
+                                         
+                                         private$.data_df$chromosome_right = private$.data_df$gene2
+                                         private$.data_df$gene_right = private$.data_df$gene_name2
+                                         private$.data_df$pos_right = private$.data_df$genomic_break_pos2 # TODO: should this be gene_start2 instead?gene_start2
+                                         
+                                         # TODO:  I suspect these should come from span_coverage, span_coverage2 but those 
+                                         # are relatively small floating-point values so I didn't include them for now.
+                                         private$.data_df$num_spanning_reads = 0
+                                         private$.data_df$num_mate_pairs = 0
+                                         private$.data_df$num_mate_pairs_fusion = 0
+                                       }
+                                     ))
+
 ##### createDataReader #####
 #' @export
 createDataReader = function(pipeline_df, measurement_set){
@@ -763,9 +791,6 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Fusion] Tophat Fusion}{gene}" = 
              DataReaderFusionTophat$new(pipeline_df = pipeline_df,
                                         measurement_set = measurement_set),
-         "{[external]-[Fusion] Defuse}{gene}" =
-             DataReader$new(pipeline_df = pipeline_df,
-                            measurement_set = measurement_set),
          "{[Affymetrix]-[Microarray] Affymetrix Bioconductor CDF v3.2.0}{gene}" = ,
          "{[Affymetrix]-[Microarray] UMich Alt CDF v20.0.0}{gene}" =
            DataReaderRNAQuantMicroarray$new(pipeline_df = pipeline_df,
@@ -776,6 +801,9 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Fusion] custom pipeline - Foundation Medicine}{gene}" =
            DataReaderFMIFusion$new(pipeline_df = pipeline_df,
                                    measurement_set = measurement_set),
+         "{[external]-[Fusion] Defuse}{gene}" =
+           DataReaderDeFuseTophat$new(pipeline_df = pipeline_df,
+                                      measurement_set = measurement_set),
          stop("Need to add reader for choice:\n", temp_string)
          )
 }
