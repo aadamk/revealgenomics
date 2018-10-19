@@ -740,6 +740,12 @@ DataReaderDeFuseTophat = R6::R6Class(classname = 'DataReaderDeFuseTophat',
                                          
                                          # Translate columns from the spreadsheet into the normalized columns
                                          # expected by the fusion data array.
+                                         # I don't think that these mappings are correct, but I tried other mappings from the same 
+                                         # spreadsheet and was unable to use 'search_fusion' to query the data with features.  I think
+                                         # that either some new features need to be registered or feature synonyms need to be created
+                                         # because I found matching features in the FEATURE table.  I will need some direction as to
+                                         # the design here because I want to time-box the amount of guess-and-check effort required to
+                                         # complete this.
                                          private$.data_df$chromosome_left = private$.data_df$gene1
                                          private$.data_df$gene_left = private$.data_df$gene_name1
                                          private$.data_df$pos_left = private$.data_df$genomic_break_pos1 # TODO: should this be gene_start1 instead?

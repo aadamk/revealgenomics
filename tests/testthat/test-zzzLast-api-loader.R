@@ -56,6 +56,10 @@ test_that("Register entities via workbook works OK", {
     cat('IGH feature search\n')
     expect_true(all.equal(dim(v1), c(1, 16)))
     
+    # TODO: This test doesn't work and I think it's because of an incorrect choice of column-to-dataframe
+    # mapping in the DataReaderDeFuseTophat.  Also, I'm not sure how to build the feature synonyms up
+    # in a way that makes sense.  Kriti, what am I missing?
+    ftrs = search_features(gene_symbol = c('KANSL1'))
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Defuse',]
     mn = mn[mn$measurementset_id == 6,]
     v1 = search_fusion(measurementset = mn, feature = ftrs)

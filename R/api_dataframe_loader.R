@@ -853,6 +853,7 @@ DataLoaderDeFuseTophat = R6::R6Class(classname = 'DataLoaderDeFuseTophat',
                                      public = list(
                                        print_level = function() {cat("----(Level: DataLoaderDeFuseTophat)\n")},
                                        register_new_features = function() {
+                                         #featreset_choices$featureset_name sheet/column
                                          fset_choice = unique(private$.reference_object$pipeline_df[,
                                                                                                     template_linker$featureset$choices_col])
                                          stopifnot(length(fset_choice) == 1)

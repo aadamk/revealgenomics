@@ -816,8 +816,20 @@ search_fusion = function(measurementset, biosample = NULL, feature = NULL,
   
   arrayname = paste0(custom_scan(), 
                      "(", full_arrayname(.ghEnv$meta$arrFusion), ")")
-  if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
-  if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
+
+  if (!is.null(biosample)) {
+    biosample_id = biosample$biosample_id
+  }
+  else {
+    biosample_id = NULL
+  }
+  
+  if (!is.null(feature)) {
+    feature_id = feature$feature_id
+  }
+  else {
+    feature_id = NULL
+  }
   
   if (exists('debug_trace')) cat("retrieving fusion data from server\n")
   res = search_fusions_scidb(arrayname,
