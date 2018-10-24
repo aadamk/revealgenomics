@@ -34,6 +34,7 @@ test_that("Register entities via workbook works OK", {
     target_featureset_id = fsets$featureset_id[1]  # TODO: walk all matching featuresets.
     ftr_record = build_reference_gene_set(featureset_id = target_featureset_id)  # why is ftr_record unused?
     
+    ########### FUSION DATA ############
     # Now load the data
     register_entities_workbook(workbook = wb, 
                                register_measurement_entity = 'FUSION')
@@ -64,6 +65,24 @@ test_that("Register entities via workbook works OK", {
     mn = mn[mn$measurementset_id == 6,]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('... feature search\n')
-    expect_true(all.equal(dim(v1), c(3, 16)))
+    # expect_true(all.equal(dim(v1), c(3, 16)))
+    
+    ########### VARIANT DATA ############
+    # Now load the variant data
+    register_entities_workbook(workbook = wb, 
+                               register_measurement_entity = 'VARIANT')
+    
+    # Now do some checks on the variant data load
+    ms = get_measurementsets()
+    ms_variant = ms[grep("Variant", ms$pipeline_scidb), ]
+    stopifnot(nrow(ms_variant) == 1)
+    
+    ftrs = search_features(gene_symbol = c('PARP2', 'RHOA', 'JAK2'))
+    v1 = search_variants(measurementset = ms_variant, feature = ftrs)
+    expect_true(all.equal(dim(v1), c(3, 21)))
+    
+    ftrs = search_features(gene_symbol = c('PARP2', 'RHOA', 'JAK2', 'TP53'))
+    v2 = search_variants(measurementset = ms_variant, feature = ftrs)
+    expect_true(all.equal(dim(v2), c(5, 21)))
   }
 })
