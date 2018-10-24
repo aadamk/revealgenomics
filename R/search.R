@@ -236,7 +236,7 @@ search_features = function(
   }
   
   if (!is.null(gene_symbol)) {
-    gene_symbol_df = search_gene_symbols(gene_symbol = gene_symbol)
+    gene_symbol_df = search_gene_symbols(gene_symbol = gene_symbol, con = con)
     if (nrow(gene_symbol_df) > 0) {
       subq = paste(
         sapply(
