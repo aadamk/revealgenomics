@@ -449,8 +449,11 @@ register_tuple_return_id = function(df,
   }
   projected_attrs = paste0(uniq[!(uniq %in% do_not_project)], # dataset_id is a dimension, and does not need to be projected
                            collapse = ",")
+  options(scidb.aio = TRUE) # try faster path: Shim uses aio_save with atts_only=0 which will include dimensions
+                            # https://github.com/Paradigm4/SciDBR/commit/85895a77549a24c16766e6adf4dcc6311ee21acc
   xx = iquery(con$db, paste0("project(", arrayname, ", ", 
                              projected_attrs, ")"), return = TRUE)
+  options(scidb.aio = FALSE)
   matching_entity_ids = find_matches_with_db(df_for_upload = df, df_in_db = xx, unique_fields = uniq)
   nonmatching_idx = which(is.na(matching_entity_ids))
   matching_idx = which(!is.na(matching_entity_ids))
