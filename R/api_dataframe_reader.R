@@ -748,7 +748,7 @@ DataReaderVariantExomic = R6::R6Class(
                                      ',' = 'comma'), 
                  "* VCF file:\n\t", file_path, "\n"))
       private$.data_df = vcfR::read.vcfR(file = file_path)
-      cat("Preview:", vcfR::head(private$.data_df), "\n")
+      # cat("Preview:", vcfR::head(private$.data_df), "\n")
       invisible(self)
     }
     ),
@@ -1318,7 +1318,11 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Single Nucleotide Variant] Targeted Region - DNA Analysis Pipeline for Cancer (Personalis)}{DNA}" =
              DataReaderVariantFormatA$new(pipeline_df = pipeline_df,
                                                  measurement_set = measurement_set),
-         "{[internal]-[Germline Variants] HaplotypeCaller}{DNA}" =
+         "{[internal]-[Germline Variants] HaplotypeCaller}{DNA}" = ,
+         "{[internal]-[Somatic variant] TNsnv}{DNA}" = ,
+         "{[internal]-[Somatic variant] TNscope}{DNA}" = ,
+         "{[internal]-[Somatic variant] Strelka 1}{DNA}" = ,
+         "{[internal]-[Somatic variant] Strelka 2}{DNA}" =
            DataReaderVariantExomic$new(pipeline_df = pipeline_df,
                                        measurement_set = measurement_set),
          "{[external]-[Single Nucleotide Variant] Targeted Region - FoundationOne Heme (FMI)}{DNA}" =

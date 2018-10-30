@@ -1346,7 +1346,11 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
            DataLoaderVariantFormatA$new(data_df = data_df,
                                         reference_object = reference_object, 
                                         feature_annotation_df = feature_annotation_df),
-         "{[internal]-[Germline Variants] HaplotypeCaller}{DNA}" =
+         "{[internal]-[Germline Variants] HaplotypeCaller}{DNA}" = ,
+         "{[internal]-[Somatic variant] TNsnv}{DNA}" = ,
+         "{[internal]-[Somatic variant] TNscope}{DNA}" = ,
+         "{[internal]-[Somatic variant] Strelka 1}{DNA}" = ,
+         "{[internal]-[Somatic variant] Strelka 2}{DNA}" = 
            DataLoaderVariantExomic$new(data_df = data_df,
                                        reference_object = reference_object, 
                                        feature_annotation_df = feature_annotation_df),
