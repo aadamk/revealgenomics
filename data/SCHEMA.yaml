@@ -460,13 +460,9 @@ array:
       id: string
       reference: string
       alternate: string
+      concat_string: string
     unique_fields:
-      - referenceset_id
-      - chromosome_key_id
-      - start
-      - end
-      - reference
-      - alternate
+      - concat_string
     dims:
       referenceset_id:
         start: 0
