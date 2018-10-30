@@ -1126,8 +1126,37 @@ DataLoaderVariantExomic = R6::R6Class(
      var_call_tibble = vcfR::extract_gt_tidy(xx)
      var_call_tibble = as.data.frame(var_call_tibble)
      var_call_tibble$Key = NULL
-     stopifnot(length(unique(var_call_tibble$Indiv)) == 1)
-     var_call_tibble$Indiv = NULL
+     if (length(unique(var_call_tibble$Indiv)) == 1)  {# Germline variants 
+       cat("Loading germline variants\n")
+       variantType = 'Germline'
+       var_call_tibble$Indiv = NULL
+     } else if (length(unique(var_call_tibble$Indiv)) == 2)  {# Somatic variants (tumor/normal)
+       cat("Loading somatic variants\n")
+       variantType = 'Somatic'
+       stopifnot(nrow(var_call_tibble) %% 2 == 0)
+       if (identical(
+         unique(var_call_tibble$Indiv), 
+         c("NORMAL", "TUMOR" ))) {
+         suffixes = c("NORMAL", "TUMOR" )
+       } else if (length(grep("_", var_call_tibble$Indiv)) == 
+                  nrow(var_call_tibble)) { # Sample_name + "_" + norm / on / pre
+         splitstr_list = stringi::stri_split(var_call_tibble$Indiv, fixed="_")
+         suffixes = unique(unlist(lapply(splitstr_list, function(elem) elem[2])))
+         # stopifnot(identical( # confirm that suffixes are "on" and "norm" only
+         #   sort(suffixes),
+         #   c("norm", "on")))
+       }
+       var_call_tibble_s1 = var_call_tibble[grep(suffixes[1], var_call_tibble$Indiv), ]
+       var_call_tibble_s2 = var_call_tibble[grep(suffixes[2], var_call_tibble$Indiv), ]
+       var_call_tibble_s1$Indiv = NULL
+       var_call_tibble_s2$Indiv = NULL
+       colnames(var_call_tibble_s1) = paste0(colnames(var_call_tibble_s1), "_", suffixes[1])
+       colnames(var_call_tibble_s2) = paste0(colnames(var_call_tibble_s2), "_", suffixes[2])
+       var_call_tibble = cbind(var_call_tibble_s1,
+                               var_call_tibble_s2)
+     } else {
+       stop("Expect number of unique values for Indiv to be 1 or 2")
+     }
      
      stopifnot(nrow(var_call_df) == nrow(var_call_tibble))
      var_call_df2 = cbind(
