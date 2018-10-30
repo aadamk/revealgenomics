@@ -1190,7 +1190,24 @@ DataLoaderVariantExomic = R6::R6Class(
      # - `attr_flex`: VCF attrubute fields that are not mandatory 
      cols_dimensions = get_idname(.ghEnv$meta$arrExomicVariantCall)[!(
        get_idname(.ghEnv$meta$arrExomicVariantCall) %in% 'key_id')]
-     cols_attr_mandatory = c('quality', 'filter', 'info', 'gt_AD', 'gt_DP', 'gt_GT')
+     if (variantType == 'Germline') {
+       cols_attr_mandatory = c('quality', 'filter', 'info', 'gt_AD', 'gt_DP', 'gt_GT')
+     } else if (variantType == 'Somatic') {
+       cols_attr_mandatory = c('quality', 'filter', 'info', 
+                               unlist(
+                                 lapply(
+                                   suffixes, 
+                                   function(elem) paste0(c('gt_AD', 'gt_DP', 'gt_GT'), "_", elem)
+                                   )
+                                 )
+                               )
+       not_found_mandatory = cols_attr_mandatory[!(cols_attr_mandatory %in% colnames(df1))]
+       if (length(not_found_mandatory) > 0) {
+         cat("Dropping mandatory restriction on columns:", 
+             pretty_print(not_found_mandatory), "\n")
+         cols_attr_mandatory = cols_attr_mandatory[(cols_attr_mandatory %in% colnames(df1))]
+       }
+     }
      cols_attr_flex = colnames(df1)[!(colnames(df1) %in% 
                                         c(cols_dimensions, cols_attr_mandatory))]
      if (!('per_gene_variant_number' %in% colnames(df1))) {
