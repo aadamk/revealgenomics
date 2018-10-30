@@ -1235,6 +1235,27 @@ DataLoaderVariantExomic = R6::R6Class(
      VAR_KEY = get_variant_key()
      var_gather = tidyr::gather(data = df1, key = "key", value = "val", 
                                 c(cols_attr_mandatory, cols_attr_flex))
+     
+     cat("Step 5B1 -- Dropping NA columns except for when the key belongs to", 
+         pretty_print(cols_attr_mandatory), "\n")
+     var_gather1 = var_gather[var_gather$key %in% cols_attr_mandatory, ] 
+     var_gather2 = var_gather[!(var_gather$key %in% cols_attr_mandatory), ]
+     stopifnot(nrow(var_gather1) + nrow(var_gather2) == nrow(var_gather))
+     non_null_indices = which(!is.na(var_gather2$val))
+     if (length(non_null_indices) != nrow(var_gather2)) {
+       cat(paste0("From total: ", nrow(var_gather), " key-value pairs, retaining: ", 
+                  (length(non_null_indices) + nrow(var_gather1)), " non-null pairs.\n\tSavings(A) = ", 
+                  round(
+                    (nrow(var_gather2) - length(non_null_indices)) / nrow(var_gather) * 100, 
+                    digits = 1), "%\n"))
+       var_gather2 = var_gather2[non_null_indices, ]
+       if (nrow(var_gather2) > 0) {
+         var_gather = rbind(var_gather1, var_gather2)
+       } else {
+         var_gather = var_gather1
+       }
+     }
+     
      M = find_matches_and_return_indices(var_gather$key, VAR_KEY$key)
      stopifnot(length(M$source_unmatched_idx) == 0)
      var_gather$key_id = VAR_KEY$key_id[M$target_matched_idx]
@@ -1248,15 +1269,20 @@ DataLoaderVariantExomic = R6::R6Class(
      non_null_indices = which(!(var_gather$val %in% empty_markers))
      if (length(non_null_indices) != nrow(var_gather)) {
        cat(paste0("From total: ", nrow(var_gather), " key-value pairs, retaining: ", 
-                  length(non_null_indices), " non-null pairs.\n\tSavings = ", 
-                  (nrow(var_gather) - length(non_null_indices)) / nrow(var_gather) * 100, "%\n"))
+                  length(non_null_indices), " non-null pairs.\n\tSavings(B) = ", 
+                  round(
+                    (nrow(var_gather) - length(non_null_indices)) / nrow(var_gather) * 100, 
+                    digits = 1), "%\n"))
        var_gather = var_gather[non_null_indices, ] 
      }
      
-     if (!identical(
-       get_variant_key(variant_key_id = unique(var_gather[is.na(var_gather$val), ]$key_id))$key,
-       "filter")) {
-       stop("Result not handled yet")
+     if (variantType == 'Germline') { # Extra check for germline data
+                                      # only `filter` column was found to have NA
+       if (!identical(
+         get_variant_key(variant_key_id = unique(var_gather[is.na(var_gather$val), ]$key_id))$key,
+         "filter")) {
+         stop("Result not handled yet")
+       }
      }
      
      # Step 7
@@ -1336,7 +1362,6 @@ DataLoaderVariantExomic = R6::R6Class(
      #   dataset_id = attr(private$.data_df, "dataset_id"),
      #   dataset_version = attr(private$.data_df, "dataset_version"))
      # per_sample_df$biosample_id = attr(private$.data_df, "biosample_id")
-     # browser()
    }
    
   )
