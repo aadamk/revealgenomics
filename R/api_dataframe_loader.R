@@ -705,248 +705,67 @@ DataLoaderVariantFormatA = R6::R6Class(classname = 'DataLoaderVariantFormatA',
                                         }
                                       ))
 
-##### DataLoaderFMIFusion #####
-#' loader to try and handle various variant formats
-#' - currently assumes that features in the data-file are previously registered from a GTF file
-#' - may use the `feature_annotation_df` data.frame to figure out action related to feature matching
-DataLoaderFMIFusion = R6::R6Class(classname = 'DataLoaderFMIFusion',
-                                       inherit = DataLoaderVariant,
-                                       public = list(
-                                         print_level = function() {cat("----(Level: DataLoaderFMIFusion)\n")},
-                                         assign_feature_ids = function(){
-                                           cat("assign_feature_ids()"); self$print_level()
-                                           super$assign_feature_ids()
-                                           
-                                           column_in_file = 'scidb_feature_col'
-                                           feature_type = 'gene' # so far, all variant data files link to gene features only
-                                           column_names = colnames(private$.feature_annotation_df)
-                                           cat("Feature annotation dataframe has columns:",
-                                               paste0(column_names,
-                                                      collapse = ", "), 
-                                               "\n\tWill match with first column\n")
-                                           private$.data_df$feature_id = match_features(
-                                             features_in_file = private$.data_df[, column_in_file],
-                                             df_features_db = private$.reference_object$feature,
-                                             feature_type = feature_type,
-                                             column_in_db = column_names[1])
-                                           private$.data_df[, column_in_file] = NULL
-                                         },
-                                         
-                                         register_new_features = function() {
-                                           cat("Function: Register new features (Level: DataLoaderFMIFusion)\n")
-                                           super$register_new_features()
-                                           
-                                           fset_id = private$.reference_object$measurement_set$featureset_id
-                                           cat("Match features in file to features at featureset_id =", fset_id, "\n")
-                                           
-                                           ftrs = private$.reference_object$feature
-                                           stopifnot(unique(ftrs$featureset_id) == fset_id)
-                                           
-                                           column_names = colnames(private$.feature_annotation_df)
-                                           cat("Feature annotation dataframe has columns:",
-                                               paste0(column_names,
-                                                      collapse = ", "), 
-                                               "\n\tWill match with first column\n")
-                                           # =========== Level 1 matching: match with gene symbols ===========
-                                           m1 = find_matches_and_return_indices(
-                                             private$.data_df$scidb_feature_col,
-                                             ftrs[, column_names[1]]
-                                           )
-                                           if (length(m1$source_unmatched_idx) > 0) {
-                                             cat("Level 1 matching with gene symbols is insufficient;\n\t
-                                                 Proceeding to match with synonyms\n")
-                                             ftrs_unmatched_v1 = private$.data_df$scidb_feature_col[
-                                               m1$source_unmatched_idx]
-                                             fsyn = private$.reference_object$feature_synonym
-                                             fsyn = fsyn[fsyn$featureset_id == fset_id, ]
-                                             
-                                             # =========== Level 2 matching: match with gene synonyms ===========
-                                             m2 = find_matches_and_return_indices(
-                                               ftrs_unmatched_v1, 
-                                               fsyn$synonym
-                                             )
-                                             if (length(m2$source_unmatched_idx) > 0) {
-                                               stop("currently assumes that features in the data-file are 
-                                                    previously registered from a GTF file,
-                                                    match with standard hugo gene symbol list, 
-                                                    or match with gene synonyms")
-                                               return(TRUE)
-                                             }
-                                             matched_syn_feature_id = fsyn[m2$target_matched_idx, ]$feature_id
-                                             syn_ftrs = get_features(feature_id = fsyn[m2$target_matched_idx, ]$feature_id)
-                                             syn_ftrs = syn_ftrs[match(matched_syn_feature_id, 
-                                                                       syn_ftrs$feature_id), ]
-                                             stopifnot(nrow(syn_ftrs) == length(m1$source_unmatched_idx))
-                                             
-                                             cat("Now overwriting synonym in data with standard hugo symbol:\n\t",
-                                                 pretty_print(unique(ftrs_unmatched_v1)),
-                                                 "==>", 
-                                                 pretty_print(unique(syn_ftrs$gene_symbol)), 
-                                                 "\n")
-                                             private$.data_df[m1$source_unmatched_idx, ]$scidb_feature_col = 
-                                               syn_ftrs$gene_symbol
-                                             return(FALSE)
-                                           } else {
-                                             cat("No new features to register\n")
-                                             return(FALSE)
-                                           }
-                                           invisible(self)
-                                           },
-                                         load_data = function() {
-                                           cat("load_data()"); self$print_level()
-                                           register_fusion_data(df = private$.data_df,
-                                                                measurementset = private$.reference_object$measurement_set)
-                                         }
-                                       ))
-
-##### DataLoaderFusionTophat #####
-DataLoaderFusionTophat = R6::R6Class(classname = 'DataLoaderFusionTophat',
-                                     inherit = DataLoader,
-                                     public = list(
-                                       print_level = function() {cat("----(Level: DataLoaderFusionTophat)\n")},
-                                       register_new_features = function() {
-                                         fset_choice = unique(private$.reference_object$pipeline_df[,
-                                                                                                    template_linker$featureset$choices_col])
-                                         stopifnot(length(fset_choice) == 1)
-                                         fsets_scidb = private$.reference_object$featureset
-                                         fset = drop_na_columns(fsets_scidb[match(fset_choice, 
-                                                                                  fsets_scidb[,
-                                                                                              template_linker$featureset$choices_col]), ])
-                                         stopifnot(nrow(fset) == 1)
-                                         cat("Matching features in file by feature-synonyms in DB at featureset_id", 
-                                             fset$featureset_id, "\n")
-                                         fsyn_sel = private$.reference_object$feature_synonym[
-                                           private$.reference_object$feature_synonym$featureset_id == 
-                                             fset$featureset_id, ]
-                                         
-                                         list_of_features = unique(c(as.character(private$.data_df$gene_left), 
-                                                                     as.character(private$.data_df$gene_right)))
-                                         head(list_of_features)
-                                         
-                                         matches_synonym = find_matches_and_return_indices(list_of_features, 
-                                                                                           fsyn_sel$synonym)
-                                         
-                                         unmatched = matches_synonym$source_unmatched_idx
-                                         cat("Number of unmatched gene symbols:", length(unmatched), "\n e.g.", 
-                                             pretty_print(list_of_features[unmatched]), "\n")
-                                         
-                                         if (length(list_of_features[unmatched]) > 0) {
-                                           newfeatures = data.frame(
-                                             name = list_of_features[unmatched],
-                                             gene_symbol = 'NA',
-                                             featureset_id = fset$featureset_id,
-                                             chromosome = "unknown",
-                                             start = '...', 
-                                             end = '...',
-                                             feature_type = "gene",
-                                             source = "Tophat fusion file")
-                                           
-                                           feature_record = register_feature(df = newfeatures)
-                                           
-                                           return(TRUE)
-                                         } else {
-                                           cat("No new features to register\n")
-                                           return(FALSE)
-                                         }                                         
-                                       },
-                                       assign_feature_ids = function(){
-                                         cat("assign_feature_ids()"); self$print_level()
-                                         super$assign_feature_ids()
-                                         
-                                         syn = private$.reference_object$feature_synonym
-                                         syn = syn[syn$featureset_id == 
-                                                     private$.reference_object$measurement_set$featureset_id, ]
-                                         
-                                         # Now register the left and right genes with system feature_id-s
-                                         private$.data_df$feature_id_left = syn[match(private$.data_df$gene_left, syn$synonym), ]$feature_id
-                                         private$.data_df$feature_id_right = syn[match(private$.data_df$gene_right, syn$synonym), ]$feature_id
-                                         stopifnot(!any(is.na(private$.data_df$feature_id_left)))
-                                         stopifnot(!any(is.na(private$.data_df$feature_id_right)))
-                                       },
-                                       load_data = function() {
-                                         cat("load_data()"); self$print_level()
-                                         private$.data_df = plyr::rename(private$.data_df,
-                                                                         c('biosample_name' = 
-                                                                             'sample_name_unabbreviated'))
-                                         register_fusion_data(df = private$.data_df,
-                                                              measurementset = private$.reference_object$measurement_set)
-                                       }
-                                     ))
-
-##### DataLoaderDeFuseTophat #####
-DataLoaderDeFuseTophat = R6::R6Class(classname = 'DataLoaderDeFuseTophat',
-                                     inherit = DataLoader,
-                                     public = list(
-                                       print_level = function() {cat("----(Level: DataLoaderDeFuseTophat)\n")},
-                                       register_new_features = function() {
-                                         #featreset_choices$featureset_name sheet/column
-                                         fset_choice = unique(private$.reference_object$pipeline_df[,
-                                                                                                    template_linker$featureset$choices_col])
-                                         stopifnot(length(fset_choice) == 1)
-                                         fsets_scidb = private$.reference_object$featureset
-                                         fset = drop_na_columns(fsets_scidb[match(fset_choice, 
-                                                                                  fsets_scidb[,
-                                                                                              template_linker$featureset$choices_col]), ])
-                                         stopifnot(nrow(fset) == 1)
-                                         cat("Matching features in file by feature-synonyms in DB at featureset_id", 
-                                             fset$featureset_id, "\n")
-                                         fsyn_sel = private$.reference_object$feature_synonym[
-                                           private$.reference_object$feature_synonym$featureset_id == 
-                                             fset$featureset_id, ]
-                                         
-                                         list_of_features = unique(c(as.character(private$.data_df$gene_left), 
-                                                                     as.character(private$.data_df$gene_right)))
-                                         head(list_of_features)
-                                         
-                                         matches_synonym = find_matches_and_return_indices(list_of_features, 
-                                                                                           fsyn_sel$synonym)
-                                         
-                                         unmatched = matches_synonym$source_unmatched_idx
-                                         cat("Number of unmatched gene symbols:", length(unmatched), "\n e.g.", 
-                                             pretty_print(list_of_features[unmatched]), "\n")
-                                         
-                                         if (length(list_of_features[unmatched]) > 0) {
-                                           newfeatures = data.frame(
-                                             name = list_of_features[unmatched],
-                                             gene_symbol = 'NA',
-                                             featureset_id = fset$featureset_id,
-                                             chromosome = "unknown",
-                                             start = '...', 
-                                             end = '...',
-                                             feature_type = "gene",
-                                             source = "Tophat fusion file")
-                                           
-                                           feature_record = register_feature(df = newfeatures)
-                                           
-                                           return(TRUE)
-                                         } else {
-                                           cat("No new features to register\n")
-                                           return(FALSE)
-                                         }                                         
-                                       },
-                                       assign_feature_ids = function(){
-                                         cat("assign_feature_ids()"); self$print_level()
-                                         super$assign_feature_ids()
-                                         
-                                         syn = private$.reference_object$feature_synonym
-                                         syn = syn[syn$featureset_id == 
-                                                     private$.reference_object$measurement_set$featureset_id, ]
-                                         
-                                         # Now register the left and right genes with system feature_id-s
-                                         private$.data_df$feature_id_left = syn[match(private$.data_df$gene_left, syn$synonym), ]$feature_id
-                                         private$.data_df$feature_id_right = syn[match(private$.data_df$gene_right, syn$synonym), ]$feature_id
-                                         stopifnot(!any(is.na(private$.data_df$feature_id_left)))
-                                         stopifnot(!any(is.na(private$.data_df$feature_id_right)))
-                                       },
-                                       load_data = function() {
-                                         cat("load_data()"); self$print_level()
-                                         private$.data_df = plyr::rename(private$.data_df,
-                                                                         c('biosample_name' = 
-                                                                             'sample_name_unabbreviated'))
-                                         register_fusion_data(df = private$.data_df,
-                                                              measurementset = private$.reference_object$measurement_set)
-                                       }
-                                     ))
+##### DataLoaderFusionFormatA #####
+DataLoaderFusionFormatA = R6::R6Class(
+  classname = 'DataLoaderFusionFormatA',
+  inherit = DataLoader,
+  public = list(
+    print_level = function() {cat("----(Level: DataLoaderFusionFormatA)\n")},
+    register_new_features = function() {
+      fset = private$get_selected_featureset()
+      fsyn_sel = private$get_feature_synonym_df_for_selected_featureset()
+      
+      list_of_features = unique(c(as.character(private$.data_df$gene_left), 
+                                  as.character(private$.data_df$gene_right)))
+      head(list_of_features)
+      
+      matches_synonym = find_matches_and_return_indices(list_of_features, 
+                                                        fsyn_sel$synonym)
+      
+      unmatched = matches_synonym$source_unmatched_idx
+      cat("Number of unmatched gene symbols:", length(unmatched), "\n e.g.", 
+          pretty_print(list_of_features[unmatched]), "\n")
+      
+      if (length(list_of_features[unmatched]) > 0) {
+        newfeatures = data.frame(
+          name = list_of_features[unmatched],
+          gene_symbol = list_of_features[unmatched],
+          featureset_id = fset$featureset_id,
+          chromosome = "unknown",
+          start = '...', 
+          end = '...',
+          feature_type = "gene",
+          source = "fusion file")
+        
+        feature_record = register_feature(df = newfeatures)
+        
+        return(TRUE)
+      } else {
+        cat("No new features to register\n")
+        return(FALSE)
+      }                                         
+    },
+    assign_feature_ids = function(){
+      cat("assign_feature_ids()"); self$print_level()
+      super$assign_feature_ids()
+      
+      syn = private$get_feature_synonym_df_for_selected_featureset()
+      
+      # Now register the left and right genes with system feature_id-s
+      private$.data_df$feature_id_left = syn[match(private$.data_df$gene_left, syn$synonym), ]$feature_id
+      private$.data_df$feature_id_right = syn[match(private$.data_df$gene_right, syn$synonym), ]$feature_id
+      stopifnot(!any(is.na(private$.data_df$feature_id_left)))
+      stopifnot(!any(is.na(private$.data_df$feature_id_right)))
+    },
+    load_data = function() {
+      cat("load_data()"); self$print_level()
+      private$.data_df = plyr::rename(private$.data_df,
+                                      c('biosample_name' = 
+                                          'sample_name_unabbreviated'))
+      register_fusion(df1 = private$.data_df,
+                      measurementset = private$.reference_object$measurement_set)
+    }
+  ))
 
 ##### createDataLoader #####
 #' @export      
@@ -991,20 +810,15 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
            DataLoaderVariantFormatA$new(data_df = data_df,
                                         reference_object = reference_object, 
                                         feature_annotation_df = feature_annotation_df),
-         "{[external]-[Fusion] Tophat Fusion}{gene}" = 
-           DataLoaderFusionTophat$new(data_df = data_df,
-                                           reference_object = reference_object),
          "{[internal]-[Proteomics] MaxQuant}{Protein}" = 
            DataLoaderProteomicsMaxQuant$new(data_df = data_df,
                                             reference_object = reference_object),
-         "{[external]-[Fusion] custom pipeline - Foundation Medicine}{gene}" =
-           DataLoaderFMIFusion$new(data_df = data_df,
-                                   reference_object = reference_object,
-                                   feature_annotation_df = feature_annotation_df),
+         "{[external]-[Fusion] Tophat Fusion}{gene}" = ,
+         "{[external]-[Fusion] custom pipeline - Foundation Medicine}{gene}" = ,
          "{[external]-[Fusion] Defuse}{gene}" =
-           DataLoaderDeFuseTophat$new(data_df = data_df,
-                                      reference_object = reference_object,
-                                      feature_annotation_df = feature_annotation_df)
+           DataLoaderFusionFormatA$new(data_df = data_df,
+                                   reference_object = reference_object,
+                                   feature_annotation_df = feature_annotation_df)
   )
 }
 
