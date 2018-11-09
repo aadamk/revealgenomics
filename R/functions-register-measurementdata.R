@@ -527,75 +527,83 @@ register_copynumber_matrix_file = function(copynumberset, dataset_version, featu
   }
 
 #' @export
-register_fusion_data = function(df, measurementset, only_test = FALSE, con = NULL){
-  test_register_fusion_data(df, measurementset)
+register_fusion = function(df1, measurementset, only_test = FALSE, con = NULL){
+  entitynm = .ghEnv$meta$arrFusion
+  con = use_ghEnv_if_null(con)
+  # Step 1
+  # Identify three groups of column-names
+  # - `dimensions`: indices of the multi-dimensional array
+  # - `attr_mandatory`: VCF attribute fields that are mandatory
+  # - `attr_flex`: VCF attrubute fields that are not mandatory 
+  cols_dimensions = get_idname(entitynm)[!(
+    get_idname(entitynm) %in% 
+      c('key_id', 'per_gene_pair_fusion_number'))]
+  cols_attr_mandatory = c('gene_left', 'chromosome_left', 'start_left', 'end_left',
+                          'gene_right', 'chromosome_right', 'start_right', 'end_right',
+                          'num_spanning_reads', 'num_mate_pairs', 'num_mate_pairs_fusion')
+  cols_attr_flex = colnames(df1)[!(colnames(df1) %in% 
+                                     c(cols_dimensions, cols_attr_mandatory))]
+  # Step 2
+  # Run tests
+  cat("Step 2 -- run tests\n")
+  test_register_fusion(df1, fusion_attr_cols = cols_attr_mandatory)
   if (!only_test) {
-    dataset_id = measurementset$dataset_id
-    dataset_version = measurementset$dataset_version
+    # Step 3 
+    # Introduce `per_gene_pair_fusion_number` column
+    if (!('per_gene_pair_fusion_number' %in% colnames(df1))) {
+      # specify dplyr mutate as per https://stackoverflow.com/a/33593868
+      df1 = df1 %>% 
+        group_by(feature_id_left, feature_id_right, biosample_id) %>% 
+          dplyr::mutate(per_gene_pair_fusion_number = row_number())
+    }
+    df1 = as.data.frame(df1)
     
-    xx = df
+    # Step 4
+    # Introduce `dataset_version` column
+    df1$dataset_version = measurementset$dataset_version
     
-    if (!all(c('feature_id_left', 'feature_id_right') %in% colnames(xx))) {
-      syn = get_feature_synonym(con = con)
-      syn = syn[syn$featureset_id == measurementset$featureset_id, ]
-      
-      # Now register the left and right genes with system feature_id-s
-      xx$feature_id_left = syn[match(xx$gene_left, syn$synonym), ]$feature_id
-      xx$feature_id_right = syn[match(xx$gene_right, syn$synonym), ]$feature_id
-      
-      # TODO: Should there always be a feature_id_left?
-      #stopifnot(!any(is.na(xx$feature_id_left)))
-
-      # feature_id_right could be N/A as is the case in the FMI Fusion load, but
-      # let's not take this out just yet.
-      #stopifnot(!any(is.na(xx$feature_id_right)))
+    # Step 5A
+    # Introduce `key_id` and `val` columns i.e. handle VariantKeys 
+    # -- First register any new keys
+    cat("Step 5A -- Register the variant attribute columns as variant keys\n")
+    variant_key_id = register_variant_key(
+      df1 = data.frame(
+        key = c(cols_attr_mandatory, cols_attr_flex), 
+        stringsAsFactors = FALSE))
+    if (!identical(
+      get_variant_key(variant_key_id = variant_key_id)$key,
+      c(cols_attr_mandatory, cols_attr_flex))) {
+      stop("Faced issue registering variant keys")
     }
     
-    if (!('biosample_id' %in% colnames(xx))) {
-      # Biosamples
-      b = search_biosamples(dataset_id = dataset_id, dataset_version = dataset_version, con = con)
-      xx$biosample_id = b[match(xx$biosample_name, b$name), ]$biosample_id
-      stopifnot(!any(is.na(xx$biosample_id)))
+    # Step 5B
+    # Match key with key_id-s
+    cat("Step 5B -- Converting wide data.frame to tall data.frame\n")
+    VAR_KEY = get_variant_key()
+    var_gather = tidyr::gather(data = df1, key = "key", value = "val", 
+                               c(cols_attr_mandatory, cols_attr_flex))
+    M = find_matches_and_return_indices(var_gather$key, VAR_KEY$key)
+    stopifnot(length(M$source_unmatched_idx) == 0)
+    var_gather$key_id = VAR_KEY$key_id[M$target_matched_idx]
+    var_gather$key = NULL # drop the key column
+    var_gather = var_gather[, c(cols_dimensions, 'key_id', 'val')]
+    
+    # Step 6
+    # Remove rows that are effectively empty
+    cat("Step 6 -- Calculating empty markers\n")
+    empty_markers = c('.', 'None')
+    non_null_indices = which(!(var_gather$val %in% empty_markers))
+    if (length(non_null_indices) != nrow(var_gather)) {
+      cat(paste0("From total: ", nrow(var_gather), " key-value pairs, retaining: ", 
+                 length(non_null_indices), " non-null pairs.\n\tSavings = ", 
+                 (nrow(var_gather) - length(non_null_indices)) / nrow(var_gather) * 100, "%\n"))
+      var_gather = var_gather[non_null_indices, ] 
     }
     
-    # Rename some columns
-    # Why is this done here and not in the data readers??  Everything should
-    # be normalized to a single internal representation before this method
-    # is entered.
-    colnames(xx)[colnames(xx) == 'Sample'] = 'sample_name_unabbreviated'
-    colnames(xx)[colnames(xx) == 'chrom_left'] = 'chromosome_left'
-    colnames(xx)[colnames(xx) == 'chrom_right'] = 'chromosome_right'
-    colnames(xx)[colnames(xx) == 'REARR-IN-FRAME?'] = 'REARR-IN-FRAME'
-    
-    if (!('measurementset_id' %in% colnames(xx))) {
-      xx$measurementset_id = measurementset$measurementset_id
-    }
-    xx$dataset_version = dataset_version
-    
-    arrayname = full_arrayname(.ghEnv$meta$arrFusion)
-    
-    if (NA %in% colnames(xx)) {
-      cat("Removing column with NA as its name from the dataframe\n")
-      xx = xx[!is.na(names(xx))]
-    }
-    xx = xx %>% group_by(biosample_id) %>% mutate(fusion_id = row_number())
-    xx = as.data.frame(xx)
-    
-    if (!('dataset_id' %in% colnames(xx))) {
-      xx$dataset_id = dataset_id
-    }
-    
-    cat("registering", nrow(xx), "entries of fusion data into array", arrayname, "\n")
-    
-    # Why is this called register_tuple when we're actually registering a 
-    # dataframe containing many input rows (essentially, input tuples)??
-    register_tuple(df = xx,
-                   ids_int64_conv = c(
-                     get_idname(arrayname), get_int64fields(arrayname)),
-                   arrayname = arrayname, 
-                   con = con)
-    
-    remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrFusion, con = con)
+    # Step 7
+    # Upload and insert the data
+    cat("Step 7 -- Upload and insert the data\n")
+    upload_variant_data_in_steps(entitynm = entitynm, 
+                                 var_gather = var_gather)
   } # end of if (!only_test)
 }
-
