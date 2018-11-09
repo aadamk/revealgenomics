@@ -43,28 +43,33 @@ test_that("Register entities via workbook works OK", {
     
     # TODO: walk all pipelines and measurementset IDs to verify data.
     ftrs = search_features(gene_symbol = c('TXNIP'))
+    if (nrow(ftrs) != 1) {
+      stop("If more than one feature for TXNIP at this point; need to adjust test")
+    }
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Tophat Fusion',]
-    mn = mn[mn$measurementset_id == 3,]
+    mn = mn[mn$featureset_id == ftrs$featureset_id,]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('TXNIP feature search\n')
-    expect_true(all.equal(dim(v1), c(3, 16)))
+    expect_true(all.equal(dim(v1), c(3, 18)))
     
     ftrs = search_features(gene_symbol = c('IGH'))
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] custom pipeline - Foundation Medicine',]
-    mn = mn[mn$measurementset_id == 2,]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('IGH feature search\n')
-    expect_true(all.equal(dim(v1), c(1, 16)))
+    expect_true(all.equal(dim(v1), c(2, 28)))
     
-    # TODO: This test doesn't work and I think it's because of an incorrect choice of column-to-dataframe
-    # mapping in the DataReaderDeFuseTophat.  Also, I'm not sure how to build the feature synonyms up
-    # in a way that makes sense.  Kriti, what am I missing?
+    # deFuse fusion (Also this is at GRCh38 in the test Excel sheet)
     ftrs = search_features(gene_symbol = c('KANSL1'))
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Defuse',]
-    mn = mn[mn$measurementset_id == 6,]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
-    cat('... feature search\n')
-    # expect_true(all.equal(dim(v1), c(3, 16)))
+    cat('KANSL1 feature search\n')
+    expect_true(all.equal(dim(v1), c(1, 83)))
+    
+    ftrs = search_features(gene_symbol = c('ARL17A', 'KANSL1', 'AKNA'))
+    mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Defuse',]
+    v1 = search_fusion(measurementset = mn, feature = ftrs)
+    cat('KANSL1 feature search\n')
+    expect_true(all.equal(dim(v1), c(2, 83)))
     
     ########### VARIANT DATA ############
     # Now load the variant data
