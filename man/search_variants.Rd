@@ -5,7 +5,7 @@
 \title{search variants}
 \usage{
 search_variants(measurementset, biosample = NULL, feature = NULL,
-  autoconvert_characters = TRUE, variants_in_one_array = TRUE, con = NULL)
+  autoconvert_characters = TRUE, con = NULL)
 }
 \arguments{
 \item{measurementset}{pipeline dataframe (mandatory)}
