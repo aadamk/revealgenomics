@@ -26,12 +26,11 @@ test_that("Register entities via workbook works OK", {
     # Load metadata first
     register_entities_workbook(workbook = wb, 
                                register_upto_entity = 'MEASUREMENTSET')
-    # register_measurement_entity = 'VARIANT')
     
     # Build up a featureset to be used for loading data
     fsets = get_featuresets()
     stopifnot(nrow(fsets) == 2)
-    target_featureset_id = fsets$featureset_id[1]  # TODO: walk all matching featuresets.
+    target_featureset_id = fsets[grep("37", fsets$name), ]$featureset_id
     ftr_record = build_reference_gene_set(featureset_id = target_featureset_id)  # why is ftr_record unused?
     
     ########### FUSION DATA ############
