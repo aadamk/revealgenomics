@@ -777,6 +777,7 @@ search_fusion = function(measurementset, biosample = NULL, feature = NULL,
   }
   
   if (!is.null(feature)) {
+    feature = feature[feature$featureset_id == measurementset$featureset_id, ]
     feature_id = feature$feature_id
   }
   else {
@@ -790,6 +791,13 @@ search_fusion = function(measurementset, biosample = NULL, feature = NULL,
                              feature_id,
                              dataset_version = dataset_version, 
                              con = con)
+  # Unpivot
+  res = unpivot_variant_data(var_raw = res, con = con)
+  
+  # Auto-convert characters
+  t1 = proc.time()
+  res = autoconvert_char(df1 = res, convert_logicals = FALSE)
+  cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
   res
 }
 
