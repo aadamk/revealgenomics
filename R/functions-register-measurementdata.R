@@ -12,6 +12,33 @@
 # END_COPYRIGHT
 #
 
+upload_variant_data_in_steps = function(entitynm, var_gather, UPLOAD_N = 5000000, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  return_sub_indices = function(bigN, fac) {
+    starts = seq(1, bigN, fac)
+    ends   = c(tail(seq(0, bigN-1, fac), -1), bigN)
+    stopifnot(length(starts) == length(ends))
+    lapply(1:length(starts), function(idx) {c(starts[idx]: ends[idx])})
+  }
+  steps = return_sub_indices(bigN = nrow(var_gather), fac = UPLOAD_N)
+  
+  arrayname = full_arrayname(entitynm)
+  for (upidx in 1:length(steps)) {
+    step = steps[[upidx]]
+    cat(paste0("Uploading variants. Sub-segment ", 
+               upidx, " of ", length(steps), " segments\n\t", 
+               "Rows: ", step[1], "-", tail(step, 1), "\n"))
+    var_sc = as.scidb_int64_cols(db = con$db, 
+                                 df1 = var_gather[c(step[1]:tail(step, 1)), ],
+                                 int64_cols = colnames(var_gather)[!(colnames(var_gather) %in% 'val')])
+    cat("Redimension and insert\n")
+    iquery(con$db, paste0("insert(redimension(",
+                          var_sc@name,
+                          ", ", arrayname, "), ", arrayname, ")"))
+    remove_old_versions_for_entity(entitynm = entitynm, con = con)
+  }
+}
+
 # Functions to upload measurement data to SciDB
 
 #' Upload expression matrix file 
@@ -421,30 +448,8 @@ register_variant = function(df1, dataset_version = NULL, only_test = FALSE, con 
     # Step 7
     # Upload and insert the data
     cat("Step 7 -- Upload and insert the data\n")
-    UPLOAD_N = 5000000
-    return_sub_indices = function(bigN, fac) {
-      starts = seq(1, bigN, fac)
-      ends   = c(tail(seq(0, bigN-1, fac), -1), bigN)
-      stopifnot(length(starts) == length(ends))
-      lapply(1:length(starts), function(idx) {c(starts[idx]: ends[idx])})
-    }
-    steps = return_sub_indices(bigN = nrow(var_gather), fac = UPLOAD_N)
-    
-    arrayname = full_arrayname(.ghEnv$meta$arrVariant)
-    for (upidx in 1:length(steps)) {
-      step = steps[[upidx]]
-      cat(paste0("Uploading variants. Sub-segment ", 
-                 upidx, " of ", length(steps), " segments\n\t", 
-                 "Rows: ", step[1], "-", tail(step, 1), "\n"))
-      var_sc = as.scidb_int64_cols(db = con$db, 
-                                   df1 = var_gather[c(step[1]:tail(step, 1)), ],
-                                   int64_cols = colnames(var_gather)[!(colnames(var_gather) %in% 'val')])
-      cat("Redimension and insert\n")
-      iquery(con$db, paste0("insert(redimension(",
-                            var_sc@name,
-                            ", ", arrayname, "), ", arrayname, ")"))
-      remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrVariant, con = con)
-    }
+    upload_variant_data_in_steps(entitynm = .ghEnv$meta$arrVariant, 
+                                 var_gather = var_gather)
   } # end of if (!only_test)
 }
 
