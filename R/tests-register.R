@@ -245,7 +245,35 @@ test_register_copnyumber_matrix_file = function(copynumberset, dataset_version){
   stopifnot("file_path" %in% colnames(copynumberset))
 }
 
-test_register_fusion_data = function(df, fusionset){
+# test_register_fusion_data_OLD = function(df, fusionset){
+#   test_dataframe_formatting(df)
+#   stopifnot(nrow(fusionset) == 1)
+# }
+
+test_register_fusion = function(df, fusion_attr_cols){
   test_dataframe_formatting(df)
-  stopifnot(nrow(fusionset) == 1)
+  if(length(unique(df$dataset_id))!=1) stop("Fusion data to be registered must belong to a single dataset/study")
+  
+  # `per_gene_pair_fusion_number`, `key_id` and `val` are mandatory fields that are typically added later --
+  # -- hence run the test as follows
+  df_temp = df
+  df_temp$per_gene_pair_fusion_number = -1
+  df_temp$key_id = -1
+  df_temp$val = 'asdf'
+  test_mandatory_fields(df_temp, arrayname = .ghEnv$meta$arrFusion)
+  
+  cols_to_check = c('measurementset_id', 'biosample_id', 'feature_id_left', 'feature_id_right',
+                    fusion_attr_cols)
+  if ( !all(cols_to_check  %in% colnames(df)) ) {
+    stop("Following columns expected but not present:\n\t",
+         pretty_print(cols_to_check[which(!(cols_to_check %in% colnames(df)))]), 
+         "\n")
+  }
+  
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrMeasurementSet,
+                            id = sort(unique(df$measurementset_id)))
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrBiosample,
+                            id = sort(unique(df$biosample_id)))
+  # check_entity_exists_at_id(entity = .ghEnv$meta$arrFeature,
+  #                           id = sort(unique(df$feature_id)))
 }
