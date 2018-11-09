@@ -230,6 +230,32 @@ DataLoader = R6::R6Class(classname = "DataLoader",
             private$.feature_annotation_df = feature_annotation_df
           }
         ), private = list(
+          get_selected_featureset = function() {
+            # retrieve the featureset for selected set of entries from Pipeline sheet 
+            # (must have downselected to a unique featureset at the time of calling)
+            fset_choice = unique(
+              private$.reference_object$pipeline_df[,
+                                                    template_linker$featureset$choices_col])
+            stopifnot(length(fset_choice) == 1)
+            fsets_scidb = private$.reference_object$featureset
+            fset = drop_na_columns(
+              fsets_scidb[match(fset_choice,
+                                fsets_scidb[,
+                                            template_linker$featureset$choices_col]), ])
+            stopifnot(nrow(fset) == 1)
+            fset
+          },
+          get_feature_synonym_df_for_selected_featureset = function() {
+            # get feature synonym dataframe for use in matching
+            # (assumes user must have downselected to a unique featureset at the time of calling)
+            fset = private$get_selected_featureset()
+            cat("Matching features in file by feature-synonyms in DB at featureset_id", 
+                fset$featureset_id, "\n")
+            fsyn_sel = private$.reference_object$feature_synonym[
+              private$.reference_object$feature_synonym$featureset_id == 
+                fset$featureset_id, ]
+            fsyn_sel
+          },
           .data_df = NULL,
           .feature_annotation_df = NULL, 
           .reference_object = NULL
