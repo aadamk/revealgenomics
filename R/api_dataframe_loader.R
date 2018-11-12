@@ -57,10 +57,14 @@ DataLoader = R6::R6Class(classname = "DataLoader",
           assign_biosample_ids = function(){
             cat("assign_biosample_ids()"); self$print_level()
             bios_ref = private$.reference_object$biosample
-            suffix = template_helper_suffix_by_entity(entity = private$.reference_object$measurement_set$entity)
-            bios_ref = bios_ref[grep(suffix, bios_ref$name), ]
-            cat("Chose suffix:", suffix, "for entity:", private$.reference_object$measurement_set$entity, 
-                "\nRetained:", nrow(bios_ref), "of total:", nrow(private$.reference_object$biosample), "in manifest\n")
+            entity = unique(private$.reference_object$measurement_set$entity)
+            if (entity %in% c(.ghEnv$meta$arrRnaquantification,
+                              .ghEnv$meta$arrVariant)) {
+              suffix = template_helper_suffix_by_entity(entity = private$.reference_object$measurement_set$entity)
+              bios_ref = bios_ref[grep(suffix, bios_ref$name), ]
+              cat("Chose suffix:", suffix, "for entity:", private$.reference_object$measurement_set$entity, 
+                  "\nRetained:", nrow(bios_ref), "of total:", nrow(private$.reference_object$biosample), "in manifest\n")
+            }
             if (nrow(private$.reference_object$pipeline_df) > 1) { 
               # multiple Measurements combined into one file
               # ==> data must contain a column called `biosample_name`
