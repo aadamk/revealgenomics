@@ -105,23 +105,20 @@ DataLoader = R6::R6Class(classname = "DataLoader",
                                                    bios_ref$name)
               
               if (length(mL$source_unmatched_idx) != 0) {
-                print(sample_name_in_file)
-                print(head(bios_ref$name))
-                cat("Excel sheet should provide link between sample in Pipelines sheet and Sample sheet under column `sample_name`")
-
-                # Let's try to use the original_sample_name as the linkage because the `sample_name` linkage is missing.
-                # TODO:  Is doing this valid?  Or is there an error in the spreadsheet?  I don't know, so I'm going to 
-                # fix it up by using original_sample_name.
-                cat("Trying `original_sample_name` instead...")
-                original_sample_name_in_file = private$.reference_object$pipeline_df$original_sample_name
-                mL = find_matches_and_return_indices(original_sample_name_in_file,
-                                                     bios_ref$original_sample_name)
-                if (length(mL$source_unmatched_idx) != 0) {
-                  stop("Excel sheet must provide link between sample in Pipelines sheet and Sample sheet under column `sample_name` or `original_sample_name`")
+                stop("did not expect to have to match original_sample_names while handling
+                     one row of Pipeline sheet (i.e. per sample file)")
+              }
+              
+              if (length(grep(sample_name_in_file, 
+                              bios_ref$name)) > 1) {
+                if (entity %in% c(.ghEnv$meta$arrRnaquantification,
+                                  .ghEnv$meta$arrVariant)) {
+                  stop("Did not expect this error for RNA-seq/GXP or variant entities")
                 }
-                
-                # If we get here, then the original_sample_name linkage got us our data, so let's use it as the sample name going forward.
-                sample_name_in_file = original_sample_name_in_file
+                stop("sample name in pipeline sheet was matched to more than one sample in biosample dataframe.
+                    Must add logic to handle this e.g.
+                    - FUSION data is typically derived from RNA sample, and rarely from DNA sample
+                    - COPYNUMBER data is typically derived from DNA sample, and rarely from RNA sample")
               }
               
               sample_id_db = bios_ref$biosample_id[mL$target_matched_idx]
