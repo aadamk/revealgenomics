@@ -713,9 +713,9 @@ DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                      public = list(
                                        print_level = function() {cat("----(Level: DataReaderFusionTophat)\n")},
                                        load_data_from_file = function() {
+                                         cat("Tophat Fusion files may or may not have header info. Reading without header and will adjust as required.")
                                          private$.header = FALSE
                                          super$load_data_from_file()
-                                         # Hmm, these column names don't align with the fusion schema from SCHEMA.yaml
                                          first_10_cols = c('biosample_name', 
                                                            'gene_left', 'chromosome_left', 'start_left',
                                                            'gene_right', 'chromosome_right', 'start_right',
