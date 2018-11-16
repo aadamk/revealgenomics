@@ -366,7 +366,7 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                         
                                         if (ncol(ftr_ann_df) == 1) {
                                           ftr_ann_df_unmatched = data.frame(name = ftr_ann_df[
-                                            match(unmatched_ftrs, ftr_ann_df[, 'feature_name']), ],  # matches for RSEM type
+                                            match(unmatched_ftrs, ftr_ann_df[, 1]), ],  # matches for RSEM type
                                             stringsAsFactors = FALSE)
                                         } else {
                                           stop("Need to implement this code-path. Follow template for `DataLoaderRNAQuantMicroarray::register_new_features()`")
