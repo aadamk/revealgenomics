@@ -1,3 +1,13 @@
+## Version 0.5
+
+(External facing changes are listed here)
+
+- rename scidb connection function from `gh_connect` to `rg_connect`
+- start using `options(scidb.aio=TRUE)` for downloads where faster `aio_save` path of not having to `apply` dimensions can be used
+- revamped fusion data implementation leads to modifications in `search_fusion` function
+- for more details, see [https://github.com/Paradigm4/revealgenomics/issues/49](https://github.com/Paradigm4/revealgenomics/issues/49)
+
+
 ## Version 0.4
 
 - package name changed from `scidb4gh` to `revealgenomics`
