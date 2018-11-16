@@ -10,7 +10,7 @@ template_helper_suffix_by_entity(entity)
 === Entity-name        Suffix ===
 RNAQUANTIFICATION      RNA
 VARIANT                DNA
-FUSION                 DNA
-COPYNUMBER_MAT         DNA
+FUSION                 DNA / RNA (cannot provide suffix)
+COPYNUMBER_MAT         DNA / RNA (cannot provide suffix)
 PROTEOMICS             Protein
 }
