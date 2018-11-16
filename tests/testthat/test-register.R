@@ -15,7 +15,7 @@ test_that("register_biosample with reserved column `sample_name` fails", {
 
 test_that("Check that variant_key registration works properly", {
   # cat("# Now connect to scidb\n")
-  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = .ghEnv$meta$arrVariantKey, force = TRUE)
     # Get the existing variant_key fields
@@ -65,7 +65,7 @@ test_that("Check that variant_key registration works properly", {
 
 test_that("Check that variant registration works properly", {
   # cat("# Now connect to scidb\n")
-  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = c(
       .ghEnv$meta$arrVariantKey,

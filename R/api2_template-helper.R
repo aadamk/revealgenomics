@@ -362,17 +362,16 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
 #' === Entity-name        Suffix ===
 #' RNAQUANTIFICATION      RNA
 #' VARIANT                DNA
-#' FUSION                 DNA
-#' COPYNUMBER_MAT         DNA
+#' FUSION                 DNA / RNA (cannot provide suffix)
+#' COPYNUMBER_MAT         DNA / RNA (cannot provide suffix)
 #' PROTEOMICS             Protein
 template_helper_suffix_by_entity = function(entity) {
   names_suffixes = c(.ghEnv$meta$arrRnaquantification, 
                      .ghEnv$meta$arrProteomics,
-                     .ghEnv$meta$arrVariant,
-                     .ghEnv$meta$arrFusion
+                     .ghEnv$meta$arrVariant
   )
-  suffixes = c('RNA', 'Protein',
-               rep('DNA', length(names_suffixes)-2))
+  suffixes = c('RNA', 'Protein', 'DNA')
+               # rep('DNA', length(names_suffixes)-2))
   names(suffixes) = names_suffixes
   if (!all(entity %in% names(suffixes))) {
     stop("Assigning suffix 'DNA', 'RNA', 'Protein' based on entity type.

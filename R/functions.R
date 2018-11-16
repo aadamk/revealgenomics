@@ -15,7 +15,7 @@
 #' @import data.table
 
 #' @export
-gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https"){
+rg_connect = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https"){
   # SciDB connection and R API --
   
   if (is.null(username) & protocol != 'http') {
@@ -60,30 +60,40 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
         path2 = '/opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf'
         if (file.exists(path1) & !file.exists(path2)) {
           apache_conf_file = path1
+          port = NULL
+          hostname = NULL
         } else if (!file.exists(path1) & file.exists(path2)) {
           apache_conf_file = path2
+          port = NULL
+          hostname = NULL
+        } else if (!file.exists(path1) & !file.exists(path2)) {
+          hostname = 'localhost'
+          port = 8083
         } else {
-          cat("Cannot infer hostname from apache config. Need to supply hostname as parameter to gh_connect\n")
+          cat("Cannot infer hostname from apache config. Need to supply hostname as parameter to rg_connect\n")
           return(NULL)
         }
-        hostname = tryCatch({
-          system(paste0("grep ServerName ", apache_conf_file, " | awk '{print $2}'"), 
-                        intern = TRUE)
+        if (is.null(hostname)) {
+          hostname = tryCatch({
+            system(paste0("grep ServerName ", apache_conf_file, " | awk '{print $2}'"), 
+                   intern = TRUE)
           }, 
           error = function(e) {
             cat("Could not infer hostname from apache conf\n")
             return(e)
           }
-        )
-        if (! "error" %in% class(hostname)) {
-          hostname = paste0(hostname, '/shim/')
-        } else {
-          print(hostname)
-          cat("Aborting gh_connect()\n")
-          return(NULL)
+          )
+          if (! "error" %in% class(hostname)) {
+            hostname = paste0(hostname, '/shim/')
+          } else {
+            print(hostname)
+            cat("Aborting rg_connect()\n")
+            return(NULL)
+          }
         }
         cat("hostname was not provided. Connecting to", hostname, "\n")
-        con$db = scidbconnect(host = hostname, username = username, password = password, port = NULL, protocol = protocol)
+        con$db = scidbconnect(host = hostname, username = username, password = password, 
+                              port = port, protocol = protocol)
       } else {
         # If user specified host and port, try user supplied parameters
         con$db = scidbconnect(host = host, username = username, password = password, port = port, protocol = protocol)
@@ -101,14 +111,14 @@ gh_connect = function(username = NULL, password = NULL, host = NULL, port = NULL
     if (!is.null(con$db)) options(revealgenomics.use_scidb_ee = FALSE)
   }  
   # Store a copy of connection object in .ghEnv
-  # Multi-session programs like Shiny, and the `gh_connect2` call need to explicitly delete this after gh_connect()
+  # Multi-session programs like Shiny, and the `rg_connect2` call need to explicitly delete this after rg_connect()
   .ghEnv$db = con$db
   return(con)
 }
 
 #' @export
-gh_connect2 = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https") {
-  con = gh_connect(username, password, host, port, protocol)
+rg_connect2 = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https") {
+  con = rg_connect(username, password, host, port, protocol)
   .ghEnv$db = NULL
   return(con)
 }
@@ -259,7 +269,12 @@ update_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
 register_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
   con = use_ghEnv_if_null(con)
   
-  if (nrow(df) < 100000) {x1 = as.scidb(con$db, df)} else {x1 = as.scidb(con$db, df, chunk_size=nrow(df))}
+  if (nrow(df) < 100000) {
+    x1 = as.scidb(con$db, df)
+  }
+  else {
+    x1 = as.scidb(con$db, df, chunk_size=nrow(df))
+  }
   
   x = x1
   for (idnm in ids_int64_conv){

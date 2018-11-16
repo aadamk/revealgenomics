@@ -115,7 +115,7 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
 
 #' register definitions for dataset
 #' 
-#' 
+#' @export
 api_register_definitions = function(df_definitions, record, con = NULL) {
   stopifnot(nrow(record) == 1)
   

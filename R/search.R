@@ -218,7 +218,12 @@ search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NU
 }
 
 #' @export
-search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_id = NULL, con = NULL){
+search_features = function(
+  gene_symbol = NULL, 
+  feature_type = c('gene', 'probeset', 'transcript', 
+                   'protein_probe'), 
+  featureset_id = NULL, 
+  con = NULL) {
   arrayname = full_arrayname(.ghEnv$meta$arrFeature)
   
   qq = arrayname
@@ -230,21 +235,31 @@ search_features = function(gene_symbol = NULL, feature_type = NULL, featureset_i
     } else {stop("Not covered yet")}
   }
   
-  if (!is.null(feature_type)){
-    if (length(feature_type)==1){
-      qq = paste("filter(", qq, ", feature_type = '", feature_type, "')", sep="")
-    } else if (length(feature_type)==2){
-      qq = paste("filter(", qq, ", feature_type = '", feature_type[1], "' OR feature_type = '", feature_type[2], "')", sep="")
-    } else {stop("Not covered yet")}
-  }
-  
   if (!is.null(gene_symbol)) {
-    subq = paste(sapply(gene_symbol, FUN = function(x) {paste("gene_symbol = '", x, "'", sep = "")}), collapse = " OR ")
+    gene_symbol_df = search_gene_symbols(gene_symbol = gene_symbol, con = con)
+    if (nrow(gene_symbol_df) > 0) {
+      subq = paste(
+        sapply(
+          gene_symbol_df$gene_symbol_id, 
+          FUN = function(x) {
+            paste0("gene_symbol_id=", x)
+            }), 
+        collapse = " OR ")
+    } else {
+      subq = 'FALSE'
+    }
     qq = paste("filter(", qq, ", ", subq, ")", sep="")
   }
   
-  join_info_unpivot(qq, arrayname, 
+  df1 = join_info_unpivot(qq, arrayname, 
+                    replicate_query_on_info_array = TRUE, 
                     con = con)
+  
+  if (!is.null(feature_type)){
+    df1[df1$feature_type %in% feature_type, ]
+  } else {
+    df1
+  }
 }
 
 ##################### MEASUREMENTDATA ###########################################################
@@ -295,9 +310,9 @@ search_rnaquantification = function(...) {
 #'                      to return an ExpressionSet object, supplying this parameter can
 #'                      optimize function exection time because function does not have to
 #'                      do biosample lookup internally
-#' @param con (Optional) database connection object; typically output of `gh_connect2()` 
+#' @param con (Optional) database connection object; typically output of `rg_connect2()` 
 #'            call. If not specified, connection object is formulated from internally stored
-#'            values of `gh_connect()` call
+#'            values of `rg_connect()` call
 #'            
 #' @export
 search_expression = function(measurementset = NULL,
@@ -352,7 +367,9 @@ search_expression = function(measurementset = NULL,
   }
   
   if (optPathBiosamples) { # use optimized function when not searching by biosample
-    cat("Not searching by biosample; Using optimized search path\n")
+    if (getOption("revealgenomics.debug", FALSE)) {
+      cat("Not searching by biosample; Using optimized search path\n")
+    }
     dao_search_expression(entity = entity,
                           measurementset = measurementset, 
                           biosample_ref = biosample_ref, 
@@ -452,7 +469,10 @@ search_rnaquantification_scidb = function(arrayname,
                  qq, ",",
                  qq2, ")")
       qq = paste("project(", qq, ", value)")
+      options(scidb.aio = TRUE) # try faster path: Shim uses aio_save with atts_only=0 which will include dimensions
+                                # https://github.com/Paradigm4/SciDBR/commit/85895a77549a24c16766e6adf4dcc6311ee21acc
       res = iquery(con$db, qq, return = T)
+      options(scidb.aio = FALSE)
     }
   } else if (!is.null(measurementset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected rqs and bs, not f
     selected_names = c('measurementset_id', 'biosample_id')
@@ -617,7 +637,6 @@ dao_search_expression = function(entity,
 #' @export
 search_variants = function(measurementset, biosample = NULL, feature = NULL, 
                            autoconvert_characters = TRUE,
-                           variants_in_one_array = TRUE,
                            con = NULL){
   if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
     stop("measurementset must be supplied"); measurementset_id = NULL
@@ -651,10 +670,13 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
                               biosample_id,
                               feature_id,
                               dataset_version = dataset_version, 
-                              variants_in_one_array = variants_in_one_array,
                               con = con)
   cat(paste0("search_variants_scidb time: ", (proc.time()-t1)[3], "\n"))
   
+  # Unpivot
+  res = unpivot_variant_data(var_raw = res, con = con)
+  
+  # Auto-convert characters
   t1 = proc.time()
   if (autoconvert_characters) {
     res = autoconvert_char(df1 = res, convert_logicals = FALSE)
@@ -666,10 +688,13 @@ search_variants = function(measurementset, biosample = NULL, feature = NULL,
 #' Inner function for searching variants
 #' 
 #' @param use_cross_join use `cross_join` if TRUE, else use `equi_join`
-search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, 
+search_variants_scidb = function(arrayname, 
+                                 measurementset_id, 
+                                 biosample_id = NULL, 
+                                 feature_id = NULL, 
                                  dataset_version, 
                                  use_cross_join = FALSE, 
-                                 variants_in_one_array, 
+                                 variants_in_one_array = TRUE, 
                                  con = NULL){
   con = use_ghEnv_if_null(con)
   
@@ -679,102 +704,49 @@ search_variants_scidb = function(arrayname, measurementset_id, biosample_id = NU
   if (is.null(measurementset_id)) stop("measurementset_id must be supplied")
   if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
   
-  if (!variants_in_one_array) { # Data exists in two arrays: VARIANT and VARIANT_INFO
-    var_nonflex_q = paste0("filter(", custom_scan(), "(", arrayname, 
-                           "), dataset_version=", dataset_version, 
-                           " AND measurementset_id=", measurementset_id, ")")
-    var_flex_q = paste0("filter(", custom_scan(), "(", arrayname, 
-                        "_INFO), dataset_version=", dataset_version, 
-                        " AND measurementset_id=", measurementset_id, ")")
-    
-    if (!is.null(biosample_id)){
-      if (length(biosample_id) == 1) {
-        var_nonflex_q = paste0("filter(", var_nonflex_q,
-                               ", biosample_id=", biosample_id, ")")
-        var_flex_q = paste0("filter(", var_flex_q,
-                            ", biosample_id=", biosample_id, ")")
-      } else {
-        var_nonflex_q = paste0("filter(", var_nonflex_q, 
-                               ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
-                                                                    id = biosample_id), ")")
-        var_flex_q = paste0("filter(", var_flex_q, 
-                            ", ", formulate_base_selection_query(fullarrayname = 'BIOSAMPLE',
-                                                                 id = biosample_id), ")")
-      }
-    }
-    
-    if (!is.null(feature_id)){
-      if (length(feature_id) == 1) {
-        var_nonflex_q = paste0("filter(", var_nonflex_q,
-                               ", feature_id=", feature_id, ")")
-        var_flex_q = paste0("filter(", var_flex_q,
-                            ", feature_id=", feature_id, ")")
-      } else {
-        var_nonflex_q = paste0("filter(", var_nonflex_q, 
-                               ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
-                                                                    id = feature_id), ")")
-        var_flex_q = paste0("filter(", var_flex_q, 
-                            ", ", formulate_base_selection_query(fullarrayname = 'FEATURE',
-                                                                 id = feature_id), ")")
-      }
-    }
-    if (use_cross_join) {
-      query = paste0("cross_join(", var_flex_q, " as X,",
-                     var_nonflex_q, "as Y, ",
-                     "X.biosample_id, Y.biosample_id, ",
-                     "X.feature_id,   Y.feature_id, ", 
-                     "X.per_gene_variant_number, Y.per_gene_variant_number)")
-      var_raw = iquery(con$db, query = query, return = TRUE)
-      res = unpivot(df1 = var_raw, arrayname = .ghEnv$meta$arrVariant)
-    } else {
-      res = join_info_unpivot(qq = var_nonflex_q, 
-                              arrayname = strip_namespace(arrayname), 
-                              replicate_query_on_info_array = TRUE, 
-                              profile_timing = TRUE,
-                              con = con)
-    }
-  } else { # VARIANT and VARIANT_INFO in one array
-    if (!is.null(biosample_id)) stop("Code path not implemented: 
-                                     Selection of biosample id from Variants in one array")
-    if (use_cross_join) stop("`use_cross_join` not supposed to be TRUE 
-                             when `variants_in_one_array` is TRUE")
-    
-    if (is.null(feature_id)) stop("Expect feature_id to be non-null")
-    
-    leftq = paste0("apply(build(<feature_id:int64>[idx_ftr=0:*], '[", 
-                    paste0(sort(feature_id), collapse = ","), 
-                    "]', true), measurementset_id, ", measurementset_id, 
-                   ", dataset_version, ", dataset_version, ")")
-    
-    query = paste0("equi_join(", 
-                      custom_scan(), "(", full_arrayname(.ghEnv$meta$arrVariant), "),",
-                      leftq, ", 'left_names=feature_id,dataset_version,measurementset_id', 
-                     'right_names=feature_id,dataset_version,measurementset_id', 
-                     'algorithm=hash_replicate_right', 'keep_dimensions=1')")
-    t1 = proc.time()
-    var_raw = iquery(con$db, query, return = T, only_attributes = T)
-    var_raw[, 'idx_ftr'] = NULL # drop the dimension added through the join
-    cat("Selection from variant array:", (proc.time()-t1)[3], "\n")
-    
-    t1 = proc.time()
-    res = tidyr::spread(data = var_raw, key = "key_id", value = "val")
-    cat("Unpivot:", (proc.time()-t1)[3], "\n")
-    
-    t1 = proc.time()
-    VAR_KEY = get_variant_key(con = con)
-    M = find_matches_and_return_indices(colnames(res), VAR_KEY$key_id)
-    
-    matched_colnames = c(colnames(res)[M$source_unmatched_idx], 
-                         VAR_KEY[M$target_matched_idx, ]$key)
-    stopifnot(all(!is.na(matched_colnames)))
-    colnames(res) = matched_colnames
-    cat("Replacing variant keys:", (proc.time()-t1)[3], "\n")
-  }
+  # VARIANT and VARIANT_INFO in one array
+  if (!is.null(biosample_id)) stop("Code path not implemented: 
+                                   Selection of biosample id from Variants in one array")
+  if (use_cross_join) stop("`use_cross_join` not supposed to be TRUE 
+                           when `variants_in_one_array` is TRUE")
   
-  res
+  if (is.null(feature_id)) stop("Expect feature_id to be non-null")
+  
+  leftq = paste0("apply(build(<feature_id:int64>[idx_ftr=0:*], '[", 
+                  paste0(sort(feature_id), collapse = ","), 
+                  "]', true), measurementset_id, ", measurementset_id, 
+                 ", dataset_version, ", dataset_version, ")")
+  
+  query = paste0("equi_join(", 
+                    custom_scan(), "(", full_arrayname(.ghEnv$meta$arrVariant), "),",
+                    leftq, ", 'left_names=feature_id,dataset_version,measurementset_id', 
+                   'right_names=feature_id,dataset_version,measurementset_id', 
+                   'algorithm=hash_replicate_right', 'keep_dimensions=1')")
+  t1 = proc.time()
+  var_raw = iquery(con$db, query, return = T, only_attributes = T)
+  var_raw[, 'idx_ftr'] = NULL # drop the dimension added through the join
+  cat("Selection from variant array:", (proc.time()-t1)[3], "\n")
+  var_raw
 }
 
-
+unpivot_variant_data = function(var_raw, con = NULL) {
+  t1 = proc.time()
+  res = tidyr::spread(data = var_raw, key = "key_id", value = "val")
+  cat("Unpivot:", (proc.time()-t1)[3], "\n")
+  
+  t1 = proc.time()
+  VAR_KEY = get_variant_key(con = con)
+  M = find_matches_and_return_indices(colnames(res), VAR_KEY$key_id)
+  
+  matched_colnames = c(colnames(res)[M$source_unmatched_idx], 
+                       VAR_KEY[M$target_matched_idx, ]$key)
+  stopifnot(all(!is.na(matched_colnames)))
+  colnames(res) = matched_colnames
+  cat("Replacing variant keys:", (proc.time()-t1)[3], "\n")
+  
+  res
+  
+}
 
 #' Search Fusion data
 #' 
@@ -796,8 +768,21 @@ search_fusion = function(measurementset, biosample = NULL, feature = NULL,
   
   arrayname = paste0(custom_scan(), 
                      "(", full_arrayname(.ghEnv$meta$arrFusion), ")")
-  if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
-  if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
+
+  if (!is.null(biosample)) {
+    biosample_id = biosample$biosample_id
+  }
+  else {
+    biosample_id = NULL
+  }
+  
+  if (!is.null(feature)) {
+    feature = feature[feature$featureset_id == measurementset$featureset_id, ]
+    feature_id = feature$feature_id
+  }
+  else {
+    feature_id = NULL
+  }
   
   if (exists('debug_trace')) cat("retrieving fusion data from server\n")
   res = search_fusions_scidb(arrayname,
@@ -806,6 +791,13 @@ search_fusion = function(measurementset, biosample = NULL, feature = NULL,
                              feature_id,
                              dataset_version = dataset_version, 
                              con = con)
+  # Unpivot
+  res = unpivot_variant_data(var_raw = res, con = con)
+  
+  # Auto-convert characters
+  t1 = proc.time()
+  res = autoconvert_char(df1 = res, convert_logicals = FALSE)
+  cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
   res
 }
 

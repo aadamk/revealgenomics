@@ -57,10 +57,14 @@ DataLoader = R6::R6Class(classname = "DataLoader",
           assign_biosample_ids = function(){
             cat("assign_biosample_ids()"); self$print_level()
             bios_ref = private$.reference_object$biosample
-            suffix = template_helper_suffix_by_entity(entity = private$.reference_object$measurement_set$entity)
-            bios_ref = bios_ref[grep(suffix, bios_ref$name), ]
-            cat("Chose suffix:", suffix, "for entity:", private$.reference_object$measurement_set$entity, 
-                "\nRetained:", nrow(bios_ref), "of total:", nrow(private$.reference_object$biosample), "in manifest\n")
+            entity = unique(private$.reference_object$measurement_set$entity)
+            if (entity %in% c(.ghEnv$meta$arrRnaquantification,
+                              .ghEnv$meta$arrVariant)) {
+              suffix = template_helper_suffix_by_entity(entity = private$.reference_object$measurement_set$entity)
+              bios_ref = bios_ref[grep(suffix, bios_ref$name), ]
+              cat("Chose suffix:", suffix, "for entity:", private$.reference_object$measurement_set$entity, 
+                  "\nRetained:", nrow(bios_ref), "of total:", nrow(private$.reference_object$biosample), "in manifest\n")
+            }
             if (nrow(private$.reference_object$pipeline_df) > 1) { 
               # multiple Measurements combined into one file
               # ==> data must contain a column called `biosample_name`
@@ -101,9 +105,20 @@ DataLoader = R6::R6Class(classname = "DataLoader",
                                                    bios_ref$name)
               
               if (length(mL$source_unmatched_idx) != 0) {
-                print(sample_name_in_file)
-                print(head(bios_ref$name))
-                stop("Excel sheet must provide link between sample in Pipelines sheet and Sample sheet under column `sample_name`")
+                stop("did not expect to have to match original_sample_names while handling
+                     one row of Pipeline sheet (i.e. per sample file)")
+              }
+              
+              if (length(grep(sample_name_in_file, 
+                              bios_ref$name)) > 1) {
+                if (entity %in% c(.ghEnv$meta$arrRnaquantification,
+                                  .ghEnv$meta$arrVariant)) {
+                  stop("Did not expect this error for RNA-seq/GXP or variant entities")
+                }
+                stop("sample name in pipeline sheet was matched to more than one sample in biosample dataframe.
+                    Must add logic to handle this e.g.
+                    - FUSION data is typically derived from RNA sample, and rarely from DNA sample
+                    - COPYNUMBER data is typically derived from DNA sample, and rarely from RNA sample")
               }
               
               sample_id_db = bios_ref$biosample_id[mL$target_matched_idx]
@@ -133,12 +148,15 @@ DataLoader = R6::R6Class(classname = "DataLoader",
             stopifnot(nrow(fset) == 1)
             # print(fset)
             
-            if (is.null(private$.reference_object$feature)) {
+            if (is.null(private$.reference_object$feature) ||
+                nrow(private$.reference_object$feature) == 0) {
               cat("feature_ref = NULL; downloading features for featureset", fset$featureset_id, "into loaderObject\n")
               private$.reference_object$feature = search_features(featureset_id = fset$featureset_id)
-            } else if (unique(private$.reference_object$feature$featureset_id) != fset$featureset_id) {
-              cat("featureset has changed; downloading features for featureset", fset$featureset_id, "into loaderObject\n")
-              private$.reference_object$feature = search_features(featureset_id = fset$featureset_id)
+            } else {
+              if (unique(private$.reference_object$feature$featureset_id) != fset$featureset_id) {
+                cat("featureset has changed; downloading features for featureset", fset$featureset_id, "into loaderObject\n")
+                private$.reference_object$feature = search_features(featureset_id = fset$featureset_id)
+              }
             }
           },
           
@@ -213,6 +231,32 @@ DataLoader = R6::R6Class(classname = "DataLoader",
             private$.feature_annotation_df = feature_annotation_df
           }
         ), private = list(
+          get_selected_featureset = function() {
+            # retrieve the featureset for selected set of entries from Pipeline sheet 
+            # (must have downselected to a unique featureset at the time of calling)
+            fset_choice = unique(
+              private$.reference_object$pipeline_df[,
+                                                    template_linker$featureset$choices_col])
+            stopifnot(length(fset_choice) == 1)
+            fsets_scidb = private$.reference_object$featureset
+            fset = drop_na_columns(
+              fsets_scidb[match(fset_choice,
+                                fsets_scidb[,
+                                            template_linker$featureset$choices_col]), ])
+            stopifnot(nrow(fset) == 1)
+            fset
+          },
+          get_feature_synonym_df_for_selected_featureset = function() {
+            # get feature synonym dataframe for use in matching
+            # (assumes user must have downselected to a unique featureset at the time of calling)
+            fset = private$get_selected_featureset()
+            cat("Matching features in file by feature-synonyms in DB at featureset_id", 
+                fset$featureset_id, "\n")
+            fsyn_sel = private$.reference_object$feature_synonym[
+              private$.reference_object$feature_synonym$featureset_id == 
+                fset$featureset_id, ]
+            fsyn_sel
+          },
           .data_df = NULL,
           .feature_annotation_df = NULL, 
           .reference_object = NULL
@@ -322,7 +366,7 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                         
                                         if (ncol(ftr_ann_df) == 1) {
                                           ftr_ann_df_unmatched = data.frame(name = ftr_ann_df[
-                                            match(unmatched_ftrs, ftr_ann_df[, 'feature_name']), ],  # matches for RSEM type
+                                            match(unmatched_ftrs, ftr_ann_df[, 1]), ],  # matches for RSEM type
                                             stringsAsFactors = FALSE)
                                         } else {
                                           stop("Need to implement this code-path. Follow template for `DataLoaderRNAQuantMicroarray::register_new_features()`")
@@ -662,79 +706,67 @@ DataLoaderVariantFormatA = R6::R6Class(classname = 'DataLoaderVariantFormatA',
                                         }
                                       ))
 
-##### DataLoaderFusionTophat #####
-DataLoaderFusionTophat = R6::R6Class(classname = 'DataLoaderFusionTophat',
-                                     inherit = DataLoader,
-                                     public = list(
-                                       print_level = function() {cat("----(Level: DataLoaderFusionTophat)\n")},
-                                       register_new_features = function() {
-                                         fset_choice = unique(private$.reference_object$pipeline_df[,
-                                                                                                    template_linker$featureset$choices_col])
-                                         stopifnot(length(fset_choice) == 1)
-                                         fsets_scidb = private$.reference_object$featureset
-                                         fset = drop_na_columns(fsets_scidb[match(fset_choice, 
-                                                                                  fsets_scidb[,
-                                                                                              template_linker$featureset$choices_col]), ])
-                                         stopifnot(nrow(fset) == 1)
-                                         cat("Matching features in file by feature-synonyms in DB at featureset_id", 
-                                             fset$featureset_id, "\n")
-                                         fsyn_sel = private$.reference_object$feature_synonym[
-                                           private$.reference_object$feature_synonym$featureset_id == 
-                                             fset$featureset_id, ]
-                                         
-                                         list_of_features = unique(c(as.character(private$.data_df$gene_left), 
-                                                                     as.character(private$.data_df$gene_right)))
-                                         head(list_of_features)
-                                         
-                                         matches_synonym = find_matches_and_return_indices(list_of_features, 
-                                                                                           fsyn_sel$synonym)
-                                         
-                                         unmatched = matches_synonym$source_unmatched_idx
-                                         cat("Number of unmatched gene symbols:", length(unmatched), "\n e.g.", 
-                                             pretty_print(list_of_features[unmatched]), "\n")
-                                         
-                                         if (length(list_of_features[unmatched]) > 0) {
-                                           newfeatures = data.frame(
-                                             name = list_of_features[unmatched],
-                                             gene_symbol = 'NA',
-                                             featureset_id = fset$featureset_id,
-                                             chromosome = "unknown",
-                                             start = '...', 
-                                             end = '...',
-                                             feature_type = "gene",
-                                             source = "Tophat fusion file")
-                                           
-                                           feature_record = register_feature(df = newfeatures)
-                                           
-                                           return(TRUE)
-                                         } else {
-                                           cat("No new features to register\n")
-                                           return(FALSE)
-                                         }                                         
-                                       },
-                                       assign_feature_ids = function(){
-                                         cat("assign_feature_ids()"); self$print_level()
-                                         super$assign_feature_ids()
-                                         
-                                         syn = private$.reference_object$feature_synonym
-                                         syn = syn[syn$featureset_id == 
-                                                     private$.reference_object$measurement_set$featureset_id, ]
-                                         
-                                         # Now register the left and right genes with system feature_id-s
-                                         private$.data_df$feature_id_left = syn[match(private$.data_df$gene_left, syn$synonym), ]$feature_id
-                                         private$.data_df$feature_id_right = syn[match(private$.data_df$gene_right, syn$synonym), ]$feature_id
-                                         stopifnot(!any(is.na(private$.data_df$feature_id_left)))
-                                         stopifnot(!any(is.na(private$.data_df$feature_id_right)))
-                                       },
-                                       load_data = function() {
-                                         cat("load_data()"); self$print_level()
-                                         private$.data_df = plyr::rename(private$.data_df,
-                                                                         c('biosample_name' = 
-                                                                             'sample_name_unabbreviated'))
-                                         register_fusion_data(df = private$.data_df,
-                                                              measurementset = private$.reference_object$measurement_set)
-                                       }
-                                     ))
+##### DataLoaderFusionFormatA #####
+DataLoaderFusionFormatA = R6::R6Class(
+  classname = 'DataLoaderFusionFormatA',
+  inherit = DataLoader,
+  public = list(
+    print_level = function() {cat("----(Level: DataLoaderFusionFormatA)\n")},
+    register_new_features = function() {
+      fset = private$get_selected_featureset()
+      fsyn_sel = private$get_feature_synonym_df_for_selected_featureset()
+      
+      list_of_features = unique(c(as.character(private$.data_df$gene_left), 
+                                  as.character(private$.data_df$gene_right)))
+      head(list_of_features)
+      
+      matches_synonym = find_matches_and_return_indices(list_of_features, 
+                                                        fsyn_sel$synonym)
+      
+      unmatched = matches_synonym$source_unmatched_idx
+      cat("Number of unmatched gene symbols:", length(unmatched), "\n e.g.", 
+          pretty_print(list_of_features[unmatched]), "\n")
+      
+      if (length(list_of_features[unmatched]) > 0) {
+        newfeatures = data.frame(
+          name = list_of_features[unmatched],
+          gene_symbol = list_of_features[unmatched],
+          featureset_id = fset$featureset_id,
+          chromosome = "unknown",
+          start = '...', 
+          end = '...',
+          feature_type = "gene",
+          source = "fusion file")
+        
+        feature_record = register_feature(df = newfeatures)
+        
+        return(TRUE)
+      } else {
+        cat("No new features to register\n")
+        return(FALSE)
+      }                                         
+    },
+    assign_feature_ids = function(){
+      cat("assign_feature_ids()"); self$print_level()
+      super$assign_feature_ids()
+      
+      syn = private$get_feature_synonym_df_for_selected_featureset()
+      
+      # Now register the left and right genes with system feature_id-s
+      private$.data_df$feature_id_left = syn[match(private$.data_df$gene_left, syn$synonym), ]$feature_id
+      private$.data_df$feature_id_right = syn[match(private$.data_df$gene_right, syn$synonym), ]$feature_id
+      stopifnot(!any(is.na(private$.data_df$feature_id_left)))
+      stopifnot(!any(is.na(private$.data_df$feature_id_right)))
+    },
+    load_data = function() {
+      cat("load_data()"); self$print_level()
+      private$.data_df = plyr::rename(private$.data_df,
+                                      c('biosample_name' = 
+                                          'sample_name_unabbreviated'))
+      register_fusion(df1 = private$.data_df,
+                      measurementset = private$.reference_object$measurement_set)
+    }
+  ))
 
 ##### createDataLoader #####
 #' @export      
@@ -779,12 +811,15 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
            DataLoaderVariantFormatA$new(data_df = data_df,
                                         reference_object = reference_object, 
                                         feature_annotation_df = feature_annotation_df),
-         "{[external]-[Fusion] Tophat Fusion}{gene}" = 
-           DataLoaderFusionTophat$new(data_df = data_df,
-                                           reference_object = reference_object),
          "{[internal]-[Proteomics] MaxQuant}{Protein}" = 
            DataLoaderProteomicsMaxQuant$new(data_df = data_df,
-                                            reference_object = reference_object)
+                                            reference_object = reference_object),
+         "{[external]-[Fusion] Tophat Fusion}{gene}" = ,
+         "{[external]-[Fusion] custom pipeline - Foundation Medicine}{gene}" = ,
+         "{[external]-[Fusion] Defuse}{gene}" =
+           DataLoaderFusionFormatA$new(data_df = data_df,
+                                   reference_object = reference_object,
+                                   feature_annotation_df = feature_annotation_df)
   )
 }
 

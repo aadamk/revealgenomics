@@ -4,8 +4,8 @@
 \alias{register_genelist_gene}
 \title{Register gene symbols in a gene-list}
 \usage{
-register_genelist_gene(genelist_id = NULL, gene_symbols = NULL,
-  df = NULL, only_test = FALSE, con = NULL)
+register_genelist_gene(genelist_id = NULL, gene_symbols = NULL, df = NULL,
+  only_test = FALSE, con = NULL)
 }
 \arguments{
 \item{genelist_id}{the id of the genelist (returned by \code{register_genelist()})}

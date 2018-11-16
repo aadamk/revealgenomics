@@ -3,14 +3,14 @@ library(revealgenomics)
 try({
   # Try to connect without security
   cat("Trying to connect without authentication")
-  gh_connect()
+  rg_connect()
   stopifnot(options('revealgenomics.use_scidb_ee') == FALSE)
 })
 if (options('revealgenomics.use_scidb_ee')) {
   source('~/.ga4gh_config.R')
-  con1 = gh_connect2('root', password = rootpassword)
-  con2 = gh_connect2('secure_user', password = secure_password)
-  con3 = gh_connect2('public_user', password = public_password)
+  con1 = rg_connect2('root', password = rootpassword)
+  con2 = rg_connect2('secure_user', password = secure_password)
+  con3 = rg_connect2('public_user', password = public_password)
   
   grant_initial_access(con = con1, user_name = 'secure_user')
   grant_initial_access(con = con1, user_name = 'public_user')

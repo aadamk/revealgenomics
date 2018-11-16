@@ -132,7 +132,7 @@ Now let us get to using the package:
 
 ```{R}
 library(revealgenomics)
-gh_connect('root', ROOTPASSWORD)
+rg_connect('root', ROOTPASSWORD)
 ```
 
 # CAUTION: Intitializing arrays here

@@ -231,12 +231,16 @@ DataReaderFMI = R6::R6Class(
           private$.data_df$`VARIANT-TYPE` == 'copy-number-alteration', 
           ]),
         fusion_data = discard_na_columns(private$.data_df[
-          private$.data_df$`VARIANT-TYPE` == 'rearrangement', 
+          (private$.data_df$`VARIANT-TYPE` == 'rearrangement' |
+           private$.data_df$`VARIANT-TYPE` == 'fusion'), 
           ])
       )
       data_df_list$variant_data$`VARIANT-TYPE` = NULL
       data_df_list$cnv_data$`VARIANT-TYPE` = NULL
       data_df_list$fusion_data$`VARIANT-TYPE` = NULL
+      
+      # Some more manual handling of columns
+      data_df_list$fusion_data$GENE = NULL
       
       private$.data_df = data_df_list
     }
@@ -318,6 +322,79 @@ DataReaderFMIVariant = R6::R6Class(
       cat("Storing the feature annotation information\n")
       private$.feature_annotation_df = data.frame(gene_symbol = private$.data_df[, feature_col], 
                                                   stringsAsFactors = FALSE)
+    }
+  )
+)
+
+##### DataReaderFMIFusion #####
+DataReaderFMIFusion = R6::R6Class(
+  classname = 'DataReaderFMIFusion',
+  inherit = DataReaderFMI,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderFMIFusion)\n")},
+    load_data_from_file = function() {
+      cat("load_data_from_file()"); self$print_level()
+      
+      super$load_data_from_file()
+      
+      cat("Extracting fusion data\n")
+      private$.data_df = private$.data_df$fusion_data
+      
+      cat("(Extracted) Dimensions:", dim(private$.data_df), "\n")
+      
+      cat("Extracting chromosome, start, end information\n")
+      
+      # attribute: gene_left  (Column REARR-GENE1)
+      private$.data_df$gene_left = private$.data_df$`REARR-GENE1`
+      
+      # attributes: chromosome_left, pos_left  (Column REARR-POS1)
+      # REARR-POS1 column will have string like "chr12:103439097-103439635"
+      rearr_pos1 = stringi::stri_split(
+        str = private$.data_df$`REARR-POS1`,
+        fixed = ":")
+      private$.data_df$chromosome_left = sapply(rearr_pos1, function(elem) {elem[1]})
+      rearr_pos1_start_end = sapply(rearr_pos1, function(elem) {elem[2]})
+      rearr_pos1_start_end = sapply(rearr_pos1_start_end, function(elem) {stringi::stri_split(str = elem, fixed='-')})
+      rearr_pos1_start = sapply(rearr_pos1_start_end, function(elem) {elem[1]})
+      rearr_pos1_end = sapply(rearr_pos1_start_end, function(elem) {elem[2]})
+      private$.data_df$start_left = rearr_pos1_start
+      private$.data_df$end_left   = rearr_pos1_end
+
+      # attribute: gene_right  (Column REARR-GENE2)
+      private$.data_df$gene_right = private$.data_df$`REARR-GENE2`
+      
+      # attributes: chromosome_left, pos_left  (Column REARR-POS2)
+      # REARR-POS1 column will have string like "chr12:103439097-103439635"
+      rearr_pos2 = stringi::stri_split(
+        str = private$.data_df$`REARR-POS2`,
+        fixed = ":")
+      private$.data_df$chromosome_right = sapply(rearr_pos2, function(elem) {elem[1]})
+      rearr_pos2_start_end = sapply(rearr_pos2, function(elem) {elem[2]})
+      rearr_pos2_start_end = sapply(rearr_pos2_start_end, function(elem) {stringi::stri_split(str = elem, fixed='-')})
+      rearr_pos2_start = sapply(rearr_pos2_start_end, function(elem) {elem[1]})
+      rearr_pos2_end = sapply(rearr_pos2_start_end, function(elem) {elem[2]})
+      private$.data_df$start_right = rearr_pos2_start
+      private$.data_df$end_right   = rearr_pos2_end
+      
+      # attribute: num_spanning_reads (Column REARR-NUMBER-OF-READS)
+      private$.data_df$num_spanning_reads = private$.data_df$`REARR-NUMBER-OF-READS`
+      
+      # these values are not found in the sheet.
+      private$.data_df$num_mate_pairs = NA
+      private$.data_df$num_mate_pairs_fusion = NA
+      
+      biosample_name_col = 'analytical_accession'
+      cat("Assigning values for biosample name using column:", biosample_name_col, "\n")
+      private$.data_df[, 'biosample_name'] = private$.data_df[, biosample_name_col]
+      
+      feature_col = c('REARR-GENE1', 'REARR-GENE2')
+      # cat("Assigning values for feature name using column:", pretty_print(feature_col), "\n")
+      # private$.data_df[, 'scidb_feature_col1'] = private$.data_df[, feature_col[1]]
+      # private$.data_df[, 'scidb_feature_col2'] = private$.data_df[, feature_col[2]]
+      
+      cat("Storing the feature annotation information\n")
+      private$.feature_annotation_df = private$.data_df[, feature_col]
+      cat("DataReaderFMIFusion::load_data_from_file() complete")
     }
   )
 )
@@ -636,15 +713,61 @@ DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                      public = list(
                                        print_level = function() {cat("----(Level: DataReaderFusionTophat)\n")},
                                        load_data_from_file = function() {
+                                         cat("Tophat Fusion files may or may not have header info. Reading without header and will adjust as required.")
                                          private$.header = FALSE
                                          super$load_data_from_file()
-                                         colnames(private$.data_df) = c('biosample_name', 
-                                                                        'gene_left', 'chromosome_left', 'pos_left',
-                                                                        'gene_right', 'chromosome_right', 'pos_right',
-                                                                        'num_spanning_reads', 'num_mate_pairs', 
-                                                                        'num_mate_pairs_fusion')
+                                         first_10_cols = c('biosample_name', 
+                                                           'gene_left', 'chromosome_left', 'start_left',
+                                                           'gene_right', 'chromosome_right', 'start_right',
+                                                           'num_spanning_reads', 'num_mate_pairs', 
+                                                           'num_mate_pairs_fusion')
+                                         if (ncol(private$.data_df) == 10) {
+                                           colnames(private$.data_df) = first_10_cols
+                                         } else if (ncol(private$.data_df) == 11) {
+                                           colnames(private$.data_df) = c(
+                                             first_10_cols,
+                                             'quality_score')
+                                         } else {
+                                           stop("Expect 10 or 11 columns here")
+                                         }
+                                         private$.data_df$end_left = NA
+                                         private$.data_df$end_right = NA
                                        }
                                      ))
+
+##### DataReaderFusionDeFuse #####
+DataReaderFusionDeFuse = R6::R6Class(
+  classname = 'DataReaderFusionDeFuse',
+  inherit = DataReader,
+  public = list(
+   print_level = function() {cat("----(Level: DataReaderFusionDeFuse)\n")},
+   load_data_from_file = function() {
+     private$.header = TRUE
+     super$load_data_from_file()
+     # Translate columns from the spreadsheet into the normalized columns
+     # expected by the fusion data array.
+     # I don't think that these mappings are correct, but I tried other mappings from the same 
+     # spreadsheet and was unable to use 'search_fusion' to query the data with features.  I think
+     # that either some new features need to be registered or feature synonyms need to be created
+     # because I found matching features in the FEATURE table.  I will need some direction as to
+     # the design here because I want to time-box the amount of guess-and-check effort required to
+     # complete this.
+     private$.data_df$chromosome_left = private$.data_df$gene_chromosome1
+     private$.data_df$gene_left = private$.data_df$gene_name1
+     private$.data_df$start_left = NA
+     private$.data_df$end_left = NA
+     
+     private$.data_df$chromosome_right = private$.data_df$gene_chromosome2
+     private$.data_df$gene_right = private$.data_df$gene_name2
+     private$.data_df$start_right = NA
+     private$.data_df$end_right = NA
+     
+     private$.data_df$num_spanning_reads = NA
+     private$.data_df$num_mate_pairs = NA
+     private$.data_df$num_mate_pairs_fusion = NA
+   }
+  ))
+
 ##### createDataReader #####
 #' @export
 createDataReader = function(pipeline_df, measurement_set){
@@ -677,12 +800,6 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Single Nucleotide Variant] custom pipeline - Foundation Medicine}{DNA}" =
            DataReaderFMIVariant$new(pipeline_df = pipeline_df,
                              measurement_set = measurement_set),
-         "{[external]-[Fusion] Tophat Fusion}{gene}" = 
-             DataReaderFusionTophat$new(pipeline_df = pipeline_df,
-                                        measurement_set = measurement_set),
-         "{[external]-[Fusion] Defuse}{gene}" =
-             DataReader$new(pipeline_df = pipeline_df,
-                            measurement_set = measurement_set),
          "{[Affymetrix]-[Microarray] Affymetrix Bioconductor CDF v3.2.0}{gene}" = ,
          "{[Affymetrix]-[Microarray] UMich Alt CDF v20.0.0}{gene}" =
            DataReaderRNAQuantMicroarray$new(pipeline_df = pipeline_df,
@@ -690,6 +807,15 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[internal]-[Proteomics] MaxQuant}{Protein}" = 
            DataReaderProteomicsMaxQuant$new(pipeline_df = pipeline_df,
                                             measurement_set = measurement_set),
+         "{[external]-[Fusion] Tophat Fusion}{gene}" = 
+           DataReaderFusionTophat$new(pipeline_df = pipeline_df,
+                                      measurement_set = measurement_set),
+         "{[external]-[Fusion] custom pipeline - Foundation Medicine}{gene}" =
+           DataReaderFMIFusion$new(pipeline_df = pipeline_df,
+                                   measurement_set = measurement_set),
+         "{[external]-[Fusion] Defuse}{gene}" =
+           DataReaderFusionDeFuse$new(pipeline_df = pipeline_df,
+                                      measurement_set = measurement_set),
          stop("Need to add reader for choice:\n", temp_string)
          )
 }

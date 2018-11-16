@@ -3,7 +3,7 @@ context("test-download.R")
 #### feature download works when feature_id is a long integer ####
 test_that("Check that feature download works when feature_id is a long integer ", {
   # cat("# Now connect to scidb\n")
-  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = c(.ghEnv$meta$arrFeature, 
                                .ghEnv$meta$arrGeneSymbol,
@@ -34,7 +34,7 @@ test_that("Check that feature download works when feature_id is a long integer "
 #### Simple test: feature registration ####
 test_that("Simple check that feature registration handles synonyms appropriately", {
   # cat("# Now connect to scidb\n")
-  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
                                .ghEnv$meta$arrFeatureset, 
@@ -90,7 +90,7 @@ test_that("Simple check that feature registration handles synonyms appropriately
 #### Advanced test: feature registration ####
 test_that("Advanced check that feature registration handles synonyms appropriately", {
   # cat("# Now connect to scidb\n")
-  e0 = tryCatch({gh_connect()}, error = function(e) {e})
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
                                .ghEnv$meta$arrFeatureset, 
