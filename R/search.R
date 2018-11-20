@@ -730,11 +730,11 @@ search_variants_scidb = function(arrayname,
 }
 
 unpivot_variant_data = function(var_raw, con = NULL) {
-  t1 = proc.time()
+  if (exists('debug_trace')) {t1 = proc.time()}
   res = tidyr::spread(data = var_raw, key = "key_id", value = "val")
-  cat("Unpivot:", (proc.time()-t1)[3], "\n")
+  if (exists('debug_trace')) cat("Unpivot:", (proc.time()-t1)[3], "\n")
   
-  t1 = proc.time()
+  if (exists('debug_trace')) {t1 = proc.time()}
   VAR_KEY = get_variant_key(con = con)
   M = find_matches_and_return_indices(colnames(res), VAR_KEY$key_id)
   
@@ -742,7 +742,7 @@ unpivot_variant_data = function(var_raw, con = NULL) {
                        VAR_KEY[M$target_matched_idx, ]$key)
   stopifnot(all(!is.na(matched_colnames)))
   colnames(res) = matched_colnames
-  cat("Replacing variant keys:", (proc.time()-t1)[3], "\n")
+  if (exists('debug_trace')) cat("Replacing variant keys:", (proc.time()-t1)[3], "\n")
   
   res
   
@@ -791,14 +791,20 @@ search_fusion = function(measurementset, biosample = NULL, feature = NULL,
                              feature_id,
                              dataset_version = dataset_version, 
                              con = con)
-  # Unpivot
-  res = unpivot_variant_data(var_raw = res, con = con)
   
-  # Auto-convert characters
-  t1 = proc.time()
-  res = autoconvert_char(df1 = res, convert_logicals = FALSE)
-  cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
-  res
+  if (nrow(res) > 0) {
+    # Unpivot
+    res = unpivot_variant_data(var_raw = res, con = con)
+    
+    # Auto-convert characters
+    if (exists('debug_trace')) {t1 = proc.time()}
+    res = autoconvert_char(df1 = res, convert_logicals = FALSE)
+    if (exists('debug_trace')) cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
+  } 
+  drop_na_columns(
+    res[, colnames(res)[
+      !(colnames(res) %in% 
+          c('key_id', 'val', 'per_gene_pair_fusion_number'))]])
 }
 
 search_fusions_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
