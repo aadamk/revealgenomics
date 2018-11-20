@@ -728,15 +728,23 @@ DataLoaderFusionFormatA = R6::R6Class(
           pretty_print(list_of_features[unmatched]), "\n")
       
       if (length(list_of_features[unmatched]) > 0) {
+        ftr_source = paste0(
+          "measurementset_id: ", 
+          private$.reference_object$measurement_set$measurementset_id, 
+          "; pipeline_name: ", 
+          private$.reference_object$measurement_set$name, 
+          "; data_type: ", 
+          private$.reference_object$measurement_set$entity)
+        
         newfeatures = data.frame(
           name = list_of_features[unmatched],
-          gene_symbol = list_of_features[unmatched],
+          gene_symbol = "NA",
           featureset_id = fset$featureset_id,
           chromosome = "unknown",
           start = '...', 
           end = '...',
           feature_type = "gene",
-          source = "fusion file")
+          source = ftr_source)
         
         feature_record = register_feature(df = newfeatures)
         
