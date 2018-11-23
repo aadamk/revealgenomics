@@ -31,8 +31,24 @@ DataReader = R6::R6Class(classname = 'DataReader',
                            },
                            get_data = function(){
                              private$.data_df
-                           }
+                           },
                            # get_pipeline_df = function() { private$.pipeline_df }
+                           verify_read = function() {
+                             if( ! ('biosample_name' %in% colnames(private$.data_df)) ) {
+                               stop("Column `biosample_name` must be introduced (if not already present) by DataReader")
+                             }
+                             if ( any(
+                                    sapply(
+                                      c('__DNA', '__RNA', '__Protein'), 
+                                      function(suffix) {length(grep(suffix, private$.data_df$biosample_name)) > 1}
+                                      )
+                                    )
+                                  ) {
+                               stop("`sample_molecule_type` should not be present in column `biosample_name`")
+                             }
+                             
+                             
+                           }
                          ),
                          private = list(
                            .measurement_set = NULL,
