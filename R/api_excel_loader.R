@@ -192,15 +192,26 @@ register_entities_workbook = function(workbook,
       # This avoids downloading features for files that share a featureset
       
       # loop through unique files in a measurementsets
+      NROWS_ACCUMULATE = 10000
+      flag_reset_accumulators = TRUE # to start with a blank slate when starting a new pipeline set
       for (file_path in unique(pip_sel$file_path)) {
+        if (flag_reset_accumulators) {
+          accumulated_data = data.frame()
+          accumulated_feature_annotation = data.frame()
+          accumulated_pipeline_df = data.frame()
+        }
         cat("----------------------------------------------\n")
         # file_path = unique(pip_sel$file_path)[1] # for testing
-        reference_object$pipeline_df = pip_sel[pip_sel$file_path == file_path, ]
-        readerObj = createDataReader(pipeline_df = reference_object$pipeline_df,
+        current_pipeline_df = pip_sel[pip_sel$file_path == file_path, ]
+        readerObj = createDataReader(pipeline_df = current_pipeline_df,
                                      measurement_set = reference_object$measurement_set)
         cat("Selected reader class:", class(readerObj), "\n")
         if (all(class(readerObj) =='NULL')) {
           cat("No reader for file:", file_path, "\n")
+          if (nrow(accumulated_data) > 0) {
+            stop("Should not skip reading / loading due to 'No reader' error 
+                 while some rows have already been accumulated")
+          }
           next
         }
         
@@ -211,12 +222,53 @@ register_entities_workbook = function(workbook,
           return(e)
         })
         if ("error" %in% class(errorStatus)) {
-          cat(paste0("Error loading file: ", file_path, ". Skipping\n"))
-          next
+          cat(paste0("Error loading file: ", file_path, ". Associating empty data-frames\n"))
+          current_data = data.frame()
+          current_feature_annotation = data.frame()
+        } else {
+          readerObj$verify_read()
+          current_data = readerObj$get_data()
+          current_feature_annotation = readerObj$get_feature_annotation()
         }
-        loaderObj = createDataLoader(data_df = readerObj$get_data(), 
+        
+        accumulated_data = rbind(
+          accumulated_data,
+          current_data
+        )
+        accumulated_feature_annotation = rbind(
+          accumulated_feature_annotation,
+          current_feature_annotation
+        )
+        accumulated_pipeline_df = rbind(
+          accumulated_pipeline_df,
+          current_pipeline_df
+        )
+        
+        if (identical(
+          file_path, 
+          unique(pip_sel$file_path)[length(unique(pip_sel$file_path))]
+        )) {
+          cat("========= Covered till last file in Pipeline set. Moving to loading phase\n")
+        } else {
+          if (nrow(accumulated_data) < NROWS_ACCUMULATE) {
+            cat("Accumulating data\n")
+            flag_reset_accumulators = FALSE
+            next
+          } else {
+            cat("========= Accumulated sufficient data:\n\t", 
+                nrow(accumulated_pipeline_df), "rows from Pipeline sheet\n\t", 
+                nrow(accumulated_data),  "rows of data\n\t", 
+                nrow(accumulated_feature_annotation),  "rows of feature annotation data\n\t", 
+                "Moving to loading phase.\n")
+            flag_reset_accumulators = TRUE
+          }
+        }
+        
+        cat("========= LOADING PHASE =========\n")
+        reference_object$pipeline_df = accumulated_pipeline_df
+        loaderObj = createDataLoader(data_df = accumulated_data, 
                                      reference_object = reference_object, 
-                                     feature_annotation_df = readerObj$get_feature_annotation())
+                                     feature_annotation_df = accumulated_feature_annotation)
         cat("Selected loader class:", class(loaderObj), "\n")
         errorStatus = tryCatch(expr = {
           loaderObj$assign_biosample_ids()
@@ -225,8 +277,9 @@ register_entities_workbook = function(workbook,
           return(e)
         })
         if ("error" %in% class(errorStatus)) {
-          cat("Skipping unmatched sample\n")
-          next
+          # cat("Skipping unmatched sample\n")
+          # next
+          stop("Error matching biosamples")
         }
         
         loaderObj$download_features_for_featureset()
@@ -247,15 +300,12 @@ register_entities_workbook = function(workbook,
           print(e)
         })
         if ("error" %in% class(errorStatus)) {
-          cat(paste0("Error assigning features for file:", file_path, "\n"))
-          next
+          stop(paste0("Error assigning features for file:", file_path, "\n"))
+          # next
         }
         
         loaderObj$assign_other_ids()
         
-        #try({
-        #  loaderObj$load_data()
-        #})
         errorStatus = tryCatch(expr = {
           loaderObj$load_data()
         }, error = function(e) {
