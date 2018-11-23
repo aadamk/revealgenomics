@@ -765,6 +765,17 @@ DataReaderFusionDeFuse = R6::R6Class(
      private$.data_df$num_spanning_reads = NA
      private$.data_df$num_mate_pairs = NA
      private$.data_df$num_mate_pairs_fusion = NA
+     
+     if (nrow(private$.data_df) == 0) {
+       private$.data_df$biosample_name = character()
+     } else {
+       if (length(unique(private$.pipeline_df$original_sample_name)) > 1) {
+         stop("Expected per sample file for this reader")
+       }
+       if (!('biosample_name' %in% colnames(private$.data_df))) {
+        private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
+       }
+     }
    }
   ))
 
