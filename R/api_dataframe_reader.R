@@ -475,6 +475,50 @@ DataReaderFMIFusion = R6::R6Class(
   )
 )
 
+##### DataReaderFMICopyNumberVariant #####
+DataReaderFMICopyNumberVariant = R6::R6Class(
+  classname = 'DataReaderFMICopyNumberVariant',
+  inherit = DataReaderFMI,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderFMICopyNumberVariant)\n")},
+    load_data_from_file = function() {
+      cat("load_data_from_file()"); self$print_level()
+      
+      super$load_data_from_file()
+      
+      cat("Extracting copy number variant data\n")
+      browser()
+      private$.data_df = private$.data_df$cnv_data
+      
+      cat("(Extracted) Dimensions:", dim(private$.data_df), "\n")
+      
+      cat("Applying rules specific to FMI data\n")
+
+      biosample_name_col = 'analytical_accession'
+      cat("Assigning values for biosample name using column:", biosample_name_col, "\n")
+      private$.data_df[, 'biosample_name'] = private$.data_df[, biosample_name_col]
+      
+      cat("Removing suffix `CNA-`")
+      colnames(private$.data_df)[
+        grep("CNA-", colnames(private$.data_df))
+      ] = gsub(
+        "CNA-", "", colnames(private$.data_df)[
+          grep("CNA-", colnames(private$.data_df))
+          ]
+      )
+      
+      
+      feature_col = 'GENE'
+      cat("Assigning values for feature name using column:", feature_col, "\n")
+      private$.data_df[, 'scidb_feature_col'] = private$.data_df[, feature_col]
+      
+      cat("Storing the feature annotation information\n")
+      private$.feature_annotation_df = data.frame(gene_symbol = private$.data_df[, feature_col], 
+                                                  stringsAsFactors = FALSE)
+    }
+  )
+)
+
 ##### DataReaderExpressionMatrix #####
 DataReaderExpressionMatrix = R6::R6Class(classname = 'DataReaderExpressionMatrix',
                                inherit = DataReaderAuto,
@@ -928,6 +972,14 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Fusion] Defuse}{gene}" =
            DataReaderFusionDeFuse$new(pipeline_df = pipeline_df,
                                       measurement_set = measurement_set),
-         stop("Need to add reader for choice:\n", temp_string)
+         "{[external]-[Exome CNV] custom pipeline - Foundation Medicine}{DNA}" =  
+           DataReaderFMICopyNumberVariant$new(pipeline_df = pipeline_df,
+                                              measurement_set = measurement_set),
+         "{[external]-[Exome CNV] CBS - Circular Binary Segmentation}{DNA}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVKit}{DNA}" = ,
+         "{[external]-[Exome CNV] custom pipeline - Pharmacyclics LLC}{DNA}" = 
+           DataReader$new(pipeline_df = pipeline_df,
+                          measurement_set = measurement_set),
+           stop("Need to add reader for choice:\n", temp_string)
          )
 }
