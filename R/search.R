@@ -944,3 +944,43 @@ search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_i
   
   iquery(con$db, left_query, return = TRUE)
 }
+
+###### DATA ESTIMATION #####
+#' @export
+estimate_measurementdata_download_size = function(
+  measurementset, 
+  units = c("MB", "KB", "GB"),
+  con = NULL
+) {
+  units = match.arg(units)
+  con = use_ghEnv_if_null(con = con)
+  if (! 'entity' %in% colnames(measurementset)) {
+    stop("Expected to find the column `entity` in a measurementset data.frame.
+         See the output of `mandatory_fields()[['MEASUREMENTSET']]`") 
+  }
+  if (! 'measurementset_id' %in% colnames(measurementset)) {
+    stop("Expected to find the column `measurementset_id` in a measurementset data.frame.
+         See the output of `mandatory_fields()[['MEASUREMENTSET']]`") 
+  }
+  if (nrow(measurementset) != 1) {
+    stop("Estimation is provided for 1 pipeline at a time")
+  }
+  query = paste0(
+    "project(summarize(filter(", 
+    full_arrayname(measurementset$entity),
+    ", measurementset_id=",
+    measurementset$measurementset_id,
+    ")), bytes)"
+  )
+  size_bytes = iquery(con$db, query, return = TRUE)$bytes
+  list(
+    entity = measurementset$entity,
+    size = switch (
+      units,
+      "KB" = size_bytes/1024,
+      "MB" = size_bytes/1024/1024,
+      "GB" = size_bytes/1024/1024/1024
+    ),
+    units = units
+  )
+}
