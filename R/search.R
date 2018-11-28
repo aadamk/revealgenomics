@@ -965,9 +965,10 @@ estimate_measurementdata_download_size = function(
   if (nrow(measurementset) != 1) {
     stop("Estimation is provided for 1 pipeline at a time")
   }
+  query = paste0(custom_scan(), "(", full_arrayname(measurementset$entity), ")")
   query = paste0(
     "project(summarize(filter(", 
-    full_arrayname(measurementset$entity),
+    query,
     ", measurementset_id=",
     measurementset$measurementset_id,
     ")), bytes)"
