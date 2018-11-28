@@ -448,50 +448,6 @@ array:
     delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
-  # COPYNUMBER_SEG
-  COPYNUMBER_SEG:
-    data_class:
-      measurementdata
-    measurementdata_subclass:
-      copynumber_seg
-    namespace: 
-      - gh_secure
-    attributes:
-      chromosome: string
-      start: int64
-      end: int64
-      num_mark: int32
-      seg_mean: double
-    dims:
-      dataset_version:
-        start: 0
-        end: Inf
-        chunk_interval: 1
-        overlap: 0
-      dataset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 10
-        overlap: 0
-      experimentset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1
-        overlap: 0
-      biosample_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-      copynumber_seg_synth_id:
-        start: 0
-        end: Inf
-        chunk_interval: 10000
-        overlap: 0
-    search_by_entity: EXPERIMENTSET
-    delete_by_entity: EXPERIMENTSET
-    infoArray: FALSE
-    compression_on: TRUE
   #COPYNUMBER_MAT
   COPYNUMBER_MAT:
     data_class:
