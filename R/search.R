@@ -279,8 +279,7 @@ search_rnaquantification = function(...) {
   search_expression(...)
 }
 
-#' Search expression data (to be called by \code{\link{search_rnaquantification}}, 
-#' and \link{search_proteomics})
+#' Search expression data (RNA-seq / GXP by Microarray, Proteomics) 
 #' 
 #' Function to search gene expression data array; allows slicing across multiple 
 #' dimensions. However `measurementset` (i.e. pipeline) must be supplied 
@@ -946,6 +945,23 @@ search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_i
 }
 
 ###### DATA ESTIMATION #####
+
+#' Estimate downloaded size for measurement data
+#' 
+#' (1.) This currently estimates data per pipeline (cannot estimate a subset by feature i.e. genes or biosamples)
+#' (2.) The estimate is a rough estimate e.g. RNA-seq data will have estimate for multiple 
+#' columns that are eventually not present in the expression matrix (e.g. \code{dataset_id, dataset_version, 
+#' biosample_id, feature_id, measurementset_id}). Some of these columns are important to link 
+#' metadata to the measurement data, and only those are eventually downloaded from the 
+#' database.
+#' (3.) For now this is only  used to estimate the data size in the measurement array 
+#' (not the feature and any other metadata that might also be downloaded to form a compound 
+#' object e.g. \link{\code{search_expression}} returns a Bioconductor ExpressionSet object).
+#' 
+#' @param measurementset measurementset dataframe -- e.g. output of \code{get_measurementset()}
+#'                       or \code{search_measurementset(dataset_id = ...)}
+#' @param units return estimated size as either of "\code{KB}", "\code{MB}" (default) or "\code{GB}"
+#' @param con the connection object (optional)
 #' @export
 estimate_measurementdata_download_size = function(
   measurementset, 

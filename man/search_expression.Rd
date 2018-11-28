@@ -2,8 +2,7 @@
 % Please edit documentation in R/search.R
 \name{search_expression}
 \alias{search_expression}
-\title{Search expression data (to be called by \code{\link{search_rnaquantification}},
-and \link{search_proteomics})}
+\title{Search expression data (RNA-seq / GXP by Microarray, Proteomics)}
 \usage{
 search_expression(measurementset = NULL, biosample = NULL,
   feature = NULL, formExpressionSet = TRUE, biosample_ref = NULL,
