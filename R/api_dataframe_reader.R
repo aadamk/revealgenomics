@@ -69,7 +69,7 @@ DataReaderVariant = R6::R6Class(classname = 'DataReaderVariant',
 ##### DataReaderVariantFormatA #####
 #' generic variant loader that aims to work with multiple formats
 #' - makes sure the mandatory fields for registering variants are named accordingly
-#' - for biosample matching, preps a column called `biosample_id`
+#' - for biosample matching, preps a column called `biosample_name`
 #' - for feature matching
 #'     + creates a column called `scidb_feature_column`
 #'     + stores annotation information in `feature_annotation_df` slot
@@ -133,19 +133,24 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                             )
                                           )
                                           
+                                          include_sample_col_in_match = TRUE
                                           potential_sample_cols = sapply(cols_library, function(item) item$sample_col)
                                           if (!(any(potential_sample_cols %in% colnames(private$.data_df)))) {
                                             if (nrow(private$.pipeline_df) == 1) {
                                               cat("One sample per file. Manually attaching sample information\n")
                                               private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
+                                              include_sample_col_in_match = FALSE
                                             }
                                           }
                                           
                                           matchWithLibrary = sapply(cols_library, function(item) {
-                                            all(c(item$annotation_col, item$ftr_col,
-                                                  item$sample_col, 
-                                                  item$start_col, item$end_col) 
-                                                %in% colnames(private$.data_df))}
+                                            cols_to_match = c(item$annotation_col, item$ftr_col,
+                                                              item$start_col, item$end_col)
+                                            if (include_sample_col_in_match) {
+                                              cols_to_match = c(cols_to_match, 
+                                                                item$sample_col)
+                                            }
+                                            all(cols_to_match %in% colnames(private$.data_df))}
                                             )
                                           if (!any(matchWithLibrary)) {
                                             stop("Expected match with at least one of the library options")
