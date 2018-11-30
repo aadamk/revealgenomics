@@ -36,8 +36,9 @@ register_entities_excel = function(study_worksheet,
 #' (e.g. `RNASeq`, `Variant` etc.)
 #' 
 #' @param register_upto_entity use this parameter to restrict load up to an user-specified entity.  
-#'                         e.g. you can load up to `Ontology`, `Dataset` (and `Project`), 
-#'                         `Definition` and not load the rest. The ordering is same
+#'                         e.g. you can load up to the following and not load the rest (1) \code{ONTOLOGY}, or 
+#'                         (2) \code{DEFINITION} (this includes \code{PROJECT} and \code{DATASET}), or 
+#'                         (3) \code{INDIVIDUAL}, and so on. The ordering is same
 #'                         as in the parameter definition below.
 #'                         Default value is `all` i.e. all entities are loaded
 #' @param register_measurement_entity use this parameter to restrict which measurement-data types 
@@ -47,7 +48,7 @@ register_entities_excel = function(study_worksheet,
 #'                             matched names. Default value is `NULL` (i.e. no checking by name done)
 #' @export
 register_entities_workbook = function(workbook, 
-                                  register_upto_entity = c('all', 'ONTOLOGY', 'DATASET', 'DEFINITION',
+                                  register_upto_entity = c('all', 'ONTOLOGY', 'DEFINITION',
                                                            'INDIVIDUAL', 'BIOSAMPLE', 'MEASUREMENTSET'),
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
                                                                   'FUSION', 'PROTEOMICS', 
