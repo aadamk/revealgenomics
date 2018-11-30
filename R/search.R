@@ -37,6 +37,20 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
   df = join_info_unpivot(qq,
                           entitynm,
                           con = con)
+
+  # Apply definition constraints
+  L1 = lapply(
+    df$dataset_id, 
+    function(dataset_id) {
+      df1 = df[df$dataset_id == dataset_id, ]
+      apply_definition_constraints(df1 = df1,
+                                   dataset_id = dataset_id,
+                                   entity = entitynm,
+                                   con = con)
+    }
+  )
+  df = do.call(what = "rbind", args = L1)
+  
   if (!all_versions) return(latest_version(df)) else return(df)
 }
 
