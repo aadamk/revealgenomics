@@ -21,7 +21,9 @@
 # - <template-helper.R> contains functions specifically for interpreting / parsing the Excel template sheet
 
 #' @export
-api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, only_test = FALSE, con = NULL) {
+api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, only_test = FALSE, 
+                                         entity_to_update = NULL, 
+                                         con = NULL) {
   con = use_ghEnv_if_null(con)
   if (is.null(workbook_path) & is.null(workbook)) {
     stop("must supply path to workbook, or workbook opened by XLConnect::loadWorkbook")
@@ -110,7 +112,14 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
                                       dataset_version = dataset_version,
                                       only_test = only_test, 
                                       con = con)
-    
+    # Update entity if suggested by user
+    update_entity_via_excel_loader(
+      data_df = dfi_st, 
+      data_df_record = dataset_record, 
+      data_df_entity = .ghEnv$meta$arrDataset, 
+      entity_to_update = entity_to_update,
+      con = con)
+
     proj_study_ids = dataset_record
     proj_study_ids$project_id = project_id
     proj_study_ids
@@ -140,7 +149,8 @@ api_register_definitions = function(df_definitions, record, con = NULL) {
 #' @param workbook workbook object returned by XLConnect:loadWorbook
 #' @param record record of scidb project_id, dataset_id and dataset_version at which to register individuals
 #' @export
-api_register_individuals = function(workbook, record, def, con = NULL) {
+api_register_individuals = function(workbook, record, def, 
+                                    entity_to_update = NULL, con = NULL) {
   stopifnot(nrow(record) == 1)
   
   data_df = load_helper_prepare_dataframe(workbook = workbook,
@@ -155,12 +165,60 @@ api_register_individuals = function(workbook, record, def, con = NULL) {
   
   data_df_record = register_individual(df = data_df, dataset_version = record$dataset_version, 
                                      con = con)
+  
+  # Update entity if suggested by user
+  update_entity_via_excel_loader(
+    data_df = data_df, 
+    data_df_record = data_df_record, 
+    data_df_entity = .ghEnv$meta$arrIndividuals, 
+    entity_to_update = entity_to_update,
+    con = con
+  )
+}
 
+update_entity_via_excel_loader = function(
+  data_df, data_df_record, data_df_entity, entity_to_update = NULL, con = con) {
+  if (!is.null(entity_to_update)) {
+    if (entity_to_update == data_df_entity) {
+      dataset_version = unique(data_df_record$dataset_version)
+      if (length(dataset_version) != 1) {
+        stop("The following code snippet works OK for 1 dataset version at a time right now")
+      }
+      idname = get_base_idname(entity_to_update)
+      stopifnot(length(idname) == 1)
+      data_df_db = get_entity(
+        entity = entity_to_update, 
+        id = data_df_record[, idname],
+        dataset_version = dataset_version, 
+        all_versions = FALSE, 
+        con = con)
+      data_df_db = data_df_db[
+        match(data_df_record[, idname], 
+              data_df_db[, idname]), ]
+      stopifnot(
+        all_equal(
+          data_df[, mandatory_fields()[[entity_to_update]]], 
+          data_df_db[, mandatory_fields()[[entity_to_update]]]
+        )
+      )
+      if (all(c('created', 'updated') %in% 
+              names(.ghEnv$meta$L$array[[entity_to_update]]$attributes))) {
+        dfx = cbind(data_df, data_df_record, data_df_db[, c('created', 'updated')])
+      } else {
+        dfx = cbind(data_df, data_df_record)
+      }
+      update_entity(entity = entity_to_update, 
+                    df = dfx, 
+                    con = con)
+    }
+  }
 }
 
 #' Samples / Biosample
 #' @export
-api_register_biosamples = function(workbook, record, def, con = NULL) {
+api_register_biosamples = function(workbook, record, def, 
+                                   entity_to_update = NULL, 
+                                   con = NULL) {
   stopifnot(nrow(record) == 1)
   
   data_df = load_helper_prepare_dataframe(workbook = workbook,
@@ -176,6 +234,14 @@ api_register_biosamples = function(workbook, record, def, con = NULL) {
   data_df_record = register_biosample(df = data_df, 
                                       dataset_version = record$dataset_version, 
                                       con = con)
+  
+  # Update entity if suggested by user
+  update_entity_via_excel_loader(
+    data_df = data_df, 
+    data_df_record = data_df_record, 
+    data_df_entity = .ghEnv$meta$arrBiosample, 
+    entity_to_update = entity_to_update,
+    con = con)
 }
 
 #' Register FeatureSets, ExperimentSets and MeasurementSets
@@ -186,7 +252,10 @@ api_register_biosamples = function(workbook, record, def, con = NULL) {
 #' in Pipelines sheet, and then uses info in `pipeline_choices` sheet to fill up the 
 #' other necessary information
 #' @export
-api_register_featuresets_experimentsets_measurementsets = function(workbook, record, def, con = NULL) {
+api_register_featuresets_experimentsets_measurementsets = function(
+  workbook, record, def, 
+  entity_to_update = NULL, 
+  con = NULL) {
   stopifnot(nrow(record) == 1)
   
   # Create choices objects from metadata sheet
@@ -251,6 +320,13 @@ api_register_featuresets_experimentsets_measurementsets = function(workbook, rec
   expset_record = register_experimentset(df = expset_df, dataset_version = record$dataset_version, 
                                          con = con)
   
+  # Update entity if suggested by user
+  update_entity_via_excel_loader(
+    data_df = expset_df, 
+    data_df_record = expset_record, 
+    data_df_entity = .ghEnv$meta$arrExperimentSet, 
+    entity_to_update = entity_to_update,
+    con = con)
   ######################################  
   # FEATURESET
   # Formulate FeatureSet
@@ -327,6 +403,13 @@ api_register_featuresets_experimentsets_measurementsets = function(workbook, rec
   msmtset_record = register_measurementset(df = msmtset_df, 
                                               dataset_version = record$dataset_version, 
                                               con = con)
+  # Update entity if suggested by user
+  update_entity_via_excel_loader(
+    data_df = msmtset_df, 
+    data_df_record = msmtset_record, 
+    data_df_entity = .ghEnv$meta$arrMeasurementSet, 
+    entity_to_update = entity_to_update,
+    con = con)
   return(list(ExperimentSetRecord = expset_record,
               MeasurementSetRecord = msmtset_record))
 }

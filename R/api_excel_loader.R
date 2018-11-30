@@ -53,6 +53,8 @@ register_entities_workbook = function(workbook,
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
                                                                   'FUSION', 'PROTEOMICS', 
                                                                   'COPYNUMBER_SEG', 'COPYNUMBER_MAT'),
+                                  entity_to_update = c(NULL, 'PROJECT', 'DATASET',
+                                                    'INDIVIDUAL', 'BIOSAMPLE', 'EXPERIMENTSET', 'MEASUREMENTSET'), 
                                   pipeline_name_filter = NULL,
                                   con = NULL) {
   register_upto_entity = match.arg(register_upto_entity)                                          
@@ -86,7 +88,10 @@ register_entities_workbook = function(workbook,
   }
   
   cat("#### Registering PROJECT, STUDY ####\n")
-  project_study_record = api_register_project_datasets(workbook = workbook, con = con)
+  project_study_record = api_register_project_datasets(
+    workbook = workbook, 
+    entity_to_update = entity_to_update, 
+    con = con)
   if (abort_condition_met(register_upto_entity, check_with_entity = .ghEnv$meta$arrDataset)) {
     return(invisible(NULL))
   }
@@ -106,14 +111,17 @@ register_entities_workbook = function(workbook,
     
     # INDIVIDUAL
     cat("#### Registering INDIVIDUAL ####\n")
-    indiv_rec = api_register_individuals(workbook = workbook, record = record, def = def)
+    indiv_rec = api_register_individuals(workbook = workbook, 
+                                         record = record, def = def,
+                                         entity_to_update = entity_to_update)
     if (abort_condition_met(register_upto_entity, check_with_entity = .ghEnv$meta$arrIndividuals)) {
       next
     }
     
     # BIOSAMPLE
     cat("#### Registering BIOSAMPLE ####\n")
-    bios_rec = api_register_biosamples(workbook = workbook, record = record, def = def)
+    bios_rec = api_register_biosamples(workbook = workbook, record = record, def = def,
+                                       entity_to_update = entity_to_update)
     if (abort_condition_met(register_upto_entity, check_with_entity = .ghEnv$meta$arrBiosample)) {
       next
     }
@@ -122,7 +130,8 @@ register_entities_workbook = function(workbook,
     cat("#### Registering FEATURESET, EXPERIMENTSET and MEASUREMENTSET ####\n")
     expset_msmtset_rec = api_register_featuresets_experimentsets_measurementsets(workbook = workbook, 
                                                                      record = record, 
-                                                                     def = def)
+                                                                     def = def,
+                                                                     entity_to_update = entity_to_update)
     if (abort_condition_met(register_upto_entity, check_with_entity = .ghEnv$meta$arrMeasurementSet)) {
       next
     }
