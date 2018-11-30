@@ -67,26 +67,28 @@ test_that("Register entities via workbook works OK", {
     mn = mn[mn$featureset_id == ftrs$featureset_id,]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('TXNIP feature search\n')
-    expect_true(all.equal(dim(v1), c(3, 18)))
+    expect_true(all.equal(dim(v1), c(3, 15)))
     
     ftrs = search_features(gene_symbol = c('IGH'))
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] custom pipeline - Foundation Medicine',]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('IGH feature search\n')
-    expect_true(all.equal(dim(v1), c(2, 28)))
+    expect_true(all.equal(dim(v1), c(2, 25)))
     
     # deFuse fusion (Also this is at GRCh38 in the test Excel sheet)
     ftrs = search_features(gene_symbol = c('KANSL1'))
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Defuse',]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('KANSL1 feature search\n')
-    expect_true(all.equal(dim(v1), c(1, 83)))
+    print(dim(v1))
+    expect_true(all.equal(dim(v1), c(1, 80)))
     
     ftrs = search_features(gene_symbol = c('ARL17A', 'KANSL1', 'AKNA'))
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Defuse',]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('KANSL1 feature search\n')
-    expect_true(all.equal(dim(v1), c(2, 83)))
+    print(dim(v1))
+    expect_true(all.equal(dim(v1), c(2, 80)))
     
     ########### VARIANT DATA ############
     # Now load the variant data
