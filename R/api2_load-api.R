@@ -75,6 +75,17 @@ api_register_project_datasets = function(workbook_path = NULL, workbook = NULL, 
                                revealgenomics_fields = mandatory_fields()[[.ghEnv$meta$arrDataset]], 
                                worksheet_fields = wksht_fields_study)
     
+    # Replicate the column `is_study_public` (studies loaded with Excel sheet will have a duplicate column 
+    # `public` (API required) and `is_study_public`(Excel sheet required))
+    dfi_st$is_study_public = dfi_st$public
+    
+    # Fix for #51 (handle controlled vocabulary fields)
+    dfi_st = revealgenomics:::load_helper_assign_ontology_ids(
+      data_df = dfi_st, 
+      definitions = workbook$Definitions[
+        which(workbook$Definitions$attribute_in_Studies), ], 
+      entity = .ghEnv$meta$arrDataset, 
+      con = con)
     # if (!(length(unique(dfi_st$name)) == 1 &
     #       length(unique(dfi_st$description)) == 1)) {
     #   stop("Currently loader handles one study per project.
