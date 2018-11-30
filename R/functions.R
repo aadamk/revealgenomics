@@ -579,14 +579,51 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
 
 
 #' @export
-get_datasets = function(dataset_id = NULL, dataset_version = NULL, all_versions = TRUE, mandatory_fields_only = FALSE, con = NULL){
-  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrDataset,
-                                       id = dataset_id, 
-                                       dataset_version = dataset_version, 
-                                       all_versions = all_versions, 
-                                       mandatory_fields_only = mandatory_fields_only, 
-                                       con = con
-  )
+get_datasets = function(dataset_id = NULL, dataset_version = NULL, 
+                        all_versions = TRUE, mandatory_fields_only = FALSE, 
+                        merge_project_info = FALSE, 
+                        con = NULL){
+  if (!merge_project_info) {
+    get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrDataset,
+                                         id = dataset_id, 
+                                         dataset_version = dataset_version, 
+                                         all_versions = all_versions, 
+                                         mandatory_fields_only = mandatory_fields_only, 
+                                         con = con)
+  } else { # merge project info
+    con = use_ghEnv_if_null(con = con)
+    if (is.null(dataset_id)) {
+      left_arr = paste0(
+        custom_scan(), "(", full_arrayname(.ghEnv$meta$arrDataset), ")")
+    } else {
+      left_arr = form_selector_query_secure_array(arrayname = full_arrayname(.ghEnv$meta$arrDataset),
+                                                  selected_ids = dataset_id,
+                                                  dataset_version = dataset_version)
+    }
+    query = paste0(
+      "equi_join(", 
+      left_arr, ", ", 
+      full_arrayname(.ghEnv$meta$arrProject), ", ", 
+      "'left_names=project_id', 'right_names=project_id', 'keep_dimensions=TRUE')"
+    )
+    query = paste0(
+      "equi_join(", 
+      query, 
+      ", ",
+      gsub(.ghEnv$meta$arrDataset, 
+           paste0(.ghEnv$meta$arrDataset, "_INFO"),
+           left_arr),
+      ", 'left_names=dataset_id,dataset_version',",
+      "'right_names=dataset_id,dataset_version', ",
+      "'left_outer=true')"
+    )
+    res = iquery(con$db, query, return=T)
+    # equi_join introduces columns called '_1' for commonly named columns of second array (PROJECT here)
+    colnames(res)[grep("_1$", colnames(res))] = 
+      gsub("_1", "", 
+           paste0("project_", colnames(res)[grep("_1$", colnames(res))]))
+    drop_equi_join_dims(df1 = res)
+  }
 }
 
 #' Retrieve individuals
