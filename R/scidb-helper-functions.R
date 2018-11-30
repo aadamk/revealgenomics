@@ -153,3 +153,7 @@ remove_versions = function(arayname, con = NULL)
   }
 }
 
+drop_equi_join_dims = function(df1) {
+  df1[, c('instance_id', 'value_no')] = c(NULL, NULL)
+  df1
+}
