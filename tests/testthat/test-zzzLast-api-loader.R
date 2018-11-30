@@ -27,6 +27,23 @@ test_that("Register entities via workbook works OK", {
     register_entities_workbook(workbook = wb, 
                                register_upto_entity = 'MEASUREMENTSET')
     
+    # Spot checks that ontology fields of study have been captured properly
+    datasets = get_datasets()
+    expect_true(all(!is.na(datasets$study_type)))
+    expect_true(all(!is.na(datasets$DAS)))
+    expect_true(all(datasets$DAS %in% wb$Studies$DAS))
+    expect_true(all(datasets$study_type %in% wb$Studies$study_type))
+    
+    # Similar spot checks using `search_datasets()` function
+    p = get_projects()
+    stopifnot(nrow(p) == 1) # Expect one project to be loaded at this time
+    project_id = p[1, ]$project_id
+    datasets = search_datasets(project_id = project_id)
+    expect_true(all(!is.na(datasets$study_type)))
+    expect_true(all(!is.na(datasets$DAS)))
+    expect_true(all(datasets$DAS %in% wb$Studies$DAS))
+    expect_true(all(datasets$study_type %in% wb$Studies$study_type))
+    
     # Build up a featureset to be used for loading data
     fsets = get_featuresets()
     stopifnot(nrow(fsets) == 2)
