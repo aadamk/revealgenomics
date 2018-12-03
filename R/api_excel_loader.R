@@ -41,6 +41,10 @@ register_entities_excel = function(study_worksheet,
 #'                         (3) \code{INDIVIDUAL}, and so on. The ordering is same
 #'                         as in the parameter definition below.
 #'                         Default value is `all` i.e. all entities are loaded
+#' @param entity_to_update enable excel sheet loader to update one entity at a time
+#'                         - applies to project, dataset, individual, biosample, experimentset, 
+#'                         measurementset. If \code{all} is supplied, then all metadata entities
+#'                         will be updated
 #' @param register_measurement_entity use this parameter to restrict which measurement-data types 
 #'                                    should be loaded by the function. 
 #'                                    Default value is `all` i.e. all measurement-types are loaded
@@ -50,15 +54,18 @@ register_entities_excel = function(study_worksheet,
 register_entities_workbook = function(workbook, 
                                   register_upto_entity = c('all', 'ONTOLOGY', 'DEFINITION',
                                                            'INDIVIDUAL', 'BIOSAMPLE', 'MEASUREMENTSET'),
+                                  entity_to_update = c(NULL, 'PROJECT', 'DATASET',
+                                                       'INDIVIDUAL', 'BIOSAMPLE', 
+                                                       'EXPERIMENTSET', 'MEASUREMENTSET',
+                                                       'all'), 
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
                                                                   'FUSION', 'PROTEOMICS', 
                                                                   'COPYNUMBER_SEG', 'COPYNUMBER_MAT'),
-                                  entity_to_update = c(NULL, 'PROJECT', 'DATASET',
-                                                    'INDIVIDUAL', 'BIOSAMPLE', 'EXPERIMENTSET', 'MEASUREMENTSET'), 
                                   pipeline_name_filter = NULL,
                                   con = NULL) {
-  register_upto_entity = match.arg(register_upto_entity)                                          
+  register_upto_entity =        match.arg(register_upto_entity)                                          
   register_measurement_entity = match.arg(register_measurement_entity)                                          
+  entity_to_update =            match.arg(entity_to_update)                                          
   if (!({zz = get_entity_info(); 
              register_measurement_entity %in% 
                c('all', zz[zz$class == "measurementdata", ]$entity)})) {

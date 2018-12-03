@@ -179,15 +179,16 @@ api_register_individuals = function(workbook, record, def,
 update_entity_via_excel_loader = function(
   data_df, data_df_record, data_df_entity, entity_to_update = NULL, con = con) {
   if (!is.null(entity_to_update)) {
-    if (entity_to_update == data_df_entity) {
+    if (entity_to_update == data_df_entity | 
+        entity_to_update == 'all') {
       dataset_version = unique(data_df_record$dataset_version)
       if (length(dataset_version) != 1) {
         stop("The following code snippet works OK for 1 dataset version at a time right now")
       }
-      idname = get_base_idname(entity_to_update)
+      idname = get_base_idname(data_df_entity)
       stopifnot(length(idname) == 1)
       data_df_db = get_entity(
-        entity = entity_to_update, 
+        entity = data_df_entity, 
         id = data_df_record[, idname],
         dataset_version = dataset_version, 
         all_versions = FALSE, 
@@ -197,17 +198,17 @@ update_entity_via_excel_loader = function(
               data_df_db[, idname]), ]
       stopifnot(
         all_equal(
-          data_df[, mandatory_fields()[[entity_to_update]]], 
-          data_df_db[, mandatory_fields()[[entity_to_update]]]
+          data_df[, mandatory_fields()[[data_df_entity]]], 
+          data_df_db[, mandatory_fields()[[data_df_entity]]]
         )
       )
       if (all(c('created', 'updated') %in% 
-              names(.ghEnv$meta$L$array[[entity_to_update]]$attributes))) {
+              names(.ghEnv$meta$L$array[[data_df_entity]]$attributes))) {
         dfx = cbind(data_df, data_df_record, data_df_db[, c('created', 'updated')])
       } else {
         dfx = cbind(data_df, data_df_record)
       }
-      update_entity(entity = entity_to_update, 
+      update_entity(entity = data_df_entity, 
                     df = dfx, 
                     con = con)
     }
