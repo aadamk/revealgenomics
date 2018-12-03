@@ -196,10 +196,12 @@ update_entity_via_excel_loader = function(
       data_df_db = data_df_db[
         match(data_df_record[, idname], 
               data_df_db[, idname]), ]
+      # Unique fields must be same; Otherwise new entry would have to be registered
+      # (New entries are automatically assigned by `register_ENTITY` class of functions)
       stopifnot(
         all_equal(
-          data_df[, mandatory_fields()[[data_df_entity]]], 
-          data_df_db[, mandatory_fields()[[data_df_entity]]]
+          data_df[, unique_fields()[[data_df_entity]]], 
+          data_df_db[, unique_fields()[[data_df_entity]]]
         )
       )
       if (all(c('created', 'updated') %in% 
