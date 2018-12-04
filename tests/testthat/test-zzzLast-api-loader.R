@@ -113,10 +113,10 @@ test_that("Register entities via workbook works OK", {
     fsets = get_featuresets()
     stopifnot(nrow(fsets) == 2)
     target_featureset_id = fsets[grep("37", fsets$name), ]$featureset_id
-    ftr_record = build_reference_gene_set(featureset_id = target_featureset_id)  # why is ftr_record unused?
+    ftr_record = build_reference_gene_set(featureset_id = target_featureset_id) 
     
     target_featureset_id = fsets[grep("38", fsets$name), ]$featureset_id
-    ftr_record = build_reference_gene_set(featureset_id = target_featureset_id)  # why is ftr_record unused?
+    ftr_record = build_reference_gene_set(featureset_id = target_featureset_id)
     
     ########### FUSION DATA ############
     # Now load the data
@@ -132,8 +132,8 @@ test_that("Register entities via workbook works OK", {
       stop("If more than one feature for TXNIP at this point; need to adjust test")
     }
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Tophat Fusion',]
-    mn = mn[mn$featureset_id == ftrs$featureset_id,]
-    v1 = search_fusion(measurementset = mn, feature = ftrs)
+    mn = mn[grep("37", mn$featureset_name), ]
+    v1 = search_fusion(measurementset = mn[1, ], feature = ftrs)
     cat('TXNIP feature search\n')
     expect_true(all.equal(dim(v1), c(3, 15)))
     
@@ -148,15 +148,13 @@ test_that("Register entities via workbook works OK", {
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Defuse',]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('KANSL1 feature search\n')
-    print(dim(v1))
-    expect_true(all.equal(dim(v1), c(1, 80)))
+    expect_true(all.equal(dim(v1), c(1, 75)))
     
     ftrs = search_features(gene_symbol = c('ARL17A', 'KANSL1', 'AKNA'))
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Defuse',]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('KANSL1 feature search\n')
-    print(dim(v1))
-    expect_true(all.equal(dim(v1), c(2, 80)))
+    expect_true(all.equal(dim(v1), c(2, 75)))
     
     ########### VARIANT DATA ############
     # Now load the variant data
