@@ -958,6 +958,40 @@ search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_i
   iquery(con$db, left_query, return = TRUE)
 }
 
+search_measurementdata = function(measurementset, con = NULL) {
+  if (nrow(measurementset) != 1) {
+    stop("This function currently works on one measurementSet at a time")
+  }
+  
+  # Check entity
+  entity = measurementset$entity
+  xx = get_entity_info()
+  xx = xx[xx$class == 'measurementdata', ]
+  if (!(entity %in% xx$entity)) {
+    stop("Entity of current measurementSet: ", 
+         entity, " is not supported")
+  }
+  lookup = c(
+    'search_expression',
+    'search_variants',
+    'search_fusion', 
+    'search_expression',
+    'search_copynumber_seg',
+    'search_copynumber_mat'
+  )
+  names(lookup) = c(
+    .ghEnv$meta$arrRnaquantification,
+    .ghEnv$meta$arrVariant,
+    .ghEnv$meta$arrFusion,
+    .ghEnv$meta$arrProteomics,
+    .ghEnv$meta$arrCopynumber_seg,
+    .ghEnv$meta$arrCopynumber_seg
+  )
+  fn_name = lookup[entity]
+  fn = get(fn_name)
+  fn(measurementset = measurementset, con = con)
+}
+
 ###### DATA ESTIMATION #####
 
 #' Estimate downloaded size for measurement data
