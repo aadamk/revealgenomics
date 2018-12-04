@@ -5,17 +5,25 @@
 \title{register entities via list of R data-frames}
 \usage{
 register_entities_workbook(workbook, register_upto_entity = c("all",
-  "ONTOLOGY", "DATASET", "DEFINITION", "INDIVIDUAL", "BIOSAMPLE",
-  "MEASUREMENTSET"), register_measurement_entity = c("all",
-  "RNAQUANTIFICATION", "VARIANT", "FUSION", "PROTEOMICS", "COPYNUMBER_SEG",
-  "COPYNUMBER_MAT"), pipeline_name_filter = NULL, con = NULL)
+  "ONTOLOGY", "DEFINITION", "INDIVIDUAL", "BIOSAMPLE", "MEASUREMENTSET"),
+  entity_to_update = c(NULL, "PROJECT", "DATASET", "INDIVIDUAL", "BIOSAMPLE",
+  "EXPERIMENTSET", "MEASUREMENTSET", "all"),
+  register_measurement_entity = c("all", "RNAQUANTIFICATION", "VARIANT",
+  "FUSION", "PROTEOMICS", "COPYNUMBER_SEG", "COPYNUMBER_MAT"),
+  pipeline_name_filter = NULL, con = NULL)
 }
 \arguments{
 \item{register_upto_entity}{use this parameter to restrict load up to an user-specified entity.
-e.g. you can load up to \code{Ontology}, \code{Dataset} (and \code{Project}),
-\code{Definition} and not load the rest. The ordering is same
+e.g. you can load up to the following and not load the rest (1) \code{ONTOLOGY}, or
+(2) \code{DEFINITION} (this includes \code{PROJECT} and \code{DATASET}), or
+(3) \code{INDIVIDUAL}, and so on. The ordering is same
 as in the parameter definition below.
 Default value is \code{all} i.e. all entities are loaded}
+
+\item{entity_to_update}{enable excel sheet loader to update one entity at a time
+- applies to project, dataset, individual, biosample, experimentset,
+measurementset. If \code{all} is supplied, then all metadata entities
+will be updated}
 
 \item{register_measurement_entity}{use this parameter to restrict which measurement-data types
 should be loaded by the function.

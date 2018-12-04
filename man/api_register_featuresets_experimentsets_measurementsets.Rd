@@ -4,8 +4,8 @@
 \alias{api_register_featuresets_experimentsets_measurementsets}
 \title{Register FeatureSets, ExperimentSets and MeasurementSets}
 \usage{
-api_register_featuresets_experimentsets_measurementsets(workbook, record,
-  def, con = NULL)
+api_register_featuresets_experimentsets_measurementsets(workbook, record, def,
+  entity_to_update = NULL, con = NULL)
 }
 \description{
 This function differs from api_register_indiv/bios/measurements

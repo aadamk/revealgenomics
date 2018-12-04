@@ -6,7 +6,7 @@
 \title{generic variant loader that aims to work with multiple formats
 \itemize{
 \item makes sure the mandatory fields for registering variants are named accordingly
-\item for biosample matching, preps a column called \code{biosample_id}
+\item for biosample matching, preps a column called \code{biosample_name}
 \item for feature matching
 \itemize{
 \item creates a column called \code{scidb_feature_column}
@@ -23,7 +23,7 @@ DataReaderVariantFormatA
 generic variant loader that aims to work with multiple formats
 \itemize{
 \item makes sure the mandatory fields for registering variants are named accordingly
-\item for biosample matching, preps a column called \code{biosample_id}
+\item for biosample matching, preps a column called \code{biosample_name}
 \item for feature matching
 \itemize{
 \item creates a column called \code{scidb_feature_column}

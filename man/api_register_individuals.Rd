@@ -4,7 +4,8 @@
 \alias{api_register_individuals}
 \title{register individuals}
 \usage{
-api_register_individuals(workbook, record, def, con = NULL)
+api_register_individuals(workbook, record, def, entity_to_update = NULL,
+  con = NULL)
 }
 \arguments{
 \item{workbook}{workbook object returned by XLConnect:loadWorbook}

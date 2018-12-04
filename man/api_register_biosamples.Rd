@@ -4,7 +4,8 @@
 \alias{api_register_biosamples}
 \title{Samples / Biosample}
 \usage{
-api_register_biosamples(workbook, record, def, con = NULL)
+api_register_biosamples(workbook, record, def, entity_to_update = NULL,
+  con = NULL)
 }
 \description{
 Samples / Biosample
