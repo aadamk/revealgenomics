@@ -5,11 +5,7 @@
 \title{Inner function for searching variants}
 \usage{
 search_variants_scidb(arrayname, measurementset_id, biosample_id = NULL,
-  feature_id = NULL, dataset_version, use_cross_join = FALSE,
-  variants_in_one_array = TRUE, con = NULL)
-}
-\arguments{
-\item{use_cross_join}{use \code{cross_join} if TRUE, else use \code{equi_join}}
+  feature_id = NULL, dataset_version, con = NULL)
 }
 \description{
 Inner function for searching variants

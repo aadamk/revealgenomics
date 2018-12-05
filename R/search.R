@@ -700,14 +700,11 @@ search_variant = function(measurementset, biosample = NULL, feature = NULL,
 
 #' Inner function for searching variants
 #' 
-#' @param use_cross_join use `cross_join` if TRUE, else use `equi_join`
 search_variants_scidb = function(arrayname, 
                                  measurementset_id, 
                                  biosample_id = NULL, 
                                  feature_id = NULL, 
                                  dataset_version, 
-                                 use_cross_join = FALSE, 
-                                 variants_in_one_array = TRUE, 
                                  con = NULL){
   con = use_ghEnv_if_null(con)
   
@@ -720,8 +717,6 @@ search_variants_scidb = function(arrayname,
   # VARIANT and VARIANT_INFO in one array
   if (!is.null(biosample_id)) stop("Code path not implemented: 
                                    Selection of biosample id from Variants in one array")
-  if (use_cross_join) stop("`use_cross_join` not supposed to be TRUE 
-                           when `variants_in_one_array` is TRUE")
   
   if (is.null(feature_id)) stop("Expect feature_id to be non-null")
   
