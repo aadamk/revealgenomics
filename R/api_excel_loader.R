@@ -209,7 +209,7 @@ register_entities_workbook = function(workbook,
       # This avoids downloading features for files that share a featureset
       
       # loop through unique files in a measurementsets
-      NROWS_ACCUMULATE = 10000
+      NROWS_ACCUMULATE = 500000
       flag_reset_accumulators = TRUE # to start with a blank slate when starting a new pipeline set
       for (file_path in unique(pip_sel$file_path)) {
         if (flag_reset_accumulators) {
