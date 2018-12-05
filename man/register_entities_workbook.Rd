@@ -6,8 +6,8 @@
 \usage{
 register_entities_workbook(workbook, register_upto_entity = c("all",
   "ONTOLOGY", "DEFINITION", "INDIVIDUAL", "BIOSAMPLE", "MEASUREMENTSET"),
-  entity_to_update = c(NULL, "PROJECT", "DATASET", "INDIVIDUAL", "BIOSAMPLE",
-  "EXPERIMENTSET", "MEASUREMENTSET", "all"),
+  entity_to_update = c(NULL, "PROJECT", "DATASET", "INDIVIDUAL",
+  "BIOSAMPLE", "EXPERIMENTSET", "MEASUREMENTSET", "all"),
   register_measurement_entity = c("all", "RNAQUANTIFICATION", "VARIANT",
   "FUSION", "PROTEOMICS", "COPYNUMBER_SEG", "COPYNUMBER_MAT"),
   pipeline_name_filter = NULL, con = NULL)
