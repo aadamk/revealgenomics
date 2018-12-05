@@ -648,7 +648,7 @@ dao_search_expression = function(entity,
 #' @param measurementset pipeline dataframe (mandatory)
 #' 
 #' @export
-search_variants = function(measurementset, biosample = NULL, feature = NULL, 
+search_variant = function(measurementset, biosample = NULL, feature = NULL, 
                            autoconvert_characters = TRUE,
                            con = NULL){
   if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
@@ -973,7 +973,7 @@ search_measurementdata = function(measurementset, con = NULL) {
   }
   lookup = c(
     'search_expression',
-    'search_variants',
+    'search_variant',
     'search_fusion', 
     'search_expression',
     'search_copynumber_seg',

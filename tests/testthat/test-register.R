@@ -134,7 +134,7 @@ test_that("Check that variant registration works properly", {
       stringsAsFactors = FALSE)
     
     register_variant(df = df_var1)
-    df_var1_res = search_variants(
+    df_var1_res = search_variant(
       measurementset = get_measurementsets(measurementset_id = 1), 
       feature = get_features(feature_id = ftr_id_res$feature_id))
     expect_true(all.equal(
@@ -154,7 +154,7 @@ test_that("Check that variant registration works properly", {
                               stringsAsFactors = FALSE))
     df_var2$measurementset_id = 2
     register_variant(df = df_var2)
-    df_var2_res = search_variants(
+    df_var2_res = search_variant(
       measurementset = get_measurementsets(measurementset_id = 2), 
       feature = get_features(feature_id = ftr_id_res$feature_id))
     expect_true(all.equal(
