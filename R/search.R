@@ -677,24 +677,28 @@ search_variant = function(measurementset, biosample = NULL, feature = NULL,
   }
   
   if (exists('debug_trace')) cat("retrieving expression data from server\n")
-  t1 = proc.time()
+  if (exists('debug_trace')) {t1 = proc.time()}
   res = search_variants_scidb(arrayname,
                               measurementset_id,
                               biosample_id,
                               feature_id,
                               dataset_version = dataset_version, 
                               con = con)
-  cat(paste0("search_variants_scidb time: ", (proc.time()-t1)[3], "\n"))
+  if (exists('debug_trace')) {
+    cat(paste0("search_variants_scidb time: ", (proc.time()-t1)[3], "\n"))
+  }
   
   # Unpivot
   res = unpivot_variant_data(var_raw = res, con = con)
   
   # Auto-convert characters
-  t1 = proc.time()
+  if (exists('debug_trace')) {t1 = proc.time()}
   if (autoconvert_characters) {
     res = autoconvert_char(df1 = res, convert_logicals = FALSE)
   }
-  cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
+  if (exists('debug_trace')) {
+    cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
+  }
   res
 }
 
@@ -708,32 +712,61 @@ search_variants_scidb = function(arrayname,
                                  con = NULL){
   con = use_ghEnv_if_null(con)
   
+  scanned_array = paste0(custom_scan(), "(", full_arrayname(arrayname), ")")
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
   if (is.null(measurementset_id)) stop("measurementset_id must be supplied")
   if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
   
-  # VARIANT and VARIANT_INFO in one array
-  if (!is.null(biosample_id)) stop("Code path not implemented: 
-                                   Selection of biosample id from Variants in one array")
+  left_query = paste0("filter(", scanned_array,
+                      ", dataset_version=", dataset_version, " AND measurementset_id=", measurementset_id, ")")
   
-  if (is.null(feature_id)) stop("Expect feature_id to be non-null")
+  if (!is.null(biosample_id)){
+    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
+    left_query = paste("filter(", left_query,
+                       ", ", filter_expr, ")", sep = "")
+  }
   
-  leftq = paste0("apply(build(<feature_id:int64>[idx_ftr=0:*], '[", 
-                  paste0(sort(feature_id), collapse = ","), 
-                  "]', true), measurementset_id, ", measurementset_id, 
-                 ", dataset_version, ", dataset_version, ")")
+  query_formulation = list(
+    left_query = left_query, 
+    equi_joined_result = FALSE # whether equi_join will be used later on (not used by default)
+  )
+  if (!is.null(feature_id)){
+    # formulate_base_selection_query() fails after 400 operands so putting code in a try catch
+    query_formulation = 
+      tryCatch({
+        filter_expr = formulate_base_selection_query(.ghEnv$meta$arrFeature, id = feature_id)
+        list(
+          left_query = paste("filter(", left_query,
+                             ", ", filter_expr,  
+                             ")", sep = ""),
+          equi_joined_result = FALSE
+        )
+      }, error = function(e) {
+        leftq = paste0("apply(build(<feature_id:int64>[idx_ftr=0:*], '[", 
+                       paste0(sort(feature_id), collapse = ","), 
+                       "]', true), measurementset_id, ", measurementset_id, 
+                       ", dataset_version, ", dataset_version, ")")
+        
+        left_query = 
+        list(
+          left_query = paste0("equi_join(", 
+                              scanned_array, ", ", 
+                              leftq, ", 'left_names=feature_id,dataset_version,measurementset_id', 
+                              'right_names=feature_id,dataset_version,measurementset_id', 
+                              'algorithm=hash_replicate_right', 'keep_dimensions=1')"),
+          equi_joined_result = TRUE
+        )
+      }) 
+  }
   
-  query = paste0("equi_join(", 
-                    custom_scan(), "(", full_arrayname(.ghEnv$meta$arrVariant), "),",
-                    leftq, ", 'left_names=feature_id,dataset_version,measurementset_id', 
-                   'right_names=feature_id,dataset_version,measurementset_id', 
-                   'algorithm=hash_replicate_right', 'keep_dimensions=1')")
-  t1 = proc.time()
-  var_raw = iquery(con$db, query, return = T, only_attributes = T)
-  var_raw[, 'idx_ftr'] = NULL # drop the dimension added through the join
-  cat("Selection from variant array:", (proc.time()-t1)[3], "\n")
+  if (query_formulation$equi_joined_result) {
+    var_raw = iquery(con$db, query_formulation$left_query, return = T, only_attributes = T)
+    var_raw[, 'idx_ftr'] = NULL # drop the dimension added through the join
+  } else {
+    var_raw = iquery(con$db, query_formulation$left_query, return = TRUE)
+  }
   var_raw
 }
 
@@ -815,17 +848,22 @@ search_fusion = function(measurementset, biosample = NULL, feature = NULL,
           c('key_id', 'val', 'per_gene_pair_fusion_number'))]])
 }
 
-search_fusions_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
+search_fusions_scidb = function(arrayname, 
+                                measurementset_id, 
+                                biosample_id = NULL, 
+                                feature_id = NULL, 
+                                dataset_version, 
                                 con = NULL){
   con = use_ghEnv_if_null(con)
   
+  scanned_array = paste0(custom_scan(), "(", full_arrayname(arrayname), ")")
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
   if (is.null(measurementset_id)) stop("measurementset_id must be supplied")
   if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
   
-  left_query = paste0("filter(", arrayname,
+  left_query = paste0("filter(", scanned_array,
                      ", dataset_version=", dataset_version, " AND measurementset_id=", measurementset_id, ")")
   
   if (!is.null(biosample_id)){
