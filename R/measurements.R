@@ -6,7 +6,7 @@
 #' 
 #' (A `MEASUREMENT` combines both Experiment and Pipeline information) 
 #' @export
-populate_measurements = function(dataset_id, dataset_version, con = NULL) {
+populate_measurements = function(con = NULL) {
   con = use_ghEnv_if_null(con)
   db = con$db
   df_info = get_entity_info()
@@ -63,8 +63,19 @@ populate_measurements = function(dataset_id, dataset_version, con = NULL) {
           cat("======------======\n")
           cat("Registering", nrow(res2_sel2), 
               "experiment-pipeline entries for dataset_id:", dataset_idi, "at version:", dataset_version, "\n")
-          measurement_record = register_measurement(df = res2_sel2, 
-                                                    dataset_version = dataset_version)
+          are_definitions_present = ifelse(
+            nrow(search_definitions(dataset_id = dataset_idi)) > 0,
+            TRUE, 
+            FALSE
+          )
+          if (!are_definitions_present) {
+            measurement_record = register_measurement(df = res2_sel2, 
+                                                      dataset_version = dataset_version)
+          } else {
+            cat("Measurementset for study:", dataset_idi, " ", 
+                get_datasets(dataset_id = dataset_idi)$name, 
+                "should be regiestered by Excel loader\n")
+          }
         }
       }
     }
