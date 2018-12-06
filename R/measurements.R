@@ -87,9 +87,28 @@ get_measurements = function(measurement_id = NULL, dataset_version = NULL,
   }
   # Merge with datasets info to join in study category
   d = get_datasets(con = con)
-  if (!('study category' %in% colnames(d))) {
+  # Use `DAS` as an alternate column for `study category`
+  if (!('study category' %in% colnames(d)) & # neither study category / DAS column is present 
+        !('DAS' %in% colnames(d))) {
     d$`study category` = NA
+  } else if (!('study category' %in% colnames(d)) & # DAS column is present, but no `study category`
+      ('DAS' %in% colnames(d))) {
+    d$`study category` = d$DAS
+  } else if (('study category' %in% colnames(d)) & #  `study category` column is present, but no DAS
+      !('DAS' %in% colnames(d))) {
+    d$`study category` = d$`study category`
+  } else if (('study category' %in% colnames(d)) & #  `study category` and DAS columns are both present
+      ('DAS' %in% colnames(d))) {
+    # make sure they do not overlap
+    idx_not_na_das = which(!is.na(d$DAS))
+    stopifnot(all(is.null(d[idx_not_na_das, ]$`study category`)))
+    
+    idx_not_na_study_category = which(!is.na(d$`study category`))
+    stopifnot(all(is.null(d[idx_not_na_study_category, ]$DAS)))
+    
+    d$`study category`[idx_not_na_das] = d$DAS[idx_not_na_das]
   }
+  
   if (any(is.na(d$`study category`))) {
     d[which(is.na(d$`study category`)), ]$`study category` = NA
   }
