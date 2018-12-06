@@ -212,6 +212,7 @@ array:
       experimentset_id: int64
       measurementset_id: int64
       measurement_entity: string
+      measurementset_name: string
       biosample_id: int64
       created: string
       updated: string
@@ -238,7 +239,7 @@ array:
       - biosample_id
     search_by_entity: DATASET
     delete_by_entity: MEASUREMENT
-    infoArray: TRUE
+    infoArray: FALSE
     infoArray_max_keys: 1000
     compression_on: FALSE
   #RNAQUANTIFICATION
