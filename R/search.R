@@ -278,13 +278,13 @@ search_features = function(
 
 ##################### MEASUREMENTDATA ###########################################################
 
-#' Search gene expression data 
+#' Deprecated function to search gene expression data 
 #' 
 #' This function is kept around for backward compatibility. 
 #' Use \code{\link{search_expression}} instead. 
 #' 
 #' Function to search gene expression data array; allows slicing across multiple 
-#' dimensions. However `measurementset` (i.e. pipeline) must be supplied 
+#' dimensions. However \code{measurementset} (i.e. pipeline) must be supplied 
 #' (currently allows searching one pipeline at a time)
 #' 
 #' @param ... refer parameters for function \code{\link{search_expression}}           
@@ -640,6 +640,20 @@ dao_search_expression = function(entity,
 }
 
 
+#' Deprecated function for searching variant data
+#' 
+#' This function is kept around for backward compatibility. 
+#' Use \code{\link{search_variant}} instead. 
+#' 
+#' Function to search variant data array; allows slicing across multiple 
+#' dimensions. \code{measurementset} (i.e. pipeline) must be supplied 
+#' (currently allows searching one pipeline at a time)
+#' 
+#' @param ... refer parameters for function \code{\link{search_variant}}           
+#' @export
+search_variants = function(...) {
+  search_variant(...)
+}
 
 #' search variants
 #' 

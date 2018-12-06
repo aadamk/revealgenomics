@@ -2,7 +2,7 @@
 % Please edit documentation in R/search.R
 \name{search_rnaquantification}
 \alias{search_rnaquantification}
-\title{Search gene expression data}
+\title{Deprecated function to search gene expression data}
 \usage{
 search_rnaquantification(...)
 }
