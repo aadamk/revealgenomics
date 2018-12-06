@@ -46,6 +46,7 @@ NULL
 .ghEnv$meta$arrMeasurement = 'MEASUREMENT'
 .ghEnv$meta$arrMeasurementSet = 'MEASUREMENTSET'
 
+.ghEnv$meta$arrMeasurementSetData = 'MEASUREMENTSETDATA'
 .ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
 .ghEnv$meta$arrVariant = 'VARIANT'
 .ghEnv$meta$arrVariantKey = 'VARIANT_KEY'
@@ -55,6 +56,7 @@ NULL
 .ghEnv$meta$arrCopynumber_mat_string = 'COPYNUMBER_MAT_STRING'
 .ghEnv$meta$arrCopynumber_variant = 'COPYNUMBER_VARIANT'
 .ghEnv$meta$arrCytometry_cytof = 'CYTOMETRY_CYTOF'
+
 # Prepare variables for the cache
 .ghEnv$cache$lookup = list()
 .ghEnv$cache$biosample_ref = NULL
