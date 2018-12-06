@@ -991,6 +991,12 @@ search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_i
   iquery(con$db, left_query, return = TRUE)
 }
 
+#' Unified function to download entire pipeline worth of data
+#' 
+#' @param measurementset dataframe containing one row of pipeline information
+#' @param con            connection object (optional  if using \code{rg_connect()})
+#' 
+#' @export
 search_measurementdata = function(measurementset, con = NULL) {
   if (nrow(measurementset) != 1) {
     stop("This function currently works on one measurementSet at a time")
