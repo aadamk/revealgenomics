@@ -296,10 +296,11 @@ api_register_featuresets_experimentsets_measurementsets = function(
                template_helper_extract_definitions(sheetName = 'featureset_choices', def = def))
   defi = defi[!(defi$attribute_name %in% c('filter_id')), ]
   
-  # Enforce that columns in data are defined in Definitions sheet
-  cat("Suppressing this check as unique case here\n")
-  try({template_helper_enforce_columns_defined(data_df = msmtset_df, 
-                                               definitions = defi)})
+  # # Enforce that columns in data are defined in Definitions sheet
+  # cat("Suppressing this check as dataset_id is present in data, but
+  #      not in Definitions sheet\n")
+  # try({template_helper_enforce_columns_defined(data_df = msmtset_df, 
+  #                                              definitions = defi)})
   
   
   # Enforce that mandatory columns listed in Definitions sheet are present in data
@@ -417,6 +418,36 @@ api_register_featuresets_experimentsets_measurementsets = function(
               MeasurementSetRecord = msmtset_record))
 }
 
+#' Register measurements
+#' 
+#' Excel sheet equivalent of \link{\code{populate_measurements()}}
+#' 
+#' @param biosample_names `sample_name` column from rows of Pipeline sheet corresponding to current pipeline
+#' @param bios_df_ref             dataframe containing API entry for biosample data at current \code{dataset_id} (retrieve from reference object)
+#' @param msmtset_df_ref  dataframe containing API entry for current measurementset (retrieve from reference object)
+api_register_measurements = function(
+  biosample_names, 
+  bios_df_ref,
+  msmtset_df_ref
+) {
+  m1 = find_matches_and_return_indices(
+    biosample_names, 
+    bios_df_ref$name
+  )
+  if (length(m1$source_unmatched_idx) != 0) {
+    stop("Excel file must provide direct match between `sample_name` column in `Pipelines` sheet, 
+         and `sample_name` column of `Subjects` sheet")
+  }
+  msmt_df = data.frame(
+    dataset_id           = msmtset_df_ref$dataset_id, 
+    experimentset_id     = msmtset_df_ref$experimentset_id, 
+    measurementset_id    = msmtset_df_ref$measurementset_id, 
+    measurement_entity   = msmtset_df_ref$entity, 
+    measurementset_name  = msmtset_df_ref$name,
+    biosample_id         = bios_df_ref[m1$target_matched_idx, 
+                                             ]$biosample_id)
+  register_measurement(df = msmt_df)
+}
 #' automatically register ontology terms
 #' 
 #' gather the terms from controlled_vocabulary column, 
