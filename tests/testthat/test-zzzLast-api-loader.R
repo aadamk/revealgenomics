@@ -25,7 +25,7 @@ test_that("Register entities via workbook works OK", {
     
     # Load metadata first
     register_entities_workbook(workbook = wb, 
-                               register_upto_entity = 'MEASUREMENTSET')
+                               register_upto_entity = 'MEASUREMENT')
     
     ##### Spot checks on Dataset #####
     # Spot checks that ontology fields of study have been captured properly

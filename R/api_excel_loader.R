@@ -53,7 +53,8 @@ register_entities_excel = function(study_worksheet,
 #' @export
 register_entities_workbook = function(workbook, 
                                   register_upto_entity = c('all', 'ONTOLOGY', 'DEFINITION',
-                                                           'INDIVIDUAL', 'BIOSAMPLE', 'MEASUREMENTSET'),
+                                                           'INDIVIDUAL', 'BIOSAMPLE', 'MEASUREMENTSET',
+                                                           'MEASUREMENT'),
                                   entity_to_update = c(NULL, 'PROJECT', 'DATASET',
                                                        'INDIVIDUAL', 'BIOSAMPLE', 
                                                        'EXPERIMENTSET', 'MEASUREMENTSET',
@@ -168,6 +169,23 @@ register_entities_workbook = function(workbook,
       cat("====================================================\n")
       cat("====================================================\n")
       reference_object$measurement_set = get_measurementsets(measurementset_id = msmtset_id_sel)
+      
+      pip_sel = pipelines_df[((pipelines_df[, template_linker$pipeline$pipelines_sel_col] == 
+                                 reference_object$measurement_set$pipeline_scidb) & 
+                                (pipelines_df[, template_linker$filter$pipelines_sel_col] == 
+                                   reference_object$measurement_set$filter_name)), ]
+     
+      cat("==== Registering MEASUREMENT =====\n")
+      api_register_measurements(
+        biosample_names = pip_sel$sample_name, 
+        bios_df_ref = reference_object$biosample,
+        msmtset_df_ref = reference_object$measurement_set
+      )
+      
+      if (abort_condition_met(register_upto_entity, check_with_entity = .ghEnv$meta$arrMeasurement)) {
+        next
+      }
+      
       if (register_measurement_entity != 'all' &
             register_measurement_entity != reference_object$measurement_set$entity) {
         cat("User chose to load entity of type:", register_measurement_entity, "only.\nSkipping measurementset_id",
@@ -187,10 +205,6 @@ register_entities_workbook = function(workbook,
       cat("Working on measurementset_id:", msmtset_id_sel,
           "(", reference_object$measurement_set$name,")\n")
       
-      pip_sel = pipelines_df[((pipelines_df[, template_linker$pipeline$pipelines_sel_col] == 
-                                 reference_object$measurement_set$pipeline_scidb) & 
-                                (pipelines_df[, template_linker$filter$pipelines_sel_col] == 
-                                   reference_object$measurement_set$filter_name)), ]
       na_to_blank = function(terms) { # macro to convert empty location in Excel file (read as NA) into "" (blank)
         ifelse(is.na(terms), "", terms)
       }
