@@ -1,10 +1,10 @@
 #' register all measurements for a specific dataset
 #' 
-#' The function should be called after loading the `MeasurementData` arrays` (e.g. Variant, RNA-seq etc.).
-#' The `MEASUREMENT` entity records one entry for each entry in a `MeasurementData` array per biosample,
+#' The function should be called after loading the \code{MeasurementData} arrays` (e.g. Variant, RNA-seq etc.).
+#' The \code{MEASUREMENT} entity records one entry for each entry in a \code{MeasurementData} array per biosample,
 #' per pipeline
 #' 
-#' (A `MEASUREMENT` combines both Experiment and Pipeline information) 
+#' (A \code{MEASUREMENT} combines both Experiment and Pipeline information) 
 #' @export
 populate_measurements = function(con = NULL) {
   con = use_ghEnv_if_null(con)

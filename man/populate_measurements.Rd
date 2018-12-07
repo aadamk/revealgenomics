@@ -4,10 +4,11 @@
 \alias{populate_measurements}
 \title{register all measurements for a specific dataset}
 \usage{
-populate_measurements(dataset_id, dataset_version, con = NULL)
+populate_measurements(con = NULL)
 }
 \description{
-The function should be called after loading the \code{MeasurementData} arrays\code{(e.g. Variant, RNA-seq etc.). The}MEASUREMENT\code{entity records one entry for each entry in a}MeasurementData` array per biosample,
+The function should be called after loading the \code{MeasurementData} arrays` (e.g. Variant, RNA-seq etc.).
+The \code{MEASUREMENT} entity records one entry for each entry in a \code{MeasurementData} array per biosample,
 per pipeline
 }
 \details{
