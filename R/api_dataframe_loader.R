@@ -814,8 +814,8 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
            DataLoaderVariantGemini$new(data_df = data_df,
                                        reference_object = reference_object),
          "{[external]-[Single Nucleotide Variant] MuTect / seurat / strelka}{DNA}" =,
-         "{[external]-[Single Nucleotide Variant] custom pipeline - Pharmacyclics LLC}{DNA}" = ,
-         "{[external]-[Single Nucleotide Variant] custom pipeline - Foundation Medicine}{DNA}" =
+         "{[external]-[Single Nucleotide Variant] Targeted Region - FoundationOne Heme (Personalis)}{DNA}" = ,
+         "{[external]-[Single Nucleotide Variant] Targeted Region - FoundationOne Heme (FMI)}{DNA}" =
            DataLoaderVariantFormatA$new(data_df = data_df,
                                         reference_object = reference_object, 
                                         feature_annotation_df = feature_annotation_df),
@@ -823,7 +823,7 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
            DataLoaderProteomicsMaxQuant$new(data_df = data_df,
                                             reference_object = reference_object),
          "{[external]-[Fusion] Tophat Fusion}{gene}" = ,
-         "{[external]-[Fusion] custom pipeline - Foundation Medicine}{gene}" = ,
+         "{[external]-[Fusion] FoundationOne Heme (FMI)}{gene}" = ,
          "{[external]-[Fusion] Defuse}{gene}" =
            DataLoaderFusionFormatA$new(data_df = data_df,
                                    reference_object = reference_object,
