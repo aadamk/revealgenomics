@@ -175,7 +175,10 @@ register_entities_workbook = function(workbook,
                                 (pipelines_df[, template_linker$filter$pipelines_sel_col] == 
                                    reference_object$measurement_set$filter_name)), ]
      
-      cat("==== Registering MEASUREMENT =====\n")
+      cat("==== Registering MEASUREMENT =====\n\tentity:", 
+          reference_object$measurement_set$entity, 
+          "\n\tpipeline name:", reference_object$measurement_set$name, 
+          "\n")
       api_register_measurements(
         biosample_names = pip_sel$sample_name, 
         bios_df_ref = reference_object$biosample,
