@@ -14,11 +14,15 @@ plot_heatmap_for_expression_set = function(es, type = c('gene_expression',
   colnames(d) = gsub(pattern = "__Protein", replacement = "", x = colnames(d))
   colnames(d) = gsub("hg19MTERCC-ensembl75-genes-", "", colnames(d))
   if (length(colnames(d)) > 10) {
-    colnames(d) = paste0(
+    # Try reducing names for viz. only
+    reduced_names = paste0(
       stringi::stri_sub(colnames(d), 1, 5),
       "...",
       stringi::stri_sub(colnames(d), -5, -1)
     )
+    if (length(which(duplicated(reduced_names))) == 0) {
+      colnames(d) = reduced_names
+    }
   }
   d = cbind(
     data.frame(
