@@ -577,6 +577,29 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
   }
 }
 
+#' @export
+find_dataset_id_by_name = function(name, partial_match = TRUE, ignore_case = TRUE, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  dx = iquery(con$db, 
+             paste0(
+               "project(", 
+                  custom_scan(), "(", full_arrayname(entitynm = .ghEnv$meta$arrDataset), "), ", 
+                  "name)"),
+             return = TRUE)
+  if (partial_match) {
+    if (ignore_case) {
+      dx[grep(name, dx$name, ignore.case = TRUE), ]$dataset_id
+    } else {
+      dx[grep(name, dx$name), ]$dataset_id
+    }
+  } else {
+    if (ignore_case) {
+      dx[tolower(dx$name) == tolower(name), ]$dataset_id
+    } else {
+      dx[dx$name == name, ]$dataset_id
+    }
+  }
+}
 
 #' @export
 get_datasets = function(dataset_id = NULL, dataset_version = NULL, 
