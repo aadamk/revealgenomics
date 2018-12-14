@@ -726,7 +726,8 @@ search_variants_scidb = function(arrayname,
                                  con = NULL){
   con = use_ghEnv_if_null(con)
   
-  scanned_array = paste0(custom_scan(), "(", full_arrayname(arrayname), ")")
+  entitynm = strip_namespace(arrayname)
+  scanned_array = paste0(custom_scan(), "(", full_arrayname(entitynm), ")")
   if (is.null(dataset_version)) stop("dataset_version must be supplied")
   if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
   
