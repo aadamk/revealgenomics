@@ -814,7 +814,7 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
            DataLoaderVariantGemini$new(data_df = data_df,
                                        reference_object = reference_object),
          "{[external]-[Single Nucleotide Variant] MuTect / seurat / strelka}{DNA}" =,
-         "{[external]-[Single Nucleotide Variant] Targeted Region - FoundationOne Heme (Personalis)}{DNA}" = ,
+         "{[external]-[Single Nucleotide Variant] Targeted Region - DNA Analysis Pipeline for Cancer (Personalis)}{DNA}" = ,
          "{[external]-[Single Nucleotide Variant] Targeted Region - FoundationOne Heme (FMI)}{DNA}" =
            DataLoaderVariantFormatA$new(data_df = data_df,
                                         reference_object = reference_object, 
