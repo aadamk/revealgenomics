@@ -577,28 +577,21 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
   }
 }
 
+#' Returns dataset_ids by grep on name
+#' 
+#' @param pattern pattern to search by
+#' @param con connection object
+#' @param ... additional parameters to grep like \code{ignore.case}, \code{perl}. See documentation for \code{grep}
 #' @export
-find_dataset_id_by_name = function(name, partial_match = TRUE, ignore_case = TRUE, con = NULL) {
-  con = use_ghEnv_if_null(con = con)
+find_dataset_id_by_grep = function(pattern, con = NULL, ...) {
+  con = revealgenomics:::use_ghEnv_if_null(con = con)
   dx = iquery(con$db, 
-             paste0(
-               "project(", 
-                  custom_scan(), "(", full_arrayname(entitynm = .ghEnv$meta$arrDataset), "), ", 
-                  "name)"),
-             return = TRUE)
-  if (partial_match) {
-    if (ignore_case) {
-      dx[grep(name, dx$name, ignore.case = TRUE), ]$dataset_id
-    } else {
-      dx[grep(name, dx$name), ]$dataset_id
-    }
-  } else {
-    if (ignore_case) {
-      dx[tolower(dx$name) == tolower(name), ]$dataset_id
-    } else {
-      dx[dx$name == name, ]$dataset_id
-    }
-  }
+              paste0(
+                "project(", 
+                revealgenomics:::custom_scan(), "(", revealgenomics:::full_arrayname(entitynm = .ghEnv$meta$arrDataset), "), ", 
+                "name)"),
+              return = TRUE)
+  dx[grep(pattern, dx$name, ...), ]$dataset_id
 }
 
 #' @export
