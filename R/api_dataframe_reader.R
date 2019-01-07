@@ -956,8 +956,14 @@ DataReaderCopyNumberMatrix = R6::R6Class(
 ##### createDataReader #####
 #' @export
 createDataReader = function(pipeline_df, measurement_set){
-  temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
-                       measurement_set$quantification_level, "}")
+  # Special formulation for entries that need to be disambuiguated by filter_choices
+  if (length(grep("COPY|CNV", measurement_set$pipeline_scidb)) > 0) { 
+    temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
+                         measurement_set$filter_name, "}")
+  } else {
+    temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
+                         measurement_set$quantification_level, "}")
+  }
   switch(temp_string,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = 
              DataReaderRNAQuantRNASeqCufflinks$new(pipeline_df = pipeline_df,

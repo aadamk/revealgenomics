@@ -812,11 +812,14 @@ DataLoaderCopyNumberMatrix = R6::R6Class(
 ##### createDataLoader #####
 #' @export      
 createDataLoader = function(data_df, reference_object, feature_annotation_df = NULL){
-  temp_string = paste0("{",
-                       reference_object$measurement_set$pipeline_scidb, 
-                       "}{", 
-                       reference_object$measurement_set$quantification_level, 
-                       "}")
+  # Special formulation for entries that need to be disambuiguated by filter_choices
+  if (length(grep("COPY|CNV", reference_object$measurement_set$pipeline_scidb)) > 0) { 
+    temp_string = paste0("{", reference_object$measurement_set$pipeline_scidb, "}{", 
+                         reference_object$measurement_set$filter_name, "}")
+  } else {
+    temp_string = paste0("{", reference_object$measurement_set$pipeline_scidb, "}{", 
+                         reference_object$measurement_set$quantification_level, "}")
+  }
   switch(temp_string,
          "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
          "{[external]-[RNA-seq] HTSeq}{gene}" = ,
