@@ -457,7 +457,7 @@ array:
     namespace: 
       - gh_secure
     attributes:
-      copynumber_val: double
+      value: float
     dims:
       dataset_version:
         start: 0
@@ -467,7 +467,7 @@ array:
       dataset_id:
         start: 0
         end: Inf
-        chunk_interval: 10
+        chunk_interval: 1
         overlap: 0
       measurementset_id:
         start: 0
@@ -477,12 +477,52 @@ array:
       biosample_id:
         start: 0
         end: Inf
-        chunk_interval: 100
+        chunk_interval: 128
         overlap: 0
       feature_id:
         start: 0
         end: Inf
-        chunk_interval: 100000
+        chunk_interval: 32768
+        overlap: 0
+    search_by_entity: MEASUREMENTSET
+    delete_by_entity: MEASUREMENTSET
+    infoArray: FALSE
+    compression_on: TRUE
+  #COPYNUMBER_MAT_STRING
+  COPYNUMBER_MAT_STRING:
+    data_class:
+      measurementdata
+    measurementdata_subclass:
+      copynumber_mat_string
+    namespace: 
+      - gh_secure
+    attributes:
+      value: string
+    dims:
+      dataset_version:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      measurementset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      biosample_id:
+        start: 0
+        end: Inf
+        chunk_interval: 128
+        overlap: 0
+      feature_id:
+        start: 0
+        end: Inf
+        chunk_interval: 32768
         overlap: 0
     search_by_entity: MEASUREMENTSET
     delete_by_entity: MEASUREMENTSET
