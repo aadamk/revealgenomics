@@ -1009,14 +1009,16 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Fusion] Defuse}{gene}" =
            DataReaderFusionDeFuse$new(pipeline_df = pipeline_df,
                                       measurement_set = measurement_set),
-         "{[external]-[Exome CNV] custom pipeline - Foundation Medicine}{DNA}" =  
+         "{[external]-[Targeted Region CNV] FoundationOne Heme (FMI)}{DNA}" =  
            DataReaderFMICopyNumberVariant$new(pipeline_df = pipeline_df,
                                               measurement_set = measurement_set),
-         "{[external]-[Exome CNV] CBS - Circular Binary Segmentation}{DNA}" = ,
-         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVKit}{DNA}" = ,
-         "{[external]-[Exome CNV] custom pipeline - Pharmacyclics LLC}{DNA}" = 
-           DataReader$new(pipeline_df = pipeline_df,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - log2 ratio}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - log2 ratio}" =
+           DataReaderCopyNumberMatrix$new(pipeline_df = pipeline_df,
                           measurement_set = measurement_set),
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - segmentation (file link)}" = 
+           DataReaderFileLink$new(pipeline_df = pipeline_df,
+                                  measurement_set = measurement_set),
            stop("Need to add reader for choice:\n", temp_string)
          )
 }

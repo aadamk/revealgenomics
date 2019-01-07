@@ -864,7 +864,12 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[Fusion] Defuse}{gene}" =
            DataLoaderFusionFormatA$new(data_df = data_df,
                                    reference_object = reference_object,
-                                   feature_annotation_df = feature_annotation_df)
+                                   feature_annotation_df = feature_annotation_df),
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - log2 ratio}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - log2 ratio}" =
+           DataLoaderCopyNumberMatrix$new(data_df = data_df,
+                                          reference_object = reference_object, 
+                                          feature_annotation_df = feature_annotation_df)
   )
 }
 
