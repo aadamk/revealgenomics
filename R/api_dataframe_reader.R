@@ -59,6 +59,42 @@ DataReader = R6::R6Class(classname = 'DataReader',
                            .data_df = NULL
                          ))
 
+##### Automatically infer separator (CSV or TSV) ####
+DataReaderAuto = R6::R6Class(
+  classname = 'DataReaderAuto',
+  inherit = DataReader,
+  public = list(
+   print_level = function() {cat("----(Level: DataReaderAuto)\n")},
+   load_data_from_file = function() {
+     cat("load_data_from_file()"); self$print_level()
+     
+     tsvReadSuccess = tryCatch({
+       cat("Trying to read as TSV file\n")
+       temp = read.delim(file = unique(private$.pipeline_df$file_path),
+                         sep = private$.separator,
+                         nrows = 2, # file should at least have two lines
+                         check.names = FALSE)
+       if (ncol(temp) == 1) {
+         cat("Unlikely that data file has 1 column. Try CSV next\n")
+         FALSE
+       } else {
+         cat("Read attempt as TSV succeeded\n")
+         TRUE
+       }
+     }, error = function(e) {
+       cat("Read attempt as TSV failed. Try CSV next\n")
+       FALSE
+     })
+     
+     if (!tsvReadSuccess) {
+       private$.separator = ','
+     }
+     
+     super$load_data_from_file()
+   }
+  )
+)
+                                           
 ##### DataReaderVariant #####
 DataReaderVariant = R6::R6Class(classname = 'DataReaderVariant',
                                 inherit = DataReader,
@@ -422,7 +458,7 @@ DataReaderFMIFusion = R6::R6Class(
 
 ##### DataReaderExpressionMatrix #####
 DataReaderExpressionMatrix = R6::R6Class(classname = 'DataReaderExpressionMatrix',
-                               inherit = DataReader,
+                               inherit = DataReaderAuto,
                                public = list(
                                  print_level = function() {cat("----(Level: DataReaderExpressionMatrix)\n")}
                                ), 
@@ -710,7 +746,7 @@ DataReaderProteomicsMaxQuant = R6::R6Class(
   classname = 'DataReaderProteomicsMaxQuant',
   inherit = DataReaderExpressionMatrix,
   public = list(
-    print_level = function() {cat("----(Level: DataReaderRNASeqGeneFormatA)\n")},
+    print_level = function() {cat("----(Level: DataReaderProteomicsMaxQuant)\n")},
     load_data_from_file = function() {
       super$load_data_from_file()
       cat("load_data_from_file()"); self$print_level()
