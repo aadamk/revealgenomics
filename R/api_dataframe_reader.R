@@ -922,6 +922,19 @@ DataReaderFusionDeFuse = R6::R6Class(
    }
   ))
 
+##### DataReaderFileLink #####
+DataReaderFileLink = R6::R6Class(
+  classname = 'DataReaderFileLink',
+  inherit = DataReader,
+  public = list(
+    load_data_from_file = function() {
+      private$.data_df = data.frame(
+        biosample_name = private$.pipeline_df$original_sample_name
+      )
+      private$.feature_annotation_df = NULL
+    }
+  ))
+
 ##### DataReaderCopyNumberMatrix #####
 DataReaderCopyNumberMatrix = R6::R6Class(
   classname = 'DataReaderCopyNumberMatrix',
