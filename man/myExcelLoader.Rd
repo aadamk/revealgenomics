@@ -4,12 +4,14 @@
 \alias{myExcelLoader}
 \title{Load Excel workbook into memory}
 \usage{
-myExcelLoader(filename, use_readxl = TRUE)
+myExcelLoader(filename, use_readxl = TRUE, silently = FALSE)
 }
 \arguments{
 \item{filename}{path to Excel workbook}
 
 \item{use_readxl}{use readxl package (default), otherwise XLConnect package}
+
+\item{silently}{spew log messages while loading workbook (logging turned on by default)}
 }
 \description{
 To be used in conjunction with \code{myExcelReader()}

@@ -43,9 +43,10 @@ template_linker = list(
 #' `
 #' @param filename path to Excel workbook
 #' @param use_readxl use readxl package (default), otherwise XLConnect package
+#' @param silently spew log messages while loading workbook (logging turned on by default)
 #' 
 #' @export
-myExcelLoader = function(filename, use_readxl=TRUE) {
+myExcelLoader = function(filename, use_readxl=TRUE, silently=FALSE) {
   tryCatch({
     if (use_readxl) {
       readxl::excel_sheets(path = filename)
@@ -75,7 +76,7 @@ myExcelLoader = function(filename, use_readxl=TRUE) {
   
   wb = list()
   for (sheet_nm in required_sheets) {
-    cat("Reading sheet: ", sheet_nm, "\n")
+    if (!silently) cat("Reading sheet: ", sheet_nm, "\n")
     if (use_readxl) {
       wb[[sheet_nm]] = as.data.frame(readxl::read_excel(path = filename, ## file name + location
                                           sheet = sheet_nm, ## Which sheet name to parse 
@@ -139,7 +140,6 @@ myExcelLoader = function(filename, use_readxl=TRUE) {
 #' @param workbook Workbook must be of type `XLConnect::workbook` (loaded by `XLConnect::loadWorkbook()`) 
 #'                 or of type `list` (loaded by `revealgenomics::myExcelLoader()`)
 #' @param sheet_name name of sheet to read from workbook
-#' @export
 myExcelReader = function(workbook, sheet_name) {
   if (class(workbook) == 'workbook') {
     readWorksheet(object = workbook, 
