@@ -257,13 +257,11 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj, 
   msmtset_df = cbind(pipeline_df,
                      filter_df,
                      featureset_df)
-  # msmtset_df$featureset_name = sapply(msmtset_selector[, selector_col_featureset_choice],
-  #                                     function(choice) {
-  #                                       choicesObj$featuresetChoicesObj$get_featureset_name(keys = choice)
-  #                                     })
   msmtset_df$dataset_id = record$dataset_id
+  # msmtset_df$measurement_entity = 
+  #   template_helper_convert_names(external_name = msmtset_df$measurement_entity)
   msmtset_df$measurement_entity = 
-    template_helper_convert_names(external_name = msmtset_df$measurement_entity)
+    assign_api_entity(pipeline_df = msmtset_df)
   
   msmtset_df
 }
@@ -272,7 +270,7 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj, 
 #' 
 #' Helper function for template Excel sheet. 
 #' 
-#' Given a project-study record `project_id, dataset_id, dataset_version`
+#' Given a project-study record \code{project_id, dataset_id, dataset_version}
 #' find the information from a target sheet (e.g. Subjects, Samples, Pipelines) pertaining
 #' to that record
 template_helper_extract_record_related_rows = function(workbook, sheetName, record) {
@@ -331,12 +329,10 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
     api_names = c(.ghEnv$meta$arrRnaquantification,
                   .ghEnv$meta$arrVariant, 
                   .ghEnv$meta$arrFusion,
-                  .ghEnv$meta$arrCopynumber_mat,
                   .ghEnv$meta$arrProteomics),
     external_name = c('Gene Expression',
                       'Variant',
                       'Rearrangement',
-                      'Copy Number Variation',
                       'Proteomics'),
     stringsAsFactors = FALSE
   )
@@ -357,6 +353,44 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
   }
 }
 
+#' Assign entity
+#' 
+#' Assign entity based on pipeline and filter choice selection in Pipelines sheet of Excel sheet
+assign_api_entity = function(pipeline_df) {
+  stopifnot(all(c('measurement_entity', 'filter_name') %in% colnames(pipeline_df)))
+  candidates = pipeline_df$measurement_entity
+  converted = rep(NA, length(candidates))
+  # Positions where one must only consdier pipeline to choose scidb entity
+  pos_pipeline = which(candidates != "Copy Number Variation")
+  if (length(pos_pipeline) > 0) {
+    converted[pos_pipeline] = 
+      template_helper_convert_names(external_name = candidates[pos_pipeline])
+  }
+  # Positions where one must consider both pipeline and filter
+  pos_pipeline_filter = which(candidates == "Copy Number Variation") # currently only CNV, but more might eb added 
+  if (length(pos_pipeline_filter) > 0) {
+    # Following coding is for CNV only
+    stopifnot(all(unique(candidates[pos_pipeline_filter]) == 'Copy Number Variation'))
+    converted[pos_pipeline_filter] = sapply(
+      pos_pipeline_filter, 
+      function(idx) {
+        pipeline = pipeline_df$pipeline_scidb[idx]
+        filter = pipeline_df$filter_name[idx]
+        if (length(grep("log2", filter)) > 0) {
+          result = .ghEnv$meta$arrCopynumber_mat
+        } else if (length(grep("file link", filter)) > 0) {
+          result = .ghEnv$meta$arrMeasurement
+        } else if (length(grep("state call", filter)) > 0) {
+          result = .ghEnv$meta$arrCopynumber_mat_string
+        } else {
+          stop("Case not covered -- pipeline: ", pipeline, " filter: ", filter)
+        }
+        return(result)
+      }
+    )   
+  }
+  return(converted)
+}
 #' Convert entity to suffix
 #' 
 #' === Entity-name        Suffix ===
