@@ -313,10 +313,9 @@ api_register_featuresets_experimentsets_measurementsets = function(
   # EXPERIMENTSET
   # Formulate ExperimentSet
   columns_experimentSet = c('dataset_id', 
-                            'measurement_entity',
                             'data_subtype')
   expset_df = unique(msmtset_df[, columns_experimentSet])
-  expset_df$name = expset_df$data_subtype
+  expset_df = plyr::rename(expset_df, c('data_subtype' = 'name'))
   expset_df$description = paste0(expset_df$name, " experiments")
   expset_df$molecule = '...'
   

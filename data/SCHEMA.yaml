@@ -135,7 +135,7 @@ array:
       name: string
       description: string
       molecule: string
-      measurement_entity: string
+      experiment_type_API: string
       created: string
       updated: string
     dims: 
