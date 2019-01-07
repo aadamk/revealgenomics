@@ -776,6 +776,39 @@ DataLoaderFusionFormatA = R6::R6Class(
     }
   ))
 
+##### DataLoaderCopyNumberMatrix #####
+DataLoaderCopyNumberMatrix = R6::R6Class(
+  classname = "DataLoaderCopyNumberMatrix",
+  inherit = DataLoaderExpression, 
+  public = list(
+    print_level = function() {cat("----(Level: DataLoaderCopyNumberMatrix)\n")},
+    register_new_features = function() {
+      col_match_ftr_name = 'tracking_id'
+      fset = find_matching_featureset(pipeline_df = private$.reference_object$pipeline_df,
+                                      featureset_link_col = template_linker$featureset$choices_col,
+                                      fsets_scidb = private$.reference_object$featureset
+      )
+      m1 = feature_matching_level1(data_df = private$.data_df, 
+                                   col_match_ftr_name = col_match_ftr_name,
+                                   fset = fset,
+                                   feature_df = private$.reference_object$feature
+      )
+      browser()
+      if (length(m1$source_unmatched_idx) > 0) {
+        stop("Need to implement level 2 matching -- see DataLoaderRNAQuantRNASeq")
+        return(FALSE)
+      } else {
+        return(FALSE)
+      }
+    },
+    assign_feature_ids = function(){
+      cat("assign_feature_ids()"); self$print_level()
+      super$assign_feature_ids(feature_type = 'gene',
+                               column_in_file = 'tracking_id')
+    }
+  )
+)
+
 ##### createDataLoader #####
 #' @export      
 createDataLoader = function(data_df, reference_object, feature_annotation_df = NULL){
