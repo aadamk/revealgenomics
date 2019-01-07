@@ -922,6 +922,24 @@ DataReaderFusionDeFuse = R6::R6Class(
    }
   ))
 
+##### DataReaderCopyNumberMatrix #####
+DataReaderCopyNumberMatrix = R6::R6Class(
+  classname = 'DataReaderCopyNumberMatrix',
+  inherit = DataReaderExpressionMatrix,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderCopyNumberMatrix)\n")},
+    load_data_from_file = function() {
+      super$load_data_from_file()
+      cat("load_data_from_file()"); self$print_level()
+      
+      colnames(private$.data_df)[1] = 'tracking_id'
+      super$convert_wide_to_tall_skinny()
+      cat("Dimensions:", dim(private$.data_df), "\n")
+    }
+  ), 
+  private = list()
+)
+
 ##### createDataReader #####
 #' @export
 createDataReader = function(pipeline_df, measurement_set){
