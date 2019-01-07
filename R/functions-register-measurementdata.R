@@ -244,7 +244,7 @@ register_expression_matrix = function(filepath,
   } # end of if (!only_test)
 }
 
-#' Upload data into gene expression, protein expression arrays
+#' Upload data into gene expression, protein expression, copy number matrix arrays
 #' 
 #' @export
 register_expression_dataframe = function(df1, dataset_version, con = NULL){
@@ -261,10 +261,12 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   stopifnot(nrow(mset) == 1)
   entity = mset$entity
   if (!(entity %in% c(.ghEnv$meta$arrRnaquantification, 
-                    .ghEnv$meta$arrProteomics))) {
+                    .ghEnv$meta$arrProteomics, 
+                    .ghEnv$meta$arrCopynumber_mat))) {
     stop("Expect to use this function to upload data for: ",
          pretty_print(c(.ghEnv$meta$arrRnaquantification,
-                        .ghEnv$meta$arrProteomics)), " only")
+                        .ghEnv$meta$arrProteomics,
+                        .ghEnv$meta$arrCopynumber_mat)), " only")
   }
   
   df1 = df1[, c('dataset_id', 'measurementset_id', 'biosample_id', 
