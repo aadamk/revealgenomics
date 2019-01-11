@@ -790,7 +790,8 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[RNA-seq] Salmon}{gene}" = ,
          "{[external]-[RNA-seq] Sailfish}{gene}" = ,
          "{[internal]-[RNA-Seq] RSEM}{gene}" = ,
-         "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = 
+         "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = ,
+         "{[external]-[RNA-seq] featureCounts}{gene}" =
            DataLoaderRNASeqGeneFormat$new(data_df = data_df,
                                           reference_object = reference_object,
                                           feature_annotation_df = feature_annotation_df),
