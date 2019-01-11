@@ -646,6 +646,13 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
                                               source = c('ENSG'),
                                               replace = c('feature_name'),
                                               feature_col = 'ENSG'
+                                            ),
+                                          'gene_feature_cols_4' = 
+                                            list(
+                                              source = c('Gene', 'Symbol', 'Chr', 'Exon_Start', 'Exon_End', 'Strand', 'Length', 'GeneStart', 'GeneEnd'),
+                                              replace = c('feature_name', 'gene_symbol', 'chromosome', 'exon_start', 'exon_end', 'strand', 'length',
+                                                          'start', 'end'),
+                                              feature_col = 'Gene'
                                             )
                                         )
                                         if (all(c('GENE_ID', 'Location') %in% colnames(private$.data_df))) {
