@@ -14,5 +14,5 @@ api_register_measurements(biosample_names, bios_df_ref, msmtset_df_ref)
 \item{msmtset_df_ref}{dataframe containing API entry for current measurementset (retrieve from reference object)}
 }
 \description{
-Excel sheet equivalent of \link{\code{populate_measurements()}}
+Excel sheet equivalent of \code{\link{populate_measurements}}
 }
