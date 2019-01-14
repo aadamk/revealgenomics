@@ -792,26 +792,42 @@ DataReaderProteomicsMaxQuant = R6::R6Class(
                                      
 ##### DataReaderFusionTophat #####
 DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
-                                     inherit = DataReader,
+                                     inherit = DataReaderAuto,
                                      public = list(
                                        print_level = function() {cat("----(Level: DataReaderFusionTophat)\n")},
                                        load_data_from_file = function() {
-                                         cat("Tophat Fusion files may or may not have header info. Reading without header and will adjust as required.")
+                                         cat("Tophat Fusion text files may or may not have header info. Reading without header and will adjust as required.")
                                          private$.header = FALSE
                                          super$load_data_from_file()
-                                         first_10_cols = c('biosample_name', 
-                                                           'gene_left', 'chromosome_left', 'start_left',
-                                                           'gene_right', 'chromosome_right', 'start_right',
-                                                           'num_spanning_reads', 'num_mate_pairs', 
-                                                           'num_mate_pairs_fusion')
-                                         if (ncol(private$.data_df) == 10) {
-                                           colnames(private$.data_df) = first_10_cols
-                                         } else if (ncol(private$.data_df) == 11) {
-                                           colnames(private$.data_df) = c(
-                                             first_10_cols,
-                                             'quality_score')
+                                         if (private$.is_excel) {
+                                           private$.data_df$biosample_name = private$.data_df$SeqID
+                                           private$.data_df = plyr::rename(
+                                             private$.data_df, 
+                                             c('LeftGene' = 'gene_left',
+                                               'LeftChrID' = 'chromosome_left',
+                                               'LeftCoord' = 'start_left',
+                                               'RightGene' = 'gene_right',
+                                               'RightChrID' = 'chromosome_right',
+                                               'RightCoord' = 'start_right',
+                                               'Num.ofReadsSpanningFusion' = 'num_spanning_reads',
+                                               'Num.ofSpanningMatePairs' = 'num_mate_pairs')
+                                           )
+                                           private$.data_df$num_mate_pairs_fusion = NA # https://janssenwiki.na.jnj.com:3000/inforMe-SciDB/scidb_loader_templates/issues/76
                                          } else {
-                                           stop("Expect 10 or 11 columns here")
+                                           first_10_cols = c('biosample_name', 
+                                                             'gene_left', 'chromosome_left', 'start_left',
+                                                             'gene_right', 'chromosome_right', 'start_right',
+                                                             'num_spanning_reads', 'num_mate_pairs', 
+                                                             'num_mate_pairs_fusion')
+                                           if (ncol(private$.data_df) == 10) {
+                                             colnames(private$.data_df) = first_10_cols
+                                           } else if (ncol(private$.data_df) == 11) {
+                                             colnames(private$.data_df) = c(
+                                               first_10_cols,
+                                               'quality_score')
+                                           } else {
+                                             stop("Expect 10 or 11 columns here")
+                                           }
                                          }
                                          private$.data_df$end_left = NA
                                          private$.data_df$end_right = NA
