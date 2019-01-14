@@ -24,5 +24,5 @@ metadata to the measurement data, and only those are eventually downloaded from 
 database.
 (3.) For now this is only  used to estimate the data size in the measurement array
 (not the feature and any other metadata that might also be downloaded to form a compound
-object e.g. \link{\code{search_expression}} returns a Bioconductor ExpressionSet object).
+object e.g. \code{\link{search_expression}} returns a Bioconductor ExpressionSet object).
 }
