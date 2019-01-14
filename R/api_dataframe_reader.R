@@ -11,18 +11,30 @@ DataReader = R6::R6Class(classname = 'DataReader',
                              cat("load_data_from_file()"); self$print_level()
                              file_path = unique(private$.pipeline_df$file_path)
                              stopifnot(length(file_path) == 1)
-                             cat(paste0("Reading *", switch(private$.separator,
-                                                   '\t' = 'tab',
-                                                   ',' = 'comma'), 
-                                 "* delimited file:\n\t", file_path, "\n"))
-                             if (!private$.header) {
-                               cat("--- No header in file\n")
+                             if (private$.is_excel) {
+                               cat(paste0("Reading Excel file:\n\t", file_path, "\n"))
+                               sheets = readxl::excel_sheets(path = file_path)
+                               if (length(sheets) != 1) {
+                                 stop("Expected 1 sheet in Excel workbook. Found following:\n\t", 
+                                      pretty_print(sheets))
+                               }
+                               private$.data_df = as.data.frame(
+                                 readxl::read_excel(path = file_path)
+                               )
+                             } else {
+                               cat(paste0("Reading *", switch(private$.separator,
+                                                              '\t' = 'tab',
+                                                              ',' = 'comma'), 
+                                          "* delimited file:\n\t", file_path, "\n"))
+                               if (!private$.header) {
+                                 cat("--- No header in file\n")
+                               }
+                               private$.data_df = read.delim(file = file_path,
+                                                             sep = private$.separator,
+                                                             check.names = FALSE,
+                                                             stringsAsFactors = FALSE,
+                                                             header = private$.header)
                              }
-                             private$.data_df = read.delim(file = file_path,
-                                                           sep = private$.separator,
-                                                           check.names = FALSE,
-                                                           stringsAsFactors = FALSE,
-                                                           header = private$.header)
                              cat("Dimensions:", dim(private$.data_df), "\n")
                              invisible(self)
                            },
@@ -56,6 +68,7 @@ DataReader = R6::R6Class(classname = 'DataReader',
                            .feature_annotation_df = NULL,
                            .header = TRUE, # whether to read first row of data-file as header
                            .separator = '\t',
+                           .is_excel = FALSE, 
                            .data_df = NULL
                          ))
 
@@ -68,26 +81,32 @@ DataReaderAuto = R6::R6Class(
    load_data_from_file = function() {
      cat("load_data_from_file()"); self$print_level()
      
-     tsvReadSuccess = tryCatch({
-       cat("Trying to read as TSV file\n")
-       temp = read.delim(file = unique(private$.pipeline_df$file_path),
-                         sep = private$.separator,
-                         nrows = 2, # file should at least have two lines
-                         check.names = FALSE)
-       if (ncol(temp) == 1) {
-         cat("Unlikely that data file has 1 column. Try CSV next\n")
+     file_path = unique(private$.pipeline_df$file_path)
+     stopifnot(length(file_path) == 1)
+     if (tools::file_ext(file_path) %in% c('xls', 'xlsx')) {
+       private$.is_excel = TRUE
+     } else {
+       tsvReadSuccess = tryCatch({
+         cat("Trying to read as TSV file\n")
+         temp = read.delim(file = file_path,
+                           sep = private$.separator,
+                           nrows = 2, # file should at least have two lines
+                           check.names = FALSE)
+         if (ncol(temp) == 1) {
+           cat("Unlikely that data file has 1 column. Try CSV next\n")
+           FALSE
+         } else {
+           cat("Read attempt as TSV succeeded\n")
+           TRUE
+         }
+       }, error = function(e) {
+         cat("Read attempt as TSV failed. Try CSV next\n")
          FALSE
-       } else {
-         cat("Read attempt as TSV succeeded\n")
-         TRUE
+       })
+       
+       if (!tsvReadSuccess) {
+         private$.separator = ','
        }
-     }, error = function(e) {
-       cat("Read attempt as TSV failed. Try CSV next\n")
-       FALSE
-     })
-     
-     if (!tsvReadSuccess) {
-       private$.separator = ','
      }
      
      super$load_data_from_file()
