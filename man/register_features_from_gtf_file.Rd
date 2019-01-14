@@ -5,7 +5,7 @@
 \title{Register features from GTF file}
 \usage{
 register_features_from_gtf_file(featureset_name, gtf_filepath, nSkip,
-  register_transcripts = c(FALSE, TRUE), con = NULL)
+  register_transcripts, con = NULL)
 }
 \arguments{
 \item{featureset_name}{Exact featureset name at which to register features}

@@ -422,7 +422,7 @@ api_register_featuresets_experimentsets_measurementsets = function(
 #' 
 #' Excel sheet equivalent of \code{\link{populate_measurements}}
 #' 
-#' @param biosample_names `sample_name` column from rows of Pipeline sheet corresponding to current pipeline
+#' @param biosample_names \code{sample_name} column from rows of Pipeline sheet corresponding to current pipeline
 #' @param bios_df_ref             dataframe containing API entry for biosample data at current \code{dataset_id} (retrieve from reference object)
 #' @param msmtset_df_ref  dataframe containing API entry for current measurementset (retrieve from reference object)
 api_register_measurements = function(
