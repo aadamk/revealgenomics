@@ -89,8 +89,12 @@ get_namespace = function(arrayname) sub("[.].*$", "", arrayname)
 
 #' @export
 drop_na_columns = function(df){
-  # http://stackoverflow.com/questions/2643939/remove-columns-from-dataframe-where-all-values-are-na
-  df[,colSums(is.na(df))<nrow(df)]
+  if (nrow(df) > 0) {
+    # http://stackoverflow.com/questions/2643939/remove-columns-from-dataframe-where-all-values-are-na
+    df[,colSums(is.na(df))<nrow(df)]
+  } else {
+    df
+  }
 }
 
 rename_column = function(x1, old_name, new_name){
