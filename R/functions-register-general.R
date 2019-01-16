@@ -305,6 +305,25 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
                           featureset_id = unique(gene_ftrs$featureset_id),
                           source = gene_ftrs$source,
                           stringsAsFactors = F)
+      # only those gene symbols that are not duplicated should also be tracked as a synonym 
+      if (!all(gene_ftrs$gene_symbol == 'NA')) { # only if non NA symbols are present
+        genesymtbl = table(gene_ftrs$gene_symbol)
+        nonduplicated = genesymtbl[genesymtbl == 1]
+        posns = which((gene_ftrs$gene_symbol %in% names(nonduplicated)) &
+                        (gene_ftrs$gene_symbol != gene_ftrs$name) # dont need to track if gene symbol and name are identical
+                      & !(gene_ftrs$gene_symbol == 'NA')) 
+        
+        df_syn2 = data.frame(
+          synonym = gene_ftrs$gene_symbol[posns], 
+          feature_id = fid[posns],
+          featureset_id = unique(gene_ftrs$featureset_id),
+          source = 'gene_symbol',
+          stringsAsFactors = F
+        )
+        
+        df_syn = rbind(df_syn, df_syn2)
+      }
+      
       ftr_syn_id = register_feature_synonym(df = df_syn, con = con)
     } else {
       ftr_syn_id = NULL
