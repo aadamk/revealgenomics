@@ -822,9 +822,6 @@ search_fusion = function(measurementset, biosample = NULL, feature = NULL,
     if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of measurementset and biosample must be same")
   }
   
-  arrayname = paste0(custom_scan(), 
-                     "(", full_arrayname(.ghEnv$meta$arrFusion), ")")
-
   if (!is.null(biosample)) {
     biosample_id = biosample$biosample_id
   }
@@ -841,7 +838,7 @@ search_fusion = function(measurementset, biosample = NULL, feature = NULL,
   }
   
   if (exists('debug_trace')) cat("retrieving fusion data from server\n")
-  res = search_fusions_scidb(arrayname,
+  res = search_fusions_scidb(arrayname = .ghEnv$meta$arrFusion,
                              measurementset_id,
                              biosample_id,
                              feature_id,
