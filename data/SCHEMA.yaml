@@ -214,6 +214,7 @@ array:
       measurement_entity: string
       measurementset_name: string
       biosample_id: int64
+      file_path: string
       created: string
       updated: string
     dims: 
@@ -233,13 +234,12 @@ array:
         chunk_interval: 1000
         overlap: 0
     unique_fields:
-      - experimentset_id
-      - measurement_entity
       - measurementset_id
       - biosample_id
+      - file_path
     search_by_entity: DATASET
     delete_by_entity: MEASUREMENT
-    infoArray: FALSE
+    infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: FALSE
   #RNAQUANTIFICATION
