@@ -261,6 +261,26 @@ DataLoader = R6::R6Class(classname = "DataLoader",
           .feature_annotation_df = NULL, 
           .reference_object = NULL
         ))
+
+
+##### DataLoaderBlankSlots #####
+# Class where all slots are blank on purpose i.e. do no action
+# To be used as a dummy
+DataLoaderBlankSlots = R6::R6Class(
+  classname = "DataLoaderExpression",
+  inherit = DataLoader,
+  public = list(
+    assign_biosample_ids = function() {}, 
+    download_features_for_featureset = function() {}, 
+    register_new_features = function() {return(FALSE)}, 
+    retrieve_features = function() {}, 
+    retrieve_feature_synonyms = function() {}, 
+    update_reference_object = function() {}, 
+    assign_feature_ids = function() {}, 
+    assign_other_ids = function() {}, 
+    load_data = function() {}
+  )
+)
 ##### DataLoaderExpression #####
 # class to be shared between loaders for
 # - GeneExpression (RNAQuantRNASeq), 
@@ -869,7 +889,15 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - log2 ratio}" =
            DataLoaderCopyNumberMatrix$new(data_df = data_df,
                                           reference_object = reference_object, 
-                                          feature_annotation_df = feature_annotation_df)
+                                          feature_annotation_df = feature_annotation_df),
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - images (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - images (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - segmentation (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - segmentation (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - b-allele frequency (file link)}" = 
+           DataLoaderBlankSlots$new(data_df = data_df,
+                                    reference_object = reference_object, 
+                                    feature_annotation_df = feature_annotation_df)
   )
 }
 

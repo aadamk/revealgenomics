@@ -1016,7 +1016,11 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - log2 ratio}" =
            DataReaderCopyNumberMatrix$new(pipeline_df = pipeline_df,
                           measurement_set = measurement_set),
-         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - segmentation (file link)}" = 
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - images (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - images (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - segmentation (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - segmentation (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - b-allele frequency (file link)}" = 
            DataReaderFileLink$new(pipeline_df = pipeline_df,
                                   measurement_set = measurement_set),
            stop("Need to add reader for choice:\n", temp_string)
