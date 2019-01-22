@@ -61,7 +61,8 @@ register_entities_workbook = function(workbook,
                                                        'all'), 
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
                                                                   'FUSION', 'PROTEOMICS', 
-                                                                  'COPYNUMBER_MAT'),
+                                                                  'COPYNUMBER_MAT', 'COPYNUMBER_MAT_STRING', 
+                                                                  'MEASUREMENT'),
                                   pipeline_name_filter = NULL,
                                   con = NULL) {
   register_upto_entity =        match.arg(register_upto_entity)                                          
