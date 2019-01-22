@@ -258,8 +258,6 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj, 
                      filter_df,
                      featureset_df)
   msmtset_df$dataset_id = record$dataset_id
-  # msmtset_df$measurement_entity = 
-  #   template_helper_convert_names(external_name = msmtset_df$measurement_entity)
   msmtset_df$measurement_entity = 
     assign_api_entity(pipeline_df = msmtset_df)
   
@@ -318,7 +316,6 @@ template_helper_extract_record_related_rows = function(workbook, sheetName, reco
 #' Gene Expression            RNAQUANTIFICATION
 #' Variant                    VARIANT
 #' Rearrangement              FUSION
-#' Copy Number Variation      COPYNUMBER_MAT
 template_helper_convert_names = function(api_name = NULL, external_name = NULL) {
   if (is.null(api_name) & is.null(external_name)) {
     stop("Must supply at least one parameter")
@@ -340,14 +337,14 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
     m1 = find_matches_and_return_indices(api_name, df1$api_name)
     if (length(m1$source_unmatched_idx) != 0) {
       stop("Unexpected internal names provided for conversion: ",
-          pretty_print(api_name[m1$source_unmatched_idx]))
+           pretty_print(api_name[m1$source_unmatched_idx]))
     }
     df1$external_name[m1$target_matched_idx]
   } else if (!is.null(external_name)) {
     m1 = find_matches_and_return_indices(external_name, df1$external_name)
     if (length(m1$source_unmatched_idx) != 0) {
       stop("Unexpected external names provided for conversion: ",
-          pretty_print(external_name[m1$source_unmatched_idx]))
+           pretty_print(external_name[m1$source_unmatched_idx]))
     }
     df1$api_name[m1$target_matched_idx]
   }
@@ -382,7 +379,7 @@ assign_api_entity = function(pipeline_df) {
       template_helper_convert_names(external_name = candidates[pos_pipeline])
   }
   # Positions where one must consider both pipeline and filter
-  pos_pipeline_filter = which(candidates == "Copy Number Variation") # currently only CNV, but more might eb added 
+  pos_pipeline_filter = which(candidates == "Copy Number Variation") # currently only CNV, but more might be added 
   if (length(pos_pipeline_filter) > 0) {
     # Following coding is for CNV only
     stopifnot(all(unique(candidates[pos_pipeline_filter]) == 'Copy Number Variation'))
