@@ -86,9 +86,33 @@ search_experimentsets = function(dataset_id = NULL, dataset_version = NULL, all_
 }
 
 #' @export
-search_measurements = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
-                                          dataset_id, dataset_version, all_versions, con = con)
+search_measurements = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, 
+                               measurementset_id = NULL, 
+                               con = NULL){
+  if (is.null(measurementset_id)) { # regular search by dataset id and/or version 
+    search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurement, 
+                                            dataset_id, dataset_version, all_versions, con = con)
+  } else { # need to search by pipeline id
+    entity = .ghEnv$meta$arrMeasurement
+    qq = paste0(
+      "filter(", 
+        custom_scan(), "(", full_arrayname(entity), ")", 
+        ", measurementset_id = ", measurementset_id, ")")
+    
+    df1 = join_info_unpivot(qq = qq,
+                      arrayname = entity,
+                      replicate_query_on_info_array = FALSE,
+                      con = con)
+    # reorder the output by the dimensions
+    # from https://stackoverflow.com/questions/17310998/sort-a-dataframe-in-r-by-a-dynamic-set-of-columns-named-in-another-data-frame
+    if (nrow(df1) == 0) return(df1)
+    df1 = df1[do.call(order, df1[get_idname(entity)]), ] 
+    
+    apply_definition_constraints(df1 = df1,
+                                 dataset_id = unique(df1$dataset_id),
+                                 entity = entity,
+                                 con = con)
+  }
 }
 
 #' @export
