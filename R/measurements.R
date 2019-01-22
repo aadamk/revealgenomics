@@ -112,10 +112,12 @@ get_measurements = function(measurement_id = NULL, dataset_version = NULL,
       ('DAS' %in% colnames(d))) {
     # make sure they do not overlap
     idx_not_na_das = which(!is.na(d$DAS))
-    stopifnot(all(is.null(d[idx_not_na_das, ]$`study category`)))
+    stopifnot(all(is.null(d[idx_not_na_das, ]$`study category`)
+                  | is.na(d[idx_not_na_das, ]$`study category`)))
     
     idx_not_na_study_category = which(!is.na(d$`study category`))
-    stopifnot(all(is.null(d[idx_not_na_study_category, ]$DAS)))
+    stopifnot(all(is.null(d[idx_not_na_study_category, ]$DAS)
+                  | is.na(d[idx_not_na_study_category, ]$DAS)))
     
     d$`study category`[idx_not_na_das] = d$DAS[idx_not_na_das]
   }
