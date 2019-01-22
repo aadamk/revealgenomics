@@ -175,6 +175,14 @@ register_entities_workbook = function(workbook,
                                 (pipelines_df[, template_linker$filter$pipelines_sel_col] == 
                                    reference_object$measurement_set$filter_name)), ]
      
+      # When testing R package, replace R_PKG_WKSP placeholder with actual path on system
+      if (identical(
+        unique(na_to_blank(pip_sel$local_project_folder_prefix)), 
+        "$(R_PKG_WKSP)")) {
+        pip_sel$local_project_folder_prefix = system.file("extdata", package = "revealgenomics")
+      }
+      pip_sel$file_path = template_helper_formulate_file_path(pipeline_df = pip_sel)
+      
       cat("==== Registering MEASUREMENT =====\n\tentity:", 
           reference_object$measurement_set$entity, 
           "\n\tpipeline name:", reference_object$measurement_set$name, 
@@ -208,16 +216,6 @@ register_entities_workbook = function(workbook,
       cat("Working on measurementset_id:", msmtset_id_sel,
           "(", reference_object$measurement_set$name,")\n")
       
-      # When testing R package, replace R_PKG_WKSP placeholder with actual path on system
-      if (identical(
-        unique(na_to_blank(pip_sel$local_project_folder_prefix)), 
-        "$(R_PKG_WKSP)")) {
-        pip_sel$local_project_folder_prefix = system.file("extdata", package = "revealgenomics")
-      }
-      pip_sel$file_path = file.path(na_to_blank(pip_sel$local_project_folder_prefix), 
-                                    na_to_blank(pip_sel$project_folder),
-                                    na_to_blank(pip_sel$project_subfolder),
-                                    pip_sel$filename)
       # As different files are loaded,
       # local reference_object keeps track of current state of features in the database
       # This avoids downloading features for files that share a featureset

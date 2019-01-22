@@ -353,6 +353,21 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
   }
 }
 
+#' Formulate a file path from Excel template
+template_helper_formulate_file_path = function(pipeline_df, local_path = TRUE) {
+  if (local_path) {
+    file.path(na_to_blank(pipeline_df$local_project_folder_prefix), 
+              na_to_blank(pipeline_df$project_folder),
+              na_to_blank(pipeline_df$project_subfolder),
+              pipeline_df$filename)
+  } else {
+    file.path(na_to_blank(pipeline_df$cloud_project_folder_prefix), 
+              na_to_blank(pipeline_df$project_folder),
+              na_to_blank(pipeline_df$project_subfolder),
+              pipeline_df$filename)  
+    }
+}
+
 #' Assign entity
 #' 
 #' Assign entity based on pipeline and filter choice selection in Pipelines sheet of Excel sheet
