@@ -162,3 +162,8 @@ names_to_numbered_vec_by_uniqueness = function(names_vec) {
   lookup_idx[names_vec]
 }
 
+#' convert NA to blank
+na_to_blank = function(terms) { 
+  ifelse(is.na(terms), "", terms)
+}
+

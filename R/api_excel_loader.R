@@ -208,9 +208,6 @@ register_entities_workbook = function(workbook,
       cat("Working on measurementset_id:", msmtset_id_sel,
           "(", reference_object$measurement_set$name,")\n")
       
-      na_to_blank = function(terms) { # macro to convert empty location in Excel file (read as NA) into "" (blank)
-        ifelse(is.na(terms), "", terms)
-      }
       # When testing R package, replace R_PKG_WKSP placeholder with actual path on system
       if (identical(
         unique(na_to_blank(pip_sel$local_project_folder_prefix)), 
