@@ -180,7 +180,7 @@ register_entities_workbook = function(workbook,
           "\n\tpipeline name:", reference_object$measurement_set$name, 
           "\n")
       api_register_measurements(
-        biosample_names = pip_sel$sample_name, 
+        pipeline_df = pip_sel, 
         bios_df_ref = reference_object$biosample,
         msmtset_df_ref = reference_object$measurement_set
       )
