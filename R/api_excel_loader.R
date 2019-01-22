@@ -69,7 +69,7 @@ register_entities_workbook = function(workbook,
   entity_to_update =            match.arg(entity_to_update)                                          
   if (!({zz = get_entity_info(); 
              register_measurement_entity %in% 
-               c('all', zz[zz$class == "measurementdata", ]$entity)})) {
+               c('all', 'MEASUREMENT', zz[zz$class == "measurementdata", ]$entity)})) {
     stop("Invalid register_measurement_entity definition in function")
   }
   abort_condition_met = function(register_upto_entity, check_with_entity) {
