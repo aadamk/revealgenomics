@@ -159,7 +159,7 @@ array:
       - name
     search_by_entity: DATASET
     delete_by_entity: EXPERIMENTSET
-    infoArray: TRUE
+    infoArray: FALSE
     infoArray_max_keys: 1000
     compression_on: FALSE
   # MEASUREMENTSET
