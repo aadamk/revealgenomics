@@ -46,6 +46,7 @@ NULL
 .ghEnv$meta$arrProteomics = 'PROTEOMICS'
 .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
 .ghEnv$meta$arrCopynumber_mat_string = 'COPYNUMBER_MAT_STRING'
+.ghEnv$meta$arrCopynumber_variant = 'COPYNUMBER_VARIANT'
 .ghEnv$meta$arrExperimentSet = 'EXPERIMENTSET'
 .ghEnv$meta$arrMeasurement = 'MEASUREMENT'
 .ghEnv$meta$arrMeasurementSet = 'MEASUREMENTSET'

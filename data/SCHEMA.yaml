@@ -528,6 +528,56 @@ array:
     delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
+  # COPYNUMBER_VARIANT
+  COPYNUMBER_VARIANT:
+    data_class:
+      measurementdata
+    measurementdata_subclass:
+      copynumber_variant
+    namespace: 
+      - gh_secure
+    attributes:
+      val: string
+    dims:
+      dataset_version:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      measurementset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      feature_id:
+        start: 0
+        end: Inf
+        chunk_interval: 100
+        overlap: 0
+      per_gene_copynumbervariant_number:
+        start: 0
+        end: Inf
+        chunk_interval: 10000
+        overlap: 0
+      key_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      biosample_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+    search_by_entity: MEASUREMENTSET
+    delete_by_entity: MEASUREMENTSET
+    infoArray: FALSE
+    compression_on: TRUE
   # ONTOLOGY
   ONTOLOGY:
     data_class:
