@@ -318,6 +318,7 @@ api_register_featuresets_experimentsets_measurementsets = function(
   expset_df = plyr::rename(expset_df, c('data_subtype' = 'name'))
   expset_df$description = paste0(expset_df$name, " experiments")
   expset_df$molecule = '...'
+  expset_df$experiment_type_API = template_helper_assign_experiment_entity(expset_df$name)
   
   cat("==== Registering EXPERIMENTSET =====\n")
   expset_record = register_experimentset(df = expset_df, dataset_version = record$dataset_version, 
@@ -372,10 +373,15 @@ api_register_featuresets_experimentsets_measurementsets = function(
   # experimentset_id
   expset_df = get_experimentset(experimentset_id = expset_record$experimentset_id, 
                                 dataset_version = record$dataset_version)
+  expset_df = plyr::rename(expset_df, c('name' = 'experiment_name'))
+  columns_experimentSet2 = c('dataset_id', 
+                            'experiment_name')
+  
   msmtset_df = merge(msmtset_df, 
                      expset_df[, c(get_base_idname(.ghEnv$meta$arrExperimentSet),
-                                   columns_experimentSet)],
-                     by = columns_experimentSet)
+                                   columns_experimentSet2)],
+                     by.x = columns_experimentSet,
+                     by.y = columns_experimentSet2)
   
   # featureset_id
   fsets = get_featuresets(con = con)
