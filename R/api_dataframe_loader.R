@@ -267,7 +267,7 @@ DataLoader = R6::R6Class(classname = "DataLoader",
 # Class where all slots are blank on purpose i.e. do no action
 # To be used as a dummy
 DataLoaderBlankSlots = R6::R6Class(
-  classname = "DataLoaderExpression",
+  classname = "DataLoaderBlankSlots",
   inherit = DataLoader,
   public = list(
     assign_biosample_ids = function() {}, 
@@ -813,7 +813,6 @@ DataLoaderCopyNumberMatrix = R6::R6Class(
                                    fset = fset,
                                    feature_df = private$.reference_object$feature
       )
-      browser()
       if (length(m1$source_unmatched_idx) > 0) {
         stop("Need to implement level 2 matching -- see DataLoaderRNAQuantRNASeq")
         return(FALSE)

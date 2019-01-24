@@ -4,7 +4,7 @@
 \alias{template_helper_formulate_file_path}
 \title{Formulate a file path from Excel template}
 \usage{
-template_helper_formulate_file_path(pipeline_df)
+template_helper_formulate_file_path(pipeline_df, local_path = TRUE)
 }
 \description{
 Formulate a file path from Excel template
