@@ -465,6 +465,8 @@ api_register_measurements = function(
   msmt_df$measurement_entity  = msmtset_df_ref$entity
   msmt_df$measurementset_name = msmtset_df_ref$name
   msmt_df$biosample_id        = bios_df_ref[m1$target_matched_idx, ]$biosample_id
+  cat("use S3 path instead of local path while storing file path in DB\n")
+  msmt_df$file_path = template_helper_formulate_file_path(pipeline_df = msmt_df, local_path = FALSE)
   register_measurement(df = msmt_df)
 }
 #' automatically register ontology terms
