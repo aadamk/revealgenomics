@@ -259,7 +259,7 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj, 
                      featureset_df)
   msmtset_df$dataset_id = record$dataset_id
   msmtset_df$measurement_entity = 
-    assign_api_entity(pipeline_df = msmtset_df)
+    template_helper_assign_measurement_entity(pipeline_df = msmtset_df)
   
   msmtset_df
 }
@@ -372,33 +372,38 @@ template_helper_formulate_file_path = function(pipeline_df, local_path = TRUE) {
     }
 }
 
-#' Assign entity
+#' Assign measurement entity
 #' 
-#' Assign entity based on pipeline and filter choice selection in Pipelines sheet of Excel sheet
-assign_api_entity = function(pipeline_df) {
+#' Assign measurement entity based on pipeline and filter choice selection in Pipelines sheet of Excel sheet
+template_helper_assign_measurement_entity = function(pipeline_df) {
   stopifnot(all(c('measurement_entity', 'filter_name') %in% colnames(pipeline_df)))
-  candidates = pipeline_df$measurement_entity
-  converted = rep(NA, length(candidates))
+  pipeline_names = pipeline_df$measurement_entity
+  filter_names   = pipeline_df$filter_name
+  converted = rep(NA, length(pipeline_names))
   # Positions where one must only consdier pipeline to choose scidb entity
-  pos_pipeline = which(candidates != "Copy Number Variation")
-  if (length(pos_pipeline) > 0) {
-    converted[pos_pipeline] = 
-      template_helper_convert_names(external_name = candidates[pos_pipeline])
-  }
+  condn_match = (pipeline_names != "Copy Number Variation") & 
+    (!grepl("file link", filter_names))
+  pos_pipeline_only = which(condn_match)
   # Positions where one must consider both pipeline and filter
-  pos_pipeline_filter = which(candidates == "Copy Number Variation") # currently only CNV, but more might be added 
+  pos_pipeline_filter = which(!condn_match)
+  
+  # Now handle accordingly
+  if (length(pos_pipeline_only) > 0) {
+    converted[pos_pipeline_only] = 
+      template_helper_convert_names(external_name = pipeline_names[pos_pipeline_only])
+  }
   if (length(pos_pipeline_filter) > 0) {
-    # Following coding is for CNV only
-    stopifnot(all(unique(candidates[pos_pipeline_filter]) == 'Copy Number Variation'))
     converted[pos_pipeline_filter] = sapply(
       pos_pipeline_filter, 
       function(idx) {
         pipeline = pipeline_df$pipeline_scidb[idx]
         filter = pipeline_df$filter_name[idx]
-        if (length(grep("log2", filter)) > 0) {
-          result = .ghEnv$meta$arrCopynumber_mat
-        } else if (length(grep("file link", filter)) > 0) {
+        if (length(grep("file link", filter)) > 0) {
           result = .ghEnv$meta$arrMeasurement
+        } else if (grepl("FMI|Personalis", pipeline)) {
+          result = .ghEnv$meta$arrCopynumber_variant
+        } else if (length(grep("log2", filter)) > 0) {
+          result = .ghEnv$meta$arrCopynumber_mat
         } else if (length(grep("state call", filter)) > 0) {
           result = .ghEnv$meta$arrCopynumber_mat_string
         } else {
