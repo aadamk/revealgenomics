@@ -13,7 +13,7 @@ populate_measurements = function(con = NULL) {
   df_info_msrmt = df_info[df_info$class == 'measurementdata',]
   df_info_msrmt$entity = as.character(df_info_msrmt$entity)
   
-  for (idx in which(df_info_msrmt$entity != .ghEnv$meta$arrCopynumber_seg)){
+  for (idx in 1:nrow(df_info_msrmt)){
     msrmnt_entity = df_info_msrmt[idx, ]$entity
     # stopifnot(is_entity_secured(msrmnt_entity))
     cat("Measurement entity: ", msrmnt_entity, "\n")
@@ -48,33 +48,38 @@ populate_measurements = function(con = NULL) {
       if (nrow(res) != nrow(res2)) stop("Data for entity: ", msrmnt_entity, " was registered without corresponding measurement set!")
       colnames(res2)[which(colnames(res2) == msrmt_set_idnm)] = 'measurementset_id'
       colnames(res2)[which(colnames(res2) == 'name')] = 'measurementset_name'
-      # res2$dataset_id = 1
-      # if (length(unique(res2$dataset_version)) != 1 |
-      #             unique(res2$dataset_version) != 1) stop("This script has not been checked for multiple dataset versions at a time")
-      # res2$dataset_version = NULL
       
-      cat("======\n")
-      cat("Registering", nrow(res2), "experiment-pipeline entries\n")
-      for (dataset_idi in sort(unique(res2$dataset_id))) {
-        res2_sel1 = res2[res2$dataset_id == dataset_idi, ]
-        for (dataset_version in sort(unique(res2_sel1$dataset_version))) {
-          res2_sel2 = res2_sel1[res2_sel1$dataset_version == dataset_version, ]
-          res2_sel2$dataset_version = NULL
-          cat("======------======\n")
-          cat("Registering", nrow(res2_sel2), 
-              "experiment-pipeline entries for dataset_id:", dataset_idi, "at version:", dataset_version, "\n")
-          are_definitions_present = ifelse(
-            nrow(search_definitions(dataset_id = dataset_idi)) > 0,
-            TRUE, 
-            FALSE
-          )
-          if (!are_definitions_present) {
-            measurement_record = register_measurement(df = res2_sel2, 
-                                                      dataset_version = dataset_version)
-          } else {
-            cat("Measurementset for study:", dataset_idi, " ", 
-                get_datasets(dataset_id = dataset_idi)$name, 
-                "should be regiestered by Excel loader\n")
+      # Run following only for studies that were loaded without Excel sheet
+      def = get_definitions()
+      if (nrow(def) > 0) { # subset accordingly
+        res2 = res2[!(res2$dataset_id %in% unique(def$dataset_id)), ]
+      }
+      
+      if (nrow(res2) > 0) {
+        cat("======\n")
+        cat("Registering", nrow(res2), "experiment-pipeline entries\n")
+        for (dataset_idi in sort(unique(res2$dataset_id))) {
+          res2_sel1 = res2[res2$dataset_id == dataset_idi, ]
+          for (dataset_version in sort(unique(res2_sel1$dataset_version))) {
+            res2_sel2 = res2_sel1[res2_sel1$dataset_version == dataset_version, ]
+            res2_sel2$dataset_version = NULL
+            res2_sel2$file_path = 'NA' # introduce filepath as NA
+            cat("======------======\n")
+            cat("Registering", nrow(res2_sel2), 
+                "experiment-pipeline entries for dataset_id:", dataset_idi, "at version:", dataset_version, "\n")
+            are_definitions_present = ifelse(
+              nrow(search_definitions(dataset_id = dataset_idi)) > 0,
+              TRUE, 
+              FALSE
+            )
+            if (!are_definitions_present) {
+              measurement_record = register_measurement(df = res2_sel2, 
+                                                        dataset_version = dataset_version)
+            } else {
+              cat("Measurementset for study:", dataset_idi, " ", 
+                  get_datasets(dataset_id = dataset_idi)$name, 
+                  "should be regiestered by Excel loader\n")
+            }
           }
         }
       }
