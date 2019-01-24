@@ -110,14 +110,12 @@ test_register_biosample = function(df, silent = TRUE){
 
 test_register_experimentset = function(df, silent = TRUE){
   # Additional tests
-  entity_df = get_entity_info()
-  entity_df = entity_df[entity_df$class == 'measurementdata', ]
-  entity_nm_upload = as.character(unique(df$measurement_entity))
+  expt_type_upload = as.character(unique(df$experiment_type_API))
   
-  if (!(all(entity_nm_upload %in% as.character(entity_df$entity)))) {
+  if (!(all(expt_type_upload %in% as.character(mappings_experimentset)))) {
     cat("Unexpected measurement entity: \n")
-    print(entity_nm_upload[!(entity_nm_upload %in% as.character(entity_df$entity))])
-    stop("Allowed measurement entities: ", pretty_print(entity_df$entity))
+    print(expt_type_upload[!(expt_type_upload %in% as.character(mappings_experimentset))])
+    stop("Allowed measurement entities: ", pretty_print(sort(mappings_experimentset)))
   }
 }
 
@@ -127,7 +125,7 @@ test_register_measurementset  = function(df1, silent = TRUE){
   # BEGIN: Common test with test_.._experimentset
   entity_df = get_entity_info()
   entity_df = entity_df[entity_df$class == 'measurementdata', ]
-  entity_nm_upload = as.character(unique(df1$measurement_entity))
+  entity_nm_upload = as.character(unique(df1$entity))
   
   if (!(all(entity_nm_upload %in% as.character(entity_df$entity)))) {
     cat("Unexpected measurement entity: \n")
