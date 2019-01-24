@@ -416,18 +416,21 @@ template_helper_assign_measurement_entity = function(pipeline_df) {
   return(converted)
 }
 
+mappings_experimentset = 
+  c( 'Single Nucleotide Variant' = 'VARIANT',
+     'RNA-seq'                   = 'RNAQUANTIFICATION_RNASEQ', 
+     'Microarray'                = 'RNAQUANTIFICATION_MICROARRAY',
+     'Fusion'                    = 'FUSION',
+     'Exome CNV'                 = 'COPYNUMBERVARIANT_EXOME', 
+     'Whole Genome CNV'          = 'COPYNUMBERVARIANT_WHOLE_GENOME',
+     'Targeted Region CNV'       = 'COPYNUMBERVARIANT_TARGETED_REGION')
+
 #' Assign experiment entity
 #' 
 #' @param experiment_name from \code{data_subtype} column from Excel template
 template_helper_assign_experiment_entity = function(experiment_name) {
-  mappings = c('Single Nucleotide Variant' = 'VARIANT',
-               'RNA-seq'                   = 'RNAQUANTIFICATION_RNASEQ', 
-               'Microarray'                = 'RNAQUANTIFICATION_MICROARRAY',
-               'Fusion'                    = 'FUSION',
-               'Exome CNV'                 = 'COPYNUMBERVARIANT_EXOME', 
-               'Whole Genome CNV'          = 'COPYNUMBERVARIANT_WHOLE_GENOME',
-               'Targeted Region CNV'       = 'COPYNUMBERVARIANT_TARGETED_REGION')
-  mapped = mappings[experiment_name]
+  
+  mapped = mappings_experimentset[experiment_name]
   stopifnot(all(!is.na(mapped)))
   mapped
 }
