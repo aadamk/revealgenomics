@@ -981,54 +981,6 @@ search_copynumber_mats_scidb = function(arrayname, measurementset_id, biosample_
   iquery(con$db, left_query, return = TRUE)
 }
 
-#' @export
-search_copynumber_seg = function(experimentset, biosample = NULL, con = NULL){
-  if (!is.null(experimentset)) {experimentset_id = experimentset$experimentset_id} else {
-    stop("experimentset must be supplied"); experimentset_id = NULL
-  }
-  if (length(unique(experimentset$dataset_version)) != 1) {
-    stop("multiple dataset versions in supplied experimentset");
-  }
-  dataset_version = unique(experimentset$dataset_version)
-  if (!is.null(biosample)) {
-    stopifnot(length(unique(biosample$dataset_version))==1)
-    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of experimentset and biosample must be same")
-  }
-  
-  arrayname = paste0(custom_scan(), 
-                     "(", full_arrayname(.ghEnv$meta$arrCopynumber_seg), ")")
-  if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
-
-  if (exists('debug_trace')) cat("retrieving CopyNumber_seg data from server\n")
-  res = search_copynumber_segs_scidb(arrayname,
-                                     experimentset_id,
-                                     biosample_id,
-                                     dataset_version = dataset_version, 
-                                     con = con)
-  res
-}
-
-search_copynumber_segs_scidb = function(arrayname, experimentset_id, biosample_id = NULL, dataset_version, con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  if (is.null(dataset_version)) stop("dataset_version must be supplied")
-  if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
-  
-  if (is.null(experimentset_id)) stop("experimentset_id must be supplied")
-  if (length(experimentset_id) != 1) stop("can handle only one experimentset_id at a time")
-  
-  left_query = paste0("filter(", arrayname,
-                      ", dataset_version=", dataset_version, " AND experimentset_id=", experimentset_id, ")")
-  
-  if (!is.null(biosample_id)){
-    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
-    left_query = paste("filter(", left_query,
-                       ", ", filter_expr, ")", sep = "")
-  }
-  
-  iquery(con$db, left_query, return = TRUE)
-}
-
 #' Unified function to download entire pipeline worth of data
 #' 
 #' @param measurementset dataframe containing one row of pipeline information
@@ -1053,7 +1005,6 @@ search_measurementdata = function(measurementset, con = NULL) {
     'search_variant',
     'search_fusion', 
     'search_expression',
-    'search_copynumber_seg',
     'search_copynumber_mat'
   )
   names(lookup) = c(
@@ -1061,8 +1012,7 @@ search_measurementdata = function(measurementset, con = NULL) {
     .ghEnv$meta$arrVariant,
     .ghEnv$meta$arrFusion,
     .ghEnv$meta$arrProteomics,
-    .ghEnv$meta$arrCopynumber_seg,
-    .ghEnv$meta$arrCopynumber_seg
+    .ghEnv$meta$arrCopynumber_mat
   )
   fn_name = lookup[entity]
   fn = get(fn_name)

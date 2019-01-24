@@ -235,21 +235,6 @@ test_register_expression_dataframe = function(df1) {
   #                           id = sort(unique(df1$feature_id)))
 }
 
-test_register_copynumber_seg = function(experimentset){
-  stopifnot(nrow(experimentset) == 1)
-  stopifnot("file_path" %in% colnames(experimentset))
-}
-
-test_register_copnyumber_matrix_file = function(copynumberset, dataset_version){
-  stopifnot(nrow(copynumberset) == 1)
-  stopifnot("file_path" %in% colnames(copynumberset))
-}
-
-# test_register_fusion_data_OLD = function(df, fusionset){
-#   test_dataframe_formatting(df)
-#   stopifnot(nrow(fusionset) == 1)
-# }
-
 test_register_fusion = function(df, fusion_attr_cols){
   test_dataframe_formatting(df)
   if(length(unique(df$dataset_id))!=1) stop("Fusion data to be registered must belong to a single dataset/study")
