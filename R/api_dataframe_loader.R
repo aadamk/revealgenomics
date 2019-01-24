@@ -886,7 +886,11 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
                                    reference_object = reference_object,
                                    feature_annotation_df = feature_annotation_df),
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - log2 ratio}" = ,
-         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - log2 ratio}" =
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - log2 ratio}" = ,
+         "{[external]-[Exome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - largest segment}" = ,
+         "{[external]-[Exome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - lowest segment}" = ,
+         "{[external]-[Whole Genome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - largest segment}" = ,
+         "{[external]-[Whole Genome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - lowest segment}" = 
            DataLoaderCopyNumberMatrix$new(data_df = data_df,
                                           reference_object = reference_object, 
                                           feature_annotation_df = feature_annotation_df),
@@ -894,7 +898,8 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - images (file link)}" = ,
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - segmentation (file link)}" = ,
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - segmentation (file link)}" = ,
-         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - b-allele frequency (file link)}" = 
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - b-allele frequency (file link)}" = ,
+         "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA - mutations - unfiltered (file link)}" =
            DataLoaderBlankSlots$new(data_df = data_df,
                                     reference_object = reference_object, 
                                     feature_annotation_df = feature_annotation_df)
