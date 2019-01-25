@@ -124,7 +124,8 @@ test_register_measurementset  = function(df1, silent = TRUE){
   
   # BEGIN: Common test with test_.._experimentset
   entity_df = get_entity_info()
-  entity_df = entity_df[entity_df$class == 'measurementdata', ]
+  entity_df = entity_df[entity_df$class == 'measurementdata' | 
+                          entity_df$entity == 'MEASUREMENT', ] # File links are registered within Measurement entity
   entity_nm_upload = as.character(unique(df1$entity))
   
   if (!(all(entity_nm_upload %in% as.character(entity_df$entity)))) {
