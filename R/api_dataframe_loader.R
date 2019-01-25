@@ -261,6 +261,26 @@ DataLoader = R6::R6Class(classname = "DataLoader",
           .feature_annotation_df = NULL, 
           .reference_object = NULL
         ))
+
+
+##### DataLoaderBlankSlots #####
+# Class where all slots are blank on purpose i.e. do no action
+# To be used as a dummy
+DataLoaderBlankSlots = R6::R6Class(
+  classname = "DataLoaderBlankSlots",
+  inherit = DataLoader,
+  public = list(
+    assign_biosample_ids = function() {}, 
+    download_features_for_featureset = function() {}, 
+    register_new_features = function() {return(FALSE)}, 
+    retrieve_features = function() {}, 
+    retrieve_feature_synonyms = function() {}, 
+    update_reference_object = function() {}, 
+    assign_feature_ids = function() {}, 
+    assign_other_ids = function() {}, 
+    load_data = function() {}
+  )
+)
 ##### DataLoaderExpression #####
 # class to be shared between loaders for
 # - GeneExpression (RNAQuantRNASeq), 
@@ -776,14 +796,50 @@ DataLoaderFusionFormatA = R6::R6Class(
     }
   ))
 
+##### DataLoaderCopyNumberMatrix #####
+DataLoaderCopyNumberMatrix = R6::R6Class(
+  classname = "DataLoaderCopyNumberMatrix",
+  inherit = DataLoaderExpression, 
+  public = list(
+    print_level = function() {cat("----(Level: DataLoaderCopyNumberMatrix)\n")},
+    register_new_features = function() {
+      col_match_ftr_name = 'tracking_id'
+      fset = find_matching_featureset(pipeline_df = private$.reference_object$pipeline_df,
+                                      featureset_link_col = template_linker$featureset$choices_col,
+                                      fsets_scidb = private$.reference_object$featureset
+      )
+      m1 = feature_matching_level1(data_df = private$.data_df, 
+                                   col_match_ftr_name = col_match_ftr_name,
+                                   fset = fset,
+                                   feature_df = private$.reference_object$feature
+      )
+      if (length(m1$source_unmatched_idx) > 0) {
+        stop("Need to implement level 2 matching -- see DataLoaderRNAQuantRNASeq")
+        return(FALSE)
+      } else {
+        return(FALSE)
+      }
+    },
+    assign_feature_ids = function(){
+      cat("assign_feature_ids()"); self$print_level()
+      super$assign_feature_ids(feature_type = 'gene',
+                               column_in_file = 'tracking_id')
+    }
+  )
+)
+
 ##### createDataLoader #####
 #' @export      
 createDataLoader = function(data_df, reference_object, feature_annotation_df = NULL){
-  temp_string = paste0("{",
-                       reference_object$measurement_set$pipeline_scidb, 
-                       "}{", 
-                       reference_object$measurement_set$quantification_level, 
-                       "}")
+  # Special formulation for entries that need to be disambuiguated by filter_choices
+  if (grepl("COPY|CNV", reference_object$measurement_set$pipeline_scidb) |
+      grepl("file link", reference_object$measurement_set$filter_name)) { 
+    temp_string = paste0("{", reference_object$measurement_set$pipeline_scidb, "}{", 
+                         reference_object$measurement_set$filter_name, "}")
+  } else {
+    temp_string = paste0("{", reference_object$measurement_set$pipeline_scidb, "}{", 
+                         reference_object$measurement_set$quantification_level, "}")
+  }
   switch(temp_string,
          "{[external]-[RNA-seq] Cufflinks}{gene}" = ,
          "{[external]-[RNA-seq] HTSeq}{gene}" = ,
@@ -828,7 +884,25 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[Fusion] Defuse}{gene}" =
            DataLoaderFusionFormatA$new(data_df = data_df,
                                    reference_object = reference_object,
-                                   feature_annotation_df = feature_annotation_df)
+                                   feature_annotation_df = feature_annotation_df),
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - log2 ratio}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - log2 ratio}" = ,
+         "{[external]-[Exome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - largest segment}" = ,
+         "{[external]-[Exome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - lowest segment}" = ,
+         "{[external]-[Whole Genome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - largest segment}" = ,
+         "{[external]-[Whole Genome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - lowest segment}" = 
+           DataLoaderCopyNumberMatrix$new(data_df = data_df,
+                                          reference_object = reference_object, 
+                                          feature_annotation_df = feature_annotation_df),
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - images (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - images (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - segmentation (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - segmentation (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - b-allele frequency (file link)}" = ,
+         "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA - mutations - unfiltered (file link)}" =
+           DataLoaderBlankSlots$new(data_df = data_df,
+                                    reference_object = reference_object, 
+                                    feature_annotation_df = feature_annotation_df)
   )
 }
 

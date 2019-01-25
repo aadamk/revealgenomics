@@ -135,7 +135,7 @@ array:
       name: string
       description: string
       molecule: string
-      measurement_entity: string
+      experiment_type_API: string
       created: string
       updated: string
     dims: 
@@ -159,7 +159,7 @@ array:
       - name
     search_by_entity: DATASET
     delete_by_entity: EXPERIMENTSET
-    infoArray: TRUE
+    infoArray: FALSE
     infoArray_max_keys: 1000
     compression_on: FALSE
   # MEASUREMENTSET
@@ -214,6 +214,7 @@ array:
       measurement_entity: string
       measurementset_name: string
       biosample_id: int64
+      file_path: string
       created: string
       updated: string
     dims: 
@@ -233,13 +234,12 @@ array:
         chunk_interval: 1000
         overlap: 0
     unique_fields:
-      - experimentset_id
-      - measurement_entity
       - measurementset_id
       - biosample_id
+      - file_path
     search_by_entity: DATASET
     delete_by_entity: MEASUREMENT
-    infoArray: FALSE
+    infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: FALSE
   #RNAQUANTIFICATION
@@ -448,50 +448,6 @@ array:
     delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
-  # COPYNUMBER_SEG
-  COPYNUMBER_SEG:
-    data_class:
-      measurementdata
-    measurementdata_subclass:
-      copynumber_seg
-    namespace: 
-      - gh_secure
-    attributes:
-      chromosome: string
-      start: int64
-      end: int64
-      num_mark: int32
-      seg_mean: double
-    dims:
-      dataset_version:
-        start: 0
-        end: Inf
-        chunk_interval: 1
-        overlap: 0
-      dataset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 10
-        overlap: 0
-      experimentset_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1
-        overlap: 0
-      biosample_id:
-        start: 0
-        end: Inf
-        chunk_interval: 1000
-        overlap: 0
-      copynumber_seg_synth_id:
-        start: 0
-        end: Inf
-        chunk_interval: 10000
-        overlap: 0
-    search_by_entity: EXPERIMENTSET
-    delete_by_entity: EXPERIMENTSET
-    infoArray: FALSE
-    compression_on: TRUE
   #COPYNUMBER_MAT
   COPYNUMBER_MAT:
     data_class:
@@ -501,7 +457,7 @@ array:
     namespace: 
       - gh_secure
     attributes:
-      copynumber_val: double
+      value: float
     dims:
       dataset_version:
         start: 0
@@ -511,7 +467,7 @@ array:
       dataset_id:
         start: 0
         end: Inf
-        chunk_interval: 10
+        chunk_interval: 1
         overlap: 0
       measurementset_id:
         start: 0
@@ -521,12 +477,102 @@ array:
       biosample_id:
         start: 0
         end: Inf
-        chunk_interval: 100
+        chunk_interval: 128
         overlap: 0
       feature_id:
         start: 0
         end: Inf
-        chunk_interval: 100000
+        chunk_interval: 32768
+        overlap: 0
+    search_by_entity: MEASUREMENTSET
+    delete_by_entity: MEASUREMENTSET
+    infoArray: FALSE
+    compression_on: TRUE
+  #COPYNUMBER_MAT_STRING
+  COPYNUMBER_MAT_STRING:
+    data_class:
+      measurementdata
+    measurementdata_subclass:
+      copynumber_mat_string
+    namespace: 
+      - gh_secure
+    attributes:
+      value: string
+    dims:
+      dataset_version:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      measurementset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      biosample_id:
+        start: 0
+        end: Inf
+        chunk_interval: 128
+        overlap: 0
+      feature_id:
+        start: 0
+        end: Inf
+        chunk_interval: 32768
+        overlap: 0
+    search_by_entity: MEASUREMENTSET
+    delete_by_entity: MEASUREMENTSET
+    infoArray: FALSE
+    compression_on: TRUE
+  # COPYNUMBER_VARIANT
+  COPYNUMBER_VARIANT:
+    data_class:
+      measurementdata
+    measurementdata_subclass:
+      copynumber_variant
+    namespace: 
+      - gh_secure
+    attributes:
+      val: string
+    dims:
+      dataset_version:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      measurementset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      feature_id:
+        start: 0
+        end: Inf
+        chunk_interval: 100
+        overlap: 0
+      per_gene_copynumbervariant_number:
+        start: 0
+        end: Inf
+        chunk_interval: 10000
+        overlap: 0
+      key_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      biosample_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
         overlap: 0
     search_by_entity: MEASUREMENTSET
     delete_by_entity: MEASUREMENTSET

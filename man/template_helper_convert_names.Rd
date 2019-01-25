@@ -11,5 +11,4 @@ external                   API
 Gene Expression            RNAQUANTIFICATION
 Variant                    VARIANT
 Rearrangement              FUSION
-Copy Number Variation      COPYNUMBER_MAT
 }

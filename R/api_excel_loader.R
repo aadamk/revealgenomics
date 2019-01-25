@@ -61,7 +61,8 @@ register_entities_workbook = function(workbook,
                                                        'all'), 
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
                                                                   'FUSION', 'PROTEOMICS', 
-                                                                  'COPYNUMBER_SEG', 'COPYNUMBER_MAT'),
+                                                                  'COPYNUMBER_MAT', 'COPYNUMBER_MAT_STRING', 
+                                                                  'MEASUREMENT'),
                                   pipeline_name_filter = NULL,
                                   con = NULL) {
   register_upto_entity =        match.arg(register_upto_entity)                                          
@@ -69,7 +70,7 @@ register_entities_workbook = function(workbook,
   entity_to_update =            match.arg(entity_to_update)                                          
   if (!({zz = get_entity_info(); 
              register_measurement_entity %in% 
-               c('all', zz[zz$class == "measurementdata", ]$entity)})) {
+               c('all', 'MEASUREMENT', zz[zz$class == "measurementdata", ]$entity)})) {
     stop("Invalid register_measurement_entity definition in function")
   }
   abort_condition_met = function(register_upto_entity, check_with_entity) {
@@ -175,12 +176,20 @@ register_entities_workbook = function(workbook,
                                 (pipelines_df[, template_linker$filter$pipelines_sel_col] == 
                                    reference_object$measurement_set$filter_name)), ]
      
+      # When testing R package, replace R_PKG_WKSP placeholder with actual path on system
+      if (identical(
+        unique(na_to_blank(pip_sel$local_project_folder_prefix)), 
+        "$(R_PKG_WKSP)")) {
+        pip_sel$local_project_folder_prefix = system.file("extdata", package = "revealgenomics")
+      }
+      pip_sel$file_path = template_helper_formulate_file_path(pipeline_df = pip_sel)
+      
       cat("==== Registering MEASUREMENT =====\n\tentity:", 
           reference_object$measurement_set$entity, 
           "\n\tpipeline name:", reference_object$measurement_set$name, 
           "\n")
       api_register_measurements(
-        biosample_names = pip_sel$sample_name, 
+        pipeline_df = pip_sel, 
         bios_df_ref = reference_object$biosample,
         msmtset_df_ref = reference_object$measurement_set
       )
@@ -208,19 +217,6 @@ register_entities_workbook = function(workbook,
       cat("Working on measurementset_id:", msmtset_id_sel,
           "(", reference_object$measurement_set$name,")\n")
       
-      na_to_blank = function(terms) { # macro to convert empty location in Excel file (read as NA) into "" (blank)
-        ifelse(is.na(terms), "", terms)
-      }
-      # When testing R package, replace R_PKG_WKSP placeholder with actual path on system
-      if (identical(
-        unique(na_to_blank(pip_sel$local_project_folder_prefix)), 
-        "$(R_PKG_WKSP)")) {
-        pip_sel$local_project_folder_prefix = system.file("extdata", package = "revealgenomics")
-      }
-      pip_sel$file_path = file.path(na_to_blank(pip_sel$local_project_folder_prefix), 
-                                    na_to_blank(pip_sel$project_folder),
-                                    na_to_blank(pip_sel$project_subfolder),
-                                    pip_sel$filename)
       # As different files are loaded,
       # local reference_object keeps track of current state of features in the database
       # This avoids downloading features for files that share a featureset

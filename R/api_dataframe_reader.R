@@ -475,6 +475,50 @@ DataReaderFMIFusion = R6::R6Class(
   )
 )
 
+##### DataReaderFMICopyNumberVariant #####
+DataReaderFMICopyNumberVariant = R6::R6Class(
+  classname = 'DataReaderFMICopyNumberVariant',
+  inherit = DataReaderFMI,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderFMICopyNumberVariant)\n")},
+    load_data_from_file = function() {
+      cat("load_data_from_file()"); self$print_level()
+      
+      super$load_data_from_file()
+      
+      cat("Extracting copy number variant data\n")
+      browser()
+      private$.data_df = private$.data_df$cnv_data
+      
+      cat("(Extracted) Dimensions:", dim(private$.data_df), "\n")
+      
+      cat("Applying rules specific to FMI data\n")
+
+      biosample_name_col = 'analytical_accession'
+      cat("Assigning values for biosample name using column:", biosample_name_col, "\n")
+      private$.data_df[, 'biosample_name'] = private$.data_df[, biosample_name_col]
+      
+      cat("Removing suffix `CNA-`")
+      colnames(private$.data_df)[
+        grep("CNA-", colnames(private$.data_df))
+      ] = gsub(
+        "CNA-", "", colnames(private$.data_df)[
+          grep("CNA-", colnames(private$.data_df))
+          ]
+      )
+      
+      
+      feature_col = 'GENE'
+      cat("Assigning values for feature name using column:", feature_col, "\n")
+      private$.data_df[, 'scidb_feature_col'] = private$.data_df[, feature_col]
+      
+      cat("Storing the feature annotation information\n")
+      private$.feature_annotation_df = data.frame(gene_symbol = private$.data_df[, feature_col], 
+                                                  stringsAsFactors = FALSE)
+    }
+  )
+)
+
 ##### DataReaderExpressionMatrix #####
 DataReaderExpressionMatrix = R6::R6Class(classname = 'DataReaderExpressionMatrix',
                                inherit = DataReaderAuto,
@@ -878,11 +922,49 @@ DataReaderFusionDeFuse = R6::R6Class(
    }
   ))
 
+##### DataReaderFileLink #####
+DataReaderFileLink = R6::R6Class(
+  classname = 'DataReaderFileLink',
+  inherit = DataReader,
+  public = list(
+    load_data_from_file = function() {
+      private$.data_df = data.frame(
+        biosample_name = private$.pipeline_df$original_sample_name
+      )
+      private$.feature_annotation_df = NULL
+    }
+  ))
+
+##### DataReaderCopyNumberMatrix #####
+DataReaderCopyNumberMatrix = R6::R6Class(
+  classname = 'DataReaderCopyNumberMatrix',
+  inherit = DataReaderExpressionMatrix,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderCopyNumberMatrix)\n")},
+    load_data_from_file = function() {
+      super$load_data_from_file()
+      cat("load_data_from_file()"); self$print_level()
+      
+      colnames(private$.data_df)[1] = 'tracking_id'
+      super$convert_wide_to_tall_skinny()
+      cat("Dimensions:", dim(private$.data_df), "\n")
+    }
+  ), 
+  private = list()
+)
+
 ##### createDataReader #####
 #' @export
 createDataReader = function(pipeline_df, measurement_set){
-  temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
-                       measurement_set$quantification_level, "}")
+  # Special formulation for entries that need to be disambuiguated by filter_choices
+  if (grepl("COPY|CNV", measurement_set$pipeline_scidb) |
+      grepl("file link", measurement_set$filter_name)) { 
+    temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
+                         measurement_set$filter_name, "}")
+  } else {
+    temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
+                         measurement_set$quantification_level, "}")
+  }
   switch(temp_string,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = 
              DataReaderRNAQuantRNASeqCufflinks$new(pipeline_df = pipeline_df,
@@ -928,6 +1010,25 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Fusion] Defuse}{gene}" =
            DataReaderFusionDeFuse$new(pipeline_df = pipeline_df,
                                       measurement_set = measurement_set),
-         stop("Need to add reader for choice:\n", temp_string)
+         "{[external]-[Targeted Region CNV] FoundationOne Heme (FMI)}{DNA}" =  
+           DataReaderFMICopyNumberVariant$new(pipeline_df = pipeline_df,
+                                              measurement_set = measurement_set),
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - log2 ratio}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - log2 ratio}" = ,
+         "{[external]-[Exome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - largest segment}" = ,
+         "{[external]-[Exome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - lowest segment}" = ,
+         "{[external]-[Whole Genome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - largest segment}" = ,
+         "{[external]-[Whole Genome CNV] CBS - Circular Binary Segmentation}{DNA - copy number value (log2) - lowest segment}" = 
+           DataReaderCopyNumberMatrix$new(pipeline_df = pipeline_df,
+                          measurement_set = measurement_set),
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - images (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - images (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - segmentation (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - segmentation (file link)}" = ,
+         "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - b-allele frequency (file link)}" = ,
+         "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA - mutations - unfiltered (file link)}" =
+           DataReaderFileLink$new(pipeline_df = pipeline_df,
+                                  measurement_set = measurement_set),
+           stop("Need to add reader for choice:\n", temp_string)
          )
 }

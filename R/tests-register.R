@@ -110,14 +110,12 @@ test_register_biosample = function(df, silent = TRUE){
 
 test_register_experimentset = function(df, silent = TRUE){
   # Additional tests
-  entity_df = get_entity_info()
-  entity_df = entity_df[entity_df$class == 'measurementdata', ]
-  entity_nm_upload = as.character(unique(df$measurement_entity))
+  expt_type_upload = as.character(unique(df$experiment_type_API))
   
-  if (!(all(entity_nm_upload %in% as.character(entity_df$entity)))) {
+  if (!(all(expt_type_upload %in% as.character(mappings_experimentset)))) {
     cat("Unexpected measurement entity: \n")
-    print(entity_nm_upload[!(entity_nm_upload %in% as.character(entity_df$entity))])
-    stop("Allowed measurement entities: ", pretty_print(entity_df$entity))
+    print(expt_type_upload[!(expt_type_upload %in% as.character(mappings_experimentset))])
+    stop("Allowed measurement entities: ", pretty_print(sort(mappings_experimentset)))
   }
 }
 
@@ -126,8 +124,9 @@ test_register_measurementset  = function(df1, silent = TRUE){
   
   # BEGIN: Common test with test_.._experimentset
   entity_df = get_entity_info()
-  entity_df = entity_df[entity_df$class == 'measurementdata', ]
-  entity_nm_upload = as.character(unique(df1$measurement_entity))
+  entity_df = entity_df[entity_df$class == 'measurementdata' | 
+                          entity_df$entity == 'MEASUREMENT', ] # File links are registered within Measurement entity
+  entity_nm_upload = as.character(unique(df1$entity))
   
   if (!(all(entity_nm_upload %in% as.character(entity_df$entity)))) {
     cat("Unexpected measurement entity: \n")
@@ -234,21 +233,6 @@ test_register_expression_dataframe = function(df1) {
   # check_entity_exists_at_id(entity = 'FEATURE',
   #                           id = sort(unique(df1$feature_id)))
 }
-
-test_register_copynumber_seg = function(experimentset){
-  stopifnot(nrow(experimentset) == 1)
-  stopifnot("file_path" %in% colnames(experimentset))
-}
-
-test_register_copnyumber_matrix_file = function(copynumberset, dataset_version){
-  stopifnot(nrow(copynumberset) == 1)
-  stopifnot("file_path" %in% colnames(copynumberset))
-}
-
-# test_register_fusion_data_OLD = function(df, fusionset){
-#   test_dataframe_formatting(df)
-#   stopifnot(nrow(fusionset) == 1)
-# }
 
 test_register_fusion = function(df, fusion_attr_cols){
   test_dataframe_formatting(df)

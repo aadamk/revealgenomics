@@ -4,10 +4,10 @@
 \alias{api_register_measurements}
 \title{Register measurements}
 \usage{
-api_register_measurements(biosample_names, bios_df_ref, msmtset_df_ref)
+api_register_measurements(pipeline_df, bios_df_ref, msmtset_df_ref)
 }
 \arguments{
-\item{biosample_names}{\code{sample_name} column from rows of Pipeline sheet corresponding to current pipeline}
+\item{pipeline_df}{subselection of Pipeline sheet corresponding to current pipeline}
 
 \item{bios_df_ref}{dataframe containing API entry for biosample data at current \code{dataset_id} (retrieve from reference object)}
 

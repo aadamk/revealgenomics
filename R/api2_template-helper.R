@@ -43,9 +43,10 @@ template_linker = list(
 #' `
 #' @param filename path to Excel workbook
 #' @param use_readxl use readxl package (default), otherwise XLConnect package
+#' @param silently spew log messages while loading workbook (logging turned on by default)
 #' 
 #' @export
-myExcelLoader = function(filename, use_readxl=TRUE) {
+myExcelLoader = function(filename, use_readxl=TRUE, silently=FALSE) {
   tryCatch({
     if (use_readxl) {
       readxl::excel_sheets(path = filename)
@@ -75,7 +76,7 @@ myExcelLoader = function(filename, use_readxl=TRUE) {
   
   wb = list()
   for (sheet_nm in required_sheets) {
-    cat("Reading sheet: ", sheet_nm, "\n")
+    if (!silently) cat("Reading sheet: ", sheet_nm, "\n")
     if (use_readxl) {
       wb[[sheet_nm]] = as.data.frame(readxl::read_excel(path = filename, ## file name + location
                                           sheet = sheet_nm, ## Which sheet name to parse 
@@ -139,7 +140,6 @@ myExcelLoader = function(filename, use_readxl=TRUE) {
 #' @param workbook Workbook must be of type `XLConnect::workbook` (loaded by `XLConnect::loadWorkbook()`) 
 #'                 or of type `list` (loaded by `revealgenomics::myExcelLoader()`)
 #' @param sheet_name name of sheet to read from workbook
-#' @export
 myExcelReader = function(workbook, sheet_name) {
   if (class(workbook) == 'workbook') {
     readWorksheet(object = workbook, 
@@ -257,13 +257,9 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj, 
   msmtset_df = cbind(pipeline_df,
                      filter_df,
                      featureset_df)
-  # msmtset_df$featureset_name = sapply(msmtset_selector[, selector_col_featureset_choice],
-  #                                     function(choice) {
-  #                                       choicesObj$featuresetChoicesObj$get_featureset_name(keys = choice)
-  #                                     })
   msmtset_df$dataset_id = record$dataset_id
   msmtset_df$measurement_entity = 
-    template_helper_convert_names(external_name = msmtset_df$measurement_entity)
+    template_helper_assign_measurement_entity(pipeline_df = msmtset_df)
   
   msmtset_df
 }
@@ -272,7 +268,7 @@ template_helper_extract_pipeline_meta_info = function(pipelines_df, choicesObj, 
 #' 
 #' Helper function for template Excel sheet. 
 #' 
-#' Given a project-study record `project_id, dataset_id, dataset_version`
+#' Given a project-study record \code{project_id, dataset_id, dataset_version}
 #' find the information from a target sheet (e.g. Subjects, Samples, Pipelines) pertaining
 #' to that record
 template_helper_extract_record_related_rows = function(workbook, sheetName, record) {
@@ -320,7 +316,6 @@ template_helper_extract_record_related_rows = function(workbook, sheetName, reco
 #' Gene Expression            RNAQUANTIFICATION
 #' Variant                    VARIANT
 #' Rearrangement              FUSION
-#' Copy Number Variation      COPYNUMBER_MAT
 template_helper_convert_names = function(api_name = NULL, external_name = NULL) {
   if (is.null(api_name) & is.null(external_name)) {
     stop("Must supply at least one parameter")
@@ -331,12 +326,10 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
     api_names = c(.ghEnv$meta$arrRnaquantification,
                   .ghEnv$meta$arrVariant, 
                   .ghEnv$meta$arrFusion,
-                  .ghEnv$meta$arrCopynumber_mat,
                   .ghEnv$meta$arrProteomics),
     external_name = c('Gene Expression',
                       'Variant',
                       'Rearrangement',
-                      'Copy Number Variation',
                       'Proteomics'),
     stringsAsFactors = FALSE
   )
@@ -344,19 +337,103 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
     m1 = find_matches_and_return_indices(api_name, df1$api_name)
     if (length(m1$source_unmatched_idx) != 0) {
       stop("Unexpected internal names provided for conversion: ",
-          pretty_print(api_name[m1$source_unmatched_idx]))
+           pretty_print(api_name[m1$source_unmatched_idx]))
     }
     df1$external_name[m1$target_matched_idx]
   } else if (!is.null(external_name)) {
     m1 = find_matches_and_return_indices(external_name, df1$external_name)
     if (length(m1$source_unmatched_idx) != 0) {
       stop("Unexpected external names provided for conversion: ",
-          pretty_print(external_name[m1$source_unmatched_idx]))
+           pretty_print(external_name[m1$source_unmatched_idx]))
     }
     df1$api_name[m1$target_matched_idx]
   }
 }
 
+#' Formulate a file path from Excel template
+template_helper_formulate_file_path = function(pipeline_df, local_path = TRUE) {
+  if (local_path) {
+    if (! ('local_project_folder_prefix' %in% colnames(pipeline_df)) ) {
+      pipeline_df$local_project_folder_prefix = NA
+    }
+    file.path(na_to_blank(pipeline_df$local_project_folder_prefix), 
+              na_to_blank(pipeline_df$project_folder),
+              na_to_blank(pipeline_df$project_subfolder),
+              pipeline_df$filename)
+  } else {
+    if (! ('cloud_project_folder_prefix' %in% colnames(pipeline_df)) ) {
+      cat("Warning: cloud folder prefix not provided\n")
+      pipeline_df$cloud_project_folder_prefix = NA
+    }
+    file.path(na_to_blank(pipeline_df$cloud_project_folder_prefix), 
+              na_to_blank(pipeline_df$project_folder),
+              na_to_blank(pipeline_df$project_subfolder),
+              pipeline_df$filename)  
+    }
+}
+
+#' Assign measurement entity
+#' 
+#' Assign measurement entity based on pipeline and filter choice selection in Pipelines sheet of Excel sheet
+template_helper_assign_measurement_entity = function(pipeline_df) {
+  stopifnot(all(c('measurement_entity', 'filter_name') %in% colnames(pipeline_df)))
+  pipeline_names = pipeline_df$measurement_entity
+  filter_names   = pipeline_df$filter_name
+  converted = rep(NA, length(pipeline_names))
+  # Positions where one must only consdier pipeline to choose scidb entity
+  condn_match = (pipeline_names != "Copy Number Variation") & 
+    (!grepl("file link", filter_names))
+  pos_pipeline_only = which(condn_match)
+  # Positions where one must consider both pipeline and filter
+  pos_pipeline_filter = which(!condn_match)
+  
+  # Now handle accordingly
+  if (length(pos_pipeline_only) > 0) {
+    converted[pos_pipeline_only] = 
+      template_helper_convert_names(external_name = pipeline_names[pos_pipeline_only])
+  }
+  if (length(pos_pipeline_filter) > 0) {
+    converted[pos_pipeline_filter] = sapply(
+      pos_pipeline_filter, 
+      function(idx) {
+        pipeline = pipeline_df$pipeline_scidb[idx]
+        filter = pipeline_df$filter_name[idx]
+        if (length(grep("file link", filter)) > 0) {
+          result = .ghEnv$meta$arrMeasurement
+        } else if (grepl("FMI|Personalis", pipeline)) {
+          result = .ghEnv$meta$arrCopynumber_variant
+        } else if (length(grep("log2", filter)) > 0) {
+          result = .ghEnv$meta$arrCopynumber_mat
+        } else if (length(grep("state call", filter)) > 0) {
+          result = .ghEnv$meta$arrCopynumber_mat_string
+        } else {
+          stop("Case not covered -- pipeline: ", pipeline, " filter: ", filter)
+        }
+        return(result)
+      }
+    )   
+  }
+  return(converted)
+}
+
+mappings_experimentset = 
+  c( 'Single Nucleotide Variant' = 'VARIANT',
+     'RNA-seq'                   = 'RNAQUANTIFICATION_RNASEQ', 
+     'Microarray'                = 'RNAQUANTIFICATION_MICROARRAY',
+     'Fusion'                    = 'FUSION',
+     'Exome CNV'                 = 'COPYNUMBERVARIANT_EXOME', 
+     'Whole Genome CNV'          = 'COPYNUMBERVARIANT_WHOLE_GENOME',
+     'Targeted Region CNV'       = 'COPYNUMBERVARIANT_TARGETED_REGION')
+
+#' Assign experiment entity
+#' 
+#' @param experiment_name from \code{data_subtype} column from Excel template
+template_helper_assign_experiment_entity = function(experiment_name) {
+  
+  mapped = mappings_experimentset[experiment_name]
+  stopifnot(all(!is.na(mapped)))
+  mapped
+}
 #' Convert entity to suffix
 #' 
 #' === Entity-name        Suffix ===

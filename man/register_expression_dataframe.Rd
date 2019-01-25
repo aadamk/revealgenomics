@@ -2,10 +2,10 @@
 % Please edit documentation in R/functions-register-measurementdata.R
 \name{register_expression_dataframe}
 \alias{register_expression_dataframe}
-\title{Upload data into gene expression, protein expression arrays}
+\title{Upload data into gene expression, protein expression, copy number matrix arrays}
 \usage{
 register_expression_dataframe(df1, dataset_version, con = NULL)
 }
 \description{
-Upload data into gene expression, protein expression arrays
+Upload data into gene expression, protein expression, copy number matrix arrays
 }
