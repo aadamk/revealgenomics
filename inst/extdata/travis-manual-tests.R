@@ -17,5 +17,5 @@ stopifnot(all(dim(get_individuals(mandatory_fields_only = T)) == c(3, 7)))
 stopifnot(all(dim(get_biosamples()) == c(3, 11)))
 stopifnot(all(dim(get_biosamples(mandatory_fields_only = T)) == c(3, 8)))
 
-stopifnot(all(dim(get_measurements()) == c(3, 11)))
+stopifnot(all(dim(get_measurements()) == c(3, 12)))
 stopifnot(class(try({get_measurements(mandatory_fields_only=T)}, silent = T)) == 'try-error')
