@@ -74,12 +74,6 @@ search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_vers
 }
 
 #' @export
-search_copynumbersets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrCopyNumberSet, 
-                                          dataset_id, dataset_version, all_versions, con = con)
-}
-
-#' @export
 search_experimentsets = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
   search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
                                           dataset_id, dataset_version, all_versions, con = con)
@@ -923,63 +917,6 @@ search_fusions_scidb = function(arrayname,
   iquery(con$db, left_query, return = TRUE)
 }
 
-
-#' @export
-search_copynumber_mat = function(measurementset, biosample = NULL, feature = NULL, con = NULL){
-  if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
-    stop("measurementset must be supplied"); measurementset_id = NULL
-  }
-  if (length(unique(measurementset$dataset_version)) != 1) {
-    stop("multiple dataset versions in supplied measurementset");
-  }
-  dataset_version = unique(measurementset$dataset_version)
-  if (!is.null(biosample)) {
-    stopifnot(length(unique(biosample$dataset_version))==1)
-    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of measurementset and biosample must be same")
-  }
-  arrayname = paste0(custom_scan(), 
-                     "(", full_arrayname(.ghEnv$meta$arrCopynumber_mat), ")")
-  if (!is.null(biosample))            {biosample_id = biosample$biosample_id}                                  else {biosample_id = NULL}
-  if (!is.null(feature))              {feature_id = feature$feature_id}                                        else {feature_id = NULL}
-  
-  if (exists('debug_trace')) cat("retrieving CopyNumber_mat data from server\n")
-  res = search_copynumber_mats_scidb(arrayname,
-                             measurementset_id,
-                             biosample_id,
-                             feature_id,
-                             dataset_version = dataset_version, 
-                             con = con)
-  res
-}
-
-search_copynumber_mats_scidb = function(arrayname, measurementset_id, biosample_id = NULL, feature_id = NULL, dataset_version, 
-                                        con = NULL){
-  con = use_ghEnv_if_null(con)
-  
-  if (is.null(dataset_version)) stop("dataset_version must be supplied")
-  if (length(dataset_version) != 1) stop("can handle only one dataset_version at a time")
-  
-  if (is.null(measurementset_id)) stop("measurementset_id must be supplied")
-  if (length(measurementset_id) != 1) stop("can handle only one measurementset_id at a time")
-  
-  left_query = paste0("filter(", arrayname,
-                      ", dataset_version=", dataset_version, " AND measurementset_id=", measurementset_id, ")")
-  
-  if (!is.null(biosample_id)){
-    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
-    left_query = paste0("filter(", left_query,
-                       ", ", filter_expr, ")")
-  }
-  
-  if (!is.null(feature_id)){
-    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrFeature, id = feature_id)
-
-    left_query = paste0("filter(", left_query,
-                       ", ", filter_expr, ")")
-  }
-  
-  iquery(con$db, left_query, return = TRUE)
-}
 
 #' Unified function to download entire pipeline worth of data
 #' 
