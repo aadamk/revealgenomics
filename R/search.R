@@ -615,7 +615,7 @@ dao_search_expression = function(entity,
     req_ids = req_ids[ !(req_ids %in% get_base_idname(.ghEnv$meta$arrMeasurementSet)) ]
     apply_str = paste0(req_ids, ",", req_ids, collapse = ", ")
     qq3 = paste0("apply(", qq2, ", ", apply_str, ")")
-    cat("Estimating download size: ")
+    # cat("Estimating download size: ")
     download_size = iquery(con$db, 
                            query = 
                              paste0(
@@ -624,7 +624,7 @@ dao_search_expression = function(entity,
                                    qq2, 
                                    "), bytes)"), 
                            return = TRUE)$bytes
-    cat(download_size/1024/1024, " MB\n")
+    # cat(download_size/1024/1024, " MB\n")
     download_limit_mb = 1000
     if (download_size > download_limit_mb * 1024 * 1024) {
       cat("Trying to download more than", download_limit_mb, "MB at a time! 
