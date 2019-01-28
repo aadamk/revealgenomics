@@ -2,7 +2,7 @@
 % Please edit documentation in R/search.R
 \name{search_expression}
 \alias{search_expression}
-\title{Search expression data (RNA-seq / GXP by Microarray, Proteomics)}
+\title{Search expression data (RNA-seq / GXP by Microarray, Proteomics) or any matrix (CopyNumber_Mat)}
 \usage{
 search_expression(measurementset = NULL, biosample = NULL,
   feature = NULL, formExpressionSet = TRUE, biosample_ref = NULL,
@@ -43,7 +43,7 @@ call. If not specified, connection object is formulated from internally stored
 values of \code{rg_connect()} call}
 }
 \description{
-Function to search gene expression data array; allows slicing across multiple
+Function to search expression matrix, proteomics matrix, CNV matrix; allows slicing across multiple
 dimensions. However \code{measurementset} (i.e. pipeline) must be supplied
 (currently allows searching one pipeline at a time)
 }

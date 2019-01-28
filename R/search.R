@@ -311,37 +311,37 @@ search_rnaquantification = function(...) {
   search_expression(...)
 }
 
-#' Search expression data (RNA-seq / GXP by Microarray, Proteomics) 
+#' Search expression data (RNA-seq / GXP by Microarray, Proteomics) or any matrix (CopyNumber_Mat)
 #' 
-#' Function to search gene expression data array; allows slicing across multiple 
-#' dimensions. However `measurementset` (i.e. pipeline) must be supplied 
+#' Function to search expression matrix, proteomics matrix, CNV matrix; allows slicing across multiple 
+#' dimensions. However \code{measurementset} (i.e. pipeline) must be supplied 
 #' (currently allows searching one pipeline at a time)
 #' 
 #' @param measurementset (Mandatory) dataframe containing pipeline information; 
 #'                       typically output of a 
-#'                       `get_measurementsets(measurementset_id = ...)` or 
-#'                       `search_measurementsets(dataset_id = ..)` call
+#'                       \code{get_measurementsets(measurementset_id = ...)} or 
+#'                       \code{search_measurementsets(dataset_id = ..)} call
 #' @param biosample (Optional) dataframe containing biosample information; 
 #'                  typically output of a 
-#'                  `search_biosamples(dataset_id = ..)` call.
+#'                  \code{search_biosamples(dataset_id = ..)} call.
 #'                  If not specified, function returns all biosamples available 
 #'                  by other search parameters
 #' @param feature (Optional) dataframe containing feature information;
 #'                typically output of a 
-#'                `search_features(gene_symbol = ...)` call.
+#'                \code{search_features(gene_symbol = ...)} call.
 #'                If not specified, function returns all features available 
 #'                by other search parameters
 #' @param formExpressionSet (default: TRUE) whether to return result as a Bioconductor
 #'                          ExpressionSet object
 #' @param biosample_ref (Optional) data-frame containing all biosamples in a study,
-#'                      i.e. typically output of `search_biosamples(dataset_id = ..)` call,
+#'                      i.e. typically output of \code{search_biosamples(dataset_id = ..)} call,
 #'                      or all biosamples available to logged in user,
-#'                      i.e. output of `get_biosamples(biosample_id = NULL)`.
-#'                      When not searching by `biosample`, and when requesting
+#'                      i.e. output of \code{get_biosamples(biosample_id = NULL)}.
+#'                      When not searching by \code{biosample}, and when requesting
 #'                      to return an ExpressionSet object, supplying this parameter can
 #'                      optimize function exection time because function does not have to
 #'                      do biosample lookup internally
-#' @param con (Optional) database connection object; typically output of `rg_connect2()` 
+#' @param con (Optional) database connection object; typically output of \code{rg_connect2()} 
 #'            call. If not specified, connection object is formulated from internally stored
 #'            values of `rg_connect()` call
 #'            
