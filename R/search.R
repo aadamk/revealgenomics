@@ -956,6 +956,59 @@ search_measurementdata = function(measurementset, con = NULL) {
   fn(measurementset = measurementset, con = con)
 }
 
+#' Search copy number variant data
+#' 
+#' Function to search copy number variant data
+#' 
+#' @param measurementset (Mandatory) dataframe containing pipeline information; 
+#'                       typically output of a 
+#'                       \code{get_measurementsets(measurementset_id = ...)} or 
+#'                       \code{search_measurementsets(dataset_id = ..)} call
+#' @param biosample (Optional) dataframe containing biosample information; 
+#'                  typically output of a 
+#'                  \code{search_biosamples(dataset_id = ..)} call.
+#'                  If not specified, function returns all biosamples available 
+#'                  by other search parameters
+#' @param feature (Optional) dataframe containing feature information;
+#'                typically output of a 
+#'                \code{search_features(gene_symbol = ...)} call.
+#'                If not specified, function returns all features available 
+#'                by other search parameters
+#' @param con (Optional) database connection object; typically output of \code{rg_connect2()} 
+#'            call. If not specified, connection object is formulated from internally stored
+#'            values of `rg_connect()` call
+#'            
+#' @export
+search_copy_number_variant = function(measurementset, feature = NULL, biosample = NULL, 
+                                      con = NULL) {
+  if (nrow(measurementset) != 1) {
+    stop("Currently implemented for one pipeline at a time")
+  }
+  if ( !('entity' %in% colnames(measurementset)) ) {
+    stop("Expect measurementset to have column `entity`")
+  }
+  allowed_entities = c(.ghEnv$meta$arrCopynumber_mat,
+                       .ghEnv$meta$arrCopynumber_mat_string, 
+                       .ghEnv$meta$arrCopynumber_variant, 
+                       .ghEnv$meta$arrMeasurement)
+  if ( !(measurementset$entity %in% allowed_entities) ) {
+    stop("Expected measurementset entity column to lie within copy number subtypes. Found:", 
+         pretty_print(measurementset$entity[!(measurementset$entity %in% allowed_entities)]))
+  }
+  
+  if (measurementset$entity == .ghEnv$meta$arrCopynumber_mat) {
+    search_expression(measurementset = measurementset, 
+                      biosample = biosample, 
+                      feature = feature, 
+                      formExpressionSet = FALSE, 
+                      con = con)
+  } else if (measurementset$entity == .ghEnv$meta$arrMeasurement) {
+    search_measurements(measurementset_id = measurementset$measurementset_id, 
+                        con = con)
+  } else {
+    stop("Not covered yet")
+  }
+}
 ###### DATA ESTIMATION #####
 
 #' Estimate downloaded size for measurement data
