@@ -260,13 +260,13 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
                              con = con)
   stopifnot(nrow(mset) == 1)
   entity = mset$entity
-  if (!(entity %in% c(.ghEnv$meta$arrRnaquantification, 
-                    .ghEnv$meta$arrProteomics, 
-                    .ghEnv$meta$arrCopynumber_mat))) {
+  allowed_entities = c(.ghEnv$meta$arrRnaquantification, 
+                       .ghEnv$meta$arrProteomics, 
+                       .ghEnv$meta$arrCopynumber_mat, 
+                       .ghEnv$meta$arrCopynumber_mat_string)
+  if (!(entity %in% allowed_entities)) {
     stop("Expect to use this function to upload data for: ",
-         pretty_print(c(.ghEnv$meta$arrRnaquantification,
-                        .ghEnv$meta$arrProteomics,
-                        .ghEnv$meta$arrCopynumber_mat)), " only")
+         pretty_print(allowed_entities), " only")
   }
   
   df1 = df1[, c('dataset_id', 'measurementset_id', 'biosample_id', 
@@ -282,9 +282,10 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
                                   name = temp_arr_nm, 
                                   use_aio_input = TRUE)
   
+  attr_type = .ghEnv$meta$L$array[[entity]]$attributes$value
   qq2 = paste0("apply(", 
                adf_expr0@name, 
-               ", value, float(value__)", 
+               ", value, ", attr_type, "(value__)", 
                ", dataset_version, ", dataset_version, ")")
   
   fullnm = full_arrayname(entitynm = entity)
