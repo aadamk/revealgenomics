@@ -67,11 +67,11 @@ register_entities_workbook = function(workbook,
                                   pipeline_name_filter = NULL,
                                   con = NULL) {
   register_upto_entity =        match.arg(register_upto_entity)                                          
-  register_measurement_entity = match.arg(register_measurement_entity)                                          
+  register_measurement_entity = match.arg(register_measurement_entity, several.ok = TRUE)                                          
   entity_to_update =            match.arg(entity_to_update)                                          
   if (!({zz = get_entity_info(); 
-             register_measurement_entity %in% 
-               c('all', 'MEASUREMENT', zz[zz$class == "measurementdata", ]$entity)})) {
+             all(register_measurement_entity %in% 
+               c('all', 'MEASUREMENT', zz[zz$class == "measurementdata", ]$entity))})) {
     stop("Invalid register_measurement_entity definition in function")
   }
   abort_condition_met = function(register_upto_entity, check_with_entity) {
@@ -199,9 +199,10 @@ register_entities_workbook = function(workbook,
         next
       }
       
-      if (register_measurement_entity != 'all' &
-            register_measurement_entity != reference_object$measurement_set$entity) {
-        cat("User chose to load entity of type:", register_measurement_entity, "only.\nSkipping measurementset_id",
+      if (!identical(register_measurement_entity, 'all') &
+             !(reference_object$measurement_set$entity %in% register_measurement_entity)) {
+        cat("User chose to load entity of type:", pretty_print(register_measurement_entity, prettify_after = 100), 
+            "only.\nSkipping measurementset_id",
             reference_object$measurement_set$measurementset_id, "of type:", reference_object$measurement_set$entity, "\n")
         next
       }
