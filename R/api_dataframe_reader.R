@@ -638,6 +638,8 @@ DataReaderFMICopyNumberVariant = R6::R6Class(
           ]
       )
       
+      cat("Renaming column TYPE as type\n")
+      private$.data_df = plyr::rename(private$.data_df, c('TYPE' = 'type'))
       
       feature_col = 'GENE'
       cat("Assigning values for feature name using column:", feature_col, "\n")
@@ -1141,7 +1143,7 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Fusion] Defuse}{gene}" =
            DataReaderFusionDeFuse$new(pipeline_df = pipeline_df,
                                       measurement_set = measurement_set),
-         "{[external]-[Targeted Region CNV] FoundationOne Heme (FMI)}{DNA}" =  
+         "{[external]-[Targeted Region CNV] FoundationOne Heme (FMI)}{DNA - copy number value - custom filter - external partner}" = 
            DataReaderFMICopyNumberVariant$new(pipeline_df = pipeline_df,
                                               measurement_set = measurement_set),
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - log2 ratio}" = ,
@@ -1164,6 +1166,9 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[DNAnexus]-[Variant_Custom: MuTect HC + PoN + Annotate] Mutect / SnpEff / GEMINI}{DNA - mutations - unfiltered (file link)}" =
            DataReaderFileLink$new(pipeline_df = pipeline_df,
                                   measurement_set = measurement_set),
+         "{[external]-[Targeted Region CNV] DNA Analysis Pipeline for Cancer (Personalis)}{DNA - copy number value - custom filter - external partner}" = 
+           DataReaderCopyNumberVariantVariableColumns$new(pipeline_df = pipeline_df,
+                          measurement_set = measurement_set),
            stop("Need to add reader for choice:\n", temp_string)
          )
 }

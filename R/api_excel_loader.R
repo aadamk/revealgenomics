@@ -62,6 +62,7 @@ register_entities_workbook = function(workbook,
                                   register_measurement_entity = c('all', 'RNAQUANTIFICATION', 'VARIANT',
                                                                   'FUSION', 'PROTEOMICS', 
                                                                   'COPYNUMBER_MAT', 'COPYNUMBER_MAT_STRING', 
+                                                                  'COPYNUMBER_VARIANT', 
                                                                   'MEASUREMENT'),
                                   pipeline_name_filter = NULL,
                                   con = NULL) {

@@ -965,6 +965,11 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
            DataLoaderCopyNumberMatrix$new(data_df = data_df,
                                           reference_object = reference_object, 
                                           feature_annotation_df = feature_annotation_df),
+         "{[external]-[Targeted Region CNV] FoundationOne Heme (FMI)}{DNA - copy number value - custom filter - external partner}" = ,
+         "{[external]-[Targeted Region CNV] DNA Analysis Pipeline for Cancer (Personalis)}{DNA - copy number value - custom filter - external partner}" = 
+           DataLoaderCopyNumberVariantFormatA$new(data_df = data_df,
+                                          reference_object = reference_object, 
+                                          feature_annotation_df = feature_annotation_df),
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - images (file link)}" = ,
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNV Radar}{DNA - copy number value - images (file link)}" = ,
          "{[external]-[Exome CNV] BWA-MEM / GATK / Picard / CNVkit}{DNA - copy number value - segmentation (file link)}" = ,
