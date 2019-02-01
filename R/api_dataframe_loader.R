@@ -825,6 +825,76 @@ DataLoaderCopyNumberMatrix = R6::R6Class(
   )
 )
 
+##### DataLoaderCopyNumberVariantFormatA #####
+#' loader to try and handle various copy number variant subformats that have variable number of columns
+#' - currently assumes that features in the data-file are previously registered from a GTF file
+#' - may use the `feature_annotation_df` data.frame to figure out action related to feature matching
+DataLoaderCopyNumberVariantFormatA = R6::R6Class(
+  classname = 'DataLoaderCopyNumberVariantFormatA',
+  inherit = DataLoader,
+  public = list(
+   print_level = function() {cat("----(Level: DataLoaderVariant)\n")},
+   assign_feature_ids = function(){
+     cat("assign_feature_ids()"); self$print_level()
+     super$assign_feature_ids()
+     
+     syn = private$get_feature_synonym_df_for_selected_featureset()
+     
+     # Now register the left and right genes with system feature_id-s
+     column_in_file = 'scidb_feature_col'
+     private$.data_df$feature_id = syn[match(private$.data_df[, column_in_file], syn$synonym), ]$feature_id
+     stopifnot(!any(is.na(private$.data_df$feature_id)))
+     private$.data_df[, column_in_file] = NULL
+   },
+   
+   register_new_features = function() {
+     fset = private$get_selected_featureset()
+     fsyn_sel = private$get_feature_synonym_df_for_selected_featureset()
+     
+     list_of_features = unique(as.character(private$.data_df[, 'scidb_feature_col']))
+     
+     matches_synonym = find_matches_and_return_indices(list_of_features, 
+                                                       fsyn_sel$synonym)
+     
+     unmatched = matches_synonym$source_unmatched_idx
+     cat("Number of unmatched gene symbols:", length(unmatched), "\n e.g.", 
+         pretty_print(list_of_features[unmatched]), "\n")
+     
+     if (length(list_of_features[unmatched]) > 0) {
+       ftr_source = paste0(
+         "measurementset_id: ", 
+         private$.reference_object$measurement_set$measurementset_id, 
+         "; pipeline_name: ", 
+         private$.reference_object$measurement_set$name, 
+         "; data_type: ", 
+         private$.reference_object$measurement_set$entity)
+       
+       newfeatures = data.frame(
+         name = list_of_features[unmatched],
+         gene_symbol = "NA",
+         featureset_id = fset$featureset_id,
+         chromosome = "unknown",
+         start = '...', 
+         end = '...',
+         feature_type = "gene",
+         source = ftr_source, 
+         stringsAsFactors = FALSE)
+       
+       feature_record = register_feature(df = newfeatures)
+       
+       return(TRUE)
+     } else {
+       cat("No new features to register\n")
+       return(FALSE)
+     }                                         
+   },
+   load_data = function() {
+     cat("load_data()"); self$print_level()
+     register_copynumbervariant_variable_columns(df1 = private$.data_df,
+                     measurementset = private$.reference_object$measurement_set)
+   }
+  ))
+
 ##### createDataLoader #####
 #' @export      
 createDataLoader = function(data_df, reference_object, feature_annotation_df = NULL){
