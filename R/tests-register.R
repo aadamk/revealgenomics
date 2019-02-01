@@ -261,3 +261,31 @@ test_register_fusion = function(df, fusion_attr_cols){
   # check_entity_exists_at_id(entity = .ghEnv$meta$arrFeature,
   #                           id = sort(unique(df$feature_id)))
 }
+
+test_register_copynumbervariant_variable_columns = function(df, cnv_attr_cols){
+  test_dataframe_formatting(df)
+  if(length(unique(df$dataset_id))!=1) stop("CNV data to be registered must belong to a single dataset/study")
+  
+  # `per_gene_copynumbervariant_number`, `key_id` and `val` are mandatory fields that are typically added later --
+  # -- hence run the test as follows
+  df_temp = df
+  df_temp$per_gene_copynumbervariant_number = -1
+  df_temp$key_id = -1
+  df_temp$val = 'asdf'
+  test_mandatory_fields(df_temp, arrayname = .ghEnv$meta$arrCopynumber_variant)
+  
+  cols_to_check = c('measurementset_id', 'biosample_id', 'feature_id',
+                    cnv_attr_cols)
+  if ( !all(cols_to_check  %in% colnames(df)) ) {
+    stop("Following columns expected but not present:\n\t",
+         pretty_print(cols_to_check[which(!(cols_to_check %in% colnames(df)))]), 
+         "\n")
+  }
+  
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrMeasurementSet,
+                            id = sort(unique(df$measurementset_id)))
+  check_entity_exists_at_id(entity = .ghEnv$meta$arrBiosample,
+                            id = sort(unique(df$biosample_id)))
+  # check_entity_exists_at_id(entity = .ghEnv$meta$arrFeature,
+  #                           id = sort(unique(df$feature_id)))
+}
