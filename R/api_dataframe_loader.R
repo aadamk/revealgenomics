@@ -72,8 +72,6 @@ DataLoader = R6::R6Class(classname = "DataLoader",
               cat("Replacing `biosample_name` with `biosample_id`\n")
               
               cat("Summary file has", length(unique(private$.data_df$biosample_name)), "biosamples\n")
-              stopifnot(length(private$.reference_object$pipeline_df$original_sample_name) ==
-                          length(unique(private$.reference_object$pipeline_df$original_sample_name)))
               cat("Current pipeline record expects", length(private$.reference_object$pipeline_df$original_sample_name), 
                   "entries\n")
               if (!all(private$.data_df$biosample_name %in% private$.reference_object$pipeline_df$original_sample_name)) {
