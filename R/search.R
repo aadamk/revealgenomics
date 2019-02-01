@@ -996,12 +996,18 @@ search_copy_number_variant = function(measurementset, feature = NULL, biosample 
          pretty_print(measurementset$entity[!(measurementset$entity %in% allowed_entities)]))
   }
   
-  if (measurementset$entity == .ghEnv$meta$arrCopynumber_mat) {
+  if (measurementset$entity %in% c(.ghEnv$meta$arrCopynumber_mat,
+                                   .ghEnv$meta$arrCopynumber_mat_string)) {
     search_expression(measurementset = measurementset, 
                       biosample = biosample, 
                       feature = feature, 
                       formExpressionSet = FALSE, 
                       con = con)
+  } else if (measurementset$entity == .ghEnv$meta$arrCopynumber_variant) {
+    search_copynumbervariant_variable_columns(measurementset = measurementset, 
+                                              biosample = biosample, 
+                                              feature = feature, 
+                                              con = con)
   } else if (measurementset$entity == .ghEnv$meta$arrMeasurement) {
     search_measurements(measurementset_id = measurementset$measurementset_id, 
                         con = con)
@@ -1009,6 +1015,61 @@ search_copy_number_variant = function(measurementset, feature = NULL, biosample 
     stop("Not covered yet")
   }
 }
+
+#' Search copy number variant subtype (variable columns)
+search_copynumbervariant_variable_columns = function(measurementset, biosample = NULL, feature = NULL, 
+                         dataset_lookup_ref = NULL,
+                         con = NULL){
+  if (!is.null(measurementset)) {measurementset_id = measurementset$measurementset_id} else {
+    stop("measurementset must be supplied"); measurementset_id = NULL
+  }
+  if (length(unique(measurementset$dataset_version)) != 1) {
+    stop("multiple dataset versions in supplied measurementset");
+  }
+  dataset_version = unique(measurementset$dataset_version)
+  if (!is.null(biosample)) {
+    stopifnot(length(unique(biosample$dataset_version))==1)
+    if (!(unique(biosample$dataset_version)==dataset_version)) stop("dataset_version-s of measurementset and biosample must be same")
+  }
+  
+  if (!is.null(biosample)) {
+    biosample_id = biosample$biosample_id
+  }
+  else {
+    biosample_id = NULL
+  }
+  
+  if (!is.null(feature)) {
+    feature = feature[feature$featureset_id == measurementset$featureset_id, ]
+    feature_id = feature$feature_id
+  }
+  else {
+    feature_id = NULL
+  }
+  
+  if (exists('debug_trace')) cat("retrieving fusion data from server\n")
+  res = search_variants_scidb(arrayname = .ghEnv$meta$arrCopynumber_variant,
+                             measurementset_id,
+                             biosample_id,
+                             feature_id,
+                             dataset_version = dataset_version, 
+                             con = con)
+  
+  if (nrow(res) > 0) {
+    # Unpivot
+    res = unpivot_variant_data(var_raw = res, con = con)
+    
+    # Auto-convert characters
+    if (exists('debug_trace')) {t1 = proc.time()}
+    res = autoconvert_char(df1 = res, convert_logicals = FALSE)
+    if (exists('debug_trace')) cat(paste0("Autoconvert time: ", (proc.time()-t1)[3], "\n"))
+  } 
+  drop_na_columns(
+    res[, colnames(res)[
+      !(colnames(res) %in% 
+          c('key_id', 'val', 'per_gene_copynumbervariant_number'))]])
+}
+
 ###### DATA ESTIMATION #####
 
 #' Estimate downloaded size for measurement data
