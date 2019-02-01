@@ -265,6 +265,138 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                         }
                                       ))
 
+##### DataReaderCopyNumberVariantVariableColumns #####
+#' generic variant loader that aims to work with multiple formats
+#' - makes sure the mandatory fields for registering variants are named accordingly
+#' - for biosample matching, preps a column called `biosample_name`
+#' - for feature matching
+#'     + creates a column called `scidb_feature_column`
+#'     + stores annotation information in `feature_annotation_df` slot
+#'       (column name of this data.frame describes whether feature `name` or `gene_symbol` 
+#'       should be used for matching)
+DataReaderCopyNumberVariantVariableColumns = R6::R6Class(
+  classname = 'DataReaderCopyNumberVariantVariableColumns',
+  inherit = DataReaderAuto,
+  public = list(
+   print_level = function() {cat("----(Level: DataReaderCopyNumberVariantVariableColumns)\n")},
+   load_data_from_file = function() {
+     cat("load_data_from_file()"); self$print_level()
+     
+     super$load_data_from_file()
+     
+     cols_library = list(
+       option1 = list(
+         colnames_in_file = c('NCBI Gene ID', 
+                            'Gene Symbol', 
+                            'Sequence', 
+                            'Segment Start', 
+                            'Segment End', 
+                            'CNA Type', 
+                            'AbsoluteCN', 
+                            'Probability CNA Call', 
+                            'P-value CNA Call', 
+                            'Provided Tumor purity'),
+         ftr_col    = 'Gene Symbol',
+         ftr_compare_col = 'gene_symbol',
+         sample_col = NA,
+         chromosome_col = 'Sequence',
+         start_col = 'Segment Start',
+         end_col = 'Segment End',
+         type_col = 'CNA Type',
+         probablity_cna_call_fill = FALSE
+       ), 
+       option2 = list(
+         colnames_in_file = c('NCBI Gene ID', 
+                              'Gene Symbol', 
+                              'Sequence', 
+                              'Segment Start', 
+                              'Segment End', 
+                              'CNA Type', 
+                              'AbsoluteCN', 
+                              'P-value CNA Call', 
+                              'Provided Tumor purity'),
+         ftr_col    = 'Gene Symbol',
+         ftr_compare_col = 'gene_symbol',
+         sample_col = NA,
+         chromosome_col = 'Sequence',
+         start_col = 'Segment Start',
+         end_col = 'Segment End',
+         type_col = 'CNA Type',
+         probablity_cna_call_fill = TRUE
+       )
+     )
+     matchWithLibrary = sapply(cols_library, function(item) {
+       cols_to_match = item$colnames_in_file
+       identical(sort(cols_to_match), sort(colnames(private$.data_df)))}
+     )
+     if (!any(matchWithLibrary)) {
+       stop("Expected match with at least one of the library options")
+     }
+     colsMatched = cols_library[[names(which(matchWithLibrary))]]
+     
+     # Sample matching 
+     potential_sample_cols = sapply(cols_library, function(item) item$sample_col)
+     if (!(any(potential_sample_cols %in% colnames(private$.data_df)))) {
+       if (nrow(private$.pipeline_df) == 1) {
+         cat("One sample per file. Manually attaching sample information\n")
+         if (nrow(private$.data_df) == 0) {
+           private$.data_df$biosample_name = character()
+         } else {
+           private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
+         }
+       }
+     }
+     
+     cat("Rule 1:\n")
+     if (colsMatched$probablity_cna_call_fill) {
+       if (nrow(private$.data_df) == 0) {
+         private$.data_df$`Probability CNA Call` = numeric()
+       } else {
+         private$.data_df$`Probability CNA Call` = as.numeric(NA)
+       }
+     } 
+
+     cat("Rule 2:\n")
+
+     cat("Rule 3:\n")
+     cat("======\nFeature column in data is at column:", colsMatched$ftr_col,
+         "\n\tMatch with scidb feature column:", colsMatched$ftr_compare_col, "\n")
+     private$.data_df[, 'scidb_feature_col'] = 
+       private$.data_df[, colsMatched$ftr_col]
+     private$.feature_annotation_df = data.frame(
+       col1 = private$.data_df[, colsMatched$ftr_col],
+       stringsAsFactors = FALSE
+     )
+     colnames(private$.feature_annotation_df) = colsMatched$ftr_compare_col
+     
+     cat("Rule 3:\n")
+     cat("======\nCNV type, chromosome, start and end columns\n")
+     cat("type col:", colsMatched$type_col, "\n")
+     cat("chromosome col:", colsMatched$chromosome_col, "\n")
+     cat("start col:", colsMatched$start_col, "\n")
+     cat("end col:",   colsMatched$end_col, "\n")
+     private$.data_df[, 'type'] = private$.data_df[, 
+                                                            colsMatched$type_col]
+     private$.data_df[, 'segment_start'] = private$.data_df[, 
+                                                            colsMatched$start_col]
+     private$.data_df[, 'segment_end'] = private$.data_df[, 
+                                                  colsMatched$end_col]
+     
+     cat("Rule 5:\n======\nHandling sample name (if present)\n")
+     if (nrow(private$.pipeline_df) > 1) {
+       stop("Not implemented yet")
+       cat("This is a summarized variant file\n")
+       cat(paste0("Expecting '", colsMatched$sample_col, 
+                  "' column to hold the sample name\n"))
+       stopifnot(colsMatched$sample_col %in% colnames(private$.data_df) )
+       if ('biosample_name' %in% colnames(private$.data_df)) {
+         stop("Did not expect `biosample_name` column in variant file\n")
+       }
+       private$.data_df$biosample_name = private$.data_df[, 
+                                                          colsMatched$sample_col]
+                                           }
+                                         }
+                                       ))
 ##### DataReaderFMI #####
 DataReaderFMI = R6::R6Class(
   classname = 'DataReaderFMI',
