@@ -619,7 +619,6 @@ DataReaderFMICopyNumberVariant = R6::R6Class(
       super$load_data_from_file()
       
       cat("Extracting copy number variant data\n")
-      browser()
       private$.data_df = private$.data_df$cnv_data
       
       cat("(Extracted) Dimensions:", dim(private$.data_df), "\n")

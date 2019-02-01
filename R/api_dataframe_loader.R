@@ -736,7 +736,6 @@ DataLoaderFusionFormatA = R6::R6Class(
       
       list_of_features = unique(c(as.character(private$.data_df$gene_left), 
                                   as.character(private$.data_df$gene_right)))
-      head(list_of_features)
       
       matches_synonym = find_matches_and_return_indices(list_of_features, 
                                                         fsyn_sel$synonym)

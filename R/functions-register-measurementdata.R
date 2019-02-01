@@ -463,8 +463,8 @@ register_fusion = function(df1, measurementset, only_test = FALSE, con = NULL){
   # Step 1
   # Identify three groups of column-names
   # - `dimensions`: indices of the multi-dimensional array
-  # - `attr_mandatory`: VCF attribute fields that are mandatory
-  # - `attr_flex`: VCF attrubute fields that are not mandatory 
+  # - `attr_mandatory`: attribute fields that are mandatory
+  # - `attr_flex`: attrubute fields that are not mandatory 
   cols_dimensions = get_idname(entitynm)[!(
     get_idname(entitynm) %in% 
       c('key_id', 'per_gene_pair_fusion_number'))]
