@@ -919,7 +919,7 @@ DataLoaderCopyNumberVariantFormatA = R6::R6Class(
 #' @export      
 createDataLoader = function(data_df, reference_object, feature_annotation_df = NULL){
   # Special formulation for entries that need to be disambuiguated by filter_choices
-  if (grepl("COPY|CNV", reference_object$measurement_set$pipeline_scidb) |
+  if (grepl("COPY|CNV|CyTOF", reference_object$measurement_set$pipeline_scidb) |
       grepl("file link", reference_object$measurement_set$filter_name)) { 
     temp_string = paste0("{", reference_object$measurement_set$pipeline_scidb, "}{", 
                          reference_object$measurement_set$filter_name, "}")

@@ -1156,7 +1156,7 @@ DataReaderCyTOF = R6::R6Class(
 #' @export
 createDataReader = function(pipeline_df, measurement_set){
   # Special formulation for entries that need to be disambuiguated by filter_choices
-  if (grepl("COPY|CNV", measurement_set$pipeline_scidb) |
+  if (grepl("COPY|CNV|CyTOF", measurement_set$pipeline_scidb) |
       grepl("file link", measurement_set$filter_name)) { 
     temp_string = paste0("{",measurement_set$pipeline_scidb, "}{", 
                          measurement_set$filter_name, "}")
