@@ -173,7 +173,10 @@ load_helper_assign_ontology_ids = function(data_df, definitions, entity, con = N
       
       if (any(is.na(vec_ont))) {
         stop("unknown ontology field. 
-        Should have run api_register_ontology_from_definition_sheet() first ")
+        Should have run api_register_ontology_from_definition_sheet() first for the term(s):\n\t",
+             pretty_print(vec[which(is.na(vec_ont))]), 
+             "\nat category:\n\t", 
+             field)
       }
       
       data_df2[, field] = vec_ont
