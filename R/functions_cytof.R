@@ -17,17 +17,17 @@ search_cytof = function(measurementset, feature = NULL, biosample = NULL,
 
 #' Formulate data tree from CyTOF feature data.frame
 #' 
-#' @param cytof_ftr_df features data.frame corresponding to a CyTOF featureset. Must contain columns \code{c('cellPopulation', 'parent1', 'parent2', ...)}
+#' @param feature_df features data.frame corresponding to a CyTOF featureset. Must contain columns \code{c('cellPopulation', 'parent1', 'parent2', ...)}
 #' 
 #' @return data.tree object with hierarchy of cell populations. See \code{\link{Node}} from package \code{data.tree}
 #' 
 #' @export
-formulate_cell_population_data_tree_from_features_dataframe = function(cytof_ftr_df) {
-  if (!("cellPopulation" %in% colnames(feature))) {
+formulate_cell_population_data_tree_from_features_dataframe = function(feature_df) {
+  if (!("cellPopulation" %in% colnames(feature_df))) {
     stop("Expected column: `cellPopulation` in features data.frame")
   }
-  parent_colnames = colnames(cytof_ftr_df)[grep('^parent[1-9]*$', 
-                                                colnames(cytof_ftr_df))]
+  parent_colnames = colnames(feature_df)[grep('^parent[1-9]*$', 
+                                                colnames(feature_df))]
   if (length(parent_colnames) == 0) {
     stop("Expected columns named: parent1, parent2, etc. ... in feature data.frame")
   } else if (length(parent_colnames) < 10) {
@@ -35,9 +35,9 @@ formulate_cell_population_data_tree_from_features_dataframe = function(cytof_ftr
   } else {
     stop("Need natural sorting")
   }
-  cytof_ftr_df = cytof_ftr_df[, c('cellPopulation', 
+  feature_df = feature_df[, c('cellPopulation', 
                                   parent_colnames)]
-  df1 = unique(cytof_ftr_df)
+  df1 = unique(feature_df)
   nodes = unique(df1$cellPopulation)
   df1$pathString = ""
   for (parentCol in sort(parent_colnames, decreasing = T)) {
@@ -64,9 +64,9 @@ filter_feature_df_by_cell_population = function(feature, population = 'singlets'
     if (!return_children) {
       return(feature[feature$cellPopulation == population, ])
     } else {
-      cytof_ftr_df = feature
-      parent_colnames = colnames(cytof_ftr_df)[grep('^parent[1-9]*$', 
-                                                          colnames(cytof_ftr_df))]
+      feature_df = feature
+      parent_colnames = colnames(feature_df)[grep('^parent[1-9]*$', 
+                                                          colnames(feature_df))]
       if (length(parent_colnames) == 0) {
         stop("Expected columns named: parent1, parent2, etc. ... in feature data.frame")
       } else if (length(parent_colnames) < 10) {
@@ -74,7 +74,7 @@ filter_feature_df_by_cell_population = function(feature, population = 'singlets'
       } else {
         stop("Need natural sorting")
       }
-      df1 = cytof_ftr_df
+      df1 = feature_df
       df1$pathString = ""
       for (parentCol in sort(parent_colnames, decreasing = T)) {
         df1$pathString = ifelse(is.na(df1[, parentCol]), 

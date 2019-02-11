@@ -4,10 +4,10 @@
 \alias{formulate_cell_population_data_tree_from_features_dataframe}
 \title{Formulate data tree from CyTOF feature data.frame}
 \usage{
-formulate_cell_population_data_tree_from_features_dataframe(cytof_ftr_df)
+formulate_cell_population_data_tree_from_features_dataframe(feature_df)
 }
 \arguments{
-\item{cytof_ftr_df}{features data.frame corresponding to a CyTOF featureset. Must contain columns \code{c('cellPopulation', 'parent1', 'parent2', ...)}}
+\item{feature_df}{features data.frame corresponding to a CyTOF featureset. Must contain columns \code{c('cellPopulation', 'parent1', 'parent2', ...)}}
 }
 \value{
 data.tree object with hierarchy of cell populations. See \code{\link{Node}} from package \code{data.tree}
