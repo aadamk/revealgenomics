@@ -26,20 +26,26 @@ NULL
 
 .ghEnv$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="revealgenomics"))
 
+.ghEnv$meta$arrOntology = 'ONTOLOGY'
+.ghEnv$meta$arrDefinition = 'DEFINITION'
 .ghEnv$meta$arrProject = 'PROJECT'
 .ghEnv$meta$arrDataset = 'DATASET'
 .ghEnv$meta$arrIndividuals = 'INDIVIDUAL'
-.ghEnv$meta$arrOntology = 'ONTOLOGY'
-.ghEnv$meta$arrDefinition = 'DEFINITION'
 .ghEnv$meta$arrBiosample = 'BIOSAMPLE'
-.ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
+
+.ghEnv$meta$arrReferenceset = 'REFERENCESET'
+.ghEnv$meta$arrFeatureset = 'FEATURESET'
 .ghEnv$meta$arrFeature = 'FEATURE'
 .ghEnv$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
-.ghEnv$meta$arrFeatureset = 'FEATURESET'
-.ghEnv$meta$arrReferenceset = 'REFERENCESET'
 .ghEnv$meta$arrGeneSymbol = 'GENE_SYMBOL'
 .ghEnv$meta$arrGenelist = 'GENELIST'
 .ghEnv$meta$arrGenelist_gene = 'GENELIST_GENE'
+
+.ghEnv$meta$arrExperimentSet = 'EXPERIMENTSET'
+.ghEnv$meta$arrMeasurement = 'MEASUREMENT'
+.ghEnv$meta$arrMeasurementSet = 'MEASUREMENTSET'
+
+.ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
 .ghEnv$meta$arrVariant = 'VARIANT'
 .ghEnv$meta$arrVariantKey = 'VARIANT_KEY'
 .ghEnv$meta$arrFusion = 'FUSION'
@@ -47,9 +53,7 @@ NULL
 .ghEnv$meta$arrCopynumber_mat = 'COPYNUMBER_MAT'
 .ghEnv$meta$arrCopynumber_mat_string = 'COPYNUMBER_MAT_STRING'
 .ghEnv$meta$arrCopynumber_variant = 'COPYNUMBER_VARIANT'
-.ghEnv$meta$arrExperimentSet = 'EXPERIMENTSET'
-.ghEnv$meta$arrMeasurement = 'MEASUREMENT'
-.ghEnv$meta$arrMeasurementSet = 'MEASUREMENTSET'
+.ghEnv$meta$arrCytometry_cytof = 'CYTOMETRY_CYTOF'
 # Prepare variables for the cache
 .ghEnv$cache$lookup = list()
 .ghEnv$cache$biosample_ref = NULL
