@@ -1089,6 +1089,69 @@ DataReaderCopyNumberMatrix = R6::R6Class(
   private = list()
 )
 
+
+##### DataReaderCyTOF #####
+DataReaderCyTOF = R6::R6Class(
+  classname = 'DataReaderCyTOF',
+  inherit = DataReaderAuto,
+  public = list(
+    print_level = function() {cat("----(Level: DataReaderCyTOF)\n")},
+    load_data_from_file = function() {
+      cat("load_data_from_file()"); self$print_level()
+      file_path = unique(private$.pipeline_df$file_path)
+      stopifnot(length(file_path) == 1)
+      cat(paste0("Reading *comma* delimited file:\n\t", file_path, "\n"))
+      private$.data_df = read.delim(file = file_path, 
+                 sep = ',', skip = 6, check.names = F, stringsAsFactors = F)
+      
+      # Skip columns marked 'Sample Type', 'Plate', 'Panel'
+      private$.data_df = private$.data_df[,
+                                          !(colnames(private$.data_df) %in% c('Sample Type', 'Plate', 'Panel')) ]
+      
+      private$.data_df = plyr::rename(private$.data_df, c('FCS Filename' = 'biosample_name'))
+      
+      super$convert_wide_to_tall_skinny(keyname = 'scidb_feature_col')
+      
+      # Skip features that have % marked in them
+      private$.data_df = private$.data_df[
+        grep("%", private$.data_df$scidb_feature_col, fixed = T, invert = T), ]
+      
+      # Skip features that have 'Ungated' marked in them
+      private$.data_df = private$.data_df[
+        grep("Ungated", private$.data_df$scidb_feature_col, fixed = T, invert = T), ]
+
+      # One occurence of the phrase " of " in each line
+      verify_that_there_is_one_occurence_of__of__in_each_feature = function(vec) {
+        count_number_of_expr_matches = function(vec, expr) {
+          stringi::stri_count(vec, fixed = expr)
+        }
+        stopifnot(
+          all(count_number_of_expr_matches(vec, expr = " of ") == 1)
+        )
+      }
+      
+      split_by_expr = function(vec, expr, side = c('left', 'right')) {
+        side = match.arg(side)
+        sapply(
+          stringi::stri_split(str = vec, fixed = expr),
+          function(elem) ifelse(side == 'left', elem[1], elem[2])
+        )
+      }
+      
+      
+      verify_that_there_is_one_occurence_of__of__in_each_feature(private$.data_df$scidb_feature_col)
+      cat("Dimensions:", dim(private$.data_df), "\n")
+      
+      # Retain stuff only the right of the phrase " of "
+      private$.data_df$scidb_feature_col = split_by_expr(
+        private$.data_df$scidb_feature_col, expr = " of ", side = 'right')
+     
+
+    }
+  ), 
+  private = list()
+)
+
 ##### createDataReader #####
 #' @export
 createDataReader = function(pipeline_df, measurement_set){
