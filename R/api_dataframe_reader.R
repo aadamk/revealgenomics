@@ -111,6 +111,18 @@ DataReaderAuto = R6::R6Class(
      
      super$load_data_from_file()
    }
+  ),
+  private = list(
+    convert_wide_to_tall_skinny = function(keyname = 'biosample_name') {
+      cat("convert_wide_to_tall_skinny()"); self$print_level()
+      
+      cat("-----\n\tConverting wide matrix form to tall-skinny table\n")
+      private$.data_df = tidyr::gather(data = private$.data_df, 
+                                       key = keyname, 
+                                       value='value', 
+                                       colnames(private$.data_df)[2:length(colnames(private$.data_df))])
+      colnames(private$.data_df)[2] = keyname
+    }
   )
 )
                                            
@@ -659,15 +671,6 @@ DataReaderExpressionMatrix = R6::R6Class(classname = 'DataReaderExpressionMatrix
                                  print_level = function() {cat("----(Level: DataReaderExpressionMatrix)\n")}
                                ), 
                                private = list(
-                                 convert_wide_to_tall_skinny = function() {
-                                   cat("convert_wide_to_tall_skinny()"); self$print_level()
-                                   
-                                   cat("-----\n\tConverting wide matrix form to tall-skinny table\n")
-                                   private$.data_df = tidyr::gather(data = private$.data_df, 
-                                                                    key = 'biosample_name', 
-                                                                    value='value', 
-                                                                    colnames(private$.data_df)[2:length(colnames(private$.data_df))])
-                                 }
                                ))
 
 ##### DataReaderRNAQuantRNASeqCufflinks #####
