@@ -74,21 +74,40 @@ DataLoader = R6::R6Class(classname = "DataLoader",
               cat("Summary file has", length(unique(private$.data_df$biosample_name)), "biosamples\n")
               cat("Current pipeline record expects", length(private$.reference_object$pipeline_df$original_sample_name), 
                   "entries\n")
-              if (!all(private$.data_df$biosample_name %in% private$.reference_object$pipeline_df$original_sample_name)) {
-                cat("Dropping extra entries\n")
-                private$.data_df = private$.data_df[private$.data_df$biosample_name %in% private$.reference_object$pipeline_df$original_sample_name, ]
-              }
               
-              mL = find_matches_and_return_indices(private$.data_df$biosample_name, 
-                                                   bios_ref$original_sample_name)
-              
-              private$.data_df$biosample_id = -1
-              private$.data_df$biosample_id[mL$source_matched_idx] = bios_ref$biosample_id[mL$target_matched_idx]
-              
-              unmatched = unique(private$.data_df[private$.data_df$biosample_id == -1, ]$biosample_name)
-              if (length(unmatched) > 0) {
-                cat("dropping", length(unmatched), "samples:", pretty_print(unmatched, prettify_after = length(unmatched)), "\n")
-                private$.data_df = private$.data_df[private$.data_df$biosample_id != -1, ]
+              if (private$.match_biosample_name_exactly) {
+                cat("Doing exact matching\n")
+                if (!all(private$.data_df$biosample_name %in% private$.reference_object$pipeline_df$original_sample_name)) {
+                  cat("Dropping extra entries\n")
+                  private$.data_df = private$.data_df[private$.data_df$biosample_name %in% private$.reference_object$pipeline_df$original_sample_name, ]
+                }
+                
+                mL = find_matches_and_return_indices(private$.data_df$biosample_name, 
+                                                     bios_ref$original_sample_name)
+                
+                private$.data_df$biosample_id = -1
+                private$.data_df$biosample_id[mL$source_matched_idx] = bios_ref$biosample_id[mL$target_matched_idx]
+                
+                unmatched = unique(private$.data_df[private$.data_df$biosample_id == -1, ]$biosample_name)
+                if (length(unmatched) > 0) {
+                  cat("dropping", length(unmatched), "samples:", pretty_print(unmatched, prettify_after = length(unmatched)), "\n")
+                  private$.data_df = private$.data_df[private$.data_df$biosample_id != -1, ]
+                }
+              } else {
+                cat("Doing inexact name matching\n") # Tested on CyTOF data
+                candidate_sample_names = bios_ref$original_sample_name
+                file_sample_names = unique(private$.data_df$biosample_name)
+                match_file_to_candidate = sapply(
+                  file_sample_names, function(nm) {
+                    # cat("Sample name: ", nm, "\n")
+                    res = unlist(sapply(candidate_sample_names, 
+                           function(bios_ref_nm) grepl(bios_ref_nm, nm)))
+                    res = which(res)
+                    stopifnot(length(res) == 1)
+                    as.integer(res)
+                  })
+                private$.data_df$biosample_id = 
+                  bios_ref[match_file_to_candidate[private$.data_df$biosample_name], ]$biosample_id
               }
               
               private$.data_df$biosample_name = NULL
@@ -257,7 +276,8 @@ DataLoader = R6::R6Class(classname = "DataLoader",
           },
           .data_df = NULL,
           .feature_annotation_df = NULL, 
-          .reference_object = NULL
+          .reference_object = NULL,
+          .match_biosample_name_exactly = TRUE
         ))
 
 
