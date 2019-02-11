@@ -249,13 +249,25 @@ search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NU
   }
 }
 
+#' Search features
+#' 
+#' @param gene_symbol (optional) which gene symbol(s) e.g. \code{c('EGFR', 'KRAS')} / primary symbol(s) e.g. \code{c('TIME', 'CELL.LENGTH')} to search by
+#' @param feature_type (optional) subselect by feature_type. Ranges between \code{c('gene', 'probeset', 'transcript', 'protein_probe', 'cytof')}
 #' @export
 search_features = function(
   gene_symbol = NULL, 
-  feature_type = c('gene', 'probeset', 'transcript', 
-                   'protein_probe'), 
+  feature_type = NULL, 
   featureset_id = NULL, 
   con = NULL) {
+  if (!is.null(feature_type)) {
+    allowed_feature_types = c('gene', 'probeset', 'transcript', 
+                            'protein_probe', 'cytof')
+    if (!(feature_type %in% allowed_feature_types)) {
+      stop("Expected feature_type to range within: \n\t", 
+           pretty_print(c(NULL, allowed_feature_types)), 
+           "\nReceived: ", feature_type)
+    }
+  }
   arrayname = full_arrayname(.ghEnv$meta$arrFeature)
   
   qq = arrayname
