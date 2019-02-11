@@ -296,6 +296,10 @@ register_entities_workbook = function(workbook,
           }
         }
         
+        if (nrow(accumulated_data) == 0) {
+          cat("Skipping loading phase as no data accumulated\n")
+          next
+        }
         cat("========= LOADING PHASE =========\n")
         reference_object$pipeline_df = accumulated_pipeline_df
         loaderObj = createDataLoader(data_df = accumulated_data, 
