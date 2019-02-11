@@ -63,6 +63,7 @@ register_entities_workbook = function(workbook,
                                                                   'FUSION', 'PROTEOMICS', 
                                                                   'COPYNUMBER_MAT', 'COPYNUMBER_MAT_STRING', 
                                                                   'COPYNUMBER_VARIANT', 
+                                                                  'CYTOMETRY_CYTOF', 
                                                                   'MEASUREMENT'),
                                   pipeline_name_filter = NULL,
                                   con = NULL) {

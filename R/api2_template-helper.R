@@ -326,11 +326,13 @@ template_helper_convert_names = function(api_name = NULL, external_name = NULL) 
     api_names = c(.ghEnv$meta$arrRnaquantification,
                   .ghEnv$meta$arrVariant, 
                   .ghEnv$meta$arrFusion,
-                  .ghEnv$meta$arrProteomics),
+                  .ghEnv$meta$arrProteomics,
+                  .ghEnv$meta$arrCytometry_cytof),
     external_name = c('Gene Expression',
                       'Variant',
                       'Rearrangement',
-                      'Proteomics'),
+                      'Proteomics',
+                      'Flow Cytometry'),
     stringsAsFactors = FALSE
   )
   if (!is.null(api_name)) {
@@ -423,7 +425,8 @@ mappings_experimentset =
      'Fusion'                    = 'FUSION',
      'Exome CNV'                 = 'COPYNUMBERVARIANT_EXOME', 
      'Whole Genome CNV'          = 'COPYNUMBERVARIANT_WHOLE_GENOME',
-     'Targeted Region CNV'       = 'COPYNUMBERVARIANT_TARGETED_REGION')
+     'Targeted Region CNV'       = 'COPYNUMBERVARIANT_TARGETED_REGION',
+     'CyTOF'                     = 'CYTOMETRY_CYTOF')
 
 #' Assign experiment entity
 #' 
@@ -442,12 +445,14 @@ template_helper_assign_experiment_entity = function(experiment_name) {
 #' FUSION                 DNA / RNA (cannot provide suffix)
 #' COPYNUMBER_MAT         DNA / RNA (cannot provide suffix)
 #' PROTEOMICS             Protein
+#' CYTOMETRY_CYTOF        cell
 template_helper_suffix_by_entity = function(entity) {
   names_suffixes = c(.ghEnv$meta$arrRnaquantification, 
                      .ghEnv$meta$arrProteomics,
-                     .ghEnv$meta$arrVariant
+                     .ghEnv$meta$arrVariant,
+                     .ghEnv$meta$arrCytometry_cytof
   )
-  suffixes = c('RNA', 'Protein', 'DNA')
+  suffixes = c('RNA', 'Protein', 'DNA', "cell")
                # rep('DNA', length(names_suffixes)-2))
   names(suffixes) = names_suffixes
   if (!all(entity %in% names(suffixes))) {
@@ -478,3 +483,4 @@ template_helper_formulate_local_file_path = function(df_pipelines) {
     df_pipelines[, 'project_folder'],
     df_pipelines[, 'project_subfolder'],
     df_pipelines[, 'filename'])
+}

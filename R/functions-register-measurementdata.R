@@ -263,7 +263,8 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   allowed_entities = c(.ghEnv$meta$arrRnaquantification, 
                        .ghEnv$meta$arrProteomics, 
                        .ghEnv$meta$arrCopynumber_mat, 
-                       .ghEnv$meta$arrCopynumber_mat_string)
+                       .ghEnv$meta$arrCopynumber_mat_string, 
+                       .ghEnv$meta$arrCytometry_cytof)
   if (!(entity %in% allowed_entities)) {
     stop("Expect to use this function to upload data for: ",
          pretty_print(allowed_entities), " only")

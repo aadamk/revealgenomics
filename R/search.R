@@ -380,7 +380,8 @@ search_expression = function(measurementset = NULL,
   stopifnot(entity %in% c(.ghEnv$meta$arrRnaquantification,
                           .ghEnv$meta$arrProteomics, 
                           .ghEnv$meta$arrCopynumber_mat, 
-                          .ghEnv$meta$arrCopynumber_mat_string))
+                          .ghEnv$meta$arrCopynumber_mat_string,
+                          .ghEnv$meta$arrCytometry_cytof))
   arrayname = full_arrayname(entity)
   if (!is.null(biosample)) {
     biosample_id = biosample$biosample_id
@@ -569,7 +570,8 @@ dao_search_expression = function(entity,
   stopifnot(entity %in% c(.ghEnv$meta$arrRnaquantification, 
                           .ghEnv$meta$arrProteomics,
                           .ghEnv$meta$arrCopynumber_mat,
-                          .ghEnv$meta$arrCopynumber_mat_string))
+                          .ghEnv$meta$arrCopynumber_mat_string, 
+                          .ghEnv$meta$arrCytometry_cytof))
   con = use_ghEnv_if_null(con = con)
   stopifnot(nrow(measurementset) == 1)
   rqs_id = unique(measurementset$measurementset_id)
