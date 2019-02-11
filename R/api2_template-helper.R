@@ -458,3 +458,23 @@ template_helper_suffix_by_entity = function(entity) {
   return(suffixes[entity])
 }
 
+#' Formulate local file path from Pipelines sheet columns
+#' @param df1 data.frame of Pipelines sheet
+#' 
+#' @export
+template_helper_formulate_local_file_path = function(df_pipelines) {
+  path_cols = c('local_project_folder_prefix',
+                'project_folder',
+                'project_subfolder',
+                'filename')
+  matches = path_cols %in% colnames(df_pipelines)
+  if (!all(matches)) {
+    stop("Following column(s):\n\t",
+         pretty_print(path_cols[!matches]),
+         "\nexpected in pipelines dataframe but missing")
+  }
+  file.path(
+    df_pipelines[, 'local_project_folder_prefix'],
+    df_pipelines[, 'project_folder'],
+    df_pipelines[, 'project_subfolder'],
+    df_pipelines[, 'filename'])
