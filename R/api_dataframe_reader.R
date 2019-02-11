@@ -1235,6 +1235,11 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[external]-[Targeted Region CNV] DNA Analysis Pipeline for Cancer (Personalis)}{DNA - copy number value - custom filter - external partner}" = 
            DataReaderCopyNumberVariantVariableColumns$new(pipeline_df = pipeline_df,
                           measurement_set = measurement_set),
+         "{[Cytobank]-[CyTOF] sample statistics}{cell - population event counts}" = ,
+         "{[Cytobank]-[CyTOF] sample statistics}{cell - median of individual MFI}" = ,
+         "{[Cytobank]-[CyTOF] sample statistics}{cell - parent population percentages}" =
+           DataReaderCyTOF$new(pipeline_df = pipeline_df,
+                               measurement_set = measurement_set),
            stop("Need to add reader for choice:\n", temp_string)
          )
 }
