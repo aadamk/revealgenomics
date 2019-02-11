@@ -13,4 +13,5 @@ VARIANT                DNA
 FUSION                 DNA / RNA (cannot provide suffix)
 COPYNUMBER_MAT         DNA / RNA (cannot provide suffix)
 PROTEOMICS             Protein
+CYTOMETRY_CYTOF        cell
 }
