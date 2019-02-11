@@ -59,7 +59,8 @@ DataLoader = R6::R6Class(classname = "DataLoader",
             bios_ref = private$.reference_object$biosample
             entity = unique(private$.reference_object$measurement_set$entity)
             if (entity %in% c(.ghEnv$meta$arrRnaquantification,
-                              .ghEnv$meta$arrVariant)) {
+                              .ghEnv$meta$arrVariant,
+                              .ghEnv$meta$arrCytometry_cytof)) {
               suffix = template_helper_suffix_by_entity(entity = private$.reference_object$measurement_set$entity)
               bios_ref = bios_ref[grep(suffix, bios_ref$name), ]
               cat("Chose suffix:", suffix, "for entity:", private$.reference_object$measurement_set$entity, 
@@ -914,6 +915,53 @@ DataLoaderCopyNumberVariantFormatA = R6::R6Class(
                      measurementset = private$.reference_object$measurement_set)
    }
   ))
+
+
+DataLoaderCyTOF = R6::R6Class(
+  classname = 'DataLoaderCyTOF',
+  inherit = DataLoaderExpression,
+  public = list(
+    print_level = function() {cat("----(Level: DataLoaderCyTOF)\n")},
+    assign_feature_ids = function(){
+      cat("assign_feature_ids()"); self$print_level()
+      # super$assign_feature_ids() # override the definition in parent class
+      
+      ftr_df = private$.reference_object$feature
+      
+      # Now register the left and right genes with system feature_id-s
+      column_in_file = 'scidb_feature_col'
+      private$.data_df$feature_id = ftr_df[match(private$.data_df[, column_in_file], ftr_df$name), ]$feature_id
+      stopifnot(!any(is.na(private$.data_df$feature_id)))
+      private$.data_df[, column_in_file] = NULL
+    },
+    
+    register_new_features = function() {
+      fset = private$get_selected_featureset()
+      ftr_sel = private$.reference_object$feature
+      
+      list_of_features = unique(as.character(private$.data_df[, 'scidb_feature_col']))
+      
+      matches_synonym = find_matches_and_return_indices(list_of_features, 
+                                                        ftr_sel$name)
+      
+      unmatched = matches_synonym$source_unmatched_idx
+      cat("Number of unmatched gene symbols:", length(unmatched), "\n e.g.", 
+          pretty_print(list_of_features[unmatched]), "\n")
+      
+      if (length(list_of_features[unmatched]) > 0) {
+        stop("Expected all features to be preregistered")
+        
+        return(TRUE)
+      } else {
+        cat("No new features to register\n")
+        return(FALSE)
+      }                                         
+    }
+  ),
+  private = list(
+    .match_biosample_name_exactly = FALSE
+  )
+)
 
 ##### createDataLoader #####
 #' @export      
