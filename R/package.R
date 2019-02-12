@@ -18,6 +18,7 @@ NULL
                         domain = NULL, appendLF = TRUE)
   options("revealgenomics.use_scidb_ee"=TRUE)
   options("revealgenomics.debug"=FALSE)
+  options("scidb.aio"=TRUE)
 }
 
 # A global environment used to store the metadata information, and cache state by some functions
