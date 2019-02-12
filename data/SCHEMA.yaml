@@ -252,7 +252,7 @@ array:
       - gh_secure
     attributes:
       size_bytes: int32
-      rds_object: binary
+      payload: binary
     dims:
       dataset_version:
         start: 0
