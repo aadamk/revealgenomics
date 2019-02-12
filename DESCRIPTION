@@ -1,8 +1,8 @@
 Package: revealgenomics
 Type: Package
 Title: SciDB REVEAL/Genomics API
-Version: 0.5
-Date: 2018-02-22
+Version: 0.6
+Date: 2019-02-12
 Author: Kriti Sen Sharma
 Maintainer: Kriti Sen Sharma <ksen@paradigm4.com>
 Description: Get insight across clinical studies. Use this API to load (register), maintain (update, delete), and retrieve (search, get) data. Multiple data types are supported e.g. clinical data, gene, transcript, RNASeq, GXP by microarray, variant, fusion etc.

@@ -1,6 +1,10 @@
+(External facing changes are listed here)
+
 ## Version 0.5
 
-(External facing changes are listed here)
+- start using `options(scidb.aio=TRUE)` across the board
+
+## Version 0.5
 
 - rename scidb connection function from `gh_connect` to `rg_connect`
 - start using `options(scidb.aio=TRUE)` for downloads where faster `aio_save` path of not having to `apply` dimensions can be used
