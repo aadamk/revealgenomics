@@ -959,14 +959,20 @@ search_measurementdata = function(measurementset, biosample_ref = NULL, con = NU
     'search_variant',
     'search_fusion', 
     'search_expression',
-    'search_copynumber_mat'
+    'search_copy_number_variant',
+    'search_copy_number_variant',
+    'search_copy_number_variant',
+    'search_cytof'
   )
   names(lookup) = c(
     .ghEnv$meta$arrRnaquantification,
     .ghEnv$meta$arrVariant,
     .ghEnv$meta$arrFusion,
     .ghEnv$meta$arrProteomics,
-    .ghEnv$meta$arrCopynumber_mat
+    .ghEnv$meta$arrCopynumber_mat,
+    .ghEnv$meta$arrCopynumber_mat_string,
+    .ghEnv$meta$arrCopynumber_variant, 
+    .ghEnv$meta$arrCytometry_cytof
   )
   fn_name = lookup[entity]
   fn = get(fn_name)
