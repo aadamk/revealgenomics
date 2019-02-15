@@ -251,7 +251,8 @@ array:
     namespace:
       - gh_secure
     attributes:
-      size_bytes: int32
+      payload_size_bytes: int64
+      payload_class: string
       payload: binary
     dims:
       dataset_version:
