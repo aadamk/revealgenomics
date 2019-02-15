@@ -46,7 +46,7 @@ NULL
 .ghEnv$meta$arrMeasurement = 'MEASUREMENT'
 .ghEnv$meta$arrMeasurementSet = 'MEASUREMENTSET'
 
-.ghEnv$meta$arrMeasurementSetData = 'MEASUREMENTSETDATA'
+.ghEnv$meta$arrMeasurementData = 'MEASUREMENTDATA'
 .ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
 .ghEnv$meta$arrVariant = 'VARIANT'
 .ghEnv$meta$arrVariantKey = 'VARIANT_KEY'
