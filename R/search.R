@@ -937,10 +937,11 @@ search_fusions_scidb = function(arrayname,
 #' Unified function to download entire pipeline worth of data
 #' 
 #' @param measurementset dataframe containing one row of pipeline information
+#' @param biosample_ref  dataframe containing biosample data of (at least) study containing current pipeline
 #' @param con            connection object (optional  if using \code{rg_connect()})
 #' 
 #' @export
-search_measurementdata = function(measurementset, con = NULL) {
+search_measurementdata = function(measurementset, biosample_ref = NULL, con = NULL) {
   if (nrow(measurementset) != 1) {
     stop("This function currently works on one measurementSet at a time")
   }

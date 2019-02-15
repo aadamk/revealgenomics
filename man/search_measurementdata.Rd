@@ -4,10 +4,13 @@
 \alias{search_measurementdata}
 \title{Unified function to download entire pipeline worth of data}
 \usage{
-search_measurementdata(measurementset, con = NULL)
+search_measurementdata(measurementset, biosample_ref = NULL,
+  con = NULL)
 }
 \arguments{
 \item{measurementset}{dataframe containing one row of pipeline information}
+
+\item{biosample_ref}{dataframe containing biosample data of (at least) study containing current pipeline}
 
 \item{con}{connection object (optional  if using \code{rg_connect()})}
 }
