@@ -976,7 +976,11 @@ search_measurementdata = function(measurementset, biosample_ref = NULL, con = NU
   )
   fn_name = lookup[entity]
   fn = get(fn_name)
-  fn(measurementset = measurementset, con = con)
+  if (fn_name == 'search_expression') {
+    fn(measurementset = measurementset, biosample_ref = biosample_ref, con = con)
+  } else {
+    fn(measurementset = measurementset, con = con)
+  }
 }
 
 #' Search copy number variant data
