@@ -24,6 +24,7 @@ register_measurementdata_cache = function(
     } else { # remember to include till the very end 
       range_idx = c((stepsize*(idx-1) + 1): payload_length)
     }
+    payload_size_at_idx = as.numeric(object.size(pipeline_data[range_idx]))
     pipeline_data_db = as.scidb(
       con$db, 
       pipeline_data[range_idx])
@@ -37,7 +38,9 @@ register_measurementdata_cache = function(
       "dataset_id, ", measurementset$dataset_id, ", ", 
       "dataset_version, ", measurementset$dataset_version, ", ", 
       "subpart_id, ", idx, ", ", 
-      "payload_size_bytes, int64(", payload_size, "), ", 
+      "payload_size_bytes, int64(", payload_size_at_idx, "), ", 
+      "cache_valid, TRUE, ", 
+      "cache_mark_timestamp, string(now()), ", 
       "payload_class, '", payoad_class, "')"
     )
     # Redimension into target schema and insert
@@ -50,8 +53,8 @@ register_measurementdata_cache = function(
       "insert(", 
       qq1, ", ", fullnm, ")"
     )
-    cat("inserting data of size", payload_size/factor/1024/1024, "MB into", fullnm, 
-        "array at measurementset_id =", unique(measurementset$measurementset_id), "\n")
+    cat("inserting data of size", payload_size_at_idx/factor/1024/1024, "MB into", fullnm, 
+        "array at measurementset_id =", unique(measurementset$measurementset_id), "subpart:", idx, "\n")
     
     iquery(con$db, qq1)
   }
