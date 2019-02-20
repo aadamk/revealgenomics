@@ -242,12 +242,12 @@ array:
     infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: FALSE
-  # MEASUREMENTDATA
-  MEASUREMENTDATA:
+  # MEASUREMENTDATA_CACHE
+  MEASUREMENTDATA_CACHE:
     data_class:
       measurementdata
     measurementdata_subclass:
-      not_applicable
+      measurementdata_cache
     namespace:
       - gh_secure
     attributes:

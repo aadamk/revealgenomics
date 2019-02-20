@@ -1,11 +1,11 @@
 #' @export
-register_measurementdata = function(
+register_measurementdata_cache = function(
   measurementset, 
   pipeline_data, 
   con = NULL
 ) {
   con = revealgenomics:::use_ghEnv_if_null(con = con)
-  fullnm = full_arrayname(.ghEnv$meta$arrMeasurementData)
+  fullnm = full_arrayname(.ghEnv$meta$arrMeasurementDataCache)
   
   # Begin uploading
   payoad_class = as.character(class(pipeline_data))
