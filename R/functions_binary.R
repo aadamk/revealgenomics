@@ -59,3 +59,137 @@ register_measurementdata_cache = function(
     iquery(con$db, qq1)
   }
 }
+
+#' @export
+search_measurementdata_cache = function(measurementset, con = NULL) {
+  if (measurementdata_cache_is_cache_valid(measurementset = measurementset, con = con)) {
+    num_subparts = measurementdata_cache_get_num_subparts(measurementset = measurementset, con = con)
+    if (num_subparts == 1) {
+      measurementdata_cache_download_subpart(measurementset = measurementset, 
+                                             subpartidx = 1, con = con)
+    } else {
+      message("Multiple subparts")
+      L1 = lapply(1:num_subparts, function(idx) {
+        cat("Downloading", idx, "of 3\n\t")
+        t1 = proc.time();
+        res = revealgenomics:::measurementdata_cache_download_subpart(measurementset = msi, subpartidx = idx, convert_to_R = FALSE)
+        cat((proc.time()-t1)[3], "seconds\n")
+        res
+      })
+      vec = L1[[1]]$payload[[1]]
+      for (idx in 2:num_subparts) {
+        vec = c(vec, L1[[idx]]$payload[[1]])
+      }
+      unserialize(vec)
+    }
+  } else {
+    message("Cache is not valid")
+    return(NULL)
+  }
+}
+
+measurementdata_cache_is_cache_valid = function(measurementset, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  stopifnot(nrow(measurementset) == 1)
+  arraynm = full_arrayname(.ghEnv$meta$arrMeasurementDataCache)
+  filter_string = paste0(
+    "filter(", 
+    custom_scan(), "(", 
+    arraynm, "), measurementset_id = ", measurementset$measurementset_id, 
+    ")"
+  )
+  is_cache_valid = iquery(
+    con$db, 
+    paste0(
+      "project(", 
+      filter_string, 
+      ", cache_valid)"
+    ),
+    return = TRUE)
+  all(is_cache_valid$cache_valid)
+}
+
+measurementdata_cache_get_num_subparts = function(measurementset, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  stopifnot(nrow(measurementset) == 1)
+  arraynm = full_arrayname(.ghEnv$meta$arrMeasurementDataCache)
+  filter_string = paste0(
+    "filter(", 
+    custom_scan(), "(", 
+    arraynm, "), measurementset_id = ", measurementset$measurementset_id, 
+    ")"
+  )
+  sum(iquery(
+    con$db, 
+    paste0(
+      "aggregate(project(",
+      filter_string, 
+      ", payload_size_bytes), count(*), subpart_id)"
+    ),
+    return = TRUE
+  )$count)
+}
+
+measurementdata_cache_get_download_size = function(measurementset, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  stopifnot(nrow(measurementset) == 1)
+  arraynm = full_arrayname(.ghEnv$meta$arrMeasurementDataCache)
+  filter_string = paste0(
+    "filter(", 
+    custom_scan(), "(", 
+    arraynm, "), measurementset_id = ", measurementset$measurementset_id, 
+    ")"
+  )
+  sum(iquery(
+    con$db, 
+    paste0(
+      "project(",
+      filter_string, 
+      ", payload_size_bytes)"
+    ),
+    return = TRUE
+  )$payload_size_bytes)
+}
+
+
+measurementdata_cache_download_subpart = function(measurementset, subpartidx, convert_to_R = TRUE, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  arraynm = full_arrayname(.ghEnv$meta$arrMeasurementDataCache)
+  filter_string = paste0(
+    "filter(", 
+    custom_scan(), "(", 
+    arraynm, "), measurementset_id = ", measurementset$measurementset_id, 
+    " AND subpart_id = ", subpartidx, 
+    ")"
+  )
+  res_df = iquery(
+    con$db, 
+    filter_string, 
+    return = TRUE
+  )
+  if (convert_to_R) {
+    unserialize(res_df$payload[[1]])
+  } else {
+    res_df
+  }
+}
+
+measurementdata_cache_return_metadata = function(con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  arraynm = full_arrayname(.ghEnv$meta$arrMeasurementDataCache)
+  iquery(
+    con$db, 
+    paste0(
+      "aggregate(",
+      custom_scan(), "(", 
+      arraynm, 
+      "), ", 
+      "sum(payload_size_bytes) AS payload_size_bytes, ", 
+      "min(payload_class) AS payload_class,", 
+      "min(cache_valid) AS cache_valid,", 
+      "min(cache_mark_timestamp) AS cache_mark_timestamp, ", 
+      "dataset_version, dataset_id, measurementset_id)"
+    ),
+    return = TRUE
+  )
+}
