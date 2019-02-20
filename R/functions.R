@@ -766,16 +766,51 @@ get_features = function(feature_id = NULL, con = NULL){
       xx = as.scidb(con$db, selector,
                     types = c('int64', 'int32'))
       
-      x2 = paste0("redimension(", xx@name, ", <val:int32>[feature_id])")
-      x3 = paste0("cross_join(", arrayname, " as X, ", 
-                  x2, " as Y, ", 
-                  "X.feature_id, Y.feature_id)")
-      qq = paste0("project(", x3, ", ",
-                  paste0(names(.ghEnv$meta$L$array$FEATURE$attributes), collapse = ","), ")")
+      if (FALSE) { # old path
+        x2 = paste0("redimension(", xx@name, ", <val:int32>[feature_id])")
+        x3 = paste0("cross_join(", arrayname, " as X, ", 
+                    x2, " as Y, ", 
+                    "X.feature_id, Y.feature_id)")
+        qq = paste0("project(", x3, ", ",
+                    paste0(names(.ghEnv$meta$L$array$FEATURE$attributes), collapse = ","), ")")
+        
+        result = join_info_unpivot(qq, 
+                                   arrayname, 
+                                   con = con)
+      } else {
+        ftr = iquery(
+          .ghEnv$db, 
+          paste0(
+            "equi_join(gh_public.FEATURE, ", 
+            xx@name, 
+            ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
+          return = T)
+        ftr = drop_equi_join_dims(ftr)
+        ftr_info = iquery(
+          .ghEnv$db, 
+          paste0(
+            "equi_join(gh_public.FEATURE_INFO, ", 
+            "project(", xx@name, ", feature_id)",
+            ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
+          return = T)
+        ftr_info = drop_equi_join_dims(ftr_info)
+        ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
+        # Following extracted from `unpivot_key_value_pairs()`
+        dt = data.table(ftr_info)
+        idname = 'feature_id'
+        key_col = 'key'
+        setkeyv(dt, c(idname, key_col))
+        x2s = dt[,val, by=c(idname, key_col)]
+        x2t = as.data.frame(spread(x2s, "key", value = "val"))
+        x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
+        result = merge(ftr, x2t, by = get_base_idname(arrayname), all.x = T)
+      }
+      
+    } else {
+      result = join_info_unpivot(qq, 
+                                 arrayname, 
+                                 con = con)
     }
-    result = join_info_unpivot(qq, 
-                      arrayname, 
-                      con = con)
   } else { # FASTER path when all data has to be downloaded
     ftr = iquery(con$db, qq, return = T)
     ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
