@@ -545,7 +545,6 @@ register_fusion = function(df1, measurementset, only_test = FALSE, con = NULL){
 register_copynumbervariant_variable_columns = function(df1, measurementset, only_test = FALSE, con = NULL){
   entitynm = .ghEnv$meta$arrCopynumber_variant
   con = use_ghEnv_if_null(con)
-  browser()
   # Step 1
   # Identify three groups of column-names
   # - `dimensions`: indices of the multi-dimensional array
