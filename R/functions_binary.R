@@ -11,7 +11,7 @@ register_measurementdata_cache = function(
   payoad_class = as.character(class(pipeline_data))
   pipeline_data = serialize(pipeline_data, NULL)
   payload_size = as.numeric(object.size(pipeline_data))
-  THRESH_SCIDB_BINARY_UPLOAD = 900*1024*1024 # 900 MB at a time
+  THRESH_SCIDB_BINARY_UPLOAD = 500*1024*1024 # MB at a time to upload
   factor = ceiling(payload_size / THRESH_SCIDB_BINARY_UPLOAD)
   
   payload_length = length(pipeline_data) 
