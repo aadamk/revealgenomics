@@ -254,6 +254,8 @@ array:
       payload_size_bytes: int64
       payload_class: string
       payload: binary
+      cache_valid: bool
+      cache_mark_timestamp: string
     dims:
       dataset_version:
         start: 0
