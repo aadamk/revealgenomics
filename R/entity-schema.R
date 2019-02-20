@@ -69,12 +69,12 @@ get_mandatory_fields_for_register_entity = function(arrayname){
     } else {
       mandatory_fields = attrs
     }
-  } else if (entity_class == 'measurementdata') {
+  } else if (entity_class %in% c('measurementdata', 'measurementdata_cache')) {
     dims = get_idname(entitynm)
     dims = dims[!(dims %in% c('dataset_version'))]
     mandatory_fields = c(dims, attrs)
   } else {
-    stop("Need to cover this\n")
+    stop("Need to cover case for class: ", entity_class)
   }
   mandatory_fields
 }
@@ -109,7 +109,7 @@ unique_fields = function(){
   lapply(names(l1), function(entity) {
     if (is.null(l1[[entity]])) {
       entity_class = entity_df[entity_df$entity == entity, ]$class
-      if (entity_class != 'measurementdata') {
+      if ( !( entity_class %in% c('measurementdata', 'measurementdata_cache') ) ) {
         stop("unique fields were not provided for entity: ", entity)
       }
     }

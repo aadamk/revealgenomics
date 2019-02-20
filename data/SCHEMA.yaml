@@ -245,7 +245,7 @@ array:
   # MEASUREMENTDATA_CACHE
   MEASUREMENTDATA_CACHE:
     data_class:
-      measurementdata
+      measurementdata_cache
     measurementdata_subclass:
       measurementdata_cache
     namespace:
