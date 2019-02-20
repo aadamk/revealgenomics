@@ -242,6 +242,45 @@ array:
     infoArray: TRUE
     infoArray_max_keys: 1000
     compression_on: FALSE
+  # MEASUREMENTDATA_CACHE
+  MEASUREMENTDATA_CACHE:
+    data_class:
+      measurementdata_cache
+    measurementdata_subclass:
+      measurementdata_cache
+    namespace:
+      - gh_secure
+    attributes:
+      payload_size_bytes: int64
+      payload_class: string
+      payload: binary
+      cache_valid: bool
+      cache_mark_timestamp: string
+    dims:
+      dataset_version:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      measurementset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      subpart_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    search_by_entity: MEASUREMENTSET
+    delete_by_entity: MEASUREMENTSET
+    infoArray: FALSE
+    compression_on: FALSE
   #RNAQUANTIFICATION
   RNAQUANTIFICATION:
     data_class:

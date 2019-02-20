@@ -937,10 +937,11 @@ search_fusions_scidb = function(arrayname,
 #' Unified function to download entire pipeline worth of data
 #' 
 #' @param measurementset dataframe containing one row of pipeline information
+#' @param biosample_ref  dataframe containing biosample data of (at least) study containing current pipeline
 #' @param con            connection object (optional  if using \code{rg_connect()})
 #' 
 #' @export
-search_measurementdata = function(measurementset, con = NULL) {
+search_measurementdata = function(measurementset, biosample_ref = NULL, con = NULL) {
   if (nrow(measurementset) != 1) {
     stop("This function currently works on one measurementSet at a time")
   }
@@ -958,18 +959,28 @@ search_measurementdata = function(measurementset, con = NULL) {
     'search_variant',
     'search_fusion', 
     'search_expression',
-    'search_copynumber_mat'
+    'search_copy_number_variant',
+    'search_copy_number_variant',
+    'search_copy_number_variant',
+    'search_cytof'
   )
   names(lookup) = c(
     .ghEnv$meta$arrRnaquantification,
     .ghEnv$meta$arrVariant,
     .ghEnv$meta$arrFusion,
     .ghEnv$meta$arrProteomics,
-    .ghEnv$meta$arrCopynumber_mat
+    .ghEnv$meta$arrCopynumber_mat,
+    .ghEnv$meta$arrCopynumber_mat_string,
+    .ghEnv$meta$arrCopynumber_variant, 
+    .ghEnv$meta$arrCytometry_cytof
   )
   fn_name = lookup[entity]
   fn = get(fn_name)
-  fn(measurementset = measurementset, con = con)
+  if (fn_name == 'search_expression') {
+    fn(measurementset = measurementset, biosample_ref = biosample_ref, con = con)
+  } else {
+    fn(measurementset = measurementset, con = con)
+  }
 }
 
 #' Search copy number variant data
