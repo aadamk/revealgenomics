@@ -744,6 +744,51 @@ get_genelist = function(genelist_id = NULL, con = NULL) {
   }
 }
 
+#' Gene list gene symbols visible to user
+#' 
+#' Get data.frame containing summary of all gene-symbols (and genelist_id-s) 
+#' from genelist-s visible to user
+#' 
+#' @return data.frame containing \code{genelist_id} and \code{gene_symbol}
+#' 
+#' @export
+get_genelist_gene_symbols = function(con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  res1 = drop_equi_join_dims(
+    iquery(
+      con$db, 
+      "project(
+        filter(
+          equi_join(
+            grouped_aggregate(
+              gh_public_rw.GENELIST_GENE, 
+              count(*), genelist_id, gene_symbol), 
+            project(gh_public_rw.GENELIST, public, owner), 
+            'left_names=genelist_id', 'right_names=genelist_id'), 
+        public=TRUE), 
+      genelist_id, gene_symbol)",
+      return = TRUE
+    )
+  )
+  res2 = drop_equi_join_dims(
+    iquery(
+      con$db, 
+      "project(
+        equi_join(
+          equi_join(
+            grouped_aggregate(
+              gh_public_rw.GENELIST_GENE, 
+              count(*), genelist_id, gene_symbol), 
+            project(gh_public_rw.GENELIST, public, owner), 
+            'left_names=genelist_id', 'right_names=genelist_id'), 
+          show_user(), 
+          'left_names=owner', 'right_names=name'), 
+      genelist_id,gene_symbol)",
+      return = TRUE
+    )
+  )
+  unique(rbind.fill(res1, res2))
+}
 
 #' @export
 get_features = function(feature_id = NULL, con = NULL){
