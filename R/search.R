@@ -773,51 +773,66 @@ search_variants_scidb = function(arrayname,
   left_query = paste0("filter(", scanned_array,
                       ", dataset_version=", dataset_version, " AND measurementset_id=", measurementset_id, ")")
   
-  if (!is.null(biosample_id)){
-    filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
-    left_query = paste("filter(", left_query,
-                       ", ", filter_expr, ")", sep = "")
-  }
-  
-  query_formulation = list(
-    left_query = left_query, 
-    equi_joined_result = FALSE # whether equi_join will be used later on (not used by default)
-  )
-  if (!is.null(feature_id)){
-    # formulate_base_selection_query() fails after 400 operands so putting code in a try catch
-    query_formulation = 
-      tryCatch({
-        filter_expr = formulate_base_selection_query(.ghEnv$meta$arrFeature, id = feature_id)
-        list(
-          left_query = paste("filter(", left_query,
-                             ", ", filter_expr,  
-                             ")", sep = ""),
-          equi_joined_result = FALSE
-        )
-      }, error = function(e) {
-        leftq = paste0("apply(build(<feature_id:int64>[idx_ftr=0:*], '[", 
-                       paste0(sort(feature_id), collapse = ","), 
-                       "]', true), measurementset_id, ", measurementset_id, 
-                       ", dataset_version, ", dataset_version, ")")
-        
-        left_query = 
-        list(
-          left_query = paste0("equi_join(", 
-                              scanned_array, ", ", 
-                              leftq, ", 'left_names=feature_id,dataset_version,measurementset_id', 
-                              'right_names=feature_id,dataset_version,measurementset_id', 
-                              'algorithm=hash_replicate_right', 'keep_dimensions=1')"),
-          equi_joined_result = TRUE
-        )
-      }) 
-  }
-  
-  if (query_formulation$equi_joined_result) {
-    var_raw = iquery(con$db, query_formulation$left_query, return = T, only_attributes = T)
-    var_raw[, 'idx_ftr'] = NULL # drop the dimension added through the join
+  if (is.null(feature_id) & is.null(biosample_id)) {
+    left_query = paste0(
+      "apply(",
+      left_query,
+      ", feature_id, feature_id", 
+      ", per_gene_variant_number, per_gene_variant_number",
+      ", key_id, key_id", 
+      ", biosample_id, biosample_id)"
+    )
+    var_raw = iquery(con$db, left_query, return = T, only_attributes = T)
   } else {
-    var_raw = iquery(con$db, query_formulation$left_query, return = TRUE)
+    if (!is.null(biosample_id)){
+      filter_expr = formulate_base_selection_query(.ghEnv$meta$arrBiosample, id = biosample_id)
+      left_query = paste("filter(", left_query,
+                         ", ", filter_expr, ")", sep = "")
+    }
+    
+    
+    
+    query_formulation = list(
+      left_query = left_query, 
+      equi_joined_result = FALSE # whether equi_join will be used later on (not used by default)
+    )
+    if (!is.null(feature_id)){
+      # formulate_base_selection_query() fails after 400 operands so putting code in a try catch
+      query_formulation = 
+        tryCatch({
+          filter_expr = formulate_base_selection_query(.ghEnv$meta$arrFeature, id = feature_id)
+          list(
+            left_query = paste("filter(", left_query,
+                               ", ", filter_expr,  
+                               ")", sep = ""),
+            equi_joined_result = FALSE
+          )
+        }, error = function(e) {
+          leftq = paste0("apply(build(<feature_id:int64>[idx_ftr=0:*], '[", 
+                         paste0(sort(feature_id), collapse = ","), 
+                         "]', true), measurementset_id, ", measurementset_id, 
+                         ", dataset_version, ", dataset_version, ")")
+          
+          left_query = 
+          list(
+            left_query = paste0("equi_join(", 
+                                scanned_array, ", ", 
+                                leftq, ", 'left_names=feature_id,dataset_version,measurementset_id', 
+                                'right_names=feature_id,dataset_version,measurementset_id', 
+                                'algorithm=hash_replicate_right', 'keep_dimensions=1')"),
+            equi_joined_result = TRUE
+          )
+        }) 
+    }
+    
+    if (query_formulation$equi_joined_result) {
+      var_raw = iquery(con$db, query_formulation$left_query, return = T, only_attributes = T)
+      var_raw[, 'idx_ftr'] = NULL # drop the dimension added through the join
+    } else {
+      var_raw = iquery(con$db, query_formulation$left_query, return = TRUE)
+    }
   }
+
   var_raw
 }
 
