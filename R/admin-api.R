@@ -231,18 +231,28 @@ grant_initial_access = function(con = NULL, user_name) {
   }
   user_idx = as.numeric(user_idx$id)
   
-  cat("Grant read access to public namespace\n")
-  iquery(con$db, 
-         paste0("set_role_permissions('", user_name, "', 'namespace', '",
-                      find_namespace('FEATURE'), "', 'rl')"))
-  cat("Grant read, write access to GENELIST namespace\n")
-  iquery(con$db, 
-         paste0("set_role_permissions('", user_name, "', 'namespace', '",
-                      find_namespace(.ghEnv$meta$arrGenelist), "', 'crudl')"))
-  cat("Grant list access to secure namespace (required for study level security)\n")
-  iquery(con$db, 
-         paste0("set_role_permissions('", user_name, "', 'namespace', '",
-                      find_namespace('DATASET'), "', 'l')"))
+  available_roles = iquery(con$db, "list('roles')", return = T)$name
+  reader_role = 'reveal_data_readers'
+  if (reader_role %in% available_roles) { # Preferred method
+    cat("Adding user to role:", reader_role, "\n")
+    query = paste0("add_user_to_role('", user_name, "', '", reader_role, "')")
+    iquery(con$db, query)
+  } else { # Not the preferred method
+    stop("Asking to individually add namespace permissions for user -- create a central role: ",  reader_role, "instead\n")
+    cat("Grant read access to public namespace\n")
+    iquery(con$db, 
+           paste0("set_role_permissions('", user_name, "', 'namespace', '",
+                  find_namespace('FEATURE'), "', 'rl')"))
+    cat("Grant read, write access to GENELIST namespace\n")
+    iquery(con$db, 
+           paste0("set_role_permissions('", user_name, "', 'namespace', '",
+                  find_namespace(.ghEnv$meta$arrGenelist), "', 'crudl')"))
+    cat("Grant list access to secure namespace (required for study level security)\n")
+    iquery(con$db, 
+           paste0("set_role_permissions('", user_name, "', 'namespace', '",
+                  find_namespace('DATASET'), "', 'l')"))
+  }
+  
   cat("Granting access to publc studies\n")
   studylist = iquery(con$db, paste0("project(", full_arrayname(.ghEnv$meta$arrDataset), ", public)"), return = T)
   studylist$dataset_version = NULL
