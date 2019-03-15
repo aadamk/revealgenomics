@@ -225,7 +225,7 @@ search_genelist_gene = function(genelist = NULL,
   
   res = iquery(con$db, qq, return = TRUE)
   
-  
+  res
 }
 
 ###################### FEATUREDATA ##########################################################
