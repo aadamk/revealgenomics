@@ -6,21 +6,41 @@
 # and may only be used with a valid Paradigm4 contract and in accord
 # with the terms and conditions specified by that contract.
 #
-# Copyright (C) 2011 - 2017 Paradigm4 Inc.
+# Copyright (C) 2011 - 2019 Paradigm4 Inc.
 # All Rights Reserved.
 #
 # END_COPYRIGHT
 #
 
+# Functions to upload measurement data to SciDB
+
+#' Return sub indices
+#' 
+#' Split a vector 1:bigN into list of vectors each of length < len_subelem
+#' 
+#' @param bigN \code{c(1: bigN)} is the vector that needs to be split
+#' @param len_subelem The maxiumum length of one of the split vectors
+#' 
+#' @examples 
+#' return_sub_indices(bigN = 10, len_subelem = 4)
+#'## [[1]]
+#'## [1] 1 2 3 4
+#'## 
+#'## [[2]]
+#'## [1] 5 6 7 8
+#'## 
+#'## [[3]]
+#'## [1]  9 10
+return_sub_indices = function(bigN, len_subelem) {
+  starts = seq(1, bigN, len_subelem)
+  ends   = c(tail(seq(0, bigN-1, len_subelem), -1), bigN)
+  stopifnot(length(starts) == length(ends))
+  lapply(1:length(starts), function(idx) {c(starts[idx]: ends[idx])})
+}
+
 upload_variant_data_in_steps = function(entitynm, var_gather, UPLOAD_N = 5000000, con = NULL) {
   con = use_ghEnv_if_null(con = con)
-  return_sub_indices = function(bigN, fac) {
-    starts = seq(1, bigN, fac)
-    ends   = c(tail(seq(0, bigN-1, fac), -1), bigN)
-    stopifnot(length(starts) == length(ends))
-    lapply(1:length(starts), function(idx) {c(starts[idx]: ends[idx])})
-  }
-  steps = return_sub_indices(bigN = nrow(var_gather), fac = UPLOAD_N)
+  steps = return_sub_indices(bigN = nrow(var_gather), len_subelem = UPLOAD_N)
   
   arrayname = full_arrayname(entitynm)
   for (upidx in 1:length(steps)) {
@@ -38,8 +58,6 @@ upload_variant_data_in_steps = function(entitynm, var_gather, UPLOAD_N = 5000000
     remove_old_versions_for_entity(entitynm = entitynm, con = con)
   }
 }
-
-# Functions to upload measurement data to SciDB
 
 #' Upload expression matrix file 
 #' 
