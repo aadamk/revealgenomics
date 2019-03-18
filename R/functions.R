@@ -258,8 +258,12 @@ update_tuple = function(df, ids_int64_conv, arrayname, con = NULL){
   for (idnm in ids_int64_conv){
     x = convert_attr_double_to_int64(arr = x, attrname = idnm, con = con)
   }
-  x = scidb_attribute_rename(arr = x, old = "updated", new = "updated_old", con = con)
-  qq = paste0("apply(", x@name, ", updated, string(now()))")
+  if ('updated' %in% .ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes) {
+    x = scidb_attribute_rename(arr = x, old = "updated", new = "updated_old", con = con)
+    qq = paste0("apply(", x@name, ", updated, string(now()))")
+  } else {
+    qq = x@name
+  }
   qq = paste0("redimension(", qq, ", ", scidb::schema(scidb(con$db, arrayname)), ")")
   
   query = paste("insert(", qq, ", ", arrayname, ")", sep="")
@@ -316,9 +320,16 @@ update_mandatory_and_info_fields = function(df, arrayname, con = NULL){
   if (any(is.na(df[, idname]))) stop("Dimensions: ", paste(idname, collapse = ", "), " should not have null values at upload time!")
   int64_fields = get_int64fields(arrayname)
   infoArray = get_infoArray(arrayname)
-  update_tuple(df[, c(get_idname(arrayname),
-                      mandatory_fields()[[strip_namespace(arrayname)]], 
-                      'created', 'updated')], 
+  
+  if (all(c('created', 'updated') %in% names(.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$attributes))) {
+    sel_cols = c(get_idname(arrayname),
+                 mandatory_fields()[[strip_namespace(arrayname)]], 
+                 'created', 'updated')
+  } else {
+    sel_cols = c(get_idname(arrayname),
+                 mandatory_fields()[[strip_namespace(arrayname)]])
+  }
+  update_tuple(df[, sel_cols], 
                ids_int64_conv = c(idname, int64_fields), 
                arrayname, 
                con = con)
