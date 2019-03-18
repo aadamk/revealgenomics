@@ -313,15 +313,17 @@ register_feature = function(df1, register_gene_synonyms = TRUE, only_test = FALS
                         (gene_ftrs$gene_symbol != gene_ftrs$name) # dont need to track if gene symbol and name are identical
                       & !(gene_ftrs$gene_symbol == 'NA')) 
         
-        df_syn2 = data.frame(
-          synonym = gene_ftrs$gene_symbol[posns], 
-          feature_id = fid[posns],
-          featureset_id = unique(gene_ftrs$featureset_id),
-          source = 'gene_symbol',
-          stringsAsFactors = F
-        )
-        
-        df_syn = rbind(df_syn, df_syn2)
+        if (length(posns) > 0) { # No need to add more synonyms if posns is empty
+          df_syn2 = data.frame(
+            synonym = gene_ftrs$gene_symbol[posns], 
+            feature_id = fid[posns],
+            featureset_id = unique(gene_ftrs$featureset_id),
+            source = 'gene_symbol',
+            stringsAsFactors = F
+          )
+          
+          df_syn = rbind(df_syn, df_syn2)
+        }
       }
       
       ftr_syn_id = register_feature_synonym(df = df_syn, con = con)
