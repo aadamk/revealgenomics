@@ -12,7 +12,7 @@ return_sub_indices(bigN, len_subelem)
 \item{len_subelem}{The maxiumum length of one of the split vectors}
 }
 \description{
-Split a vector \code{1:bigN} into list of vectors each of length < \code{len_subelem}
+Split a vector 1:bigN into list of vectors each of length < len_subelem
 }
 \examples{
 return_sub_indices(bigN = 10, len_subelem = 4)
