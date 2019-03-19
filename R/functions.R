@@ -1334,8 +1334,13 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   fpos = match(sel_fx, feature_df$feature_id)
   fData = feature_df[fpos, ]
   
-  row.names(exprs) = fData$name
-  rownames(fData) = fData$name
+  if (length(unique(fData$gene_symbol)) == length(unique(fData$name))) {
+    row.names(exprs) = fData$gene_symbol
+    rownames(fData) = fData$gene_symbol
+  } else {
+    row.names(exprs) = fData$name
+    rownames(fData) = fData$name
+  }
   
   #############################################
   ## Step 2 # Get phenotype data
