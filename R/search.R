@@ -596,7 +596,7 @@ dao_search_expression = function(entity,
     feature = feature[feature$featureset_id == measurementset$featureset_id, ]
     ftr_id = sort(unique(feature$feature_id))
     
-    K_THRESH = 20
+    K_THRESH = 2
     if (length(ftr_id) <= K_THRESH) {
       path = "filter_features"
     } else {
