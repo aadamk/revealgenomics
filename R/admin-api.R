@@ -259,13 +259,18 @@ grant_initial_access = function(con = NULL, user_name) {
   studylist = unique(studylist)
   studylist = studylist[studylist$public, ]
   
-  query = paste0("build(<dataset_id:int64>
+  if (nrow(studylist) > 0) {
+    query = paste0("build(<dataset_id:int64>
                    [dataset_id_idx=1:",nrow(studylist),"],", 
                    "'[", paste0(studylist$dataset_id, collapse = ","),"]',true )")
-  query = paste0("apply(", query, ",user_id,", user_idx, ",access, true)")
-  query = paste0("redimension(", query, ", ", PERMISSIONS_ARRAY(), ")")
-  query = paste0("insert(", query, ", ", PERMISSIONS_ARRAY(), ")")
-  iquery(con$db, query)
+    query = paste0("apply(", query, ",user_id,", user_idx, ",access, true)")
+    query = paste0("redimension(", query, ", ", PERMISSIONS_ARRAY(), ")")
+    query = paste0("insert(", query, ", ", PERMISSIONS_ARRAY(), ")")
+    iquery(con$db, query)
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
 }
 
 #' whether to use secure_scan or not
