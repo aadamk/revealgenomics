@@ -596,7 +596,7 @@ dao_search_expression = function(entity,
     feature = feature[feature$featureset_id == measurementset$featureset_id, ]
     ftr_id = sort(unique(feature$feature_id))
     
-    K_THRESH = 20
+    K_THRESH = 2
     if (length(ftr_id) <= K_THRESH) {
       path = "filter_features"
     } else {
@@ -632,21 +632,21 @@ dao_search_expression = function(entity,
     apply_str = paste0(req_ids, ",", req_ids, collapse = ", ")
     qq3 = paste0("apply(", qq2, ", ", apply_str, ")")
     # cat("Estimating download size: ")
-    download_size = iquery(con$db, 
-                           query = 
-                             paste0(
-                               "project(
-                                 summarize(",
-                                   qq2, 
-                                   "), bytes)"), 
-                           return = TRUE)$bytes
-    # cat(download_size/1024/1024, " MB\n")
-    download_limit_mb = 1000
-    if (download_size > download_limit_mb * 1024 * 1024) {
-      cat("Trying to download more than", download_limit_mb, "MB at a time! 
-          Post an issue at https://github.com/Paradigm4/revealgenomics/issues\n")
-      return(NULL)
-    }
+    # download_size = iquery(con$db, 
+    #                        query = 
+    #                          paste0(
+    #                            "project(
+    #                              summarize(",
+    #                                qq2, 
+    #                                "), bytes)"), 
+    #                        return = TRUE)$bytes
+    # # cat(download_size/1024/1024, " MB\n")
+    # download_limit_mb = 1000
+    # if (download_size > download_limit_mb * 1024 * 1024) {
+    #   cat("Trying to download more than", download_limit_mb, "MB at a time! 
+    #       Post an issue at https://github.com/Paradigm4/revealgenomics/issues\n")
+    #   return(NULL)
+    # }
     res = iquery(con$db, query = qq3, binary = TRUE, only_attributes = TRUE, return = TRUE)
   }
   

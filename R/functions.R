@@ -837,7 +837,7 @@ get_features = function(feature_id = NULL, con = NULL){
         ftr = iquery(
           .ghEnv$db, 
           paste0(
-            "equi_join(gh_public.FEATURE, ", 
+            "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), ", ", 
             xx@name, 
             ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
           return = T)
@@ -845,7 +845,7 @@ get_features = function(feature_id = NULL, con = NULL){
         ftr_info = iquery(
           .ghEnv$db, 
           paste0(
-            "equi_join(gh_public.FEATURE_INFO, ", 
+            "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), ", ", 
             "project(", xx@name, ", feature_id)",
             ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
           return = T)
@@ -996,10 +996,7 @@ filter_on_dataset_id_and_version = function(arrayname,
     stop(cat("Must specify dataset_id. To retrieve all ", tolower(arrayname), "s, use get_", tolower(arrayname), "s()", sep = ""))
   }
   
-  join_info_unpivot(qq = qq,
-                    arrayname = arrayname,
-                    replicate_query_on_info_array = TRUE,
-                    con = con)
+  download_unpivot_info_join(qq = qq, arrayname = arrayname, con = con)
 }
 
 #' internal function for search_METADATA()
@@ -1170,6 +1167,62 @@ join_info_unpivot = function(qq, arrayname,
   df2
 }
 
+#' Download from scidb then unpivot info and join in R
+#' 
+#' @param qq query on primary array (allied downloaad will be from \code{_INFO} array)
+#' @param arrayname primary arrayname e.g. \code{BIOSAMPLE, INDIVIDUAL}
+#' @param project_primary_id_then_download_attrs_only flag to control iquery download mechanism
+#' @param con connection object (optional when using \code{rg_connect()})
+#' 
+#' @examples 
+#' \dontrun{
+#' download_unpivot_info_join(qq = "filter(secure_scan(gh_secure.BIOSAMPLE), dataset_id = 11)",
+#'                                 arrayname = 'BIOSAMPLE')
+#' }
+download_unpivot_info_join = function(qq, 
+                                           arrayname, 
+                                           project_primary_id_then_download_attrs_only = FALSE, 
+                                           con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  res1 = iquery(con$db, qq, return = TRUE)
+  res2 = tryCatch({ # to capture case when download of INFO array fails due to very large size
+    if (project_primary_id_then_download_attrs_only) {
+      # iquery with return attributes only
+      info_query = paste0(
+        "apply(",
+        gsub(arrayname, paste0(arrayname, "_INFO"), qq),
+        ", ", get_base_idname(arrayname), ", ", get_base_idname(arrayname), ")"
+      )
+      res2_schema = paste0(
+        "<key:string, val:string, ", get_base_idname(arrayname), ":int64>[i]"
+      )
+      iquery(con$db, info_query, return = TRUE, only_attributes = TRUE, 
+                    schema = res2_schema)
+    } else {
+      info_query = gsub(arrayname, paste0(arrayname, "_INFO"), qq)
+      res2_schema = paste0(
+        "<key:string, val:string>[", 
+        paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+      )
+      res2 = iquery(con$db, info_query, return = TRUE, 
+                    schema = res2_schema)
+      # Drop the unnecessary ID-s
+      res2[, c(get_base_idname(arrayname), 'key', 'val')]
+    }
+  }, error = function(e) {
+    return(NULL)
+  })
+  if (is.null(res2)) {
+    res1$more_cols_in_db = TRUE
+    res1
+  } else if (nrow(res2) > 0) {
+    res2_t = spread(res2, "key", value = "val")
+    merge(res1, res2_t, by = get_base_idname(arrayname))
+  } else {
+    res1
+  }
+}
+
 unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
   idname = get_idname(arrayname)
 
@@ -1281,8 +1334,13 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   fpos = match(sel_fx, feature_df$feature_id)
   fData = feature_df[fpos, ]
   
-  row.names(exprs) = fData$name
-  rownames(fData) = fData$name
+  if (length(unique(fData$gene_symbol)) == length(unique(fData$name))) {
+    row.names(exprs) = fData$gene_symbol
+    rownames(fData) = fData$gene_symbol
+  } else {
+    row.names(exprs) = fData$name
+    rownames(fData) = fData$name
+  }
   
   #############################################
   ## Step 2 # Get phenotype data

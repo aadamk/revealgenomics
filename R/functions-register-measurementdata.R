@@ -288,14 +288,17 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
          pretty_print(allowed_entities), " only")
   }
   
-  df1 = df1[, c('dataset_id', 'measurementset_id', 'biosample_id', 
+  dataset_id = unique(df1$dataset_id)
+  stopifnot(length(ms_id) == 1)
+  
+  df1 = df1[, c('biosample_id', 
                 'feature_id', 'value')]
   df1 = plyr::rename(df1, c('value' = 'value__'))
   
   temp_arr_nm = paste0("temp_df_", stringi::stri_rand_strings(1, 6))
   adf_expr0 = as.scidb_int64_cols(db = con$db,
                                   df1 = df1,
-                                  int64_cols = c('dataset_id', 'measurementset_id', 'biosample_id', 
+                                  int64_cols = c('biosample_id', 
                                                  'feature_id'),
                                   chunk_size=nrow(df1), 
                                   name = temp_arr_nm, 
@@ -305,13 +308,16 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
   qq2 = paste0("apply(", 
                adf_expr0@name, 
                ", value, ", attr_type, "(value__)", 
-               ", dataset_version, ", dataset_version, ")")
+               ", dataset_version, ", dataset_version, 
+               ", dataset_id, ", dataset_id, 
+               ", measurementset_id, ", ms_id, 
+               ")")
   
   fullnm = full_arrayname(entitynm = entity)
   qq2 = paste0("redimension(", qq2, ", ", fullnm, ")")
   
   cat("inserting data for", nrow(df1), "expression values into", fullnm, 
-      "array at measurementset_id =", unique(df1$measurementset_id), "\n")
+      "array at measurementset_id =", ms_id, "\n")
   iquery(con$db, paste("insert(", qq2, ", ", fullnm, ")"))
   iquery(con$db, paste0("remove(", temp_arr_nm, ")"))
   
