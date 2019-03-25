@@ -13,12 +13,12 @@
 #
 
 #' @export
-get_measurementsets = function(measurementset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
+get_measurementsets = function(measurementset_id = NULL, dataset_version = NULL, all_versions = FALSE, mandatory_fields_only = FALSE, con = NULL){
   get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrMeasurementSet,
                                        id = measurementset_id, 
                                        dataset_version = dataset_version, 
                                        all_versions = all_versions,
-                                       mandatory_fields_only = FALSE,
+                                       mandatory_fields_only = mandatory_fields_only,
                                        con = con)
 }
 
