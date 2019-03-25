@@ -1102,42 +1102,51 @@ download_unpivot_info_join = function(qq,
                                       con = NULL) {
   con = use_ghEnv_if_null(con = con)
   res1 = iquery(con$db, qq, return = TRUE)
-  res2 = tryCatch({ # to capture case when download of INFO array fails due to very large size
-    if (project_primary_id_then_download_attrs_only) {
-      # iquery with return attributes only
-      info_query = paste0(
-        "apply(",
-        gsub(arrayname, paste0(arrayname, "_INFO"), qq),
-        ", ", get_base_idname(arrayname), ", ", get_base_idname(arrayname), ")"
-      )
-      res2_schema = paste0(
-        "<key:string, val:string, ", get_base_idname(arrayname), ":int64>[i]"
-      )
-      iquery(con$db, info_query, return = TRUE, only_attributes = TRUE, 
-                    schema = res2_schema)
+  if (mandatory_fields_only) {
+    res_df = res1
+  } else { # try joining with INFO array
+    res2 = tryCatch({ # to capture case when download of INFO array fails due to very large size
+      if (algo_choice_project_primary_id_then_download_attrs_only) {
+        # iquery with return attributes only
+        info_query = paste0(
+          "apply(",
+          gsub(arrayname, paste0(arrayname, "_INFO"), qq),
+          ", ", get_base_idname(arrayname), ", ", get_base_idname(arrayname), ")"
+        )
+        res2_schema = paste0(
+          "<key:string, val:string, ", get_base_idname(arrayname), ":int64>[i]"
+        )
+        iquery(con$db, info_query, return = TRUE, only_attributes = TRUE, 
+               schema = res2_schema)
+      } else {
+        info_query = gsub(arrayname, paste0(arrayname, "_INFO"), qq)
+        res2_schema = paste0(
+          "<key:string, val:string>[", 
+          paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+        )
+        res2 = iquery(con$db, info_query, return = TRUE, 
+                      schema = res2_schema)
+        # Drop the unnecessary ID-s
+        res2[, c(get_base_idname(arrayname), 'key', 'val')]
+      }
+    }, error = function(e) {
+      return(NULL)
+    })
+    
+    # Merge with INFO array in R
+    if (is.null(res2)) {
+      res1$more_cols_in_db = TRUE
+      res_df = res1
+    } else if (nrow(res2) > 0) {
+      res2_t = spread(res2, "key", value = "val")
+      if (exists('debug_trace')) {t1 = proc.time()}
+      res_df = merge(res1, res2_t, by = get_base_idname(arrayname), all.x = TRUE)
+      if (exists('debug_trace')) {cat("join with info in R:\n"); print( proc.time()-t1 )}
     } else {
-      info_query = gsub(arrayname, paste0(arrayname, "_INFO"), qq)
-      res2_schema = paste0(
-        "<key:string, val:string>[", 
-        paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
-      )
-      res2 = iquery(con$db, info_query, return = TRUE, 
-                    schema = res2_schema)
-      # Drop the unnecessary ID-s
-      res2[, c(get_base_idname(arrayname), 'key', 'val')]
+      res_df = res1
     }
-  }, error = function(e) {
-    return(NULL)
-  })
-  if (is.null(res2)) {
-    res1$more_cols_in_db = TRUE
-    res1
-  } else if (nrow(res2) > 0) {
-    res2_t = spread(res2, "key", value = "val")
-    merge(res1, res2_t, by = get_base_idname(arrayname))
-  } else {
-    res1
   }
+  return(res_df)
 }
 
 unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
