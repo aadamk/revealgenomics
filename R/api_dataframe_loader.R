@@ -76,6 +76,17 @@ DataLoader = R6::R6Class(classname = "DataLoader",
               cat("Current pipeline record expects", length(private$.reference_object$pipeline_df$original_sample_name), 
                   "entries\n")
               
+              m1 = find_matches_and_return_indices(
+                source = private$.reference_object$pipeline_df$sample_name,
+                target = bios_ref$name
+              )
+              if (nrow(bios_ref) != length(m1$target_matched_idx)) {
+                cat("Filtering available biosamples by pipeline sheet entries\n",
+                    "Originally", nrow(bios_ref), "samples. Filtered down to",
+                    length(m1$target_matched_idx), "samples\n")
+                bios_ref = bios_ref[m1$target_matched_idx, ]
+              }
+              
               if (private$.match_biosample_name_exactly) {
                 cat("Doing exact matching\n")
                 if (!all(private$.data_df$biosample_name %in% private$.reference_object$pipeline_df$original_sample_name)) {
