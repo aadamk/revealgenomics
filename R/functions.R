@@ -580,9 +580,12 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
     }
   }
   if (get_entity_infoArrayExists(entitynm)) {
-    join_info_unpivot(qq, arrayname = entitynm, 
-                      mandatory_fields_only = mandatory_fields_only,
-                      con = con)
+    # join_info_unpivot(qq, arrayname = entitynm, 
+    #                   mandatory_fields_only = mandatory_fields_only,
+    #                   con = con)
+    download_unpivot_info_join(qq = qq, arrayname = entitynm, 
+                              mandatory_fields_only = mandatory_fields_only,
+                              con = con)
   } else {
     iquery(con$db, qq, return = TRUE)
   }
