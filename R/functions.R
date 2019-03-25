@@ -1087,7 +1087,7 @@ join_info_unpivot = function(qq, arrayname,
 #' 
 #' @param qq query on primary array (allied downloaad will be from \code{_INFO} array)
 #' @param arrayname primary arrayname e.g. \code{BIOSAMPLE, INDIVIDUAL}
-#' @param project_primary_id_then_download_attrs_only flag to control iquery download mechanism
+#' @param algo_choice_project_primary_id_then_download_attrs_only flag to control iquery download mechanism
 #' @param con connection object (optional when using \code{rg_connect()})
 #' 
 #' @examples 
@@ -1096,9 +1096,10 @@ join_info_unpivot = function(qq, arrayname,
 #'                                 arrayname = 'BIOSAMPLE')
 #' }
 download_unpivot_info_join = function(qq, 
-                                           arrayname, 
-                                           project_primary_id_then_download_attrs_only = FALSE, 
-                                           con = NULL) {
+                                      arrayname, 
+                                      mandatory_fields_only = FALSE, 
+                                      algo_choice_project_primary_id_then_download_attrs_only = FALSE, 
+                                      con = NULL) {
   con = use_ghEnv_if_null(con = con)
   res1 = iquery(con$db, qq, return = TRUE)
   res2 = tryCatch({ # to capture case when download of INFO array fails due to very large size
