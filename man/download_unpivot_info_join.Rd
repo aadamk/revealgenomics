@@ -5,14 +5,15 @@
 \title{Download from scidb then unpivot info and join in R}
 \usage{
 download_unpivot_info_join(qq, arrayname,
-  project_primary_id_then_download_attrs_only = FALSE, con = NULL)
+  algo_choice_project_primary_id_then_download_attrs_only = FALSE,
+  con = NULL)
 }
 \arguments{
 \item{qq}{query on primary array (allied downloaad will be from \code{_INFO} array)}
 
 \item{arrayname}{primary arrayname e.g. \code{BIOSAMPLE, INDIVIDUAL}}
 
-\item{project_primary_id_then_download_attrs_only}{flag to control iquery download mechanism}
+\item{algo_choice_project_primary_id_then_download_attrs_only}{flag to control iquery download mechanism}
 
 \item{con}{connection object (optional when using \code{rg_connect()})}
 }

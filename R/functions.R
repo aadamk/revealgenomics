@@ -580,9 +580,12 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
     }
   }
   if (get_entity_infoArrayExists(entitynm)) {
-    join_info_unpivot(qq, arrayname = entitynm, 
-                      mandatory_fields_only = mandatory_fields_only,
-                      con = con)
+    # join_info_unpivot(qq, arrayname = entitynm, 
+    #                   mandatory_fields_only = mandatory_fields_only,
+    #                   con = con)
+    download_unpivot_info_join(qq = qq, arrayname = entitynm, 
+                              mandatory_fields_only = mandatory_fields_only,
+                              con = con)
   } else {
     iquery(con$db, qq, return = TRUE)
   }
@@ -605,94 +608,10 @@ find_dataset_id_by_grep = function(pattern, con = NULL, ...) {
   dx[grep(pattern, dx$name, ...), ]$dataset_id
 }
 
-#' @export
-get_datasets = function(dataset_id = NULL, dataset_version = NULL, 
-                        all_versions = TRUE, mandatory_fields_only = FALSE, 
-                        merge_project_info = FALSE, 
-                        con = NULL){
-  if (!merge_project_info) {
-    get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrDataset,
-                                         id = dataset_id, 
-                                         dataset_version = dataset_version, 
-                                         all_versions = all_versions, 
-                                         mandatory_fields_only = mandatory_fields_only, 
-                                         con = con)
-  } else { # merge project info
-    con = use_ghEnv_if_null(con = con)
-    if (is.null(dataset_id)) {
-      left_arr = paste0(
-        custom_scan(), "(", full_arrayname(.ghEnv$meta$arrDataset), ")")
-    } else {
-      left_arr = form_selector_query_secure_array(arrayname = full_arrayname(.ghEnv$meta$arrDataset),
-                                                  selected_ids = dataset_id,
-                                                  dataset_version = dataset_version)
-    }
-    query = paste0(
-      "equi_join(", 
-      left_arr, ", ", 
-      full_arrayname(.ghEnv$meta$arrProject), ", ", 
-      "'left_names=project_id', 'right_names=project_id', 'keep_dimensions=TRUE')"
-    )
-    query = paste0(
-      "equi_join(", 
-      query, 
-      ", ",
-      gsub(.ghEnv$meta$arrDataset, 
-           paste0(.ghEnv$meta$arrDataset, "_INFO"),
-           left_arr),
-      ", 'left_names=dataset_id,dataset_version',",
-      "'right_names=dataset_id,dataset_version', ",
-      "'left_outer=true')"
-    )
-    res = iquery(con$db, query, return=T)
-    # equi_join introduces columns called '_1' for commonly named columns of second array (PROJECT here)
-    colnames(res)[grep("_1$", colnames(res))] = 
-      gsub("_1", "", 
-           paste0("project_", colnames(res)[grep("_1$", colnames(res))]))
-    drop_equi_join_dims(df1 = res)
-  }
-}
-
-#' Retrieve individuals
-#' 
-#' get_ENTITY can be used to retrive
-#' - one individual (e.g. `individual_id = 33`)
-#' - more than one individual (e.g. `individual_id = c(33, 44)`)
-#' - all individuals visible to user (e.g. `get_individuals()`)
-#' @export
-get_individuals = function(individual_id = NULL, dataset_version = NULL, all_versions = FALSE, mandatory_fields_only = FALSE, con = NULL){
-  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals,
-                                       id = individual_id, 
-                                       dataset_version = dataset_version, 
-                                       all_versions = all_versions, 
-                                       mandatory_fields_only = mandatory_fields_only,
-                                       con = con)
-}
-
-#' @export
-get_biosamples = function(biosample_id = NULL, dataset_version = NULL, all_versions = FALSE, mandatory_fields_only = FALSE, con = NULL){
-  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample,
-                                       id = biosample_id, 
-                                       dataset_version = dataset_version, 
-                                       all_versions = all_versions, 
-                                       mandatory_fields_only = mandatory_fields_only,
-                                       con = con)
-}
-
 check_args_get = function(id, dataset_version, all_versions){
   if (is.null(id) & !is.null(dataset_version) & !all_versions) stop("null value of id is used to get all entities accessible to user. Cannot specify version")
   if (!is.null(dataset_version) & all_versions==TRUE) stop("Cannot specify specific dataset_version, and also set all_versions = TRUE")
 }
-
-#' @export
-get_experimentset = function(experimentset_id = NULL, dataset_version = NULL, all_versions = FALSE, mandatory_fields_only = FALSE, con = NULL){
-  get_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrExperimentSet, 
-                                       id = experimentset_id, 
-                                       dataset_version, all_versions, 
-                                       mandatory_fields_only = mandatory_fields_only, 
-                                       con = con)
-}
-
 
 get_versioned_secure_metadata_entity = function(entity, id, 
                                                 dataset_version, 
@@ -1171,7 +1090,7 @@ join_info_unpivot = function(qq, arrayname,
 #' 
 #' @param qq query on primary array (allied downloaad will be from \code{_INFO} array)
 #' @param arrayname primary arrayname e.g. \code{BIOSAMPLE, INDIVIDUAL}
-#' @param project_primary_id_then_download_attrs_only flag to control iquery download mechanism
+#' @param algo_choice_project_primary_id_then_download_attrs_only flag to control iquery download mechanism
 #' @param con connection object (optional when using \code{rg_connect()})
 #' 
 #' @examples 
@@ -1180,47 +1099,57 @@ join_info_unpivot = function(qq, arrayname,
 #'                                 arrayname = 'BIOSAMPLE')
 #' }
 download_unpivot_info_join = function(qq, 
-                                           arrayname, 
-                                           project_primary_id_then_download_attrs_only = FALSE, 
-                                           con = NULL) {
+                                      arrayname, 
+                                      mandatory_fields_only = FALSE, 
+                                      algo_choice_project_primary_id_then_download_attrs_only = FALSE, 
+                                      con = NULL) {
   con = use_ghEnv_if_null(con = con)
   res1 = iquery(con$db, qq, return = TRUE)
-  res2 = tryCatch({ # to capture case when download of INFO array fails due to very large size
-    if (project_primary_id_then_download_attrs_only) {
-      # iquery with return attributes only
-      info_query = paste0(
-        "apply(",
-        gsub(arrayname, paste0(arrayname, "_INFO"), qq),
-        ", ", get_base_idname(arrayname), ", ", get_base_idname(arrayname), ")"
-      )
-      res2_schema = paste0(
-        "<key:string, val:string, ", get_base_idname(arrayname), ":int64>[i]"
-      )
-      iquery(con$db, info_query, return = TRUE, only_attributes = TRUE, 
-                    schema = res2_schema)
+  if (mandatory_fields_only) {
+    res_df = res1
+  } else { # try joining with INFO array
+    res2 = tryCatch({ # to capture case when download of INFO array fails due to very large size
+      if (algo_choice_project_primary_id_then_download_attrs_only) {
+        # iquery with return attributes only
+        info_query = paste0(
+          "apply(",
+          gsub(arrayname, paste0(arrayname, "_INFO"), qq),
+          ", ", get_base_idname(arrayname), ", ", get_base_idname(arrayname), ")"
+        )
+        res2_schema = paste0(
+          "<key:string, val:string, ", get_base_idname(arrayname), ":int64>[i]"
+        )
+        iquery(con$db, info_query, return = TRUE, only_attributes = TRUE, 
+               schema = res2_schema)
+      } else {
+        info_query = gsub(arrayname, paste0(arrayname, "_INFO"), qq)
+        res2_schema = paste0(
+          "<key:string, val:string>[", 
+          paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+        )
+        res2 = iquery(con$db, info_query, return = TRUE, 
+                      schema = res2_schema)
+        # Drop the unnecessary ID-s
+        res2[, c(get_base_idname(arrayname), 'key', 'val')]
+      }
+    }, error = function(e) {
+      return(NULL)
+    })
+    
+    # Merge with INFO array in R
+    if (is.null(res2)) {
+      res1$more_cols_in_db = TRUE
+      res_df = res1
+    } else if (nrow(res2) > 0) {
+      res2_t = spread(res2, "key", value = "val")
+      if (exists('debug_trace')) {t1 = proc.time()}
+      res_df = merge(res1, res2_t, by = get_base_idname(arrayname), all.x = TRUE)
+      if (exists('debug_trace')) {cat("join with info in R:\n"); print( proc.time()-t1 )}
     } else {
-      info_query = gsub(arrayname, paste0(arrayname, "_INFO"), qq)
-      res2_schema = paste0(
-        "<key:string, val:string>[", 
-        paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
-      )
-      res2 = iquery(con$db, info_query, return = TRUE, 
-                    schema = res2_schema)
-      # Drop the unnecessary ID-s
-      res2[, c(get_base_idname(arrayname), 'key', 'val')]
+      res_df = res1
     }
-  }, error = function(e) {
-    return(NULL)
-  })
-  if (is.null(res2)) {
-    res1$more_cols_in_db = TRUE
-    res1
-  } else if (nrow(res2) > 0) {
-    res2_t = spread(res2, "key", value = "val")
-    merge(res1, res2_t, by = get_base_idname(arrayname))
-  } else {
-    res1
   }
+  return(res_df)
 }
 
 unpivot_key_value_pairs = function(df, arrayname, key_col = "key", val = "val"){
