@@ -243,15 +243,19 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                           
                                           include_sample_col_in_match = TRUE
                                           potential_sample_cols = sapply(cols_library, function(item) item$sample_col)
+                                          skip_enforcing_data_file_sample_name = FALSE
                                           if (!(any(potential_sample_cols %in% colnames(private$.data_df)))) {
                                             if (nrow(private$.pipeline_df) == 1) {
                                               cat("One sample per file. Manually attaching sample information\n")
                                               private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
+                                              skip_enforcing_data_file_sample_name = TRUE # Do not need to enforce since manually copied above
                                               include_sample_col_in_match = FALSE
                                             }
                                           }
                                           
-                                          super$enforce_data_file_sample_name_column()
+                                          if (!skip_enforcing_data_file_sample_name) {
+                                            super$enforce_data_file_sample_name_column()
+                                          }
                                           
                                           matchWithLibrary = sapply(cols_library, function(item) {
                                             cols_to_match = c(item$annotation_col, item$ftr_col,
@@ -391,9 +395,11 @@ DataReaderCopyNumberVariantVariableColumns = R6::R6Class(
      
      # Sample matching 
      potential_sample_cols = sapply(cols_library, function(item) item$sample_col)
+     skip_enforcing_data_file_sample_name = FALSE
      if (!(any(potential_sample_cols %in% colnames(private$.data_df)))) {
        if (nrow(private$.pipeline_df) == 1) {
          cat("One sample per file. Manually attaching sample information\n")
+         skip_enforcing_data_file_sample_name = TRUE # Do not need to enforce since manually copied above
          if (nrow(private$.data_df) == 0) {
            private$.data_df$biosample_name = character()
          } else {
@@ -402,7 +408,9 @@ DataReaderCopyNumberVariantVariableColumns = R6::R6Class(
        }
      }
      
-     super$enforce_data_file_sample_name_column()
+     if (!skip_enforcing_data_file_sample_name) {
+       super$enforce_data_file_sample_name_column()
+     }
      
      cat("Rule 1:\n")
      if (colsMatched$probablity_cna_call_fill) {
@@ -740,7 +748,7 @@ DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantR
                                         # code for per-sample loader
                                         stopifnot(length(private$.pipeline_df$original_sample_name) == 1)
                                         private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
-                                        super$enforce_data_file_sample_name_column()
+                                        # super$enforce_data_file_sample_name_column() # Do not need to enforce since manually copied above
                                         
                                         columns_to_drop = c('class_code', 
                                                             'nearest_ref_id', 
@@ -1110,9 +1118,12 @@ DataReaderFusionDeFuse = R6::R6Class(
        }
        if (!('biosample_name' %in% colnames(private$.data_df))) {
         private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
+        # No need to enforce `data_file_sample_name` in this case 
+        # (since was just assigned to `original_sample_name)
+       } else { # if `biosample_name` was present in original file
+         super$enforce_data_file_sample_name_column()
        }
      }
-     super$enforce_data_file_sample_name_column()
    }
   ))
 
@@ -1123,9 +1134,10 @@ DataReaderFileLink = R6::R6Class(
   public = list(
     load_data_from_file = function() {
       private$.data_df = data.frame(
-        biosample_name = private$.pipeline_df$original_sample_name
+        biosample_name = private$.pipeline_df$original_sample_name, 
+        stringsAsFactors = FALSE
       )
-      super$enforce_data_file_sample_name_column()
+      # super$enforce_data_file_sample_name_column() # No need to enforce as just manually enforced above
       private$.feature_annotation_df = NULL
     }
   ))
