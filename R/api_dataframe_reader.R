@@ -60,6 +60,47 @@ DataReader = R6::R6Class(classname = 'DataReader',
                              }
                              
                              
+                           },
+                           
+                           # Whether one needs to enforce the `data_file_sample_name` column
+                           need_to_enforce_data_file_sample_name_column = function() {
+                             if ('data_file_sample_name' %in% colnames(private$.pipeline_df)) {
+                               !identical(
+                                 private$.pipeline_df$data_file_sample_name, 
+                                 private$.pipeline_df$original_sample_name
+                               ) 
+                             } else {
+                                 FALSE
+                             } 
+                           },
+                           enforce_data_file_sample_name_column = function() {
+                             need_to_enforce = self$need_to_enforce_data_file_sample_name_column()
+                             if (need_to_enforce) {
+                               cat("Pipelines sheet column `data_file_sample_name` is different from column `original_sample_name`\n")
+                               if ('biosample_name' %in% colnames(private$.data_df)) {
+                                 m1 = find_matches_and_return_indices(
+                                   private$.data_df$biosample_name, 
+                                   private$.pipeline_df$data_file_sample_name
+                                 )
+                                 stopifnot(length(m1$source_unmatched_idx) == 0) # Being very restrictive right now
+                                 private$.data_df$biosample_name = 
+                                   private$.pipeline_df[m1$target_matched_idx, ]$original_sample_name
+                               } else { # if `biosample_name` not in columns of private$.data_df, assume that data is in matrix format
+                                 m0 = find_matches_and_return_indices(
+                                   source = colnames(private$.data_df),
+                                   target = private$.pipeline_df$data_file_sample_name
+                                 )
+                                 if (length(m0$source_unmatched_idx) > 0) {
+                                   message("Unmatched columns: \n\t", 
+                                           pretty_print(
+                                             colnames(private$.data_df)[m0$source_unmatched_idx], 
+                                             prettify_after = length(m0$source_unmatched_idx)
+                                           ))
+                                 }
+                                 colnames(private$.data_df)[m0$source_matched_idx] = 
+                                   private$.pipeline_df[m0$target_matched_idx, ]$original_sample_name
+                               }
+                             } # end of if (need_to_enforce)
                            }
                          ),
                          private = list(
