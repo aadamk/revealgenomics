@@ -113,7 +113,7 @@ DataReader = R6::R6Class(classname = 'DataReader',
                            .data_df = NULL
                          ))
 
-##### Automatically infer separator (CSV or TSV) ####
+## DataReaderAuto (Automatically infer separator -- CSV or TSV) ####
 DataReaderAuto = R6::R6Class(
   classname = 'DataReaderAuto',
   inherit = DataReader,
@@ -250,6 +250,8 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                               include_sample_col_in_match = FALSE
                                             }
                                           }
+                                          
+                                          super$enforce_data_file_sample_name_column()
                                           
                                           matchWithLibrary = sapply(cols_library, function(item) {
                                             cols_to_match = c(item$annotation_col, item$ftr_col,
@@ -399,6 +401,8 @@ DataReaderCopyNumberVariantVariableColumns = R6::R6Class(
          }
        }
      }
+     
+     super$enforce_data_file_sample_name_column()
      
      cat("Rule 1:\n")
      if (colsMatched$probablity_cna_call_fill) {
@@ -576,6 +580,8 @@ DataReaderFMIVariant = R6::R6Class(
       cat("Assigning values for biosample name using column:", biosample_name_col, "\n")
       private$.data_df[, 'biosample_name'] = private$.data_df[, biosample_name_col]
       
+      super$enforce_data_file_sample_name_column()
+      
       feature_col = 'GENE'
       cat("Assigning values for feature name using column:", feature_col, "\n")
       private$.data_df[, 'scidb_feature_col'] = private$.data_df[, feature_col]
@@ -647,6 +653,7 @@ DataReaderFMIFusion = R6::R6Class(
       biosample_name_col = 'analytical_accession'
       cat("Assigning values for biosample name using column:", biosample_name_col, "\n")
       private$.data_df[, 'biosample_name'] = private$.data_df[, biosample_name_col]
+      super$enforce_data_file_sample_name_column()
       
       feature_col = c('REARR-GENE1', 'REARR-GENE2')
       # cat("Assigning values for feature name using column:", pretty_print(feature_col), "\n")
@@ -681,6 +688,7 @@ DataReaderFMICopyNumberVariant = R6::R6Class(
       biosample_name_col = 'analytical_accession'
       cat("Assigning values for biosample name using column:", biosample_name_col, "\n")
       private$.data_df[, 'biosample_name'] = private$.data_df[, biosample_name_col]
+      super$enforce_data_file_sample_name_column()
       
       cat("Removing suffix `CNA-`")
       colnames(private$.data_df)[
@@ -732,6 +740,7 @@ DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantR
                                         # code for per-sample loader
                                         stopifnot(length(private$.pipeline_df$original_sample_name) == 1)
                                         private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
+                                        super$enforce_data_file_sample_name_column()
                                         
                                         columns_to_drop = c('class_code', 
                                                             'nearest_ref_id', 
@@ -802,6 +811,7 @@ DataReaderRNAQuantRNASeqCufflinks = R6::R6Class(classname = 'DataReaderRNAQuantR
                                       colnames(private$.data_df)[1] = 'tracking_id'
 
                                       super$convert_wide_to_tall_skinny()
+                                      super$enforce_data_file_sample_name_column()
                                     }
                                   }
                                 ))
@@ -818,6 +828,8 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
                                       load_data_from_file = function() {
                                         super$load_data_from_file()
                                         cat("load_data_from_file()"); self$print_level()
+                                        
+                                        super$enforce_data_file_sample_name_column()
                                         
                                         cat("Automatically interpreting specific format of data by matching with biosample names\n")
                                         bios = search_biosamples(dataset_id = private$.measurement_set$dataset_id, 
@@ -976,6 +988,7 @@ DataReaderRNAQuantMicroarray = R6::R6Class(classname = 'DataReaderRNAQuantMicroa
                                      rownames(private$.data_df) = 1:nrow(private$.data_df)
                                      
                                      super$convert_wide_to_tall_skinny()
+                                     super$enforce_data_file_sample_name_column()
                                      
                                      cat("Dimensions:", dim(private$.data_df), "\n")
                                      
@@ -1004,6 +1017,7 @@ DataReaderProteomicsMaxQuant = R6::R6Class(
                    stringsAsFactors = FALSE),
         private$.data_df)
       super$convert_wide_to_tall_skinny()
+      super$enforce_data_file_sample_name_column()
       cat("Dimensions:", dim(private$.data_df), "\n")
     }
   ), 
@@ -1052,6 +1066,8 @@ DataReaderFusionTophat = R6::R6Class(classname = 'DataReaderFusionTophat',
                                          }
                                          private$.data_df$end_left = NA
                                          private$.data_df$end_right = NA
+                                         
+                                         super$enforce_data_file_sample_name_column()
                                        }
                                      ))
 
@@ -1096,6 +1112,7 @@ DataReaderFusionDeFuse = R6::R6Class(
         private$.data_df$biosample_name = private$.pipeline_df$original_sample_name
        }
      }
+     super$enforce_data_file_sample_name_column()
    }
   ))
 
@@ -1108,6 +1125,7 @@ DataReaderFileLink = R6::R6Class(
       private$.data_df = data.frame(
         biosample_name = private$.pipeline_df$original_sample_name
       )
+      super$enforce_data_file_sample_name_column()
       private$.feature_annotation_df = NULL
     }
   ))
@@ -1124,6 +1142,7 @@ DataReaderCopyNumberMatrix = R6::R6Class(
       
       colnames(private$.data_df)[1] = 'tracking_id'
       super$convert_wide_to_tall_skinny()
+      super$enforce_data_file_sample_name_column()
       cat("Dimensions:", dim(private$.data_df), "\n")
     }
   ), 
@@ -1150,6 +1169,7 @@ DataReaderCyTOF = R6::R6Class(
                                           !(colnames(private$.data_df) %in% c('Sample Type', 'Plate', 'Panel')) ]
       
       private$.data_df = plyr::rename(private$.data_df, c('FCS Filename' = 'biosample_name'))
+      super$enforce_data_file_sample_name_column()
       
       super$convert_wide_to_tall_skinny(keyname = 'scidb_feature_col')
       
