@@ -752,7 +752,7 @@ get_features = function(feature_id = NULL, con = NULL){
         ftr_info = iquery(
           .ghEnv$db, 
           paste0(
-            "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), ", ", 
+            "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), "_INFO, ", 
             "project(", xx@name, ", feature_id)",
             ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
           return = T)
