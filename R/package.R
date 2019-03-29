@@ -59,7 +59,6 @@ NULL
 
 # Prepare variables for the cache
 .ghEnv$cache$lookup = list()
-.ghEnv$cache$biosample_ref = NULL
 .ghEnv$cache[[.ghEnv$meta$arrOntology]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrVariantKey]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrDefinition]] = NULL

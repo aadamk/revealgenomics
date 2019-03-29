@@ -1,5 +1,5 @@
 reference_object = list(biosample_ref = data.frame(name = c('a', 'b', 'c'),
-                                                   bioample_id = 132:134,
+                                                   biosample_id = 132:134,
                                                    stringsAsFactors = FALSE),
                         feature_ref = data.frame(name = c('EGFR', 'MYC', 'P53'),
                                                  feature_id = 2062:2064,

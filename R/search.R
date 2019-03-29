@@ -438,14 +438,8 @@ search_expression = function(measurementset = NULL,
     # If user did not provide biosample, then query the server for it, or retrieve from global biosample list
     if (is.null(biosample)) {
       biosample_id = unique(res$biosample_id)
-      if (FALSE) { # avoiding this path right now (might be useful when the download of all accessible biosamples is prohibitive)
-        cat("query the server for matching biosamples\n")
-        biosample = get_biosamples(biosample_id, con = con)
-      } else{
-        biosample_ref = get_biosamples_from_cache(con = con)
-        biosample = biosample_ref[biosample_ref$biosample_id %in% biosample_id, ]
-        biosample = drop_na_columns(biosample)
-      }
+      cat("query the server for matching biosamples\n")
+      biosample = get_biosamples(biosample_id, con = con)
     }
     
     # If user did not provide feature, then query the server for it, or retrieve from global feature list

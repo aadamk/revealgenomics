@@ -178,18 +178,6 @@ search_entity = function(entity, id, ...){
   }
 }
 
-get_biosamples_from_cache = function(updateCache = FALSE, con = NULL){
-  if (updateCache | is.null(.ghEnv$cache$biosample_ref)){
-    update_biosample_cache(con = con)
-  }
-  return(.ghEnv$cache$biosample_ref)
-}
-
-update_biosample_cache = function(con = NULL){
-  con = use_ghEnv_if_null(con)
-  .ghEnv$cache$biosample_ref = get_biosamples(con = con)
-}
-
 #' @export
 get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
   get_ontology_from_cache(ontology_id = ontology_id, 
