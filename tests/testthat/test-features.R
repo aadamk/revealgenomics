@@ -262,6 +262,73 @@ test_that("Advanced check that feature registration handles synonyms appropriate
       c("gene", "protein_probe")
     )
     
+    # Tests that `get_features()` works with and without mandatory fields flag
+    # All features
+    ff_all1 = get_features(feature_id = NULL)
+    ff_all2 = get_features(feature_id = NULL, mandatory_fields_only = TRUE)
+    expect_gt(
+      nrow(ff_all1), 0
+    )
+    expect_equal(
+      nrow(ff_all2),
+      nrow(ff_all2)
+    )
+    expect_equal(
+      sort(ff_all1$feature_id),
+      sort(ff_all2$feature_id)
+    )
+    
+    # 10 features
+    vec10 = sample(c(1:max(ff_all$feature_id)), size = 10)
+    ff_10_1 = get_features(feature_id = vec10)
+    ff_10_1 = get_features(feature_id = vec10, 
+                           mandatory_fields_only = TRUE)
+    expect_equal(
+      nrow(ff_10_1), 10
+    )
+    expect_equal(
+      nrow(ff_10_1),
+      nrow(ff_10_2)
+    )
+    expect_equal(
+      sort(ff_10_1$feature_id),
+      sort(ff_10_2$feature_id)
+    )
+    
+    # 1000 features
+    vec1000 = sample(c(1:max(ff_all$feature_id)), size = 1000)
+    ff_1000_1 = get_features(feature_id = vec1000)
+    ff_1000_1 = get_features(feature_id = vec1000, 
+                           mandatory_fields_only = TRUE)
+    expect_equal(
+      nrow(ff_1000_1), 1000
+    )
+    expect_equal(
+      nrow(ff_1000_1),
+      nrow(ff_1000_2)
+    )
+    expect_equal(
+      sort(ff_1000_1$feature_id),
+      sort(ff_1000_2$feature_id)
+    )
+    
+    # 30000 features -- must use as.scidb
+    vec30k = sample(c(1:max(ff_all$feature_id)), size = 30000)
+    ff_30k_1 = get_features(feature_id = vec30k)
+    ff_30k_1 = get_features(feature_id = vec30k, 
+                             mandatory_fields_only = TRUE)
+    expect_equal(
+      nrow(ff_30k_1), 1000
+    )
+    expect_equal(
+      nrow(ff_30k_1),
+      nrow(ff_30k_2)
+    )
+    expect_equal(
+      sort(ff_30k_1$feature_id),
+      sort(ff_30k_2$feature_id)
+    )
+    
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
                                .ghEnv$meta$arrFeatureset, 
