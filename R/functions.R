@@ -1088,6 +1088,9 @@ download_unpivot_info_join = function(qq,
                                       con = NULL) {
   con = use_ghEnv_if_null(con = con)
   res1 = iquery(con$db, qq, return = TRUE)
+  res1[, 'ARBITRARY_IDX'] = NULL # in case this was introduced by the `cross_join`
+                                 # Once `project(ARRAY, -ARBITRARY_IDX)` is possible (scidb 19.3), we can skip this step
+  
   if (mandatory_fields_only) {
     res_df = res1
   } else { # try joining with INFO array
