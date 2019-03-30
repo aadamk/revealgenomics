@@ -709,7 +709,7 @@ get_genelist_gene_symbols = function(con = NULL) {
 }
 
 #' @export
-get_features = function(feature_id = NULL, con = NULL){
+get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = NULL){
   con = use_ghEnv_if_null(con)
   
   entitynm = .ghEnv$meta$arrFeature
