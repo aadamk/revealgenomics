@@ -759,26 +759,35 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
         ftr_info = drop_equi_join_dims(ftr_info)
         ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
         # Following extracted from `unpivot_key_value_pairs()`
-        dt = data.table(ftr_info)
-        idname = 'feature_id'
-        key_col = 'key'
-        setkeyv(dt, c(idname, key_col))
-        x2s = dt[,val, by=c(idname, key_col)]
-        x2t = as.data.frame(spread(x2s, "key", value = "val"))
+        if (FALSE) { # old path
+          dt = data.table(ftr_info)
+          idname = 'feature_id'
+          key_col = 'key'
+          setkeyv(dt, c(idname, key_col))
+          x2s = dt[,val, by=c(idname, key_col)]
+          x2t = as.data.frame(spread(x2s, "key", value = "val"))
+        } else {
+          x2t = spread(ftr_info, "key", value = "val")
+        }
         x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
         result = merge(ftr, x2t, by = get_base_idname(arrayname), all.x = T)
       }
       
     } else {
-      result = join_info_unpivot(qq, 
-                                 arrayname, 
-                                 con = con)
+      result = download_unpivot_info_join(
+        qq = qq, 
+        arrayname = arrayname, 
+        mandatory_fields_only = mandatory_fields_only, 
+        con = con)
     }
   } else { # FASTER path when all data has to be downloaded
-    ftr = iquery(con$db, qq, return = T)
-    ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
-    ftr = merge(ftr, ftr_info, by = get_idname(arrayname), all.x = T)
-    result = unpivot_key_value_pairs(ftr, arrayname, key_col = "key", val = "val")
+    result = iquery(con$db, qq, return = T)
+    if (!mandatory_fields_only) {
+      ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
+      ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
+      ftr_info = spread(ftr_info, "key", value = "val")
+      result = merge(result, ftr_info, by = get_base_idname(arrayname), all.x = T)
+    }
   }
   result
 }
