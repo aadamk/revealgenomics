@@ -729,26 +729,17 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
       xx = as.scidb(con$db, selector,
                     types = c('int64', 'int32'))
       
-      if (FALSE) { # old path
-        x2 = paste0("redimension(", xx@name, ", <val:int32>[feature_id])")
-        x3 = paste0("cross_join(", arrayname, " as X, ", 
-                    x2, " as Y, ", 
-                    "X.feature_id, Y.feature_id)")
-        qq = paste0("project(", x3, ", ",
-                    paste0(names(.ghEnv$meta$L$array$FEATURE$attributes), collapse = ","), ")")
-        
-        result = join_info_unpivot(qq, 
-                                   arrayname, 
-                                   con = con)
+      ftr = iquery(
+        con$db, 
+        paste0(
+          "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), ", ", 
+          xx@name, 
+          ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
+        return = T)
+      ftr = drop_equi_join_dims(ftr)
+      if (mandatory_fields_only) {
+        result = ftr
       } else {
-        ftr = iquery(
-          con$db, 
-          paste0(
-            "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), ", ", 
-            xx@name, 
-            ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
-          return = T)
-        ftr = drop_equi_join_dims(ftr)
         ftr_info = iquery(
           con$db, 
           paste0(
@@ -772,7 +763,6 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
         x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
         result = merge(ftr, x2t, by = get_base_idname(arrayname), all.x = T)
       }
-      
     } else {
       result = download_unpivot_info_join(
         qq = qq, 
