@@ -1382,3 +1382,27 @@ get_entity_count = function(new_function = FALSE, skip_measurement_data = TRUE, 
     res2
   }
 }
+
+#' check if two API results are identical
+#' 
+#' @param df1 data-frame 1
+#' @param df2 data-frame 2
+#' @param entity entity for the data-frames that are being compared (e.g. \code{BIOSAMPLE, MEASUREMENTSET} etc.)
+#' 
+#' @examples 
+#' \dontrun{
+#' b1 = search_biosamples(dataset_id = 1)
+#' b2 = get_biosamples()
+#' b2 = b2[b2$dataset_id ==1, ]
+#' check_if_revealgenomics_dataframes_equal(b1, b2, 'BIOSAMPLE')
+#' }
+check_if_revealgenomics_dataframes_equal = function(df1, df2, entity) {
+  if (identical(dim(df1), dim(df2))) {
+    df1 = df1[order(df1[, revealgenomics:::get_base_idname(entity)]), ]; rownames(df1) = 1:nrow(df1); 
+    df2 = df2[order(df2[, revealgenomics:::get_base_idname(entity)]), ]; rownames(df2) = 1:nrow(df2); df2 = df2[, colnames(df1)]
+    return(all.equal(df1, df2))
+  } else {
+    return(FALSE)
+  }
+}
+
