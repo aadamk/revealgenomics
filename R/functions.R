@@ -1109,16 +1109,24 @@ download_unpivot_info_join = function(qq,
                schema = res2_schema)
       } else {
         info_query = gsub(arrayname, paste0(arrayname, "_INFO"), qq)
-        res2_schema = paste0(
-          "<key:string, val:string>[", 
-          paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
-        )
+        if (grepl("^cross_join", info_query)) {
+          res2_schema = paste0(
+            "<key:string, val:string, ARBITRARY_IDX:int64>[", 
+            paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+          )
+        } else {
+          res2_schema = paste0(
+            "<key:string, val:string>[", 
+            paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+          )
+        }
         res2 = iquery(con$db, info_query, return = TRUE, 
                       schema = res2_schema)
         # Drop the unnecessary ID-s
         res2[, c(get_base_idname(arrayname), 'key', 'val')]
       }
     }, error = function(e) {
+      print(e)
       return(NULL)
     })
     
