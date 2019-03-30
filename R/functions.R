@@ -805,24 +805,21 @@ form_selector_query_secure_array = function(arrayname, selected_ids, dataset_ver
     # Formulate the cross_join query
     idname = get_base_idname(entitynm)
     diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
-    upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
+    upload = sprintf("build(<%s:int64>[ARBITRARY_IDX=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
                      length(selected_ids), 
                      paste(selected_ids, sep=",", collapse="),(")
     )
     apply_dataset_version = paste("apply(", upload, ", dataset_version, ", dataset_version, ")", sep = "")
-    redim = paste("redimension(", apply_dataset_version, ", <idx:int64>[", idname, "])", sep = "")
+    redim = paste("redimension(", apply_dataset_version, ", <ARBITRARY_IDX:int64>[", idname, "])", sep = "")
     
-    query= paste("project(
-                 cross_join(",
+    query= paste0("cross_join(",
                  arrayname, " as A, ",
                  redim, " as B, ",
                  "A.", idname, ", " ,
                  "B.", idname,
-                 "),",
-                 paste(names(.ghEnv$meta$L$array[[entitynm]]$attributes), collapse = ", "),
-                 ")",
-                 sep = "")
+                 ")")
+    # Once project(ARRAY, -ARBITRARY_IDX) is possible (scidb 19.3), we can use that
   }
   query
 }
@@ -853,21 +850,19 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
     # Formulate the cross_join query
     # diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
     # if (length(diminfo) != 1) stop("code not covered")
-    upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
+    upload = sprintf("build(<%s:int64>[ARBITRARY_IDX=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
                      length(selected_ids), 
                      paste(selected_ids, sep=",", collapse="),("))
-    redim = paste("redimension(", upload, ", <idx:int64>[", idname,"])", sep = "")
+    redim = paste("redimension(", upload, ", <ARBITRARY_IDX:int64>[", idname,"])", sep = "")
     
-    query= paste("project(cross_join(",
+    query= paste0("cross_join(",
                  arrayname, " as A, ",
                  redim, " as B, ",
                  "A.", idname, ", " ,
                  "B.", idname,
-                 "),",
-                 paste(names(.ghEnv$meta$L$array[[entitynm]]$attributes), collapse = ","),
-                 ")",
-                 sep = "")
+                 ")")
+    # Once project(ARRAY, -ARBITRARY_IDX) is possible (scidb 19.3), we can use that
   }
   query
 }
