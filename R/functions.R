@@ -750,16 +750,7 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
         ftr_info = drop_equi_join_dims(ftr_info)
         ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
         # Following extracted from `unpivot_key_value_pairs()`
-        if (FALSE) { # old path
-          dt = data.table(ftr_info)
-          idname = 'feature_id'
-          key_col = 'key'
-          setkeyv(dt, c(idname, key_col))
-          x2s = dt[,val, by=c(idname, key_col)]
-          x2t = as.data.frame(spread(x2s, "key", value = "val"))
-        } else {
-          x2t = spread(ftr_info, "key", value = "val")
-        }
+        x2t = spread(ftr_info, "key", value = "val")
         x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
         result = merge(ftr, x2t, by = get_base_idname(arrayname), all.x = T)
       }
