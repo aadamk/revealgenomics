@@ -742,7 +742,7 @@ get_features = function(feature_id = NULL, con = NULL){
                                    con = con)
       } else {
         ftr = iquery(
-          .ghEnv$db, 
+          con$db, 
           paste0(
             "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), ", ", 
             xx@name, 
@@ -750,7 +750,7 @@ get_features = function(feature_id = NULL, con = NULL){
           return = T)
         ftr = drop_equi_join_dims(ftr)
         ftr_info = iquery(
-          .ghEnv$db, 
+          con$db, 
           paste0(
             "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), "_INFO, ", 
             "project(", xx@name, ", feature_id)",
