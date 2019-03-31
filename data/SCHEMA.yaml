@@ -1,5 +1,26 @@
 --- 
 array:
+  # METADATA_ATTRIBUTE_KEY
+  METADATA_ATTRIBUTE_KEY:
+    data_class:
+      metadata
+    namespace:
+      - gh_public
+    attributes:
+      metadata_attribute_key: string
+    unique_fields:
+      - metadata_attribute_key
+    dims:
+      metadata_attribute_key_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    search_by_entity: METADATA_ATTRIBUTE_KEY
+    delete_by_entity: METADATA_ATTRIBUTE_KEY
+    infoArray: FALSE
+    compression_on: FALSE
+    cached: TRUE
   PROJECT: 
     data_class:
       metadata
