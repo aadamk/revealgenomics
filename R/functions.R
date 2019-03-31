@@ -709,7 +709,7 @@ get_genelist_gene_symbols = function(con = NULL) {
 }
 
 #' @export
-get_features = function(feature_id = NULL, con = NULL){
+get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = NULL){
   con = use_ghEnv_if_null(con)
   
   entitynm = .ghEnv$meta$arrFeature
@@ -729,26 +729,17 @@ get_features = function(feature_id = NULL, con = NULL){
       xx = as.scidb(con$db, selector,
                     types = c('int64', 'int32'))
       
-      if (FALSE) { # old path
-        x2 = paste0("redimension(", xx@name, ", <val:int32>[feature_id])")
-        x3 = paste0("cross_join(", arrayname, " as X, ", 
-                    x2, " as Y, ", 
-                    "X.feature_id, Y.feature_id)")
-        qq = paste0("project(", x3, ", ",
-                    paste0(names(.ghEnv$meta$L$array$FEATURE$attributes), collapse = ","), ")")
-        
-        result = join_info_unpivot(qq, 
-                                   arrayname, 
-                                   con = con)
+      ftr = iquery(
+        con$db, 
+        paste0(
+          "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), ", ", 
+          xx@name, 
+          ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
+        return = T)
+      ftr = drop_equi_join_dims(ftr)
+      if (mandatory_fields_only) {
+        result = ftr
       } else {
-        ftr = iquery(
-          con$db, 
-          paste0(
-            "equi_join(", full_arrayname(.ghEnv$meta$arrFeature), ", ", 
-            xx@name, 
-            ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
-          return = T)
-        ftr = drop_equi_join_dims(ftr)
         ftr_info = iquery(
           con$db, 
           paste0(
@@ -759,26 +750,25 @@ get_features = function(feature_id = NULL, con = NULL){
         ftr_info = drop_equi_join_dims(ftr_info)
         ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
         # Following extracted from `unpivot_key_value_pairs()`
-        dt = data.table(ftr_info)
-        idname = 'feature_id'
-        key_col = 'key'
-        setkeyv(dt, c(idname, key_col))
-        x2s = dt[,val, by=c(idname, key_col)]
-        x2t = as.data.frame(spread(x2s, "key", value = "val"))
+        x2t = spread(ftr_info, "key", value = "val")
         x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
         result = merge(ftr, x2t, by = get_base_idname(arrayname), all.x = T)
       }
-      
     } else {
-      result = join_info_unpivot(qq, 
-                                 arrayname, 
-                                 con = con)
+      result = download_unpivot_info_join(
+        qq = qq, 
+        arrayname = arrayname, 
+        mandatory_fields_only = mandatory_fields_only, 
+        con = con)
     }
   } else { # FASTER path when all data has to be downloaded
-    ftr = iquery(con$db, qq, return = T)
-    ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
-    ftr = merge(ftr, ftr_info, by = get_idname(arrayname), all.x = T)
-    result = unpivot_key_value_pairs(ftr, arrayname, key_col = "key", val = "val")
+    result = iquery(con$db, qq, return = T)
+    if (!mandatory_fields_only) {
+      ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
+      ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
+      ftr_info = spread(ftr_info, "key", value = "val")
+      result = merge(result, ftr_info, by = get_base_idname(arrayname), all.x = T)
+    }
   }
   result
 }
@@ -805,24 +795,21 @@ form_selector_query_secure_array = function(arrayname, selected_ids, dataset_ver
     # Formulate the cross_join query
     idname = get_base_idname(entitynm)
     diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
-    upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
+    upload = sprintf("build(<%s:int64>[ARBITRARY_IDX=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
                      length(selected_ids), 
                      paste(selected_ids, sep=",", collapse="),(")
     )
     apply_dataset_version = paste("apply(", upload, ", dataset_version, ", dataset_version, ")", sep = "")
-    redim = paste("redimension(", apply_dataset_version, ", <idx:int64>[", idname, "])", sep = "")
+    redim = paste("redimension(", apply_dataset_version, ", <ARBITRARY_IDX:int64>[", idname, "])", sep = "")
     
-    query= paste("project(
-                 cross_join(",
+    query= paste0("cross_join(",
                  arrayname, " as A, ",
                  redim, " as B, ",
                  "A.", idname, ", " ,
                  "B.", idname,
-                 "),",
-                 paste(names(.ghEnv$meta$L$array[[entitynm]]$attributes), collapse = ", "),
-                 ")",
-                 sep = "")
+                 ")")
+    # Once project(ARRAY, -ARBITRARY_IDX) is possible (scidb 19.3), we can use that
   }
   query
 }
@@ -853,21 +840,19 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
     # Formulate the cross_join query
     # diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
     # if (length(diminfo) != 1) stop("code not covered")
-    upload = sprintf("build(<%s:int64>[idx=1:%d,100000,0],'[(%s)]', true)",
+    upload = sprintf("build(<%s:int64>[ARBITRARY_IDX=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
                      length(selected_ids), 
                      paste(selected_ids, sep=",", collapse="),("))
-    redim = paste("redimension(", upload, ", <idx:int64>[", idname,"])", sep = "")
+    redim = paste("redimension(", upload, ", <ARBITRARY_IDX:int64>[", idname,"])", sep = "")
     
-    query= paste("project(cross_join(",
+    query= paste0("cross_join(",
                  arrayname, " as A, ",
                  redim, " as B, ",
                  "A.", idname, ", " ,
                  "B.", idname,
-                 "),",
-                 paste(names(.ghEnv$meta$L$array[[entitynm]]$attributes), collapse = ","),
-                 ")",
-                 sep = "")
+                 ")")
+    # Once project(ARRAY, -ARBITRARY_IDX) is possible (scidb 19.3), we can use that
   }
   query
 }
@@ -1093,6 +1078,9 @@ download_unpivot_info_join = function(qq,
                                       con = NULL) {
   con = use_ghEnv_if_null(con = con)
   res1 = iquery(con$db, qq, return = TRUE)
+  res1[, 'ARBITRARY_IDX'] = NULL # in case this was introduced by the `cross_join`
+                                 # Once `project(ARRAY, -ARBITRARY_IDX)` is possible (scidb 19.3), we can skip this step
+  
   if (mandatory_fields_only) {
     res_df = res1
   } else { # try joining with INFO array
@@ -1111,16 +1099,24 @@ download_unpivot_info_join = function(qq,
                schema = res2_schema)
       } else {
         info_query = gsub(arrayname, paste0(arrayname, "_INFO"), qq)
-        res2_schema = paste0(
-          "<key:string, val:string>[", 
-          paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
-        )
+        if (grepl("^cross_join", info_query)) {
+          res2_schema = paste0(
+            "<key:string, val:string, ARBITRARY_IDX:int64>[", 
+            paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+          )
+        } else {
+          res2_schema = paste0(
+            "<key:string, val:string>[", 
+            paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+          )
+        }
         res2 = iquery(con$db, info_query, return = TRUE, 
                       schema = res2_schema)
         # Drop the unnecessary ID-s
         res2[, c(get_base_idname(arrayname), 'key', 'val')]
       }
     }, error = function(e) {
+      print(e)
       return(NULL)
     })
     
@@ -1382,3 +1378,27 @@ get_entity_count = function(new_function = FALSE, skip_measurement_data = TRUE, 
     res2
   }
 }
+
+#' check if two API results are identical
+#' 
+#' @param df1 data-frame 1
+#' @param df2 data-frame 2
+#' @param entity entity for the data-frames that are being compared (e.g. \code{BIOSAMPLE, MEASUREMENTSET} etc.)
+#' 
+#' @examples 
+#' \dontrun{
+#' b1 = search_biosamples(dataset_id = 1)
+#' b2 = get_biosamples()
+#' b2 = b2[b2$dataset_id ==1, ]
+#' check_if_revealgenomics_dataframes_equal(b1, b2, 'BIOSAMPLE')
+#' }
+check_if_revealgenomics_dataframes_equal = function(df1, df2, entity) {
+  if (identical(dim(df1), dim(df2))) {
+    df1 = df1[order(df1[, revealgenomics:::get_base_idname(entity)]), ]; rownames(df1) = 1:nrow(df1); 
+    df2 = df2[order(df2[, revealgenomics:::get_base_idname(entity)]), ]; rownames(df2) = 1:nrow(df2); df2 = df2[, colnames(df1)]
+    return(all.equal(df1, df2))
+  } else {
+    return(FALSE)
+  }
+}
+

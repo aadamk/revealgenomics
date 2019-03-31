@@ -4,7 +4,7 @@
 \alias{download_unpivot_info_join}
 \title{Download from scidb then unpivot info and join in R}
 \usage{
-download_unpivot_info_join(qq, arrayname,
+download_unpivot_info_join(qq, arrayname, mandatory_fields_only = FALSE,
   algo_choice_project_primary_id_then_download_attrs_only = FALSE,
   con = NULL)
 }
