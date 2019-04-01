@@ -749,6 +749,7 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
           return = T)
         ftr_info = drop_equi_join_dims(ftr_info)
         ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
+        ftr_info = ftr_info[!is.na(ftr_info$val) & ftr_info$val != "" & ftr_info$val != "NA", ]
         # Following extracted from `unpivot_key_value_pairs()`
         x2t = spread(ftr_info, "key", value = "val")
         x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
@@ -766,6 +767,7 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
     if (!mandatory_fields_only) {
       ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
       ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
+      ftr_info = ftr_info[!is.na(ftr_info$val) & ftr_info$val != "" & ftr_info$val != "NA", ]
       ftr_info = spread(ftr_info, "key", value = "val")
       result = merge(result, ftr_info, by = get_base_idname(arrayname), all.x = T)
     }
