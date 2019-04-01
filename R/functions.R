@@ -560,7 +560,8 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
     if (length(get_idname(entitynm)) == 1) {
       qq = form_selector_query_1d_array(arrayname = fullnm,
                                         idname = get_base_idname(fullnm),
-                                        selected_ids = id)
+                                        selected_ids = id,
+                                        join_algorithm = 'cross_join')
     } else {
       qq = form_selector_query_secure_array(arrayname = fullnm,
                                             selected_ids = id,
@@ -717,7 +718,8 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
   
   qq = arrayname
   if (!is.null(feature_id)) {
-    qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), as.integer(feature_id))
+    qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), as.integer(feature_id),
+                                      join_algorithm = 'equi_join')
     
     # URL length restriction enforce by apache (see https://github.com/Paradigm4/<CUSTOMER>/issues/53)
     THRESH_query_len = 270000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
