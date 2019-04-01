@@ -828,7 +828,9 @@ form_selector_query_secure_array = function(arrayname, selected_ids, dataset_ver
 }
 
 
-form_selector_query_1d_array = function(arrayname, idname, selected_ids){
+form_selector_query_1d_array = function(arrayname, idname, selected_ids,
+                                        join_algorithm = c('cross_join', 'equi_join')){
+  join_algorithm = match.arg(join_algorithm)
   sorted=sort(selected_ids)
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
   THRESH_K = 15  # limit at which to switch from cross_between_ to cross_join
@@ -850,22 +852,29 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
                    arrayname, 
                    filter_string)
   } else { # mostly non-contiguous tickers, use `cross_join`
-    # Formulate the cross_join query
-    # diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
-    # if (length(diminfo) != 1) stop("code not covered")
     upload = sprintf("build(<%s:int64>[ARBITRARY_IDX=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
                      length(selected_ids), 
                      paste(selected_ids, sep=",", collapse="),("))
-    redim = paste("redimension(", upload, ", <ARBITRARY_IDX:int64>[", idname,"])", sep = "")
-    
-    query= paste0("cross_join(",
-                 arrayname, " as A, ",
-                 redim, " as B, ",
-                 "A.", idname, ", " ,
-                 "B.", idname,
-                 ")")
-    # Once project(ARRAY, -ARBITRARY_IDX) is possible (scidb 19.3), we can use that
+    if (join_algorithm == 'cross_join') {
+      # Formulate the cross_join query
+      redim = paste("redimension(", upload, ", <ARBITRARY_IDX:int64>[", idname,"])", sep = "")
+      
+      query= paste0("cross_join(",
+                    arrayname, " as A, ",
+                    redim, " as B, ",
+                    "A.", idname, ", " ,
+                    "B.", idname,
+                    ")")
+      # Once project(ARRAY, -ARBITRARY_IDX) is possible (scidb 19.3), we can use that
+    } else if (join_algorithm == 'equi_join') {
+      query= paste0("equi_join(",
+                    arrayname, ", ",
+                    upload, ", ",
+                    "'left_names=", idname, "', " ,
+                    "'right_names=", idname,
+                    "', 'keep_dimensions=1')")
+    }
   }
   query
 }
@@ -1112,19 +1121,23 @@ download_unpivot_info_join = function(qq,
                schema = res2_schema)
       } else {
         info_query = gsub(arrayname, paste0(arrayname, "_INFO"), qq)
-        if (grepl("^cross_join", info_query)) {
-          res2_schema = paste0(
-            "<key:string, val:string, ARBITRARY_IDX:int64>[", 
-            paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
-          )
+        if (grepl("^equi_join", info_query)) {
+          res2 = iquery(con$db, info_query, return = TRUE)
         } else {
-          res2_schema = paste0(
-            "<key:string, val:string>[", 
-            paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
-          )
+          if (grepl("^cross_join", info_query)) {
+            res2_schema = paste0(
+              "<key:string, val:string, ARBITRARY_IDX:int64>[", 
+              paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+            )
+          } else {
+            res2_schema = paste0(
+              "<key:string, val:string>[", 
+              paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+            )
+          }
+          res2 = iquery(con$db, info_query, return = TRUE, 
+                        schema = res2_schema)
         }
-        res2 = iquery(con$db, info_query, return = TRUE, 
-                      schema = res2_schema)
         # Drop the unnecessary ID-s
         res2[, c(get_base_idname(arrayname), 'key', 'val')]
       }
