@@ -764,12 +764,23 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
     }
   } else { # FASTER path when all data has to be downloaded
     result = iquery(con$db, qq, return = T)
+    result = result[order(result$feature_id), ]
     if (!mandatory_fields_only) {
       ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
       ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
       ftr_info = ftr_info[!is.na(ftr_info$val) & ftr_info$val != "" & ftr_info$val != "NA", ]
       ftr_info = spread(ftr_info, "key", value = "val")
-      result = merge(result, ftr_info, by = get_base_idname(arrayname), all.x = T)
+      if (FALSE) { # old method
+        result = merge(result, ftr_info, by = get_base_idname(arrayname), all.x = T)
+      } else {
+        ftr_info = ftr_info[order(ftr_info$feature_id), ]
+        result = rbind.fill(
+          result[!(result$feature_id %in% ftr_info$feature_id), ], 
+          cbind(
+            result[(result$feature_id %in% ftr_info$feature_id), ], 
+            ftr_info))
+        result = result[order(result$feature_id), ]
+      }
     }
   }
   result
