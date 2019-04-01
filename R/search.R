@@ -768,11 +768,13 @@ search_variants_scidb = function(arrayname,
                       ", dataset_version=", dataset_version, " AND measurementset_id=", measurementset_id, ")")
   
   if (is.null(feature_id) & is.null(biosample_id)) {
+    synthetic_dimension = grep("per.*number", get_idname(entitynm), value = T)
+    stopifnot(length(synthetic_dimension) == 1)
     left_query = paste0(
       "apply(",
       left_query,
       ", feature_id, feature_id", 
-      ", per_gene_variant_number, per_gene_variant_number",
+      ", ", synthetic_dimension, ", ", synthetic_dimension,
       ", key_id, key_id", 
       ", biosample_id, biosample_id)"
     )
