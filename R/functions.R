@@ -14,9 +14,24 @@
 
 #' @import data.table
 
+get_revealgenomics_config = function() {
+  config_file = '/etc/revealgenomics_config.yaml'
+  if (file.exists(config_file)) {
+    yaml.load_file(config_file)
+  } else {
+    NULL
+  }
+}
+
 #' @export
 rg_connect = function(username = NULL, password = NULL, host = NULL, port = NULL, protocol = "https"){
   # SciDB connection and R API --
+  
+  if (!is.null(get_revealgenomics_config())) {
+    if (get_revealgenomics_config()$security$convert_username_to_lowercase) {
+      username = tolower(username)
+    }
+  }
   
   if (is.null(username) & protocol != 'http') {
     cat("using HTTP protocol\n")
