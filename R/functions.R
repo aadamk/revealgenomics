@@ -528,7 +528,39 @@ register_info = function(df, idname, arrayname, con = NULL){
                        new_info_col_nm)
     info = info %>%
       gather(key, val, info_col_pos)
-    register_tuple(df = info, ids_int64_conv = idname, arrayname = paste(arrayname,"_INFO",sep=""), con = con)
+    
+    # Check that all attribute column names are registered. If not, register
+    metadata_attrs = unique(info$key)
+    
+    entity_id = get_entity_id(entity = strip_namespace(arrayname))
+    metadtata_attrs_in_db = get_metadata_attrkey()
+    metadtata_attrs_in_db = metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
+    if (!(all(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey))) {
+      cat("Registering new metadata attributes:", 
+          pretty_print(metadata_attrs[!(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey)]), 
+          "\n")
+      metadata_attr_id = register_metadata_attrkey(
+        df1 = data.frame(metadata_attrkey = metadata_attrs, 
+                         entity_id = entity_id,
+                         stringsAsFactors = FALSE)
+      )
+      metadtata_attrs_in_db = get_metadata_attrkey()
+      metadtata_attrs_in_db = metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
+      stopifnot(all(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey))
+    }
+    
+    # Assign attribute key id-s within `INFO` data.frame 
+    # (do not leave `key_id` generation to scidb synthetic handling)
+    m1 = find_matches_and_return_indices(
+      source = info$key,
+      target = metadtata_attrs_in_db$metadata_attrkey
+    )
+    stopifnot(length(m1$source_unmatched_idx) == 0)
+    info$key_id = metadtata_attrs_in_db$metadata_attrkey_id[m1$target_matched_idx]
+    
+    # Register 
+    register_tuple(df = info, ids_int64_conv = c(idname, 'key_id'), 
+                   arrayname = paste(arrayname,"_INFO",sep=""), con = con)
   }
 }
 
