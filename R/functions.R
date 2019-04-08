@@ -201,6 +201,13 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
 }
 
 #' @export
+get_metadata_attrkey = function(metadata_attrkey_id = NULL, updateCache = FALSE, con = NULL){
+  get_metadata_attrkey_from_cache(metadata_attrkey_id = metadata_attrkey_id, 
+                             updateCache = updateCache, 
+                             con = con)
+}
+
+#' @export
 get_variant_key = function(variant_key_id = NULL, updateCache = FALSE, con = NULL){
   get_variant_key_from_cache(variant_key_id = variant_key_id, 
                              updateCache = updateCache, 
