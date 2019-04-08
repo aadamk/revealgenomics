@@ -1,23 +1,26 @@
 --- 
 array:
-  # METADATA_ATTRIBUTE_KEY
-  METADATA_ATTRIBUTE_KEY:
+  # METADATA_ATTRKEY
+  METADATA_ATTRKEY:
+    entity_id: 1001
     data_class:
       metadata
     namespace:
       - gh_public
     attributes:
-      metadata_attribute_key: string
+      metadata_attrkey: string
+      entity_id: int64
     unique_fields:
-      - metadata_attribute_key
+      - metadata_attrkey
+      - entity_id
     dims:
-      metadata_attribute_key_id:
+      metadata_attrkey_id:
         start: 0
         end: Inf
         chunk_interval: 1000000
         overlap: 0
-    search_by_entity: METADATA_ATTRIBUTE_KEY
-    delete_by_entity: METADATA_ATTRIBUTE_KEY
+    search_by_entity: 
+    delete_by_entity: METADATA_ATTRKEY
     infoArray: FALSE
     compression_on: FALSE
     cached: TRUE
