@@ -200,11 +200,19 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
                           con = con)
 }
 
-#' @export
 get_metadata_attrkey = function(metadata_attrkey_id = NULL, updateCache = FALSE, con = NULL){
   get_metadata_attrkey_from_cache(metadata_attrkey_id = metadata_attrkey_id, 
-                             updateCache = updateCache, 
-                             con = con)
+                                  updateCache = updateCache, 
+                                  con = con)
+}
+
+#' Search metadata attributes by entity id
+#' 
+#' @param entity_id id of API entity as assigned in \code{SCHEMA.yaml} file. You can list all 
+#'                  \code{entity_id}-s by running the function \code{get_entity_info()}
+search_metadata_attrkey = function(entity_id, updateCache = FALSE, con = NULL){
+  metadtata_attrs_in_db = get_metadata_attrkey(updateCache = updateCache, con = con)
+  metadtata_attrs_in_db = metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
 }
 
 #' @export
@@ -533,8 +541,7 @@ register_info = function(df, idname, arrayname, con = NULL){
     metadata_attrs = unique(info$key)
     
     entity_id = get_entity_id(entity = strip_namespace(arrayname))
-    metadtata_attrs_in_db = get_metadata_attrkey()
-    metadtata_attrs_in_db = metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
+    metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id)
     if (!(all(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey))) {
       cat("Registering new metadata attributes:", 
           pretty_print(metadata_attrs[!(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey)]), 
@@ -544,8 +551,7 @@ register_info = function(df, idname, arrayname, con = NULL){
                          entity_id = entity_id,
                          stringsAsFactors = FALSE)
       )
-      metadtata_attrs_in_db = get_metadata_attrkey()
-      metadtata_attrs_in_db = metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
+      metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id)
       stopifnot(all(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey))
     }
     
