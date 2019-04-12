@@ -575,7 +575,8 @@ select_from_1d_entity = function(entitynm, id, dataset_version = NULL,
     if (length(get_idname(entitynm)) == 1) {
       qq = form_selector_query_1d_array(arrayname = fullnm,
                                         idname = get_base_idname(fullnm),
-                                        selected_ids = id)
+                                        selected_ids = id,
+                                        join_algorithm = 'cross_join')
     } else {
       qq = form_selector_query_secure_array(arrayname = fullnm,
                                             selected_ids = id,
@@ -732,7 +733,8 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
   
   qq = arrayname
   if (!is.null(feature_id)) {
-    qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), as.integer(feature_id))
+    qq = form_selector_query_1d_array(arrayname, get_base_idname(arrayname), as.integer(feature_id),
+                                      join_algorithm = 'equi_join')
     
     # URL length restriction enforce by apache (see https://github.com/Paradigm4/<CUSTOMER>/issues/53)
     THRESH_query_len = 270000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
@@ -764,6 +766,7 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
           return = T)
         ftr_info = drop_equi_join_dims(ftr_info)
         ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
+        ftr_info = ftr_info[!is.na(ftr_info$val) & ftr_info$val != "" & ftr_info$val != "NA", ]
         # Following extracted from `unpivot_key_value_pairs()`
         x2t = spread(ftr_info, "key", value = "val")
         x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
@@ -778,11 +781,23 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
     }
   } else { # FASTER path when all data has to be downloaded
     result = iquery(con$db, qq, return = T)
+    result = result[order(result$feature_id), ]
     if (!mandatory_fields_only) {
       ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
       ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
+      ftr_info = ftr_info[!is.na(ftr_info$val) & ftr_info$val != "" & ftr_info$val != "NA", ]
       ftr_info = spread(ftr_info, "key", value = "val")
-      result = merge(result, ftr_info, by = get_base_idname(arrayname), all.x = T)
+      if (FALSE) { # old method
+        result = merge(result, ftr_info, by = get_base_idname(arrayname), all.x = T)
+      } else {
+        ftr_info = ftr_info[order(ftr_info$feature_id), ]
+        result = rbind.fill(
+          result[!(result$feature_id %in% ftr_info$feature_id), ], 
+          cbind(
+            result[(result$feature_id %in% ftr_info$feature_id), ], 
+            ftr_info))
+        result = result[order(result$feature_id), ]
+      }
     }
   }
   result
@@ -830,7 +845,9 @@ form_selector_query_secure_array = function(arrayname, selected_ids, dataset_ver
 }
 
 
-form_selector_query_1d_array = function(arrayname, idname, selected_ids){
+form_selector_query_1d_array = function(arrayname, idname, selected_ids,
+                                        join_algorithm = c('cross_join', 'equi_join')){
+  join_algorithm = match.arg(join_algorithm)
   sorted=sort(selected_ids)
   breaks=c(0, which(diff(sorted)!=1), length(sorted))
   THRESH_K = 15  # limit at which to switch from cross_between_ to cross_join
@@ -852,22 +869,29 @@ form_selector_query_1d_array = function(arrayname, idname, selected_ids){
                    arrayname, 
                    filter_string)
   } else { # mostly non-contiguous tickers, use `cross_join`
-    # Formulate the cross_join query
-    # diminfo = .ghEnv$meta$L$array[[entitynm]]$dims
-    # if (length(diminfo) != 1) stop("code not covered")
     upload = sprintf("build(<%s:int64>[ARBITRARY_IDX=1:%d,100000,0],'[(%s)]', true)",
                      idname, 
                      length(selected_ids), 
                      paste(selected_ids, sep=",", collapse="),("))
-    redim = paste("redimension(", upload, ", <ARBITRARY_IDX:int64>[", idname,"])", sep = "")
-    
-    query= paste0("cross_join(",
-                 arrayname, " as A, ",
-                 redim, " as B, ",
-                 "A.", idname, ", " ,
-                 "B.", idname,
-                 ")")
-    # Once project(ARRAY, -ARBITRARY_IDX) is possible (scidb 19.3), we can use that
+    if (join_algorithm == 'cross_join') {
+      # Formulate the cross_join query
+      redim = paste("redimension(", upload, ", <ARBITRARY_IDX:int64>[", idname,"])", sep = "")
+      
+      query= paste0("cross_join(",
+                    arrayname, " as A, ",
+                    redim, " as B, ",
+                    "A.", idname, ", " ,
+                    "B.", idname,
+                    ")")
+      # Once project(ARRAY, -ARBITRARY_IDX) is possible (scidb 19.3), we can use that
+    } else if (join_algorithm == 'equi_join') {
+      query= paste0("equi_join(",
+                    arrayname, ", ",
+                    upload, ", ",
+                    "'left_names=", idname, "', " ,
+                    "'right_names=", idname,
+                    "', 'keep_dimensions=1')")
+    }
   }
   query
 }
@@ -1114,19 +1138,23 @@ download_unpivot_info_join = function(qq,
                schema = res2_schema)
       } else {
         info_query = gsub(arrayname, paste0(arrayname, "_INFO"), qq)
-        if (grepl("^cross_join", info_query)) {
-          res2_schema = paste0(
-            "<key:string, val:string, ARBITRARY_IDX:int64>[", 
-            paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
-          )
+        if (grepl("^equi_join", info_query)) {
+          res2 = iquery(con$db, info_query, return = TRUE)
         } else {
-          res2_schema = paste0(
-            "<key:string, val:string>[", 
-            paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
-          )
+          if (grepl("^cross_join", info_query)) {
+            res2_schema = paste0(
+              "<key:string, val:string, ARBITRARY_IDX:int64>[", 
+              paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+            )
+          } else {
+            res2_schema = paste0(
+              "<key:string, val:string>[", 
+              paste0(pretty_print(revealgenomics:::get_idname(arrayname)), ", key_id]")
+            )
+          }
+          res2 = iquery(con$db, info_query, return = TRUE, 
+                        schema = res2_schema)
         }
-        res2 = iquery(con$db, info_query, return = TRUE, 
-                      schema = res2_schema)
         # Drop the unnecessary ID-s
         res2[, c(get_base_idname(arrayname), 'key', 'val')]
       }
