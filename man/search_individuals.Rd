@@ -4,8 +4,8 @@
 \alias{search_individuals}
 \title{Search individuals by dataset}
 \usage{
-search_individuals(dataset_id = NULL, dataset_version = NULL,
-  all_versions = FALSE, con = NULL)
+search_individuals(dataset_id = NULL, requested_attributes = NULL,
+  dataset_version = NULL, all_versions = FALSE, con = NULL)
 }
 \description{
 \code{search_individuals()} can be used to retrive
