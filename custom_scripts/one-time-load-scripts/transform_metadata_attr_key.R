@@ -4,7 +4,7 @@
 
 rm(list=ls())
 library(revealgenomics)
-creds_file = '~/.scidb_secure_user_auth'
+creds_file = '~/.rg_config_secure-rw.json'
 rg_connect(username = read_json(creds_file)$`user-name`, password = read_json(creds_file)$`user-password`)
 
 ######### Get all fields for metadata entities ###########
@@ -81,9 +81,13 @@ for (entity in entity_info$entity) {
       new_schema = paste0(
         "<key:string,val:string,", 
         ifelse(revealgenomics:::is_entity_versioned(entity), "dataset_version:int64 NOT NULL," , ""),  
-        ifelse(revealgenomics:::is_entity_secured(entity), "dataset_id:int64 NOT NULL,", ""), 
-        revealgenomics:::get_base_idname(entity), 
-        ":int64 NOT NULL, OLD__key_id:int64 NOT NULL,entity_id:int64,key_id:int64 NOT NULL> [instance_id; value_no]"
+        ifelse(
+          'dataset_id' %in% names(.ghEnv$meta$L$array[[entity]]$dims), 
+          "dataset_id:int64 NOT NULL,", ""), 
+        ifelse(entity != .ghEnv$meta$arrDataset, 
+               paste0(revealgenomics:::get_base_idname(entity), ":int64 NOT NULL, "),
+               ""), 
+        "OLD__key_id:int64 NOT NULL,entity_id:int64,key_id:int64 NOT NULL> [instance_id; value_no]"
       )
     }
     query1 = paste0(
