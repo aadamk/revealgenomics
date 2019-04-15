@@ -1424,10 +1424,15 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   
   #############################################
   ## Step 0 # Retain biosample and feature info for returned data
-  feature_df =   drop_na_columns(
-    feature_df[match(unique(expr_df$feature_id), feature_df$feature_id), ])
+  
+  # Convert expr_df to data.table in-place
+  # and create ref object for it
+  expr_dt <- setDT(expr_df)
+  
+  feature_df = drop_na_columns(
+    feature_df[unique(expr_dt, by = c("feature_id"))$feature_id %in% feature_df$feature_id, ])
   biosample_df = drop_na_columns(
-    biosample_df[match(unique(expr_df$biosample_id), biosample_df$biosample_id), ])
+    biosample_df[unique(expr_dt, by = c("biosample_id"))$biosample_id %in% biosample_df$biosample_id, ])
   
   #############################################
   ## Step 1 # Convert data frame to matrix
