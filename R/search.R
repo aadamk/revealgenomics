@@ -703,21 +703,29 @@ search_expression_by_one_measurementset_zero_or_more_features = function(entity,
   
   if (!formExpressionSet) return(res)
   
+  # Set res as a data.table to make the following operations
+  # more efficient
+  setDT(res)
+  
   # Retrieved biosamples
-  biosample_id = unique(res$biosample_id)
-  biosample = biosample_ref[biosample_ref$biosample_id %in% biosample_id, ]
+  biosample = biosample_ref[
+    biosample_ref$biosample_id %in% unique(res, by = "biosample_id")$biosample_id, ]
   
   # Retrieved features
-  feature_id = unique(res$feature_id)
+  feature_id = unique(res, by = "feature_id")$feature_id
   if (!is.null(feature)) {
     feature_sel = feature[feature$feature_id %in% feature_id, ]
   } else { # user has not supplied features; need to download features from DB
     cat("Downloading features to form ExpressionSet\n")
-    feature_sel = get_features(feature_id = feature_id, 
+    feature_sel = get_features(feature_id = feature_id,
                                con = con)
   }
+  
+  # Convert res back to a data.frame
+  setDF(res)
+  
   cat("Forming ExpressionSet\n")
-  expressionSet = formulate_list_expression_set(expr_df = res, 
+  expressionSet = formulate_list_expression_set(expr_df = res,
                                                 dataset_version = dataset_version, 
                                                 measurementset = measurementset,
                                                 biosample = biosample,
