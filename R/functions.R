@@ -1015,6 +1015,49 @@ search_versioned_secure_metadata_entity = function(entity,
   if (!all_versions) return(latest_version(df1)) else return(df1)
 }
 
+#' internal function for \code{search_METADATA()} by set of requested attributes
+#' 
+#' internal function for \code{search_individuals()}, \code{search_biosamples()} etc.
+#' search of a metadata entry by \code{requested_attributes}
+search_versioned_secure_metadata_entity_by_requested_attributes = function(entity,
+                                                                           requested_attributes,
+                                                                           dataset_version, 
+                                                                           all_versions, 
+                                                                           con) {
+  con = use_ghEnv_if_null(con = con)
+  idname = get_base_idname(entity)
+  attrkey = search_metadata_attrkey(entity_id = get_entity_id(entity))
+  m1 = find_matches_and_return_indices(attrkey$metadata_attrkey, requested_attributes)
+  if (length(m1$source_matched_idx) == 0) {
+    stop("None of requested attributes match attributes present in DB for requested entity:", entity, 
+         ". Try running the function: \n search_attributes(entity = '", entity, "')")
+  }
+  attrkey = attrkey[attrkey$metadata_attrkey %in% requested_attributes, ]
+  selection_query = gsub(idname, "key_id", 
+                         formulate_base_selection_query(fullarrayname = entity, id = attrkey$metadata_attrkey_id))
+  filter_info_query = paste0("filter(", full_arrayname(entity), "_INFO,", selection_query, ")")
+  filter_info_df = iquery(con$db, filter_info_query, return = T)
+  filter_info_df = spread(filter_info_df[, c(idname, 'key', 'val')], "key", value = "val")
+  
+  stopifnot(length(unique(filter_info_df[, idname])) == nrow(filter_info_df))
+  filter_info_df = filter_info_df[order(filter_info_df[, idname]), ]
+  
+  orig_array_df = get_entity(entity = entity, id = filter_info_df[, idname], mandatory_fields_only = T, con = con)
+  orig_array_df = orig_array_df[order(orig_array_df[, idname]), ]
+  
+  stopifnot(nrow(orig_array_df) == nrow(filter_info_df))
+  
+  returned_cols = requested_attributes[(requested_attributes %in% colnames(filter_info_df))]
+  if (length(returned_cols) == 1) {
+    filter_info_df = data.frame('val' = filter_info_df[, returned_cols], 
+                                stringsAsFactors = FALSE)
+    filter_info_df = plyr::rename(filter_info_df, c('val' = returned_cols))
+  } else {
+    filter_info_df = filter_info_df[, returned_cols]
+  }
+  
+  cbind(orig_array_df, filter_info_df)
+}
 
 # dataset_version: can be "NULL" or any single integral value (if "NULL", then all versions would be returned back)
 cross_join_select_by_two_dims = function(qq, tt, val1, val2, selected_names, dataset_version, con = NULL){
