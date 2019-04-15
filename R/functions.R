@@ -13,6 +13,7 @@
 #
 
 #' @import data.table
+#' @import Matrix
 
 get_revealgenomics_config = function() {
   config_file = '/etc/revealgenomics_config.yaml'
