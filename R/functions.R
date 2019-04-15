@@ -1002,19 +1002,40 @@ search_versioned_secure_metadata_entity = function(entity,
   df1 = filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
                                         dataset_version = dataset_version, 
                                         con = con)
+  
+  run_common_operations_on_search_metadata_output(df1 = df1, 
+                                                  dataset_id = dataset_id,
+                                                  all_versions = all_versions, 
+                                                  entity = entity, 
+                                                  con = con)
+}
+
+
+run_common_operations_on_search_metadata_output = function(df1, dataset_id, entity, all_versions, con) {
   # reorder the output by the dimensions
   # from https://stackoverflow.com/questions/17310998/sort-a-dataframe-in-r-by-a-dynamic-set-of-columns-named-in-another-data-frame
   if (nrow(df1) == 0) return(df1)
   df1 = df1[do.call(order, df1[get_idname(entity)]), ] 
-
-  df1 = apply_definition_constraints(df1 = df1,
-                                     dataset_id = dataset_id,
-                                     entity = entity,
-                                     con = con)
+  
+  if (!is.null(dataset_id)) {
+    df1 = apply_definition_constraints(df1 = df1,
+                                       dataset_id = dataset_id,
+                                       entity = entity,
+                                       con = con)
+  } else {
+    L1 = lapply(unique(df1$dataset_id), 
+                function(dataset_idi) {
+                  apply_definition_constraints(df1 = df1[df1$dataset_id == dataset_idi, ],
+                                               dataset_id = dataset_idi,
+                                               entity = entity,
+                                               con = con)
+                }) 
+    df1 = do.call(what = "rbind", 
+                  args = L1)
+  }
   
   if (!all_versions) return(latest_version(df1)) else return(df1)
 }
-
 #' internal function for \code{search_METADATA()} by set of requested attributes
 #' 
 #' internal function for \code{search_individuals()}, \code{search_biosamples()} etc.
@@ -1056,7 +1077,12 @@ search_versioned_secure_metadata_entity_by_requested_attributes = function(entit
     filter_info_df = filter_info_df[, returned_cols]
   }
   
-  cbind(orig_array_df, filter_info_df)
+  df1 = cbind(orig_array_df, filter_info_df)
+  
+  run_common_operations_on_search_metadata_output(df1 = df1, all_versions = all_versions, 
+                                                  dataset_id = NULL,
+                                                  entity = entity, 
+                                                  con = con)
 }
 
 # dataset_version: can be "NULL" or any single integral value (if "NULL", then all versions would be returned back)
