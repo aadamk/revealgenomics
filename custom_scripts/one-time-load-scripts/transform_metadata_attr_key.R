@@ -4,6 +4,11 @@
 
 rm(list=ls())
 library(revealgenomics)
+
+if (!revealgenomics:::scidb_exists_array(revealgenomics:::full_arrayname(.ghEnv$meta$arrMetadataAttrKey))) {  # one time only
+  rg_connect(username = 'scidbadmin')
+  init_db(arrays_to_init = .ghEnv$meta$arrMetadataAttrKey)
+}
 creds_file = '~/.rg_config_secure-rw.json'
 rg_connect(username = read_json(creds_file)$`user-name`, password = read_json(creds_file)$`user-password`)
 
