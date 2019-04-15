@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{search_versioned_secure_metadata_entity}
 \alias{search_versioned_secure_metadata_entity}
-\title{internal function for search_METADATA()}
+\title{internal function for \code{search_METADATA()}}
 \usage{
 search_versioned_secure_metadata_entity(entity, dataset_id,
   dataset_version, all_versions, con = NULL)

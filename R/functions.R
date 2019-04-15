@@ -989,10 +989,10 @@ filter_on_dataset_id_and_version = function(arrayname,
   download_unpivot_info_join(qq = qq, arrayname = arrayname, con = con)
 }
 
-#' internal function for search_METADATA()
+#' internal function for \code{search_METADATA()}
 #' 
-#' internal function for `search_individuals()`, `search_biosamples()` etc.
-#' search of a metadata entry by `dataset_id`
+#' internal function for \code{search_individuals()}, \code{search_biosamples()} etc.
+#' search of a metadata entry by \code{dataset_id}
 search_versioned_secure_metadata_entity = function(entity, 
                                                    dataset_id, 
                                                    dataset_version, 
