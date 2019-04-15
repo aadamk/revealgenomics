@@ -91,7 +91,7 @@ get_namespace = function(arrayname) sub("[.].*$", "", arrayname)
 drop_na_columns = function(df){
   if (nrow(df) > 0) {
     # http://stackoverflow.com/questions/2643939/remove-columns-from-dataframe-where-all-values-are-na
-    Filter(function(x) 
+    base::Filter(function(x) 
             !all(is.na(x)),
            df)
   } else {
