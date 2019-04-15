@@ -1452,6 +1452,9 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   exprs[ as.matrix(expr_dt[, .(feature_id_idx, biosample_id_idx)]) ] <- expr_dt$value
   cat(" done.\n")
   
+  # Convert back to dataframe
+  setDF(expr_df)
+  
   ##! Start fix code - Do the checking on the casted data frame instead!
   stopifnot( nrow(exprs) == nrow(feature_df) )
   stopifnot( ncol(exprs) == nrow(biosample_df) )
