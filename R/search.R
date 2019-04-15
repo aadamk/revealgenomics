@@ -682,7 +682,9 @@ dao_search_expression = function(entity,
     #       Post an issue at https://github.com/Paradigm4/revealgenomics/issues\n")
     #   return(NULL)
     # }
+    cat("Downloading full dataset from SciDB ... ")
     res = iquery(con$db, query = qq3, binary = TRUE, only_attributes = TRUE, return = TRUE)
+    cat(" done.\n")
   }
   
   if (!formExpressionSet) return(res)
