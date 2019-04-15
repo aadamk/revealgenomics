@@ -1245,12 +1245,28 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   
   #############################################
   ## Step 1 # Convert data frame to matrix
+  
+  # Old, slower method.
   # stopifnot(nrow(expr_df) == length(biosample_df$biosample_id) * length(feature_df$feature_id))
-  exprs = acast(expr_df, feature_id~biosample_id, value.var="value")
+  # exprs = acast(expr_df, feature_id~biosample_id, value.var="value")
+  
+  cat("Reshaping expr to Matrix...")
+  expr_dt[, `:=`(feature_id_idx = feature_id - min(feature_id) + 1,
+                         biosample_id_idx = biosample_id - min(biosample_id) + 1)]
+  exprs <- Matrix::Matrix(nrow = nrow(feature_df),
+              ncol = nrow(biosample_df),
+              data = 0,
+              sparse = F)
+  exprs[ as.matrix(expr_dt[, .(feature_id_idx, biosample_id_idx)]) ] <- expr_dt$value
+  cat(" done.\n")
   
   ##! Start fix code - Do the checking on the casted data frame instead!
   stopifnot( nrow(exprs) == nrow(feature_df) )
   stopifnot( ncol(exprs) == nrow(biosample_df) )
+  
+  # Set the row and column names to the id's first
+  rownames(exprs) = feature_df$feature_id
+  colnames(exprs) = biosample_df$biosample_id
   
   ## And let's at least provide a message to the console if we encounter this in any other study, since this is relevant for debugging! (-:
   
@@ -1322,7 +1338,7 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
                     data=fData, varMetadata = metadata)
   #############################################
   ## Step X # Convert to ExpressionSet
-  exampleSet <- ExpressionSet(assayData=exprs,
+  exampleSet <- ExpressionSet(assayData=as.matrix(exprs),
                               phenoData=phenoData,
                               featureData=featureData)
   exampleSet
