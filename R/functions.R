@@ -226,7 +226,7 @@ search_attributes = function(entity, updateCache = FALSE, con = NULL) {
 #'                  \code{entity_id}-s by running the function \code{get_entity_info()}
 search_metadata_attrkey = function(entity_id, updateCache = FALSE, con = NULL){
   metadtata_attrs_in_db = get_metadata_attrkey(updateCache = updateCache, con = con)
-  metadtata_attrs_in_db = metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
+  metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
 }
 
 #' @export
