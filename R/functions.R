@@ -206,6 +206,20 @@ get_metadata_attrkey = function(metadata_attrkey_id = NULL, updateCache = FALSE,
                                   con = con)
 }
 
+#' @export
+search_attributes = function(entity, updateCache = FALSE, con = NULL) {
+  entity_info = get_entity_info()
+  entity_info = entity_info[
+    which(sapply(entity_info$entity, 
+                 function(entity) .ghEnv$meta$L$array[[entity]]$infoArray)), ]
+  
+  if (! entity %in% entity_info$entity ) {
+    stop("Search by attributes are available by following entities:", 
+         pretty_print(entity_info$entity, prettify_after = nrow(entity_info)))
+  } 
+  
+  search_metadata_attrkey(entity_id = get_entity_id(entity), updateCache = updateCache, con = con)$metadata_attrkey
+}
 #' Search metadata attributes by entity id
 #' 
 #' @param entity_id id of API entity as assigned in \code{SCHEMA.yaml} file. You can list all 
