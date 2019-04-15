@@ -1056,7 +1056,11 @@ search_versioned_secure_metadata_entity_by_requested_attributes = function(entit
   attrkey = attrkey[attrkey$metadata_attrkey %in% requested_attributes, ]
   selection_query = gsub(idname, "key_id", 
                          formulate_base_selection_query(fullarrayname = entity, id = attrkey$metadata_attrkey_id))
-  filter_info_query = paste0("filter(", full_arrayname(entity), "_INFO,", selection_query, ")")
+  filter_info_query = paste0(
+    "filter(", 
+    custom_scan(), "(", 
+    full_arrayname(entity), "_INFO),", 
+    selection_query, ")")
   filter_info_df = iquery(con$db, filter_info_query, return = T)
   filter_info_df = spread(filter_info_df[, c(idname, 'key', 'val')], "key", value = "val")
   
