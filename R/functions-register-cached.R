@@ -13,6 +13,23 @@
 #
 
 #' @export
+register_metadata_attrkey = function(df1, only_test = FALSE, con = NULL){
+  uniq = unique_fields()[[.ghEnv$meta$arrMetadataAttrKey]]
+  test_register_metadata_attrkey(df1, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  
+  if (!only_test) {
+    arrayname = full_arrayname(.ghEnv$meta$arrMetadataAttrKey)
+    ids = register_tuple_return_id(df1, arrayname, uniq, con = con)
+    
+    # force update the cache
+    update_metadata_attrkey_cache(con = con)
+    
+    return(ids)
+  } # end of if (!only_test)
+}
+
+
+#' @export
 register_variant_key = function(df1, only_test = FALSE, con = NULL){
   uniq = unique_fields()[[.ghEnv$meta$arrVariantKey]]
   test_register_variant_key(df1, uniq, silent = ifelse(only_test, FALSE, TRUE))

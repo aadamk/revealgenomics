@@ -83,6 +83,20 @@ get_entity_from_cache = function(entitynm, id, updateCache, con = NULL) {
 ###################################################################################
 
 ##### VARIANT_KEY #####
+update_metadata_attrkey_cache = function(con = NULL){
+  update_entity_cache(entitynm = .ghEnv$meta$arrMetadataAttrKey, 
+                      con = con)
+}
+
+get_metadata_attrkey_from_cache = function(metadata_attrkey_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrMetadataAttrKey, 
+                        id = metadata_attrkey_id, 
+                        updateCache = updateCache, 
+                        con = con)
+}
+
+
+##### VARIANT_KEY #####
 update_variant_key_cache = function(con = NULL){
   update_entity_cache(entitynm = .ghEnv$meta$arrVariantKey, 
                       con = con)

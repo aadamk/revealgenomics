@@ -57,6 +57,7 @@ get_mandatory_fields_for_register_entity = function(arrayname){
     if (!(entitynm %in% c(.ghEnv$meta$arrProject,
                           .ghEnv$meta$arrDataset,
                           .ghEnv$meta$arrOntology,
+                          .ghEnv$meta$arrMetadataAttrKey, 
                           .ghEnv$meta$arrVariantKey))) {
       mandatory_fields = c('dataset_id', attrs)
     } else { # PROJECT, DATASET, ONTOLOGY, VARIANT_KEY
@@ -214,6 +215,10 @@ get_entity_data_class = function(entity){
   .ghEnv$meta$L$array[[entity]]$data_class
 }
 
+get_entity_id = function(entity){
+  .ghEnv$meta$L$array[[entity]]$entity_id
+}
+
 
 get_delete_by_entity = function(entity) { 
   entity = strip_namespace(entity)
@@ -225,13 +230,16 @@ get_delete_by_entity = function(entity) {
 #' @export
 get_entity_info = function(){
   df1 = data.frame(entity = get_entity_names(), stringsAsFactors = FALSE)
+  df1$entity_id =        sapply(get_entity_names(), function(entity) get_entity_id(entity))
   df1$class =            sapply(get_entity_names(), function(entity) get_entity_class(entity))
   df1$measurementdata_subclass = sapply(get_entity_names(), function(entity) .ghEnv$meta$L$array[[entity]]$measurementdata_subclass)
   df1$search_by_entity = sapply(get_entity_names(), function(entity) get_search_by_entity(entity))
   df1$delete_by_entity = sapply(get_entity_names(), function(entity) get_delete_by_entity(entity))
   df1 = data.frame(apply(df1, 2, function(col) {sapply(col, function(elem) {ifelse (is.null(elem), NA, elem)})}), 
                    stringsAsFactors = FALSE)
+  df1 = df1[order(df1$entity_id), ]
   rownames(df1) = NULL
+  
   df1
 }
 

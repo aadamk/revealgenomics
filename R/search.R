@@ -59,18 +59,35 @@ search_datasets = function(project_id = NULL, dataset_version = NULL, all_versio
 #' `search_individuals()` can be used to retrive
 #' all individuals in a particular dataset
 #' @export
-search_individuals = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
-                                          dataset_id, dataset_version, all_versions,
-                                          con = con)
+search_individuals = function(dataset_id = NULL, requested_attributes = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
+  if (is.null(requested_attributes)) { # return all flex fields
+    search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
+                                            dataset_id, dataset_version, all_versions,
+                                            con = con)
+  } else if (!is.null(requested_attributes) & is.null(dataset_id)) { # return only selected fields, across all dataset_id-s
+    search_versioned_secure_metadata_entity_by_requested_attributes(
+      entity = .ghEnv$meta$arrIndividuals,
+      requested_attributes = requested_attributes, 
+      dataset_version = dataset_version, 
+      all_versions = all_versions,
+      con = con)
+  }
 }
 
 #' @export
-search_biosamples = function(dataset_id = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
-  search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
-                                          dataset_id, dataset_version, all_versions,
-                                          con = con)
-  
+search_biosamples = function(dataset_id = NULL, requested_attributes = NULL, dataset_version = NULL, all_versions = FALSE, con = NULL){
+  if (is.null(requested_attributes)) { # return all flex fields
+    search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
+                                            dataset_id, dataset_version, all_versions,
+                                            con = con)
+  } else if (!is.null(requested_attributes) & is.null(dataset_id)) { # return only selected fields, across all dataset_id-s
+    search_versioned_secure_metadata_entity_by_requested_attributes(
+      entity = .ghEnv$meta$arrBiosample,
+      requested_attributes = requested_attributes, 
+      dataset_version = dataset_version, 
+      all_versions = all_versions,
+      con = con)
+  }
 }
 
 #' @export

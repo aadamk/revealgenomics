@@ -200,6 +200,35 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
                           con = con)
 }
 
+get_metadata_attrkey = function(metadata_attrkey_id = NULL, updateCache = FALSE, con = NULL){
+  get_metadata_attrkey_from_cache(metadata_attrkey_id = metadata_attrkey_id, 
+                                  updateCache = updateCache, 
+                                  con = con)
+}
+
+#' @export
+search_attributes = function(entity, updateCache = FALSE, con = NULL) {
+  entity_info = get_entity_info()
+  entity_info = entity_info[
+    which(sapply(entity_info$entity, 
+                 function(entity) .ghEnv$meta$L$array[[entity]]$infoArray)), ]
+  
+  if (! entity %in% entity_info$entity ) {
+    stop("Search by attributes are available by following entities:", 
+         pretty_print(entity_info$entity, prettify_after = nrow(entity_info)))
+  } 
+  
+  search_metadata_attrkey(entity_id = get_entity_id(entity), updateCache = updateCache, con = con)$metadata_attrkey
+}
+#' Search metadata attributes by entity id
+#' 
+#' @param entity_id id of API entity as assigned in \code{SCHEMA.yaml} file. You can list all 
+#'                  \code{entity_id}-s by running the function \code{get_entity_info()}
+search_metadata_attrkey = function(entity_id, updateCache = FALSE, con = NULL){
+  metadtata_attrs_in_db = get_metadata_attrkey(updateCache = updateCache, con = con)
+  metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
+}
+
 #' @export
 get_variant_key = function(variant_key_id = NULL, updateCache = FALSE, con = NULL){
   get_variant_key_from_cache(variant_key_id = variant_key_id, 
@@ -521,7 +550,37 @@ register_info = function(df, idname, arrayname, con = NULL){
                        new_info_col_nm)
     info = info %>%
       gather(key, val, info_col_pos)
-    register_tuple(df = info, ids_int64_conv = idname, arrayname = paste(arrayname,"_INFO",sep=""), con = con)
+    
+    # Check that all attribute column names are registered. If not, register
+    metadata_attrs = unique(info$key)
+    
+    entity_id = get_entity_id(entity = strip_namespace(arrayname))
+    metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id)
+    if (!(all(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey))) {
+      cat("Registering new metadata attributes:", 
+          pretty_print(metadata_attrs[!(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey)]), 
+          "\n")
+      metadata_attr_id = register_metadata_attrkey(
+        df1 = data.frame(metadata_attrkey = metadata_attrs, 
+                         entity_id = entity_id,
+                         stringsAsFactors = FALSE)
+      )
+      metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id)
+      stopifnot(all(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey))
+    }
+    
+    # Assign attribute key id-s within `INFO` data.frame 
+    # (do not leave `key_id` generation to scidb synthetic handling)
+    m1 = find_matches_and_return_indices(
+      source = info$key,
+      target = metadtata_attrs_in_db$metadata_attrkey
+    )
+    stopifnot(length(m1$source_unmatched_idx) == 0)
+    info$key_id = metadtata_attrs_in_db$metadata_attrkey_id[m1$target_matched_idx]
+    
+    # Register 
+    register_tuple(df = info, ids_int64_conv = c(idname, 'key_id'), 
+                   arrayname = paste(arrayname,"_INFO",sep=""), con = con)
   }
 }
 
@@ -930,10 +989,10 @@ filter_on_dataset_id_and_version = function(arrayname,
   download_unpivot_info_join(qq = qq, arrayname = arrayname, con = con)
 }
 
-#' internal function for search_METADATA()
+#' internal function for \code{search_METADATA()}
 #' 
-#' internal function for `search_individuals()`, `search_biosamples()` etc.
-#' search of a metadata entry by `dataset_id`
+#' internal function for \code{search_individuals()}, \code{search_biosamples()} etc.
+#' search of a metadata entry by \code{dataset_id}
 search_versioned_secure_metadata_entity = function(entity, 
                                                    dataset_id, 
                                                    dataset_version, 
@@ -943,19 +1002,92 @@ search_versioned_secure_metadata_entity = function(entity,
   df1 = filter_on_dataset_id_and_version(arrayname = entity, dataset_id, 
                                         dataset_version = dataset_version, 
                                         con = con)
+  
+  run_common_operations_on_search_metadata_output(df1 = df1, 
+                                                  dataset_id = dataset_id,
+                                                  all_versions = all_versions, 
+                                                  entity = entity, 
+                                                  con = con)
+}
+
+
+run_common_operations_on_search_metadata_output = function(df1, dataset_id, entity, all_versions, con) {
   # reorder the output by the dimensions
   # from https://stackoverflow.com/questions/17310998/sort-a-dataframe-in-r-by-a-dynamic-set-of-columns-named-in-another-data-frame
   if (nrow(df1) == 0) return(df1)
   df1 = df1[do.call(order, df1[get_idname(entity)]), ] 
-
-  df1 = apply_definition_constraints(df1 = df1,
-                                     dataset_id = dataset_id,
-                                     entity = entity,
-                                     con = con)
+  
+  if (!is.null(dataset_id)) {
+    df1 = apply_definition_constraints(df1 = df1,
+                                       dataset_id = dataset_id,
+                                       entity = entity,
+                                       con = con)
+  } else {
+    L1 = lapply(unique(df1$dataset_id), 
+                function(dataset_idi) {
+                  apply_definition_constraints(df1 = df1[df1$dataset_id == dataset_idi, ],
+                                               dataset_id = dataset_idi,
+                                               entity = entity,
+                                               con = con)
+                }) 
+    df1 = do.call(what = "rbind", 
+                  args = L1)
+  }
   
   if (!all_versions) return(latest_version(df1)) else return(df1)
 }
-
+#' internal function for \code{search_METADATA()} by set of requested attributes
+#' 
+#' internal function for \code{search_individuals()}, \code{search_biosamples()} etc.
+#' search of a metadata entry by \code{requested_attributes}
+search_versioned_secure_metadata_entity_by_requested_attributes = function(entity,
+                                                                           requested_attributes,
+                                                                           dataset_version, 
+                                                                           all_versions, 
+                                                                           con) {
+  con = use_ghEnv_if_null(con = con)
+  idname = get_base_idname(entity)
+  attrkey = search_metadata_attrkey(entity_id = get_entity_id(entity))
+  m1 = find_matches_and_return_indices(attrkey$metadata_attrkey, requested_attributes)
+  if (length(m1$source_matched_idx) == 0) {
+    stop("None of requested attributes match attributes present in DB for requested entity:", entity, 
+         ". Try running the function: \n search_attributes(entity = '", entity, "')")
+  }
+  attrkey = attrkey[attrkey$metadata_attrkey %in% requested_attributes, ]
+  selection_query = gsub(idname, "key_id", 
+                         formulate_base_selection_query(fullarrayname = entity, id = attrkey$metadata_attrkey_id))
+  filter_info_query = paste0(
+    "filter(", 
+    custom_scan(), "(", 
+    full_arrayname(entity), "_INFO),", 
+    selection_query, ")")
+  filter_info_df = iquery(con$db, filter_info_query, return = T)
+  filter_info_df = spread(filter_info_df[, c(idname, 'key', 'val')], "key", value = "val")
+  
+  stopifnot(length(unique(filter_info_df[, idname])) == nrow(filter_info_df))
+  filter_info_df = filter_info_df[order(filter_info_df[, idname]), ]
+  
+  orig_array_df = get_entity(entity = entity, id = filter_info_df[, idname], mandatory_fields_only = T, con = con)
+  orig_array_df = orig_array_df[order(orig_array_df[, idname]), ]
+  
+  stopifnot(nrow(orig_array_df) == nrow(filter_info_df))
+  
+  returned_cols = requested_attributes[(requested_attributes %in% colnames(filter_info_df))]
+  if (length(returned_cols) == 1) {
+    filter_info_df = data.frame('val' = filter_info_df[, returned_cols], 
+                                stringsAsFactors = FALSE)
+    filter_info_df = plyr::rename(filter_info_df, c('val' = returned_cols))
+  } else {
+    filter_info_df = filter_info_df[, returned_cols]
+  }
+  
+  df1 = cbind(orig_array_df, filter_info_df)
+  
+  run_common_operations_on_search_metadata_output(df1 = df1, all_versions = all_versions, 
+                                                  dataset_id = NULL,
+                                                  entity = entity, 
+                                                  con = con)
+}
 
 # dataset_version: can be "NULL" or any single integral value (if "NULL", then all versions would be returned back)
 cross_join_select_by_two_dims = function(qq, tt, val1, val2, selected_names, dataset_version, con = NULL){

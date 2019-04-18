@@ -1,6 +1,31 @@
 --- 
 array:
+  # METADATA_ATTRKEY
+  METADATA_ATTRKEY:
+    entity_id: 1001
+    data_class:
+      metadata
+    namespace:
+      - gh_public
+    attributes:
+      metadata_attrkey: string
+      entity_id: int64
+    unique_fields:
+      - metadata_attrkey
+      - entity_id
+    dims:
+      metadata_attrkey_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    search_by_entity: 
+    delete_by_entity: METADATA_ATTRKEY
+    infoArray: FALSE
+    compression_on: FALSE
+    cached: TRUE
   PROJECT: 
+    entity_id: 1002
     data_class:
       metadata
     namespace: 
@@ -24,6 +49,7 @@ array:
     infoArray_max_keys: 1000
     compression_on: FALSE
   DATASET:
+    entity_id: 1003
     data_class:
       metadata
     namespace: 
@@ -56,6 +82,7 @@ array:
     compression_on: FALSE
   # INDIVIDUAL
   INDIVIDUAL:
+    entity_id: 1004
     data_class:
       metadata
     namespace: 
@@ -91,6 +118,7 @@ array:
     compression_on: FALSE
   # BIOSAMPLE
   BIOSAMPLE:
+    entity_id: 1005
     data_class:
       metadata
     namespace: 
@@ -127,6 +155,7 @@ array:
     compression_on: FALSE
   # EXPERIMENTSET
   EXPERIMENTSET:
+    entity_id: 1006
     data_class:
       metadata
     namespace: 
@@ -164,6 +193,7 @@ array:
     compression_on: FALSE
   # MEASUREMENTSET
   MEASUREMENTSET:
+    entity_id: 1007
     data_class:
       metadata
     namespace:
@@ -204,6 +234,7 @@ array:
     compression_on: FALSE
   # MEASUREMENT
   MEASUREMENT:
+    entity_id: 1008
     data_class:
       metadata
     namespace: 
@@ -244,6 +275,7 @@ array:
     compression_on: FALSE
   # MEASUREMENTDATA_CACHE
   MEASUREMENTDATA_CACHE:
+    entity_id: 9001
     data_class:
       measurementdata_cache
     measurementdata_subclass:
@@ -283,6 +315,7 @@ array:
     compression_on: FALSE
   #RNAQUANTIFICATION
   RNAQUANTIFICATION:
+    entity_id: 8001
     data_class:
       measurementdata
     measurementdata_subclass:
@@ -323,6 +356,7 @@ array:
     compression_on: TRUE
   # VARIANT_KEY
   VARIANT_KEY:
+    entity_id: 1009
     data_class:
       metadata
     namespace:
@@ -344,6 +378,7 @@ array:
     cached: TRUE
   # VARIANT
   VARIANT:
+    entity_id: 8002
     data_class:
       measurementdata
     measurementdata_subclass:
@@ -394,6 +429,7 @@ array:
     compression_on: TRUE
   # FUSION
   FUSION:
+    entity_id: 8003
     data_class:
       measurementdata
     measurementdata_subclass:
@@ -449,6 +485,7 @@ array:
     compression_on: TRUE
   # PROTEOMICS
   PROTEOMICS:
+    entity_id: 8004
     data_class:
       measurementdata
     measurementdata_subclass:
@@ -489,6 +526,7 @@ array:
     compression_on: TRUE
   #COPYNUMBER_MAT
   COPYNUMBER_MAT:
+    entity_id: 8005
     data_class:
       measurementdata
     measurementdata_subclass:
@@ -529,6 +567,7 @@ array:
     compression_on: TRUE
   #COPYNUMBER_MAT_STRING
   COPYNUMBER_MAT_STRING:
+    entity_id: 8006
     data_class:
       measurementdata
     measurementdata_subclass:
@@ -569,6 +608,7 @@ array:
     compression_on: TRUE
   # COPYNUMBER_VARIANT
   COPYNUMBER_VARIANT:
+    entity_id: 8007
     data_class:
       measurementdata
     measurementdata_subclass:
@@ -619,6 +659,7 @@ array:
     compression_on: TRUE
   # CYTOMETRY_CYTOF
   CYTOMETRY_CYTOF:
+    entity_id: 8008
     data_class:
       measurementdata
     measurementdata_subclass:
@@ -659,6 +700,7 @@ array:
     compression_on: TRUE
   # ONTOLOGY
   ONTOLOGY:
+    entity_id: 1010
     data_class:
       metadata
     namespace: 
@@ -687,6 +729,7 @@ array:
     cached: TRUE
   # DEFINITION
   DEFINITION:
+    entity_id: 1011
     data_class:
       metadata
     namespace: 
@@ -724,6 +767,7 @@ array:
     cached: TRUE
   # FEATURESET
   FEATURESET:
+    entity_id: 2001
     data_class:
       featuredata
     namespace: 
@@ -750,6 +794,7 @@ array:
     compression_on: FALSE
   # FEATURE
   FEATURE:
+    entity_id: 2002
     data_class:
       featuredata
     namespace: 
@@ -792,6 +837,7 @@ array:
     compression_on: FALSE
   # FEATURE_SYNONYM
   FEATURE_SYNONYM:
+    entity_id: 2003
     data_class: 
       featuredata
     namespace:
@@ -823,6 +869,7 @@ array:
     compression_on: FALSE
   # GENE_SYMBOL
   GENE_SYMBOL:
+    entity_id: 2004
     data_class:
       featuredata
     namespace: 
@@ -844,6 +891,7 @@ array:
     compression_on: FALSE
   # GENELIST
   GENELIST:
+    entity_id: 3001
     data_class: 
       featuredata
     namespace:
@@ -870,6 +918,7 @@ array:
     compression_on: FALSE
   # GENELIST_GENE
   GENELIST_GENE:
+    entity_id: 3002
     data_class: 
       featuredata
     namespace:
@@ -896,6 +945,7 @@ array:
     compression_on: FALSE
   # REFERENCESET
   REFERENCESET:
+    entity_id: 2006
     data_class:
       featuredata
     namespace:

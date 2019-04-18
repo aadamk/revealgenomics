@@ -27,24 +27,25 @@ NULL
 
 .ghEnv$meta$L = yaml.load_file(system.file("data", "SCHEMA.yaml", package="revealgenomics"))
 
+.ghEnv$meta$arrMetadataAttrKey = 'METADATA_ATTRKEY'
 .ghEnv$meta$arrOntology = 'ONTOLOGY'
 .ghEnv$meta$arrDefinition = 'DEFINITION'
 .ghEnv$meta$arrProject = 'PROJECT'
 .ghEnv$meta$arrDataset = 'DATASET'
 .ghEnv$meta$arrIndividuals = 'INDIVIDUAL'
 .ghEnv$meta$arrBiosample = 'BIOSAMPLE'
+.ghEnv$meta$arrExperimentSet = 'EXPERIMENTSET'
+.ghEnv$meta$arrMeasurement = 'MEASUREMENT'
+.ghEnv$meta$arrMeasurementSet = 'MEASUREMENTSET'
 
 .ghEnv$meta$arrReferenceset = 'REFERENCESET'
 .ghEnv$meta$arrFeatureset = 'FEATURESET'
 .ghEnv$meta$arrFeature = 'FEATURE'
 .ghEnv$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
 .ghEnv$meta$arrGeneSymbol = 'GENE_SYMBOL'
+
 .ghEnv$meta$arrGenelist = 'GENELIST'
 .ghEnv$meta$arrGenelist_gene = 'GENELIST_GENE'
-
-.ghEnv$meta$arrExperimentSet = 'EXPERIMENTSET'
-.ghEnv$meta$arrMeasurement = 'MEASUREMENT'
-.ghEnv$meta$arrMeasurementSet = 'MEASUREMENTSET'
 
 .ghEnv$meta$arrMeasurementDataCache = 'MEASUREMENTDATA_CACHE'
 .ghEnv$meta$arrRnaquantification = 'RNAQUANTIFICATION'
