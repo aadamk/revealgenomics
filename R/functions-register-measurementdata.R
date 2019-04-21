@@ -262,6 +262,64 @@ register_expression_matrix = function(filepath,
   } # end of if (!only_test)
 }
 
+#' Register in-memory matrix
+#' 
+#' Register in-memory matrix (Expression, Proteomics etc.) into corresponding entity
+#' 
+#' @param mat in-memory matrix of feature_id (rows) by biosample_id (columns) and (expression/Proteomics/...) value
+#' @param measurementset data.frame containing information about MeasurementSet
+#' 
+#' @export
+register_in_memory_matrix = function(mat, measurementset) {
+  stopifnot(nrow(measurementset) == 1)
+  THRESHOLD = 50 # can upload x MB at a time
+  NSTEPS = ceiling(as.numeric(object.size(mat))/1024/1024/THRESHOLD)
+  
+  steps = revealgenomics:::return_sub_indices(bigN = ncol(mat), len_subelem = round(ncol(mat)/NSTEPS))
+  
+  # Verify that indices exist
+  bios_ids = sort(unique(as.integer(colnames(mat))))
+  stopifnot(
+    nrow(get_biosamples(biosample_id = bios_ids, mandatory_fields_only = T)) == ncol(mat)
+  )
+  
+  ftr_ids = sort(unique(as.integer(rownames(mat))))
+  stopifnot(
+    nrow(get_features(feature_id = ftr_ids, mandatory_fields_only = T)) == nrow(mat)
+  )
+  
+  if (measurementset$entity %in% get_entity_names()) {
+    entitynm = measurementset$entity
+  } else {
+    stop("case not covered")
+  }
+  for (upidx in 1:length(steps)) {
+    step = steps[[upidx]]
+    cat(paste0("Uploading sub-segment ", 
+               upidx, " of ", length(steps), " segments\n\t", 
+               "Rows: ", step[1], "-", tail(step, 1), "\n"))
+    
+    if (step[1] == tail(step, 1)) {
+      stop("Need to cover this corner case of only column to upload in this sub index\n")
+    }
+    # -------- Convert to data.frame and upload ----------
+    cat("Converting matrix to dataframe\n")
+    expr_df = as.data.frame(as.table(mat[, c(step[1]:tail(step, 1))]), stringsAsFactors = FALSE)
+    cat("Labeling columns and adding more metadata columns\n")
+    colnames(expr_df) = c('feature_id', 'biosample_id', 'value')
+    expr_df$feature_id = as.integer(expr_df$feature_id)
+    expr_df$biosample_id = as.integer(expr_df$biosample_id)
+    expr_df$dataset_id = as.integer(measurementset$dataset_id)
+    expr_df$measurementset_id = as.integer(measurementset$measurementset_id)
+    # sapply(expr_df, class)
+    
+    message("Registering ", as.integer(object.size(expr_df)/1024/1024),
+            " MB of data at measurementset_id: ", measurementset$measurementset_id,
+            " -- Pipeline: ", measurementset$name)
+    register_expression_dataframe(df1 = expr_df, dataset_version = 1)
+  }
+}
+
 #' Upload data into gene expression, protein expression, copy number matrix arrays
 #' 
 #' @export
