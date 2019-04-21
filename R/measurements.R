@@ -1,12 +1,14 @@
-#' register all measurements for a specific dataset
+#' register all measurements for all / a specific dataset
 #' 
 #' The function should be called after loading the \code{MeasurementData} arrays` (e.g. Variant, RNA-seq etc.).
 #' The \code{MEASUREMENT} entity records one entry for each entry in a \code{MeasurementData} array per biosample,
 #' per pipeline
 #' 
 #' (A \code{MEASUREMENT} combines both Experiment and Pipeline information) 
+#' 
+#' @param dataset_id restrict population of measurement entries to one study (default \code{NULL}: populate for all studies)
 #' @export
-populate_measurements = function(con = NULL) {
+populate_measurements = function(dataset_id = NULL, con = NULL) {
   con = use_ghEnv_if_null(con)
   db = con$db
   df_info = get_entity_info()
@@ -22,12 +24,23 @@ populate_measurements = function(con = NULL) {
     msrmt_set_nm = df_info_msrmt[idx, ]$search_by_entity
     msrmt_set_idnm = get_base_idname(msrmt_set_nm)
     t1 = proc.time()
-    res = iquery(db,
-                 paste("aggregate(", custom_scan(), "(", msrmt_array, 
-                       "), count(*), biosample_id, ", 
-                       msrmt_set_idnm, 
-                       ", dataset_version)"), 
-                 return = T)
+    if (is.null(dataset_id)) {
+      res = iquery(db,
+                   paste("aggregate(", custom_scan(), "(", msrmt_array, 
+                         "), count(*), biosample_id, ", 
+                         msrmt_set_idnm, 
+                         ", dataset_version)"), 
+                   return = T)
+    } else {
+      stopifnot(length(dataset_id) == 1)
+      res = iquery(db,
+                   paste("aggregate(filter(", 
+                         custom_scan(), "(", msrmt_array, 
+                         "), dataset_id = ", dataset_id, "), count(*), biosample_id, ", 
+                         msrmt_set_idnm, 
+                         ", dataset_version)"), 
+                   return = T)
+    }
     proc.time()-t1
     if (nrow(res) > 0) {
       cat("----Number of rows: ", nrow(res), "\n")

@@ -2,9 +2,12 @@
 % Please edit documentation in R/measurements.R
 \name{populate_measurements}
 \alias{populate_measurements}
-\title{register all measurements for a specific dataset}
+\title{register all measurements for all / a specific dataset}
 \usage{
-populate_measurements(con = NULL)
+populate_measurements(dataset_id = NULL, con = NULL)
+}
+\arguments{
+\item{dataset_id}{restrict population of measurement entries to one study (default \code{NULL}: populate for all studies)}
 }
 \description{
 The function should be called after loading the \code{MeasurementData} arrays` (e.g. Variant, RNA-seq etc.).
