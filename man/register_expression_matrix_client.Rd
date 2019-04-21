@@ -25,5 +25,5 @@ retrieve using \code{get_featureset(featureset_id = featureset_id)}}
 }
 \description{
 This wrapper function shows an example of how to call the internal upload function
-`register_expression_dataframe``
+\code{register_expression_dataframe}
 }

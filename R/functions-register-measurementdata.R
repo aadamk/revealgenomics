@@ -385,7 +385,7 @@ register_expression_dataframe = function(df1, dataset_version, con = NULL){
 #' Upload expression matrix file 
 #' 
 #' This wrapper function shows an example of how to call the internal upload function 
-#' `register_expression_dataframe``
+#' \code{register_expression_dataframe}
 #' 
 #' @param filepath can exist on SciDB server or client
 #' @param measurementset dataframe containing pipeline information for measurementset_id at which to insert expression data; 
