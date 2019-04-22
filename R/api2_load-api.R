@@ -348,13 +348,12 @@ api_register_featuresets_experimentsets_measurementsets = function(
   ftrset_df$source_uri = "..."
   
   refSets = get_referenceset()
-  if (nrow(refSets) > 2) {
-    stop("In following piece of code referenceSet linking logic is implemented assuming only two referenceSets: GRCh37 and GRCh38")
+  refset37_id = refSets[grep("grch37", refSets$name, ignore.case = T), ]$referenceset_id
+  refset38_id = refSets[grep("grch38", refSets$name, ignore.case = T), ]$referenceset_id
+  if (length(refset37_id) != 1 |
+              length(refset38_id) != 1) {
+    stop("Following logic expects one featureset named as grch38 and one featureset named as grch37")
   }
-  refset37_id = refSets[grep("37", refSets$name), ]$referenceset_id
-  refset38_id = refSets[grep("38", refSets$name), ]$referenceset_id
-  stopifnot(length(refset37_id) == 1 &
-              length(refset38_id) == 1)
   
   ftrset_df$referenceset_id = -1
   if (length(grep("37", ftrset_df$source)) > 0) {
