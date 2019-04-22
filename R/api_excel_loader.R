@@ -353,6 +353,12 @@ register_entities_workbook = function(workbook,
           cat("failed loading data\n")
         }
       } # end of loop through unique files in a measurementsets
+      qc_res = run_quality_control_checks(measurementset_id = msmtset_id_sel)
+      if ( (length(qc_res$condition1_failures) > 0) | 
+           (length(qc_res$condition2_failures) > 0) | 
+           (length(qc_res$unexpected_na_result_at) > 0) ) {
+        stop("Unexpected result here. Stop and check before proceeding")
+      }
     } # end of loop through measurementsets in a dataset record
   } # end of loop through dataset records
 }
