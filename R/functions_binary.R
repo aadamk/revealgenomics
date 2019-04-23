@@ -70,9 +70,9 @@ search_measurementdata_cache = function(measurementset, con = NULL) {
     } else {
       message("Multiple subparts")
       L1 = lapply(1:num_subparts, function(idx) {
-        cat("Downloading", idx, "of 3\n\t")
+        cat("Downloading", idx, "of", num_subparts, "\n\t")
         t1 = proc.time();
-        res = revealgenomics:::measurementdata_cache_download_subpart(measurementset = msi, subpartidx = idx, convert_to_R = FALSE)
+        res = revealgenomics:::measurementdata_cache_download_subpart(measurementset = measurementset, subpartidx = idx, convert_to_R = FALSE)
         cat((proc.time()-t1)[3], "seconds\n")
         res
       })
