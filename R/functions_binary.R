@@ -106,7 +106,11 @@ measurementdata_cache_is_cache_valid = function(measurementset, con = NULL) {
       ", cache_valid)"
     ),
     return = TRUE)
-  all(is_cache_valid$cache_valid)
+  if (nrow(is_cache_valid) == 0) {
+    return(FALSE)
+  } else {
+    return(all(is_cache_valid$cache_valid))
+  }
 }
 
 measurementdata_cache_get_num_subparts = function(measurementset, con = NULL) {
