@@ -168,6 +168,15 @@ build_reference_gene_set = function( featureset_id,
                                      hierarchy = c('ensembl_gene_id', 'vega_id', 
                                                    'ucsc_id', 'ccds_id', 'gene_symbol', 'hgnc_id'),
                                      con = NULL) {
+  ftrset = get_featuresets(featureset_id = featureset_id, con = con)
+  if (is.null(gene_annotation_file_path) | is.null(gene_location_file_path)) {
+    if (!grepl("38", ftrset$name)) {
+      message("Asked to build featureset at name: ", ftrset$name, "\n\t -- API provides default annotation for GRCh38 only\n")
+      if (!user_confirms_action(action = "building of reference gene set")) {
+        return(FALSE)
+      }
+    }
+  }
   if (is.null(gene_annotation_file_path)) {
     gene_annotation_file_path = system.file("extdata", 
                                             "gene__hugo__hgnc_complete_set.txt.gz", package="revealgenomics")
