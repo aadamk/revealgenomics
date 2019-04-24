@@ -167,3 +167,19 @@ na_to_blank = function(terms) {
   ifelse(is.na(terms), "", terms)
 }
 
+#' check before proceeding
+#' 
+#' ask user for confirmation before proceeding with an action
+#' 
+#' @param action a string describing the action that will be taken if user confirms
+user_confirms_action = function(action) {
+  message("Do you still want to proceed with: ", action, "?\n")
+  response <- readline("(Y)es/(N)o: ")
+  if ( (tolower(response) == 'y' | tolower(response) == 'yes') & !is.na(response)) {
+    cat("Proceeding with", action, "\n")
+    return(TRUE)
+  } else{
+    cat("Canceled", action, "\n")
+    return(FALSE)
+  }
+}
