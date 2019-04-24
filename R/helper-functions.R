@@ -173,13 +173,20 @@ na_to_blank = function(terms) {
 #' 
 #' @param action a string describing the action that will be taken if user confirms
 user_confirms_action = function(action) {
-  message("Do you still want to proceed with: ", action, "?\n")
-  response <- readline("(Y)es/(N)o: ")
-  if ( (tolower(response) == 'y' | tolower(response) == 'yes') & !is.na(response)) {
-    cat("Proceeding with", action, "\n")
-    return(TRUE)
-  } else{
-    cat("Canceled", action, "\n")
-    return(FALSE)
+  userResponse <- NA
+  while(is.na(userResponse) | nchar(userResponse) == 0) { 
+    userResponse <- readline(
+      prompt = paste0("Do you want to continue with action: ", action, "? (yes/no): \n  "))
+    switch(tolower(userResponse), 
+           "yes" = {  
+             cat("Proceeding with action: ", action, "\n")
+             proceed = TRUE
+           },
+           "no" = {  
+             cat("Canceled action: ", action, "\n")
+             proceed = FALSE
+             },
+           { message("Please respond with yes or no"); userResponse <- NA })
   }
+  return(proceed)
 }
