@@ -1047,7 +1047,7 @@ search_versioned_secure_metadata_entity_by_requested_attributes = function(entit
                                                                            con) {
   con = use_ghEnv_if_null(con = con)
   idname = get_base_idname(entity)
-  attrkey = search_metadata_attrkey(entity_id = get_entity_id(entity))
+  attrkey = search_metadata_attrkey(entity_id = get_entity_id(entity), con = con)
   m1 = find_matches_and_return_indices(attrkey$metadata_attrkey, requested_attributes)
   if (length(m1$source_matched_idx) == 0) {
     stop("None of requested attributes match attributes present in DB for requested entity:", entity, 
