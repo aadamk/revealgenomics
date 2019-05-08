@@ -5,12 +5,16 @@
 \title{Search features}
 \usage{
 search_features(gene_symbol = NULL, feature_type = NULL,
-  featureset_id = NULL, con = NULL)
+  featureset_id = NULL, mandatory_fields_only = FALSE, con = NULL)
 }
 \arguments{
 \item{gene_symbol}{(optional) which gene symbol(s) e.g. \code{c('EGFR', 'KRAS')} / primary symbol(s) e.g. \code{c('TIME', 'CELL.LENGTH')} to search by}
 
 \item{feature_type}{(optional) subselect by feature_type. Ranges between \code{c('gene', 'probeset', 'transcript', 'protein_probe', 'cytof')}}
+
+\item{featureset_id}{(optional) which \code{featureset_id} to search it}
+
+\item{mandatory_fields_only}{(default:FALSE) return only mandatory fields}
 }
 \description{
 Search features

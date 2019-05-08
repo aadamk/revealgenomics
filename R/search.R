@@ -272,11 +272,14 @@ search_feature_by_synonym = function(synonym, id_type = NULL, featureset_id = NU
 #' 
 #' @param gene_symbol (optional) which gene symbol(s) e.g. \code{c('EGFR', 'KRAS')} / primary symbol(s) e.g. \code{c('TIME', 'CELL.LENGTH')} to search by
 #' @param feature_type (optional) subselect by feature_type. Ranges between \code{c('gene', 'probeset', 'transcript', 'protein_probe', 'cytof')}
+#' @param featureset_id (optional) which \code{featureset_id} to search it
+#' @param mandatory_fields_only (default:FALSE) return only mandatory fields
 #' @export
 search_features = function(
   gene_symbol = NULL, 
   feature_type = NULL, 
   featureset_id = NULL, 
+  mandatory_fields_only = FALSE, 
   con = NULL) {
   if (!is.null(feature_type)) {
     allowed_feature_types = c('gene', 'probeset', 'transcript', 
@@ -314,9 +317,11 @@ search_features = function(
     qq = paste("filter(", qq, ", ", subq, ")", sep="")
   }
   
-  df1 = join_info_unpivot(qq, arrayname, 
-                    replicate_query_on_info_array = TRUE, 
-                    con = con)
+  df1 = download_unpivot_info_join(
+    qq = qq, 
+    arrayname = arrayname, 
+    mandatory_fields_only = mandatory_fields_only, 
+    con = con)
   
   if (!is.null(feature_type)){
     df1[df1$feature_type %in% feature_type, ]
