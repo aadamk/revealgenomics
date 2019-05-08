@@ -993,7 +993,8 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[external]-[RNA-seq] Sailfish}{gene}" = ,
          "{[internal]-[RNA-Seq] RSEM}{gene}" = ,
          "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] Cufflinks}{gene}" = ,
-         "{[external]-[RNA-seq] featureCounts}{gene}" =
+         "{[external]-[RNA-seq] featureCounts}{gene}" = ,
+         "{[DNAnexus]-[RNAseq_Expression_AlignmentBased v1.3.3] RSEM}{gene}" = 
            DataLoaderRNASeqGeneFormat$new(data_df = data_df,
                                           reference_object = reference_object,
                                           feature_annotation_df = feature_annotation_df),
@@ -1018,7 +1019,8 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
                                        reference_object = reference_object),
          "{[external]-[Single Nucleotide Variant] MuTect / seurat / strelka}{DNA}" =,
          "{[external]-[Single Nucleotide Variant] Targeted Region - DNA Analysis Pipeline for Cancer (Personalis)}{DNA}" = ,
-         "{[external]-[Single Nucleotide Variant] Targeted Region - FoundationOne Heme (FMI)}{DNA}" =
+         "{[external]-[Single Nucleotide Variant] Targeted Region - FoundationOne Heme (FMI)}{DNA}" = ,
+         "{[DNAnexus]-[Variant_DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" = 
            DataLoaderVariantFormatA$new(data_df = data_df,
                                         reference_object = reference_object, 
                                         feature_annotation_df = feature_annotation_df),
