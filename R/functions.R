@@ -1042,6 +1042,7 @@ run_common_operations_on_search_metadata_output = function(df1, dataset_id, enti
 #' search of a metadata entry by \code{requested_attributes}
 search_versioned_secure_metadata_entity_by_requested_attributes = function(entity,
                                                                            requested_attributes,
+                                                                           dataset_id, 
                                                                            dataset_version, 
                                                                            all_versions, 
                                                                            con) {
@@ -1061,6 +1062,16 @@ search_versioned_secure_metadata_entity_by_requested_attributes = function(entit
     custom_scan(), "(", 
     full_arrayname(entity), "_INFO),", 
     selection_query, ")")
+  if (!is.null(dataset_id)) {
+    if (length(dataset_id) != 1) stop("Expect to search one dataset at a time")
+    filter_info_query = paste0(
+      "filter(", 
+      filter_info_query, 
+      ", dataset_id = ", 
+      dataset_id, 
+      ")"
+    )
+  }
   filter_info_df = iquery(con$db, filter_info_query, return = T)
   filter_info_df = spread(filter_info_df[, c(idname, 'key', 'val')], "key", value = "val")
   

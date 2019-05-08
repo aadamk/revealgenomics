@@ -64,10 +64,11 @@ search_individuals = function(dataset_id = NULL, requested_attributes = NULL, da
     search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrIndividuals, 
                                             dataset_id, dataset_version, all_versions,
                                             con = con)
-  } else if (!is.null(requested_attributes) & is.null(dataset_id)) { # return only selected fields, across all dataset_id-s
+  } else if (!is.null(requested_attributes)) { # return only selected fields, across all/selected dataset_id-s
     search_versioned_secure_metadata_entity_by_requested_attributes(
       entity = .ghEnv$meta$arrIndividuals,
       requested_attributes = requested_attributes, 
+      dataset_id = dataset_id, 
       dataset_version = dataset_version, 
       all_versions = all_versions,
       con = con)
@@ -80,10 +81,11 @@ search_biosamples = function(dataset_id = NULL, requested_attributes = NULL, dat
     search_versioned_secure_metadata_entity(entity = .ghEnv$meta$arrBiosample, 
                                             dataset_id, dataset_version, all_versions,
                                             con = con)
-  } else if (!is.null(requested_attributes) & is.null(dataset_id)) { # return only selected fields, across all dataset_id-s
+  } else if (!is.null(requested_attributes)) { # return only selected fields, across all/selected dataset_id-s
     search_versioned_secure_metadata_entity_by_requested_attributes(
       entity = .ghEnv$meta$arrBiosample,
       requested_attributes = requested_attributes, 
+      dataset_id = dataset_id, 
       dataset_version = dataset_version, 
       all_versions = all_versions,
       con = con)
