@@ -5,7 +5,7 @@
 \title{internal function for \code{search_METADATA()} by set of requested attributes}
 \usage{
 search_versioned_secure_metadata_entity_by_requested_attributes(entity,
-  requested_attributes, dataset_version, all_versions, con)
+  requested_attributes, dataset_id, dataset_version, all_versions, con)
 }
 \description{
 internal function for \code{search_individuals()}, \code{search_biosamples()} etc.
