@@ -796,7 +796,7 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
                                       join_algorithm = 'equi_join')
     
     # URL length restriction enforce by apache (see https://github.com/Paradigm4/<CUSTOMER>/issues/53)
-    THRESH_query_len = 270000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
+    THRESH_query_len = 200000 # as set in /opt/rh/httpd24/root/etc/httpd/conf.d/25-default_ssl.conf
     
     if (stringi::stri_length(qq) >= THRESH_query_len) {
       selector = data.frame(feature_id = as.integer(feature_id), 
