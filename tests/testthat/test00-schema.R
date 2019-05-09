@@ -3,7 +3,7 @@ context("test-schema.R")
 
 test_that("get_base_idname(ENTITY) matches entity_id for metadata classes", {
   expect_base_idname = function(entity) {
-    expect_equal(get_base_idname(entity), 
+    expect_equal(revealgenomics:::get_base_idname(entity), 
                  paste0(tolower(entity), "_id"))
   }
   expect_base_idname(entity = .ghEnv$meta$arrFeature)

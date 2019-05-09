@@ -74,7 +74,10 @@ test_that("Check that variant registration works properly", {
       .ghEnv$meta$arrFeatureSynonym,
       .ghEnv$meta$arrBiosample,
       .ghEnv$meta$arrMeasurementSet,
-      .ghEnv$meta$arrDataset), 
+      .ghEnv$meta$arrDataset,
+      .ghEnv$meta$arrMetadataAttrKey,
+      .ghEnv$meta$arrGeneSymbol
+      ), 
       force = TRUE)
     
     # Register dummy dataset
@@ -172,6 +175,11 @@ test_that("Check that variant registration works properly", {
       .ghEnv$meta$arrFeature,
       .ghEnv$meta$arrFeatureSynonym,
       .ghEnv$meta$arrBiosample,
-      .ghEnv$meta$arrMeasurementSet), force = TRUE)
+      .ghEnv$meta$arrMeasurementSet,
+      .ghEnv$meta$arrDataset,
+      .ghEnv$meta$arrMetadataAttrKey,
+      .ghEnv$meta$arrGeneSymbol
+    ), 
+    force = TRUE)
   }
 })

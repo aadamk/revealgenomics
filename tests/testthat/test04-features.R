@@ -7,7 +7,9 @@ test_that("Check that feature download works when feature_id is a long integer "
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = c(.ghEnv$meta$arrFeature, 
                                .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
+                               .ghEnv$meta$arrFeatureSynonym, 
+                               .ghEnv$meta$arrMetadataAttrKey), 
+            force = TRUE)
     feature_id = register_feature(df = data.frame(name = "dummyFeature", 
                                      gene_symbol = "dummySymbol",
                                      featureset_id = 1000, 
@@ -26,7 +28,9 @@ test_that("Check that feature download works when feature_id is a long integer "
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrFeature, 
                                .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
+                               .ghEnv$meta$arrFeatureSynonym, 
+                               .ghEnv$meta$arrMetadataAttrKey), 
+            force = TRUE)
     
   }
 })
@@ -40,7 +44,8 @@ test_that("Simple check that feature registration handles synonyms appropriately
                                .ghEnv$meta$arrFeatureset, 
                                .ghEnv$meta$arrFeature, 
                                .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
+                               .ghEnv$meta$arrFeatureSynonym, 
+                               .ghEnv$meta$arrMetadataAttrKey), force = TRUE)
     # Any random referenceset
     refset = get_referenceset()
     if (nrow(refset) >= 1) { # If ReferenceSet has been  filled by this time
@@ -64,7 +69,8 @@ test_that("Simple check that feature registration handles synonyms appropriately
                         start = '-1',
                         end = '-1',
                         feature_type = "gene",
-                        source = "...")
+                        source = "...", 
+                        stringsAsFactors = FALSE)
     
     feature_record = register_feature(df = df_ftr, register_gene_synonyms = TRUE)
     
@@ -82,7 +88,8 @@ test_that("Simple check that feature registration handles synonyms appropriately
                                .ghEnv$meta$arrFeatureset, 
                                .ghEnv$meta$arrFeature, 
                                .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
+                               .ghEnv$meta$arrFeatureSynonym, 
+                               .ghEnv$meta$arrMetadataAttrKey), force = TRUE)
     
   }
 })
@@ -96,7 +103,8 @@ test_that("Advanced check that feature registration handles synonyms appropriate
                                .ghEnv$meta$arrFeatureset, 
                                .ghEnv$meta$arrFeature, 
                                .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
+                               .ghEnv$meta$arrFeatureSynonym, 
+                               .ghEnv$meta$arrMetadataAttrKey), force = TRUE)
     # Any random referenceset
     refset = get_referenceset()
     if (nrow(refset) >= 1) { # If ReferenceSet has been  filled by this time
@@ -106,7 +114,7 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     }
     
     fset_id = register_featureset(df = data.frame(referenceset_id = refset_id,
-                                                  name = "debug_test_featureset",
+                                                  name = "debug_test_featureset_grch38",
                                                   description = "...",
                                                   source_uri = "...", 
                                                   stringsAsFactors = FALSE))
@@ -114,9 +122,12 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     feature_record = build_reference_gene_set(featureset_id = fset_id)
     
     ftrs = get_features()
+    ftrs_mandatory_fields = get_features(mandatory_fields_only = TRUE)
     fsyn = revealgenomics:::get_feature_synonym()
     
     expect_true(length(unique(fsyn$feature_id)) == nrow(ftrs))
+    expect_true(ncol(ftrs) > ncol(ftrs_mandatory_fields))
+    expect_true(nrow(ftrs) == nrow(ftrs_mandatory_fields))
     expect_true(nrow(ftrs) == 55980)
     expect_true(nrow(fsyn) == 544383)
     
@@ -240,6 +251,11 @@ test_that("Advanced check that feature registration handles synonyms appropriate
       nrow(search_features(feature_type = 'protein_probe')),
       length(unique(c(str1, str2)))
     )
+    # Retrieve by search -- mandatory_fields_only
+    expect_equal(
+      nrow(search_features(feature_type = 'protein_probe', mandatory_fields_only = TRUE)),
+      length(unique(c(str1, str2)))
+    )
     # Retrieve by get
     expect_equal(
       nrow(get_features(
@@ -247,6 +263,16 @@ test_that("Advanced check that feature registration handles synonyms appropriate
           c(prot_probe_res$feature_id, 
             prot_probe_res2$feature_id)
         ))),
+      length(unique(c(str1, str2)))
+    )
+    
+    # Retrieve by get -- mandatory_fields_only
+    expect_equal(
+      nrow(get_features(
+        feature_id = unique(
+          c(prot_probe_res$feature_id, 
+            prot_probe_res2$feature_id)
+        ), mandatory_fields_only = TRUE)),
       length(unique(c(str1, str2)))
     )
     
@@ -279,9 +305,9 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     )
     
     # 10 features
-    vec10 = sample(c(1:max(ff_all$feature_id)), size = 10)
+    vec10 = sample(c(1:max(ff_all1$feature_id)), size = 10)
     ff_10_1 = get_features(feature_id = vec10)
-    ff_10_1 = get_features(feature_id = vec10, 
+    ff_10_2 = get_features(feature_id = vec10, 
                            mandatory_fields_only = TRUE)
     expect_equal(
       nrow(ff_10_1), 10
@@ -296,9 +322,9 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     )
     
     # 1000 features
-    vec1000 = sample(c(1:max(ff_all$feature_id)), size = 1000)
+    vec1000 = sample(c(1:max(ff_all1$feature_id)), size = 1000)
     ff_1000_1 = get_features(feature_id = vec1000)
-    ff_1000_1 = get_features(feature_id = vec1000, 
+    ff_1000_2 = get_features(feature_id = vec1000, 
                            mandatory_fields_only = TRUE)
     expect_equal(
       nrow(ff_1000_1), 1000
@@ -313,12 +339,12 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     )
     
     # 30000 features -- must use as.scidb
-    vec30k = sample(c(1:max(ff_all$feature_id)), size = 30000)
+    vec30k = sample(c(1:max(ff_all1$feature_id)), size = 30000)
     ff_30k_1 = get_features(feature_id = vec30k)
-    ff_30k_1 = get_features(feature_id = vec30k, 
+    ff_30k_2 = get_features(feature_id = vec30k, 
                              mandatory_fields_only = TRUE)
-    expect_equal(
-      nrow(ff_30k_1), 1000
+    expect_true(
+      nrow(ff_30k_1) >= 30000 # protein probe features can have one feature_id mapping to multiple feature_id, gene_symbol_id tuples
     )
     expect_equal(
       nrow(ff_30k_1),
@@ -334,7 +360,7 @@ test_that("Advanced check that feature registration handles synonyms appropriate
                                .ghEnv$meta$arrFeatureset, 
                                .ghEnv$meta$arrFeature, 
                                .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym), force = TRUE)
-    
+                               .ghEnv$meta$arrFeatureSynonym, 
+                               .ghEnv$meta$arrMetadataAttrKey), force = TRUE)
   }
 })

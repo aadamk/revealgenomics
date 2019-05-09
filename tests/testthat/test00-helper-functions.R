@@ -14,15 +14,14 @@ test_that("verify output of names_to_numbered_vec_by_uniqueness", {
   res1 = c(1, 2, 1, 3)
   names(res1) = vec_names1
   expect_equal(
-    names_to_numbered_vec_by_uniqueness(vec_names1),
+    revealgenomics:::names_to_numbered_vec_by_uniqueness(vec_names1),
     res1
   )
   
   res2 = c(1, 2, 3, 1, 2, 4)
   names(res2) = as.character(vec_names2)
   expect_equal(
-    names_to_numbered_vec_by_uniqueness(vec_names2),
+    revealgenomics:::names_to_numbered_vec_by_uniqueness(vec_names2),
     res2
   )
-  
 })
