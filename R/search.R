@@ -281,6 +281,10 @@ search_features = function(
   featureset_id = NULL, 
   mandatory_fields_only = FALSE, 
   con = NULL) {
+  if (is.null(feature_type) & is.null(featureset_id) & is.null(gene_symbol)) {
+    stop("Must provide at least one of the following search parameters:", 
+         "\n\tgene_symbol, feature_type, featureset_id")
+  }
   if (!is.null(feature_type)) {
     allowed_feature_types = c('gene', 'probeset', 'transcript', 
                             'protein_probe', 'cytof')
@@ -317,6 +321,19 @@ search_features = function(
     qq = paste("filter(", qq, ", ", subq, ")", sep="")
   }
   
+  if (qq == arrayname) { # no conditions were applied in terms of gene_symbol, featureset_id
+    if (mandatory_fields_only) {
+      if (!is.null(feature_type)){
+        qq = paste0("filter(", arrayname, ", feature_type = '", feature_type, "')")
+      } else {
+        stop("Should not have arrived here\n", 
+             "Must provide at least one of the following search parameters:", 
+             "\n\tgene_symbol, feature_type, featureset_id")
+      }
+    } else { # when all fields are requested
+      # can find more optimum AFL path here
+    }
+  } 
   df1 = download_unpivot_info_join(
     qq = qq, 
     arrayname = arrayname, 
