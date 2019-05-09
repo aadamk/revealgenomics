@@ -824,12 +824,21 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
             ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
           return = T)
         ftr_info = drop_equi_join_dims(ftr_info)
-        ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
+        if (length(unique(ftr$feature_id)) < nrow(ftr)) { # feature_id-s are not unique (one feature_id mapping to multiple gene_symbol_id)
+          cols_to_use = c(get_base_idname(arrayname), 'gene_symbol_id')
+        } else {
+          cols_to_use = get_base_idname(arrayname)
+        }
+        ftr_info = ftr_info[, c(cols_to_use, 'key', 'val')]
         ftr_info = ftr_info[!is.na(ftr_info$val) & ftr_info$val != "" & ftr_info$val != "NA", ]
         # Following extracted from `unpivot_key_value_pairs()`
         x2t = spread(ftr_info, "key", value = "val")
         x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
-        result = merge(ftr, x2t, by = get_base_idname(arrayname), all.x = T)
+        if (nrow(ftr) > 0) {
+          result = merge(ftr, x2t, by = cols_to_use, all.x = T)
+        } else {
+          result = ftr
+        }
       }
     } else {
       result = download_unpivot_info_join(
@@ -843,20 +852,26 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
     result = result[order(result$feature_id), ]
     if (!mandatory_fields_only) {
       ftr_info = iquery(con$db, paste(qq, "_INFO", sep=""), return = T)
-      ftr_info = ftr_info[, c('feature_id', 'key', 'val')]
-      ftr_info = ftr_info[!is.na(ftr_info$val) & ftr_info$val != "" & ftr_info$val != "NA", ]
-      ftr_info = spread(ftr_info, "key", value = "val")
-      if (FALSE) { # old method
-        result = merge(result, ftr_info, by = get_base_idname(arrayname), all.x = T)
-      } else {
-        ftr_info = ftr_info[order(ftr_info$feature_id), ]
-        result = rbind.fill(
-          result[!(result$feature_id %in% ftr_info$feature_id), ], 
-          cbind(
-            result[(result$feature_id %in% ftr_info$feature_id), ], 
-            ftr_info))
-        result = result[order(result$feature_id), ]
-      }
+      if (nrow(ftr_info) > 0) {
+        ftr_info = ftr_info[, c('gene_symbol_id', 'feature_id', 'key', 'val')]
+        ftr_info = ftr_info[!is.na(ftr_info$val) & ftr_info$val != "" & ftr_info$val != "NA", ]
+        ftr_info = spread(ftr_info, "key", value = "val")
+        if (length(unique(result$feature_id)) < nrow(result)) { # use basic R method because optimization in `else` clause has not been worked out for protein probes where one `feature_id` might point to multiple `gene_symbol_id`-s
+          result = merge(result, ftr_info, 
+                         by = c(
+                           get_base_idname(arrayname),
+                           'gene_symbol_id'
+                           ), all.x = T)
+        } else {
+          ftr_info = ftr_info[order(ftr_info$feature_id), ]
+          result = rbind.fill(
+            result[!(result$feature_id %in% ftr_info$feature_id), ], 
+            cbind(
+              result[(result$feature_id %in% ftr_info$feature_id), ], 
+              ftr_info))
+          result = result[order(result$feature_id), ]
+        }
+      } 
     }
   }
   result
@@ -1299,7 +1314,13 @@ download_unpivot_info_join = function(qq,
                         schema = res2_schema)
         }
         # Drop the unnecessary ID-s
-        res2[, c(get_base_idname(arrayname), 'key', 'val')]
+        if (strip_namespace(arrayname) == .ghEnv$meta$arrFeature) {
+          # special handling because feature_id might not be unique when one protein probe can map to multiple genes
+          cols_for_use = c(get_base_idname(arrayname), 'gene_symbol_id')
+        } else {
+          cols_for_use = get_base_idname(arrayname)
+        }
+        res2[, c(cols_for_use, 'key', 'val')]
       }
     }, error = function(e) {
       print(e)
@@ -1313,7 +1334,7 @@ download_unpivot_info_join = function(qq,
     } else if (nrow(res2) > 0) {
       res2_t = spread(res2, "key", value = "val")
       if (exists('debug_trace')) {t1 = proc.time()}
-      res_df = merge(res1, res2_t, by = get_base_idname(arrayname), all.x = TRUE)
+      res_df = merge(res1, res2_t, by = cols_for_use, all.x = TRUE)
       if (exists('debug_trace')) {cat("join with info in R:\n"); print( proc.time()-t1 )}
     } else {
       res_df = res1
