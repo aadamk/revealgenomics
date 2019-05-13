@@ -265,10 +265,7 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                             }
                                           }
                                           
-                                          if (!skip_enforcing_data_file_sample_name) {
-                                            super$enforce_data_file_sample_name_column()
-                                          }
-                                          
+                                          # Find which column library current file matches with
                                           matchWithLibrary = sapply(cols_library, function(item) {
                                             cols_to_match = c(item$annotation_col, item$ftr_col,
                                                               item$start_col, item$end_col)
@@ -277,11 +274,16 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                                                 item$sample_col)
                                             }
                                             all(cols_to_match %in% colnames(private$.data_df))}
-                                            )
+                                          )
                                           if (!any(matchWithLibrary)) {
                                             stop("Expected match with at least one of the library options")
                                           }
                                           colsMatched = cols_library[[names(which(matchWithLibrary))]]
+                                          
+                                          # Enforce data file sample name column if required
+                                          if (!skip_enforcing_data_file_sample_name) {
+                                            super$enforce_data_file_sample_name_column(column_in_file = colsMatched$sample_col)
+                                          }
                                           
                                           cat("Rule 1:\n")
                                           mandatory_columns = colsMatched$annotation_col
