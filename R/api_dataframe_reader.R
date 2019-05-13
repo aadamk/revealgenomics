@@ -242,6 +242,14 @@ DataReaderVariantFormatA = R6::R6Class(classname = 'DataReaderVariantFormatA',
                                               sample_col = 'biosample_name', # this will be manually introduced below
                                               start_col = 'POS',
                                               end_col = 'POS'
+                                            ), 
+                                            option4 = list( # Covance panel
+                                              annotation_col = c('ref', 'alt', 'chrom', 'rs_ids'),
+                                              ftr_col    = 'gene',
+                                              ftr_compare_col = 'gene_symbol',
+                                              sample_col = 'PFREFID',
+                                              start_col = 'start',
+                                              end_col = 'end'
                                             )
                                           )
                                           
