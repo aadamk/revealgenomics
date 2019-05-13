@@ -73,19 +73,23 @@ DataReader = R6::R6Class(classname = 'DataReader',
                                  FALSE
                              } 
                            },
-                           enforce_data_file_sample_name_column = function() {
+                           # Handle case when sample column in data file is different from name in sample manifest
+                           # 
+                           # Replace sample column in file with `original_sample_name` (name from sample manifest) using 
+                           # mapping (from `data_file_sample_name` to `original_sample_name` provided in Excel file 
+                           enforce_data_file_sample_name_column = function(column_in_file = 'biosample_name') {
                              need_to_enforce = self$need_to_enforce_data_file_sample_name_column()
                              if (need_to_enforce) {
                                cat("Pipelines sheet column `data_file_sample_name` is different from column `original_sample_name`\n")
-                               if ('biosample_name' %in% colnames(private$.data_df)) {
+                               if (column_in_file %in% colnames(private$.data_df)) {
                                  m1 = find_matches_and_return_indices(
-                                   private$.data_df$biosample_name, 
+                                   private$.data_df[, column_in_file], 
                                    private$.pipeline_df$data_file_sample_name
                                  )
                                  stopifnot(length(m1$source_unmatched_idx) == 0) # Being very restrictive right now
-                                 private$.data_df$biosample_name = 
+                                 private$.data_df[, column_in_file] = 
                                    private$.pipeline_df[m1$target_matched_idx, ]$original_sample_name
-                               } else { # if `biosample_name` not in columns of private$.data_df, assume that data is in matrix format
+                               } else { # if `column_in_file` not in columns of private$.data_df, assume that data is in matrix format
                                  m0 = find_matches_and_return_indices(
                                    source = colnames(private$.data_df),
                                    target = private$.pipeline_df$data_file_sample_name
