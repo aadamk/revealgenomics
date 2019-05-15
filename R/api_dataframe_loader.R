@@ -42,13 +42,26 @@ find_matching_featureset = function(
 feature_matching_level1 = function(data_df, # data-frame containing feature and measurement values
                                    col_match_ftr_name, # column in data to match with scidb features
                                    fset, # specific featureset to be used for matching
-                                   feature_df # features data frame at specific featureset_id
+                                   feature_df, # features data frame at specific featureset_id
+                                   feature_df_col = 'name' # column in features data.frame with which to match
 ) {
   cat("Matching features in file by feature-names in DB at featureset_id", 
       fset$featureset_id, "\n")
   find_matches_and_return_indices(data_df[, col_match_ftr_name], 
-                                  feature_df$name)
+                                  feature_df[, feature_df_col])
 }       
+
+#' Formulate feature source string for use in feature registration
+formulate_feature_source_from_measuremenset = function(measurementset) {
+  stopifnot(nrow(measurementset) == 1)
+  paste0(
+    "measurementset_id: ", 
+    measurementset$measurementset_id, 
+    "; pipeline_name: ", 
+    measurementset$name, 
+    "; data_type: ", 
+    measurementset$entity)
+}
 
 ##### DataLoader #####
 DataLoader = R6::R6Class(classname = "DataLoader", 
@@ -349,11 +362,19 @@ DataLoaderExpression = R6::R6Class(classname = "DataLoaderExpression",
                                     super$assign_feature_ids()
                                     cat("assign_feature_ids()"); self$print_level()
                                     
+                                    if (identical(colnames(private$.feature_annotation_df), 
+                                                  'gene_symbol')) {
+                                      column_in_db = 'gene_symbol' # special handling for RSEM file with Hugo gene symbols 
+                                                                   # https://github.com/Paradigm4/revealgenomics/blob/master/inst/extdata/data_study_XX_ROW_DNAnexus_gene_RSEM_eset_TPM_w_clin_1samplePerPatient.tsv
+                                                                   # see commit https://github.com/Paradigm4/revealgenomics/commit/39e96f18a5b1fd0fbc0418f3e0597fa4706ccc8b#diff-680b17553e29f834dcf09bd13c28ccac
+                                    } else {
+                                      column_in_db = 'name'        # in all other cases, match with feature `name` 
+                                    }
                                     private$.data_df$feature_id = match_features(
                                       features_in_file = private$.data_df[, column_in_file],
                                       df_features_db = private$.reference_object$feature,
                                       feature_type = feature_type,
-                                      column_in_db = 'name')
+                                      column_in_db = column_in_db)
                                     private$.data_df[, column_in_file] = NULL
                                   }
                                 ))
@@ -403,16 +424,30 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                                                       featureset_link_col = template_linker$featureset$choices_col,
                                                                       fsets_scidb = private$.reference_object$featureset
                                       )
+                                      ftr_ann_df = private$.feature_annotation_df
+                                      if (identical(colnames(ftr_ann_df), 'gene_symbol')) {
+                                        # special handling for RSEM file with Hugo gene symbols 
+                                        # https://github.com/Paradigm4/revealgenomics/blob/master/inst/extdata/data_study_XX_ROW_DNAnexus_gene_RSEM_eset_TPM_w_clin_1samplePerPatient.tsv
+                                        # see commit https://github.com/Paradigm4/revealgenomics/commit/39e96f18a5b1fd0fbc0418f3e0597fa4706ccc8b#diff-680b17553e29f834dcf09bd13c28ccac
+                                        feature_df_col = 'gene_symbol'
+                                      } else if (identical(colnames(ftr_ann_df), 'feature_name')) {
+                                        feature_df_col = 'name'
+                                      } else {
+                                        stop("Matrix files loaded by this loader are expected to have ", 
+                                             "one feature column with feature name (e.g. Ensembl ID) ",
+                                             "or gene_symbol (e.g. Hugo gene symbol). ", 
+                                             "Need to implement handling of case where matrix file has multiple rows. ",
+                                             "Follow template for `DataLoaderRNAQuantMicroarray::register_new_features()`")
+                                      }
                                       m1 = feature_matching_level1(data_df = private$.data_df,
                                                                    col_match_ftr_name = col_match_ftr_name,
                                                                    fset = fset,
-                                                                   feature_df = private$.reference_object$feature
-                                                              )
+                                                                   feature_df = private$.reference_object$feature,
+                                                                   feature_df_col = feature_df_col)
                                       
                                       if (length(m1$source_unmatched_idx) > 0) {
                                         unmatched_ftrs = unique(private$.data_df[m1$source_unmatched_idx,
                                                                                  col_match_ftr_name])
-                                        ftr_ann_df = private$.feature_annotation_df
                                         
                                         if (ncol(ftr_ann_df) == 1) {
                                           ftr_ann_df_unmatched = data.frame(name = ftr_ann_df[
@@ -423,7 +458,13 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                         }
                                         
                                         ftr_ann_df_unmatched$featureset_id = fset$featureset_id
-                                        ftr_ann_df_unmatched$gene_symbol = 'NA'
+                                        if (feature_df_col == 'name') {
+                                          ftr_ann_df_unmatched$gene_symbol = 'NA'
+                                        } else if (feature_df_col == 'gene_symbol') {
+                                          ftr_ann_df_unmatched$gene_symbol = ftr_ann_df_unmatched$name
+                                        } else {
+                                          stop("Expect `feature_df_col` to be `name` or `gene_symbol")
+                                        }
                                         ftr_ann_df_unmatched$chromosome = 'NA'
                                         ftr_ann_df_unmatched$start = 'NA'
                                         ftr_ann_df_unmatched$end = 'NA'
@@ -434,7 +475,8 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                                                private$.reference_object$measurement_set$filter_name)) == 1) {
                                           ftr_ann_df_unmatched$feature_type = 'transcript'
                                         }
-                                        ftr_ann_df_unmatched$source = 'rnaseq_file'
+                                        ftr_ann_df_unmatched$source = formulate_feature_source_from_measuremenset(
+                                          measurementset = private$.reference_object$measurement_set)
                                         
                                         stopifnot(nrow(ftr_ann_df_unmatched) == length(unmatched_ftrs))
                                         register_feature(df = ftr_ann_df_unmatched, 
@@ -777,13 +819,9 @@ DataLoaderFusionFormatA = R6::R6Class(
           pretty_print(list_of_features[unmatched]), "\n")
       
       if (length(list_of_features[unmatched]) > 0) {
-        ftr_source = paste0(
-          "measurementset_id: ", 
-          private$.reference_object$measurement_set$measurementset_id, 
-          "; pipeline_name: ", 
-          private$.reference_object$measurement_set$name, 
-          "; data_type: ", 
-          private$.reference_object$measurement_set$entity)
+        ftr_source = formulate_feature_source_from_measuremenset(
+          measurementset = private$.reference_object$measurement_set
+        )
         
         newfeatures = data.frame(
           name = list_of_features[unmatched],
@@ -893,13 +931,8 @@ DataLoaderCopyNumberVariantFormatA = R6::R6Class(
          pretty_print(list_of_features[unmatched]), "\n")
      
      if (length(list_of_features[unmatched]) > 0) {
-       ftr_source = paste0(
-         "measurementset_id: ", 
-         private$.reference_object$measurement_set$measurementset_id, 
-         "; pipeline_name: ", 
-         private$.reference_object$measurement_set$name, 
-         "; data_type: ", 
-         private$.reference_object$measurement_set$entity)
+       ftr_source = formulate_feature_source_from_measuremenset(
+         measurementset = private$.reference_object$measurement_set)
        
        newfeatures = data.frame(
          name = list_of_features[unmatched],
