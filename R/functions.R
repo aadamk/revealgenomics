@@ -831,10 +831,10 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
         }
         ftr_info = ftr_info[, c(cols_to_use, 'key', 'val')]
         ftr_info = ftr_info[!is.na(ftr_info$val) & ftr_info$val != "" & ftr_info$val != "NA", ]
-        # Following extracted from `unpivot_key_value_pairs()`
-        x2t = spread(ftr_info, "key", value = "val")
-        x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
-        if (nrow(ftr) > 0) {
+        if (nrow(ftr) > 0 & nrow(ftr_info) > 0) {
+          # Following extracted from `unpivot_key_value_pairs()`
+          x2t = spread(ftr_info, "key", value = "val")
+          x2t = x2t[, which(!(colnames(x2t) == "<NA>"))]
           result = merge(ftr, x2t, by = cols_to_use, all.x = T)
         } else {
           result = ftr
