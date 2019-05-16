@@ -555,7 +555,7 @@ register_info = function(df, idname, arrayname, con = NULL){
     metadata_attrs = unique(info$key)
     
     entity_id = get_entity_id(entity = strip_namespace(arrayname))
-    metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id)
+    metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id, con = con)
     if (!(all(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey))) {
       cat("Registering new metadata attributes:", 
           pretty_print(metadata_attrs[!(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey)]), 
@@ -563,9 +563,10 @@ register_info = function(df, idname, arrayname, con = NULL){
       metadata_attr_id = register_metadata_attrkey(
         df1 = data.frame(metadata_attrkey = metadata_attrs, 
                          entity_id = entity_id,
-                         stringsAsFactors = FALSE)
+                         stringsAsFactors = FALSE), 
+        con = con
       )
-      metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id)
+      metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id, con = con)
       stopifnot(all(metadata_attrs %in% metadtata_attrs_in_db$metadata_attrkey))
     }
     
