@@ -912,7 +912,7 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
                                           'gene_feature_cols_2' = 
                                             list(
                                               source = c('GENE_ID'),
-                                              replace = c('gene_symbol'),
+                                              replace = c('feature_name'),
                                               feature_col = 'GENE_ID'
                                             ),
                                           'gene_feature_cols_3' =  # RSEM file
