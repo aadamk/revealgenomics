@@ -526,6 +526,82 @@ delete_dataset_internal <- function(dataset_id, datasetVersion, datasetStructure
                 con = con)
 }
 
+#' @export
+delete_featureset = function(featureset_id, con = NULL) {
+  fset = get_featuresets(featureset_id = featureset_id, con = con)
+  if (nrow(fset) != 1) stop("Cannot retrieve featureset with specified featureset_id")
+  ff = search_features(featureset_id = featureset_id, mandatory_fields_only = T, con = con)
+  if (nrow(ff) == 0) {
+    cat("No features to delete. Proceeding to delete featureset\n")
+    userResponse = 'continueDeleting'
+  } else {
+    subq = revealgenomics:::formulate_base_selection_query('FEATURE', sort(ff$feature_id))
+    
+    ei = get_entity_info()
+    entities = ei[ei$class == 'measurementdata', ]$entity
+    
+    counts_at_entity = sapply(
+      entities, 
+      function(entity) {
+        cat("Working on entity:", entity, "\n")
+        fullnm = revealgenomics:::full_arrayname(entity)
+        exists_array = revealgenomics:::scidb_exists_array(arrayName = fullnm, con = con)
+        
+        if (exists_array) {
+          if (entity == .ghEnv$meta$arrFusion) {
+            query = paste0("op_count(filter(",fullnm, ", ", 
+                           gsub("feature_id", "feature_id_left", subq),
+                           " OR ", 
+                           gsub("feature_id", "feature_id_right", subq),
+                           "))")
+          } else {
+            query = paste0("op_count(filter(",fullnm, ", ", subq, "))")
+          }
+          iquery(
+            con$db, 
+            query,
+            return = TRUE
+          )$count
+        } else{
+          NA
+        }
+      }
+    )
+    names(counts_at_entity) = entities
+    if (any(counts_at_entity != 0)) {
+      non_empty_entities = names(counts_at_entity)[which( !is.na(counts_at_entity) & counts_at_entity > 0)]
+      stop("Cannot delete featureset: ", featureset_id, ", featureset_name: ", fset$name, 
+           "\nData exists for featureset_id at following entities: ",
+           pretty_print(
+             non_empty_entities, prettify_after = 100
+           ))
+    } else {
+      cat("No data is registered at any of the MeasurementData entities for features", 
+          "associated with this featureset", 
+          "\nProceeding to delete features")
+    }
+    
+    if (user_confirms_action(action = "Delete features contained within the featureset")) {
+      cat("Deleting associated feature synonyms\n")
+      iquery(
+        con$db, 
+        paste0("delete(", 
+               revealgenomics:::full_arrayname(.ghEnv$meta$arrFeatureSynonym), 
+               ", ", subq, ")")
+      )
+      
+      cat("Deleting features\n")
+      delete_entity(entity = .ghEnv$meta$arrFeature, id = sort(ff$feature_id), con = con)
+      userResponse = 'continueDeleting'
+    } else {
+      userResponse = 'stopDeleting'
+    }
+  } # if features exist within a featureset
+  
+  if (userResponse == 'continueDeleting') {
+    delete_entity(entity = .ghEnv$meta$arrFeatureset, id = featureset_id, con = con)
+  }
+}
 
 
 ##-----------------------------------------------------------------------------=
