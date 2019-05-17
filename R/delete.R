@@ -528,6 +528,7 @@ delete_dataset_internal <- function(dataset_id, datasetVersion, datasetStructure
 
 #' @export
 delete_featureset = function(featureset_id, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
   fset = get_featuresets(featureset_id = featureset_id, con = con)
   if (nrow(fset) != 1) stop("Cannot retrieve featureset with specified featureset_id")
   ff = search_features(featureset_id = featureset_id, mandatory_fields_only = T, con = con)
