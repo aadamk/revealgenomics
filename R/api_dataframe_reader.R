@@ -62,24 +62,23 @@ DataReader = R6::R6Class(classname = 'DataReader',
                              
                            },
                            
-                           # Whether one needs to enforce the `data_file_sample_name` column
-                           need_to_enforce_data_file_sample_name_column = function() {
-                             if ('data_file_sample_name' %in% colnames(private$.pipeline_df)) {
-                               !identical(
-                                 private$.pipeline_df$data_file_sample_name, 
-                                 private$.pipeline_df$original_sample_name
-                               ) 
-                             } else {
-                                 FALSE
-                             } 
-                           },
                            # Handle case when sample column in data file is different from name in sample manifest
                            # 
                            # Replace sample column in file with `original_sample_name` (name from sample manifest) using 
                            # mapping (from `data_file_sample_name` to `original_sample_name` provided in Excel file 
                            enforce_data_file_sample_name_column = function(column_in_file = 'biosample_name') {
-                             need_to_enforce = self$need_to_enforce_data_file_sample_name_column()
-                             if (need_to_enforce) {
+                             # Whether one needs to enforce the `data_file_sample_name` column
+                             need_to_enforce_data_file_sample_name_column = function() {
+                               if ('data_file_sample_name' %in% colnames(private$.pipeline_df)) {
+                                 !identical(
+                                   private$.pipeline_df$data_file_sample_name, 
+                                   private$.pipeline_df$original_sample_name
+                                 ) # enforce only if `data_file_sample_name` is different from `original_sample_name`
+                               } else { # Cannot enforce if `data_file_sample_name` column is not present
+                                 FALSE
+                               } 
+                             }
+                             if (need_to_enforce_data_file_sample_name_column()) {
                                cat("Pipelines sheet column `data_file_sample_name` is different from column `original_sample_name`\n")
                                if (column_in_file %in% colnames(private$.data_df)) {
                                  m1 = find_matches_and_return_indices(
@@ -104,7 +103,7 @@ DataReader = R6::R6Class(classname = 'DataReader',
                                  colnames(private$.data_df)[m0$source_matched_idx] = 
                                    private$.pipeline_df[m0$target_matched_idx, ]$original_sample_name
                                }
-                             } # end of if (need_to_enforce)
+                             } # end of if (need_to_enforce_data_file_sample_name_column())
                            }
                          ),
                          private = list(
