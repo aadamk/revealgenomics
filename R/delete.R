@@ -544,7 +544,7 @@ delete_featureset = function(featureset_id, con = NULL) {
     counts_at_entity = sapply(
       entities, 
       function(entity) {
-        cat("Working on entity:", entity, "\n")
+        cat("Checking entity:", entity, "\n")
         fullnm = revealgenomics:::full_arrayname(entity)
         exists_array = revealgenomics:::scidb_exists_array(arrayName = fullnm, con = con)
         
@@ -582,7 +582,9 @@ delete_featureset = function(featureset_id, con = NULL) {
           "\nProceeding to delete features")
     }
     
-    if (user_confirms_action(action = "Delete features contained within the featureset")) {
+    if (user_confirms_action(action = 
+                             paste0("Delete features contained within featureset_id: ",
+                                    featureset_id, ", featureset_name: ", fset$name))) {
       cat("Deleting associated feature synonyms\n")
       iquery(
         con$db, 
