@@ -446,6 +446,8 @@ DataLoaderRNAQuantRNASeq = R6::R6Class(classname = "DataLoaderRNAQuantRNASeq",
                                                                    feature_df_col = feature_df_col)
                                       
                                       if (length(m1$source_unmatched_idx) > 0) {
+                                        if ("GTF_URL" %in% colnames(fset)) stop("Did not expect to find unmatched features in ", 
+                                                                                "featureset populated using GTF file. Please check") 
                                         unmatched_ftrs = unique(private$.data_df[m1$source_unmatched_idx,
                                                                                  col_match_ftr_name])
                                         
