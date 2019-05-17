@@ -4,7 +4,8 @@
 \alias{feature_matching_level1}
 \title{Level 1 feature matching}
 \usage{
-feature_matching_level1(data_df, col_match_ftr_name, fset, feature_df)
+feature_matching_level1(data_df, col_match_ftr_name, fset, feature_df,
+  feature_df_col = "name")
 }
 \description{
 Match column in file with feature names
