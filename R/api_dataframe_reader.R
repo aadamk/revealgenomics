@@ -850,36 +850,55 @@ DataReaderRNASeqGeneFormatA = R6::R6Class(classname = 'DataReaderRNASeqGeneForma
                                         super$load_data_from_file()
                                         cat("load_data_from_file()"); self$print_level()
                                         
+                                        data_file_sample_name_column_present = (
+                                          'data_file_sample_name' %in% colnames(private$.pipeline_df)
+                                        )
                                         super$enforce_data_file_sample_name_column()
                                         
-                                        cat("Automatically interpreting specific format of data by matching with biosample names\n")
                                         bios = search_biosamples(dataset_id = private$.measurement_set$dataset_id, 
                                                                  dataset_version = private$.measurement_set$dataset_version)
                                         
                                         sample_from_manifest = bios[grep("__RNA", bios$name), ]$original_sample_name
-                                        m1 = lapply(colnames(private$.data_df), 
-                                                    function(colnm) {
-                                                      x2 = sapply(1:length(sample_from_manifest), 
-                                                                  function(pos) {
-                                                                    subelem = sample_from_manifest[pos]; 
-                                                                    xx = grep(subelem, colnm, fixed = TRUE); 
-                                                                    ifelse(length(xx) == 0, NA, pos)})
-                                                      x2[!is.na(x2)]
+                                        if (!data_file_sample_name_column_present) { # if data_file_sample_name column is not present in Excel file
+                                          cat("Automatically interpreting specific format of data by matching with biosample names\n")
+                                          m1 = lapply(colnames(private$.data_df), 
+                                                      function(colnm) {
+                                                        x2 = sapply(1:length(sample_from_manifest), 
+                                                                    function(pos) {
+                                                                      subelem = sample_from_manifest[pos]; 
+                                                                      xx = grep(subelem, colnm, fixed = TRUE); 
+                                                                      ifelse(length(xx) == 0, NA, pos)})
+                                                        x2[!is.na(x2)]
                                                       })
-                                        m1_len = sapply(m1, function(elem) {length(elem)})
-                                        if (!all(unique(m1_len) %in% c(0,1))) {
-                                          stop("Expected columns to be either feature annotation or unique biosample names.
+                                          m1_len = sapply(m1, function(elem) {length(elem)})
+                                          if (!all(unique(m1_len) %in% c(0,1))) {
+                                            stop("Expected columns to be either feature annotation or unique biosample names.
                                                Received data that has some non-unique biosample names:\n\t",
-                                               pretty_print(colnames(private$.data_df), prettify_after = 15))
+                                                 pretty_print(colnames(private$.data_df), prettify_after = 15))
+                                          }
+                                          sample_manifest_matched_pos = unlist(m1)
+                                          potential_sample_col_pos = which(m1_len == 1)
+                                          first_sample_col_pos = min(potential_sample_col_pos)
+                                          stopifnot(first_sample_col_pos >= 2)
+                                          
+                                          potential_sample_cols = colnames(private$.data_df)[potential_sample_col_pos]
+                                          potential_sample_names_manifest = sample_from_manifest[sample_manifest_matched_pos]
+                                        } else { # if data_file_sample_name column was enforced
+                                          cat("Excel sheet provided `data_file_sample_name`", 
+                                              "will be used to match with name in sample manifest",
+                                              "\n\tExact matching will be employed\n")
+                                          
+                                          m1 = find_matches_and_return_indices(
+                                            source = colnames(private$.data_df),
+                                            target = sample_from_manifest
+                                          )
+                                          
+                                          potential_sample_cols = colnames(private$.data_df)[m1$source_matched_idx]
+                                          potential_sample_names_manifest = potential_sample_cols # Since exact matching in this case
+                                          first_sample_col_pos = min(which(colnames(private$.data_df) %in% potential_sample_cols))
                                         }
-                                        sample_manifest_matched_pos = unlist(m1)
-                                        potential_sample_col_pos = which(m1_len == 1)
-                                        first_sample_col_pos = min(potential_sample_col_pos)
-                                        stopifnot(first_sample_col_pos >= 2)
                                         
-                                        potential_sample_cols = colnames(private$.data_df)[potential_sample_col_pos]
                                         ftr_ann_columns       = colnames(private$.data_df)[1:(first_sample_col_pos - 1)]
-                                        potential_sample_names_manifest = sample_from_manifest[sample_manifest_matched_pos]
                                         # Match with library of feature annotation choices (most restrictive first)
                                         feature_library = list(
                                           'transcript_feature_cols_1' = 
