@@ -87,6 +87,9 @@ retrieve_r_object_at_key = function(key, con = NULL) {
   if (class(res) != 'list' | length(res) != 3) {
     cat("No R object found at key:", key, "\n")
     return(invisible(NULL))
+  } else if (identical(res$key, character(0))) {
+    cat("No R object found at key:", key, "\n")
+    return(invisible(NULL))
   } else if (length(res) == 3) {
     unserialize(res$payload[[1]])
   } else {
