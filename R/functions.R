@@ -681,6 +681,23 @@ find_dataset_id_by_grep = function(pattern, con = NULL, ...) {
   dx[grep(pattern, dx$name, ...), ]$dataset_id
 }
 
+#' Returns project_ids by grep on name
+#' 
+#' @param pattern pattern to search by
+#' @param con connection object
+#' @param ... additional parameters to grep like \code{ignore.case}, \code{perl}. See documentation for \code{grep}
+#' @export
+find_project_id_by_grep = function(pattern, con = NULL, ...) {
+  con = revealgenomics:::use_ghEnv_if_null(con = con)
+  dx = iquery(con$db, 
+              paste0(
+                "project(", 
+                revealgenomics:::full_arrayname(entitynm = .ghEnv$meta$arrProject), ", ", 
+                "name)"),
+              return = TRUE)
+  dx[grep(pattern, dx$name, ...), ]$project_id
+}
+
 check_args_get = function(id, dataset_version, all_versions){
   if (is.null(id) & !is.null(dataset_version) & !all_versions) stop("null value of id is used to get all entities accessible to user. Cannot specify version")
   if (!is.null(dataset_version) & all_versions==TRUE) stop("Cannot specify specific dataset_version, and also set all_versions = TRUE")
