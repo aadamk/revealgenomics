@@ -236,6 +236,12 @@ get_variant_key = function(variant_key_id = NULL, updateCache = FALSE, con = NUL
                              con = con)
 }
 
+get_chromosome_key = function(chromosome_key_id = NULL, updateCache = FALSE, con = NULL){
+  get_chromosome_key_from_cache(chromosome_key_id = chromosome_key_id, 
+                                updateCache = updateCache, 
+                                con = con)
+}
+
 #' @export
 get_definitions = function(definition_id = NULL, updateCache = FALSE, con = NULL){
   get_definition_from_cache(definition_id = definition_id, 
@@ -274,8 +280,8 @@ get_max_id = function(arrayname, con = NULL){
   con = use_ghEnv_if_null(con)
   
   max = iquery(con$db, paste("aggregate(apply(", arrayname,
-                             ", id, ", get_base_idname(arrayname), "), ",
-                             "max(id))", sep=""), return=TRUE)$id_max
+                             ", temp_id, ", get_base_idname(arrayname), "), ",
+                             "max(temp_id))", sep=""), return=TRUE)$temp_id_max
   if (is.na(max)) max = 0
   return(max)
 }
@@ -443,8 +449,11 @@ register_tuple_return_id = function(df,
   }
   projected_attrs = paste0(uniq[!(uniq %in% do_not_project)], # dataset_id is a dimension, and does not need to be projected
                            collapse = ",")
+  options(scidb.aio = TRUE) # try faster path: Shim uses aio_save with atts_only=0 which will include dimensions
+                            # https://github.com/Paradigm4/SciDBR/commit/85895a77549a24c16766e6adf4dcc6311ee21acc
   xx = iquery(con$db, paste0("project(", arrayname, ", ", 
                              projected_attrs, ")"), return = TRUE)
+  options(scidb.aio = FALSE)
   matching_entity_ids = find_matches_with_db(df_for_upload = df, df_in_db = xx, unique_fields = uniq)
   nonmatching_idx = which(is.na(matching_entity_ids))
   matching_idx = which(!is.na(matching_entity_ids))

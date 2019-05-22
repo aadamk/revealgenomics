@@ -69,6 +69,28 @@ register_referenceset = function(df, only_test = FALSE, con = NULL){
   } # end of if (!only_test)
 }
 
+#' @export
+register_exomic_variant = function(df1, only_test = FALSE, con = NULL){
+  con = use_ghEnv_if_null(con)
+  
+  # Formulate concatenated string field
+  unique_fields_list = c(
+    "referenceset_id", "chromosome_key_id", "start", "end", 
+    "reference", "alternate"
+  )
+  df1x = data.frame(lapply(df1[,unique_fields_list], as.character), stringsAsFactors=FALSE)
+  df1$concat_string = apply(df1x, 1, paste, collapse = "__")
+  
+  uniq = unique_fields()[[.ghEnv$meta$arrExomicVariant]]
+  test_register_exomic_variant(df1, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  if (!only_test) {
+    arrayname = full_arrayname(.ghEnv$meta$arrExomicVariant)
+    register_tuple_return_id(df1,
+                             arrayname, uniq, con = con)
+    # remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrExomicVariant, con = con)
+  } # end of if (!only_test)
+}
+
 #' Register genelist
 #' 
 #' Preferred method of registering genelist-s is to 

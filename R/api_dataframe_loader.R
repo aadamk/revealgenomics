@@ -1009,6 +1009,364 @@ DataLoaderCyTOF = R6::R6Class(
   )
 )
 
+DataLoaderVariantExomic = R6::R6Class(
+  classname = 'DataLoaderVariantExomic',
+  inherit = DataLoader,
+  public = list(
+   print_level = function() {cat("----(Level: DataLoaderVariantExomic)\n")},
+   assign_feature_ids = function(){
+     # Empty function because this data class does not deal with features
+     cat("assign_feature_ids()"); self$print_level()
+   },
+   
+   register_new_features = function() {
+     # Empty function because this data class does not deal with features
+     cat("Function: Register new features"); self$print_level()
+     return(FALSE)
+   },
+   
+   assign_biosample_ids = function() {
+     cat("assign_biosample_ids()"); self$print_level()
+     bios_ref = private$.reference_object$biosample
+     suffix = template_helper_suffix_by_entity(entity = private$.reference_object$measurement_set$entity)
+     bios_ref = bios_ref[grep(suffix, bios_ref$name), ]
+     cat("Chose suffix:", suffix, "for entity:", private$.reference_object$measurement_set$entity, 
+         "\nRetained:", nrow(bios_ref), "of total:", nrow(private$.reference_object$biosample), "in manifest\n")
+     if (nrow(private$.reference_object$pipeline_df) > 1) { 
+       # multiple Measurements combined into one file
+       # ==> data must contain a column called `biosample_name`
+       stop("Path for multiple exomic variant measurements combined into one file 
+            not implemented yet\n")
+     } else if (nrow(private$.reference_object$pipeline_df) == 1) {
+       # One Measurement per file 
+       # ==> information about biosample will exist in `pipeline_df` reference object
+       cat("One Measurement per file\n")
+       
+       sample_name_in_file = private$.reference_object$pipeline_df$sample_name
+       
+       mL = find_matches_and_return_indices(sample_name_in_file,
+                                            bios_ref$name)
+       
+       if (length(mL$source_unmatched_idx) != 0) {
+         print(sample_name_in_file)
+         print(head(bios_ref$name))
+         stop("Excel sheet must provide link between sample in Pipelines sheet and Sample sheet under column `sample_name`")
+       }
+       
+       sample_id_db = bios_ref$biosample_id[mL$target_matched_idx]
+       cat("sample-name:", sample_name_in_file, "==> biosample_id:", 
+           sample_id_db, "\n")
+       attr(private$.data_df, 'biosample_id') = sample_id_db
+     }
+     invisible(self)   
+   },
+   download_features_for_featureset = function() {
+     # Empty function because this data class does not deal with features
+   },
+   #' assign dataset_id and measurementset_id
+   assign_other_ids = function(){
+     attr(private$.data_df, "dataset_id") = private$.reference_object$record$dataset_id
+     attr(private$.data_df, "dataset_version") = private$.reference_object$record$dataset_version
+     attr(private$.data_df, "measurementset_id") = private$.reference_object$measurement_set$measurementset_id
+   },
+   load_data = function() {
+     # ##### FORMAT #####
+     # format_str = unique(private$.data_df@gt[, 'FORMAT'])
+     # if (length(format_str) != 1) {
+     #   stop("Expected unique format string per sample, but got", 
+     #        pretty_print(format_str))
+     # }
+     # format_df = data.frame(
+     #   measurementset_id = private$.data_df@measurementset_id,
+     #   format = format_str,
+     #   stringsAsFactors = FALSE
+     # )
+     # 
+     
+     xx = private$.data_df
+     exomic_var_df = as.data.frame(xx@fix[, c("CHROM", "POS", "ID", "REF", "ALT")], 
+                                   stringsAsFactors = FALSE)
+     exomic_var_df = plyr::rename(
+       exomic_var_df,
+       c('CHROM' = 'chromosome',
+         'POS' = 'start',
+         'ID' = 'id',
+         'REF' = 'reference',
+         'ALT' = 'alternate')
+     )
+     chromosomes = naturalsort::naturalsort(unique(exomic_var_df$chromosome))
+     chromosome_key_id = register_chromosome_key(
+       df1 = data.frame(
+         chromosome = chromosomes, 
+         stringsAsFactors = FALSE
+       ))
+     chrom_key_df = get_chromosome_key()
+     m1 = find_matches_and_return_indices(exomic_var_df$chromosome, 
+                                          chrom_key_df$chromosome)
+     stopifnot(length(m1$source_unmatched_idx) == 0)
+     exomic_var_df$chromosome_key_id = chrom_key_df[m1$target_matched_idx, ]$chromosome_key_id
+     exomic_var_df$chromosome = NULL
+     
+     exomic_var_df$end = exomic_var_df$start
+     
+     ms_id = attr(xx, "measurementset_id")
+     ms_df = get_measurementsets(measurementset_id = ms_id)
+     fset_df = get_featuresets(featureset_id = ms_df$featureset_id)
+     exomic_var_df$referenceset_id = fset_df$referenceset_id
+     
+     head(exomic_var_df)
+     register_res = revealgenomics:::register_exomic_variant(df1 = exomic_var_df)
+     
+     var_call_df = data.frame(
+       quality = xx@fix[, "QUAL"],
+       filter = xx@fix[, "FILTER"],
+       info = xx@fix[, "INFO"],
+       stringsAsFactors = FALSE
+     )
+     var_call_tibble = vcfR::extract_gt_tidy(xx)
+     var_call_tibble = as.data.frame(var_call_tibble)
+     var_call_tibble$Key = NULL
+     if (length(unique(var_call_tibble$Indiv)) == 1)  {# Germline variants 
+       cat("Loading germline variants\n")
+       variantType = 'Germline'
+       var_call_tibble$Indiv = NULL
+     } else if (length(unique(var_call_tibble$Indiv)) == 2)  {# Somatic variants (tumor/normal)
+       cat("Loading somatic variants\n")
+       variantType = 'Somatic'
+       stopifnot(nrow(var_call_tibble) %% 2 == 0)
+       if (identical(
+         unique(var_call_tibble$Indiv), 
+         c("NORMAL", "TUMOR" ))) {
+         suffixes = c("NORMAL", "TUMOR" )
+       } else if (length(grep("_", var_call_tibble$Indiv)) == 
+                  nrow(var_call_tibble)) { # Sample_name + "_" + norm / on / pre
+         splitstr_list = stringi::stri_split(var_call_tibble$Indiv, fixed="_")
+         suffixes = unique(unlist(lapply(splitstr_list, function(elem) elem[2])))
+         # stopifnot(identical( # confirm that suffixes are "on" and "norm" only
+         #   sort(suffixes),
+         #   c("norm", "on")))
+       }
+       var_call_tibble_s1 = var_call_tibble[grep(suffixes[1], var_call_tibble$Indiv), ]
+       var_call_tibble_s2 = var_call_tibble[grep(suffixes[2], var_call_tibble$Indiv), ]
+       var_call_tibble_s1$Indiv = NULL
+       var_call_tibble_s2$Indiv = NULL
+       colnames(var_call_tibble_s1) = paste0(colnames(var_call_tibble_s1), "_", suffixes[1])
+       colnames(var_call_tibble_s2) = paste0(colnames(var_call_tibble_s2), "_", suffixes[2])
+       var_call_tibble = cbind(var_call_tibble_s1,
+                               var_call_tibble_s2)
+     } else {
+       stop("Expect number of unique values for Indiv to be 1 or 2")
+     }
+     
+     stopifnot(nrow(var_call_df) == nrow(var_call_tibble))
+     var_call_df2 = cbind(
+       var_call_df,
+       var_call_tibble
+     )
+     assign_ids = function(df1,
+                           measurementset_id,
+                           dataset_id,
+                           dataset_version) {
+       df1$measurementset_id = measurementset_id
+       df1$dataset_id = dataset_id
+       df1$dataset_version = dataset_version
+       df1
+     }
+     var_call_df3 = assign_ids(
+       df1 = var_call_df2,
+       measurementset_id = attr(private$.data_df, "measurementset_id"),
+       dataset_id = attr(private$.data_df, "dataset_id"),
+       dataset_version = attr(private$.data_df, "dataset_version"))
+     var_call_df3$biosample_id = attr(private$.data_df, "biosample_id")
+     
+     stopifnot(nrow(register_res) == nrow(var_call_df3))
+     var_call_df3$exomic_variant_id = register_res$exomic_variant_id
+     
+     df1 = var_call_df3
+     # Step 1
+     # Identify three groups of column-names
+     # - `dimensions`: indices of the multi-dimensional array
+     # - `attr_mandatory`: VCF attribute fields that are mandatory
+     # - `attr_flex`: VCF attrubute fields that are not mandatory 
+     cols_dimensions = get_idname(.ghEnv$meta$arrExomicVariantCall)[!(
+       get_idname(.ghEnv$meta$arrExomicVariantCall) %in% 'key_id')]
+     if (variantType == 'Germline') {
+       cols_attr_mandatory = c('quality', 'filter', 'info', 'gt_AD', 'gt_DP', 'gt_GT')
+     } else if (variantType == 'Somatic') {
+       cols_attr_mandatory = c('quality', 'filter', 'info', 
+                               unlist(
+                                 lapply(
+                                   suffixes, 
+                                   function(elem) paste0(c('gt_AD', 'gt_DP', 'gt_GT'), "_", elem)
+                                   )
+                                 )
+                               )
+       not_found_mandatory = cols_attr_mandatory[!(cols_attr_mandatory %in% colnames(df1))]
+       if (length(not_found_mandatory) > 0) {
+         cat("Dropping mandatory restriction on columns:", 
+             pretty_print(not_found_mandatory), "\n")
+         cols_attr_mandatory = cols_attr_mandatory[(cols_attr_mandatory %in% colnames(df1))]
+       }
+     }
+     cols_attr_flex = colnames(df1)[!(colnames(df1) %in% 
+                                        c(cols_dimensions, cols_attr_mandatory))]
+     if (!('per_gene_variant_number' %in% colnames(df1))) {
+       # specify dplyr mutate as per https://stackoverflow.com/a/33593868
+       df1x = df1 %>% group_by(exomic_variant_id, biosample_id) %>% dplyr::mutate(per_gene_variant_number = row_number())
+       if (unique(df1x$per_gene_variant_number) != 1) stop("Not coded yet!")
+     }
+     df1 = as.data.frame(df1)
+     
+     # Step 5A
+     # Introduce `key_id` and `val` columns i.e. handle VariantKeys 
+     # -- First register any new keys
+     cat("Step 5A -- Register the variant attribute columns as variant keys\n")
+     variant_key_id = register_variant_key(
+       df1 = data.frame(
+         key = c(cols_attr_mandatory, cols_attr_flex), 
+         stringsAsFactors = FALSE))
+     if (!identical(
+       get_variant_key(variant_key_id = variant_key_id)$key,
+       c(cols_attr_mandatory, cols_attr_flex))) {
+       stop("Faced issue registering variant keys")
+     }
+     
+     cat("Step 5B -- Converting wide data.frame to tall data.frame\n")
+     VAR_KEY = get_variant_key()
+     var_gather = tidyr::gather(data = df1, key = "key", value = "val", 
+                                c(cols_attr_mandatory, cols_attr_flex))
+     
+     cat("Step 5B1 -- Dropping NA columns except for when the key belongs to", 
+         pretty_print(cols_attr_mandatory), "\n")
+     var_gather1 = var_gather[var_gather$key %in% cols_attr_mandatory, ] 
+     var_gather2 = var_gather[!(var_gather$key %in% cols_attr_mandatory), ]
+     stopifnot(nrow(var_gather1) + nrow(var_gather2) == nrow(var_gather))
+     non_null_indices = which(!is.na(var_gather2$val))
+     if (length(non_null_indices) != nrow(var_gather2)) {
+       cat(paste0("From total: ", nrow(var_gather), " key-value pairs, retaining: ", 
+                  (length(non_null_indices) + nrow(var_gather1)), " non-null pairs.\n\tSavings(A) = ", 
+                  round(
+                    (nrow(var_gather2) - length(non_null_indices)) / nrow(var_gather) * 100, 
+                    digits = 1), "%\n"))
+       var_gather2 = var_gather2[non_null_indices, ]
+       if (nrow(var_gather2) > 0) {
+         var_gather = rbind(var_gather1, var_gather2)
+       } else {
+         var_gather = var_gather1
+       }
+     }
+     
+     M = find_matches_and_return_indices(var_gather$key, VAR_KEY$key)
+     stopifnot(length(M$source_unmatched_idx) == 0)
+     var_gather$key_id = VAR_KEY$key_id[M$target_matched_idx]
+     var_gather$key = NULL # drop the key column
+     var_gather = var_gather[, c(cols_dimensions, 'key_id', 'val')]
+     
+     # Step 6
+     # Remove rows that are effectively empty
+     cat("Step 6 -- Calculating empty markers\n")
+     empty_markers = c('.', 'None')
+     non_null_indices = which(!(var_gather$val %in% empty_markers))
+     if (length(non_null_indices) != nrow(var_gather)) {
+       cat(paste0("From total: ", nrow(var_gather), " key-value pairs, retaining: ", 
+                  length(non_null_indices), " non-null pairs.\n\tSavings(B) = ", 
+                  round(
+                    (nrow(var_gather) - length(non_null_indices)) / nrow(var_gather) * 100, 
+                    digits = 1), "%\n"))
+       var_gather = var_gather[non_null_indices, ] 
+     }
+     
+     if (variantType == 'Germline') { # Extra check for germline data
+                                      # only `filter` column was found to have NA
+       if (!identical(
+         get_variant_key(variant_key_id = unique(var_gather[is.na(var_gather$val), ]$key_id))$key,
+         "filter")) {
+         stop("Result not handled yet")
+       }
+     }
+     
+     # Step 7
+     # Upload and insert the data
+     cat("Step 7 -- Upload and insert the data\n")
+     UPLOAD_N = 5000000
+     return_sub_indices = function(bigN, fac) {
+       starts = seq(1, bigN, fac)
+       ends   = c(tail(seq(0, bigN-1, fac), -1), bigN)
+       stopifnot(length(starts) == length(ends))
+       lapply(1:length(starts), function(idx) {c(starts[idx]: ends[idx])})
+     }
+     steps = return_sub_indices(bigN = nrow(var_gather), fac = UPLOAD_N)
+     
+     arrayname = full_arrayname(.ghEnv$meta$arrExomicVariantCall)
+     for (upidx in 1:length(steps)) {
+       step = steps[[upidx]]
+       cat(paste0("Uploading variants. Sub-segment ", 
+                  upidx, " of ", length(steps), " segments\n\t", 
+                  "Rows: ", step[1], "-", tail(step, 1), "\n"))
+       con = use_ghEnv_if_null(con = NULL)
+       var_sc = as.scidb_int64_cols(db = con$db, 
+                                    df1 = var_gather[c(step[1]:tail(step, 1)), ],
+                                    int64_cols = colnames(var_gather)[!(colnames(var_gather) %in% 'val')])
+       cat("Redimension and insert\n")
+       iquery(con$db, paste0("insert(redimension(",
+                             var_sc@name,
+                             ", ", arrayname, "), ", arrayname, ")"))
+       remove_old_versions_for_entity(entitynm = .ghEnv$meta$arrExomicVariantCall, con = con)
+     }
+     
+     head(var_call_df)
+     # ##### PER PIPELINE data #####
+     # if (!any(is.na(as.integer(vcfR::getPOS(private$.data_df))))) {
+     #   vcf_fix_start = as.integer(vcfR::getPOS(private$.data_df))
+     #   vcf_fix_end   = vcf_fix_start
+     # }
+     # if (!any(is.na(as.numeric(vcfR::getQUAL(private$.data_df))))) {
+     #   vcf_fix_qual = as.numeric(vcfR::getQUAL(private$.data_df))
+     # }
+     # per_pipeline_df = data.frame(
+     #   chromosome = vcfR::getCHROM(private$.data_df),
+     #   start      = vcf_fix_start, 
+     #   end        = vcf_fix_end,
+     #   id         = vcfR::getID(private$.data_df),
+     #   reference  = vcfR::getREF(private$.data_df),
+     #   alternate  = vcfR::getALT(private$.data_df),
+     #   stringsAsFactors = FALSE
+     # )
+     # if (ncol(private$.data_df@gt) == 2) {
+     #   per_sample_df = data.frame(
+     #     chromosome = vcfR::getCHROM(private$.data_df),
+     #     start      = vcf_fix_start, 
+     #     end        = vcf_fix_end,
+     #     id         = vcfR::getID(private$.data_df),
+     #     reference  = vcfR::getREF(private$.data_df),
+     #     alternate  = vcfR::getALT(private$.data_df),
+     #     quality    = vcf_fix_qual,
+     #     info       = vcfR::getINFO(private$.data_df),
+     #     call       = private$.data_df@gt[, 2],
+     #     stringsAsFactors = FALSE
+     #   )
+     # } else if (ncol(private$.data_df@gt) == 3) {
+     #   stop("Not implemented tumor normal case yet")
+     # } else {
+     #   stop("Unexpected number of columns in vcf GT dataframe: ", 
+     #        ncol(private$.data_df@gt))
+     # }
+     # per_pipeline_df = assign_ids(
+     #   df1 = per_pipeline_df,
+     #   measurementset_id = attr(private$.data_df, "measurementset_id"),
+     #   dataset_id = attr(private$.data_df, "dataset_id"),
+     #   dataset_version = attr(private$.data_df, "dataset_version"))
+     # per_sample_df = assign_ids(
+     #   df1 = per_sample_df,
+     #   measurementset_id = attr(private$.data_df, "measurementset_id"),
+     #   dataset_id = attr(private$.data_df, "dataset_id"),
+     #   dataset_version = attr(private$.data_df, "dataset_version"))
+     # per_sample_df$biosample_id = attr(private$.data_df, "biosample_id")
+   }
+   
+  )
+)
+
 ##### createDataLoader #####
 #' @export      
 createDataLoader = function(data_df, reference_object, feature_annotation_df = NULL){
@@ -1059,6 +1417,14 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
            DataLoaderVariantFormatA$new(data_df = data_df,
                                         reference_object = reference_object, 
                                         feature_annotation_df = feature_annotation_df),
+         "{[internal]-[Germline Variants] HaplotypeCaller}{DNA}" = ,
+         "{[internal]-[Somatic variant] TNsnv}{DNA}" = ,
+         "{[internal]-[Somatic variant] TNscope}{DNA}" = ,
+         "{[internal]-[Somatic variant] Strelka 1}{DNA}" = ,
+         "{[internal]-[Somatic variant] Strelka 2}{DNA}" = 
+           DataLoaderVariantExomic$new(data_df = data_df,
+                                       reference_object = reference_object, 
+                                       feature_annotation_df = feature_annotation_df),
          "{[internal]-[Proteomics] MaxQuant}{Protein}" = 
            DataLoaderProteomicsMaxQuant$new(data_df = data_df,
                                             reference_object = reference_object),

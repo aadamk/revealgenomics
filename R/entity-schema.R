@@ -54,19 +54,25 @@ get_mandatory_fields_for_register_entity = function(arrayname){
   entity_class = zz[zz$entity == entitynm, ]$class
   
   if (entity_class == 'metadata') {
+    # Metadata entities that do not have to supply `dataset_id` at registration time
+    # PROJECT, DATASET, ONTOLOGY, VARIANT_KEY, ...
     if (!(entitynm %in% c(.ghEnv$meta$arrProject,
                           .ghEnv$meta$arrDataset,
                           .ghEnv$meta$arrOntology,
                           .ghEnv$meta$arrMetadataAttrKey, 
-                          .ghEnv$meta$arrVariantKey))) {
+                          .ghEnv$meta$arrVariantKey, 
+                          .ghEnv$meta$arrChromosomeKey))) {
       mandatory_fields = c('dataset_id', attrs)
-    } else { # PROJECT, DATASET, ONTOLOGY, VARIANT_KEY
+    } else { 
       mandatory_fields = attrs
-    }
+    } 
   } else if (entity_class == 'featuredata') {
+    # pull in dimensions that are mandatory fields
     if (entitynm %in% c(.ghEnv$meta$arrFeature, .ghEnv$meta$arrFeatureSynonym)) {
       # arrays in which featureset_id is a dimension but also a mandatory field
       mandatory_fields = c('featureset_id', attrs) 
+    } else if (entitynm %in% c(.ghEnv$meta$arrExomicVariant)) {
+      mandatory_fields = c('chromosome_key_id', 'referenceset_id', attrs) 
     } else {
       mandatory_fields = attrs
     }
@@ -170,6 +176,8 @@ get_base_idname = function(arrayname){
     # featuredata arrays that have featureset_id and/or gene_symbol_id 
     # as dimensions for faster slicing
     dims[!(dims %in% c("featureset_id", "gene_symbol_id"))] 
+  } else if (entitynm == .ghEnv$meta$arrExomicVariant) {
+    dims[!(dims %in% c("referenceset_id", "chromosome_key_id"))]
   } else if (entitynm != .ghEnv$meta$arrDataset) {
     dims[!(dims %in% c("dataset_id", "dataset_version"))]
   } else {

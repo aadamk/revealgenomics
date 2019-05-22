@@ -173,10 +173,18 @@ register_entities_workbook = function(workbook,
       cat("====================================================\n")
       reference_object$measurement_set = get_measurementsets(measurementset_id = msmtset_id_sel)
       
-      pip_sel = pipelines_df[((pipelines_df[, template_linker$pipeline$pipelines_sel_col] == 
+      pip_sel1 = pipelines_df[((pipelines_df[, template_linker$pipeline$pipelines_sel_col] == 
                                  reference_object$measurement_set$pipeline_scidb) & 
                                 (pipelines_df[, template_linker$filter$pipelines_sel_col] == 
                                    reference_object$measurement_set$filter_name)), ]
+      # Sub-select from Pipelines sheet based on pipeline choice, filter choice and featureset choice
+      pip_sel = pipelines_df[((pipelines_df[, template_linker$pipeline$pipelines_sel_col] == 
+                                 reference_object$measurement_set$pipeline_scidb) & 
+                                (pipelines_df[, template_linker$filter$pipelines_sel_col] == 
+                                   reference_object$measurement_set$filter_name) & 
+                                (pipelines_df[, template_linker$featureset$api_choices_col] == 
+                                   reference_object$measurement_set$featureset_scidb)), ]
+      if (nrow(pip_sel1) != nrow(pip_sel)) { message("The featureset restriction was added for exomic variant loading. Please review"); browser() }
      
       # When testing R package, replace R_PKG_WKSP placeholder with actual path on system
       if (identical(
