@@ -539,7 +539,7 @@ register_versioned_secure_metadata_entity = function(entity, df,
   
   if (!only_test) {
     if (is.null(dataset_version)) {
-      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE)
+      dataset_version = get_dataset_max_version(dataset_id = unique(df$dataset_id), updateCache = TRUE, con = con)
       cat("dataset_version was not specified. Registering at version", dataset_version, "of dataset", unique(df$dataset_id), "\n")
     }
     arrayname = full_arrayname(entity)
