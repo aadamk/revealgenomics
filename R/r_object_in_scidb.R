@@ -11,11 +11,11 @@ init_r_object_cache = function(con = NULL) {
   response = user_confirms_action(action = "initialize R object cache")
   if (response) {
     tryCatch({
-      iquery(con$db, "remove(gh_secure.R_OBJECT_CACHE)")
+      iquery(con$db, "remove(gh_r_object_store.R_OBJECT_CACHE)")
     }, error = function(e) {
       message("Issue deleting array. Either array did not exist before (that's perfectly OK), or you do not have permissions")
     })
-    iquery(con$db, "create array gh_secure.R_OBJECT_CACHE <key:string, payload:binary>[r_object_cache_id]")
+    iquery(con$db, "create array gh_r_object_store.R_OBJECT_CACHE <key:string, payload:binary>[r_object_cache_id]")
   }
 }
 
@@ -28,14 +28,14 @@ init_r_object_cache = function(con = NULL) {
 #' @param con   connection object
 #' @examples 
 #' \dontrun{
-#'   rg_connect(username = 'scidbadmin') # or any user with access to gh_secure namespace
+#'   rg_connect(username = 'scidbadmin') # or any user with access to gh_r_object_store namespace
 #'   revealgenomics:::register_r_object_at_key(r_obj = c(1:10), key = "asdf")
 #'   # To retrieve data, run
 #'   revealgenomics:::retrieve_r_object_at_key(key = "asdf")
 #' }
 register_r_object_at_key = function(r_obj, key, con = NULL) {
   con = use_ghEnv_if_null(con = con)
-  keys_df = iquery(con$db, "project(gh_secure.R_OBJECT_CACHE, key)", return = TRUE)
+  keys_df = iquery(con$db, "project(gh_r_object_store.R_OBJECT_CACHE, key)", return = TRUE)
   m1 = find_matches_and_return_indices(source = key, target = keys_df$key)
   if (length(m1$source_matched_idx) == 1) {
     insert_idx = keys_df[m1$target_matched_idx, ]$r_object_cache_id
@@ -61,17 +61,17 @@ register_r_object_at_key = function(r_obj, key, con = NULL) {
   query = paste0(
     "insert(redimension(", 
     query, 
-    ", gh_secure.R_OBJECT_CACHE), gh_secure.R_OBJECT_CACHE)"
+    ", gh_r_object_store.R_OBJECT_CACHE), gh_r_object_store.R_OBJECT_CACHE)"
   )
   iquery(con$db, query)
 }
 
-#' Retriev R object associated with key
+#' Retrive R object associated with key
 #' @param key   key associated with the R object
 #' @param con   connection object
 #' @examples 
 #' \dontrun{
-#'   rg_connect(username = 'scidbadmin') # or any user with access to gh_secure namespace
+#'   rg_connect(username = 'scidbadmin') # or any user with access to gh_r_object_store namespace
 #'   revealgenomics:::retrieve_r_object_at_key(key = "asdf")
 #'   revealgenomics:::retrieve_r_object_at_key(key = "KeyDoesNotExist")
 #'   # No R object found at key: KeyDoesNotExist
@@ -81,7 +81,7 @@ retrieve_r_object_at_key = function(key, con = NULL) {
   res = iquery(
     con$db, 
     paste0(
-      "filter(gh_secure.R_OBJECT_CACHE, key = '", key, "')"
+      "filter(gh_r_object_store.R_OBJECT_CACHE, key = '", key, "')"
     ),
     return = TRUE)
   if (class(res) != 'list' | length(res) != 3) {
