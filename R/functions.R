@@ -1430,35 +1430,43 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df, measurement
   # and create ref object for it
   expr_dt <- setDT(expr_df)
   
+  ftr_vec = unique(expr_dt, by = c("feature_id"))$feature_id
+  bios_vec = unique(expr_dt, by = c("biosample_id"))$biosample_id
   feature_df = drop_na_columns(
-    feature_df[unique(expr_dt, by = c("feature_id"))$feature_id %in% feature_df$feature_id, ])
+    feature_df[ftr_vec %in% feature_df$feature_id, ])
   biosample_df = drop_na_columns(
-    biosample_df[unique(expr_dt, by = c("biosample_id"))$biosample_id %in% biosample_df$biosample_id, ])
+    biosample_df[bios_vec %in% biosample_df$biosample_id, ])
   
   #############################################
   ## Step 1 # Convert data frame to matrix
   
-  # Old, slower method.
-  # stopifnot(nrow(expr_df) == length(biosample_df$biosample_id) * length(feature_df$feature_id))
-  # exprs = acast(expr_df, feature_id~biosample_id, value.var="value")
-  
   cat("Reshaping expr to Matrix...")
-  expr_dt[, `:=`(feature_id_idx = feature_id - min(feature_id) + 1,
-                         biosample_id_idx = biosample_id - min(biosample_id) + 1)]
-  exprs <- Matrix::Matrix(nrow = nrow(feature_df),
-              ncol = nrow(biosample_df),
-              data = 0,
-              sparse = F)
-  exprs[ as.matrix(expr_dt[, .(feature_id_idx, biosample_id_idx)]) ] <- expr_dt$value
+  if ((length(ftr_vec) * length(bios_vec)) > nrow(expr_df)) { # Handle case for sparse matrix
+    cat("Handling sparse matrix case\n")
+    # Old, slower method.
+    exprs = acast(expr_df, feature_id~biosample_id, value.var="value")
+  } else if ((length(ftr_vec) * length(bios_vec)) == nrow(expr_df)) { # handle case for dense matrix
+    cat("Handling dense matrix case\n")
+    expr_dt[, `:=`(feature_id_idx = feature_id - min(feature_id) + 1,
+                   biosample_id_idx = biosample_id - min(biosample_id) + 1)]
+    exprs <- Matrix::Matrix(nrow = nrow(feature_df),
+                            ncol = nrow(biosample_df),
+                            data = 0,
+                            sparse = F)
+    exprs[ as.matrix(expr_dt[, .(feature_id_idx, biosample_id_idx)]) ] <- expr_dt$value
+    # Set the row and column names to the id's first
+    rownames(exprs) = feature_df$feature_id
+    colnames(exprs) = biosample_df$biosample_id
+  } else {
+    stop("Expect product of lengths of features and vectors to be greater than or equal to ",
+         "number of rows of expression dataframe")
+  }
   cat(" done.\n")
   
   ##! Start fix code - Do the checking on the casted data frame instead!
   stopifnot( nrow(exprs) == nrow(feature_df) )
   stopifnot( ncol(exprs) == nrow(biosample_df) )
   
-  # Set the row and column names to the id's first
-  rownames(exprs) = feature_df$feature_id
-  colnames(exprs) = biosample_df$biosample_id
   
   ## And let's at least provide a message to the console if we encounter this in any other study, since this is relevant for debugging! (-:
   if (getOption("revealgenomics.debug", FALSE)) {
