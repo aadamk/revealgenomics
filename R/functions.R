@@ -1290,9 +1290,6 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df, measurement
   selected_bios = as.integer(colnames(exprs))
   pos = match(selected_bios, biosample_df$biosample_id)
   
-  selected_bios = as.integer(colnames(exprs))
-  pos = match(selected_bios, biosample_df$biosample_id)
-  
   # In case phenotype data is a dataframe with merged INDIVIDUAL and BIOSAMPLE info
   # it is likely that `sample_name` column was used for disambiguating INDIVIDUAL.name
   # and BIOSAMPLE.name. Use that when available
