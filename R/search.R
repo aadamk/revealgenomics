@@ -459,7 +459,8 @@ formulate_list_expression_set = function(expr_df, dataset_version, measurementse
   if (nrow(measurementset) > 1) {stop("currently does not support returning expressionSets for multiple rnaquantification sets")}
   if (length(dataset_version) != 1) {stop("currently does not support returning expressionSets for multiple dataset_verions")}
   
-  convertToExpressionSet(expr_df, biosample_df = biosample, feature_df = feature)
+  convertToExpressionSet(expr_df, biosample_df = biosample, feature_df = feature,
+                         measurementset_df = measurementset)
 }
 
 search_rnaquantification_scidb = function(arrayname,
