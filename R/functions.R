@@ -1619,17 +1619,16 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df, measurement
   colnames(exprs) = biosample_df$biosample_id
   
   ## And let's at least provide a message to the console if we encounter this in any other study, since this is relevant for debugging! (-:
-  
-  NAs.found <- apply( exprs, 1, function(x) { sum(is.na(x)) })
-  if(sum(NAs.found)>0) {
-    NAs.found <- NAs.found[NAs.found != 0]
-    NAs.name <- feature_df %>% 
-      dplyr::filter(feature_id %in% names(NAs.found)) %>%
-      dplyr::mutate(feature_id = factor(.data$feature_id, levels = names(NAs.found))) %>%
-      dplyr::arrange(feature_id) %>%
-      dplyr::pull(name) %>%
-      as.character(.)
-    if (getOption("revealgenomics.debug", FALSE)) {
+  if (getOption("revealgenomics.debug", FALSE)) {
+    NAs.found <- apply( exprs, 1, function(x) { sum(is.na(x)) })
+    if(sum(NAs.found)>0) {
+      NAs.found <- NAs.found[NAs.found != 0]
+      NAs.name <- feature_df %>% 
+        dplyr::filter(feature_id %in% names(NAs.found)) %>%
+        dplyr::mutate(feature_id = factor(.data$feature_id, levels = names(NAs.found))) %>%
+        dplyr::arrange(feature_id) %>%
+        dplyr::pull(name) %>%
+        as.character(.)
       message(
         paste0("[convertToExpressionSet] ", NAs.found, "x empty entries found for feature_id ", names(NAs.found), " (", NAs.name, ")", sep="\n")
       )
