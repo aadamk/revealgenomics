@@ -171,3 +171,44 @@ na_to_blank = function(terms) {
   ifelse(is.na(terms), "", terms)
 }
 
+convert_data_frame_to_matrix = function(expr_df) {
+  stopifnot(
+    all(c('feature_id', 'biosample_id', 'value') %in%
+          colnames(expr_df))
+  )
+  # Convert expr_df to data.table in-place
+  # and create ref object for it
+  expr_dt <- setDT(expr_df)
+  
+  ftr_vec = unique(expr_dt, by = c("feature_id"))$feature_id
+  bios_vec = unique(expr_dt, by = c("biosample_id"))$biosample_id
+  
+  cat("Reshaping expr to Matrix...")
+  prod_dim_range = (max(ftr_vec) - min(ftr_vec) + 1) * (max(bios_vec) - min(bios_vec) + 1)
+  if (prod_dim_range == nrow(expr_df)) { # handle case for dense matrix
+    cat("Handling continuous dense matrix case\n")
+    expr_dt[, `:=`(feature_id_idx = feature_id - min(feature_id) + 1,
+                   biosample_id_idx = biosample_id - min(biosample_id) + 1)]
+    exprs <- Matrix::Matrix(nrow = length(ftr_vec),
+                            ncol = length(bios_vec),
+                            data = 0,
+                            sparse = F)
+    exprs[ as.matrix(expr_dt[, .(feature_id_idx, biosample_id_idx)]) ] <- expr_dt$value
+    # Set the row and column names to the id's first
+    rownames(exprs) = ftr_vec
+    colnames(exprs) = bios_vec
+  } else if (prod_dim_range > nrow(expr_df)) { # Handle case for sparse matrix
+    cat("Handling sparse matrix / discontinuous dense matrix case\n")
+    # slower method.
+    exprs = acast(expr_df, feature_id~biosample_id, value.var="value")
+    stopifnot( nrow(exprs) == length(ftr_vec) )
+    stopifnot( ncol(exprs) == length(bios_vec) )
+  } else {
+    stop("Expect product of lengths of features and vectors to be greater than or equal to ",
+         "number of rows of expression dataframe")
+  }
+  cat(" done.\n")
+  
+  return(exprs)
+}
+
