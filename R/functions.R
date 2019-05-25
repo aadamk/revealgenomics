@@ -1421,7 +1421,7 @@ check_entity_exists_at_id = function(entity, id, ...){
 
 # Following:
 # http://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf
-convertToExpressionSet = function(expr_df, biosample_df, feature_df){
+convertToExpressionSet = function(expr_df, biosample_df, feature_df, measurementset_df){
   
   #############################################
   ## Step 0 # Retain biosample and feature info for returned data
@@ -1528,11 +1528,31 @@ convertToExpressionSet = function(expr_df, biosample_df, feature_df){
   metadata = data.frame(labelDescription = colnames(fData), row.names = colnames(fData))
   featureData = new("AnnotatedDataFrame",
                     data=fData, varMetadata = metadata)
+  
+  #############################################
+  ## Step 4 # Experiment data -- keep slots available for filling in later
+  experimentData = new("MIAME",
+                     name="...",
+                     lab="...",
+                     contact="...",
+                     title="...",
+                     abstract="...",
+                     url="...",
+                     other=as.list(convert_factors_to_char(measurementset_df)))
+  
+  #############################################
+  ## Step 5. Protocol data is a data.frame listing details of protocol
+  # per sample this is not available for our schema right now
+  
   #############################################
   ## Step X # Convert to ExpressionSet
   exampleSet <- ExpressionSet(assayData=as.matrix(exprs),
                               phenoData=phenoData,
-                              featureData=featureData)
+                              featureData=featureData, 
+                              experimentData = experimentData, 
+                              annotation = ifelse('name' %in% colnames(measurementset_df), 
+                                                  as.character(measurementset_df[, 'name']),
+                                                  '...'))
   exampleSet
 }
 
