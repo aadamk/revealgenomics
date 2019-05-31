@@ -234,14 +234,16 @@ test_register_variant = function(df, variant_attr_cols){
   #                           id = sort(unique(df$feature_id)))
 }
 
-test_register_expression_dataframe = function(df1) {
+test_register_expression_dataframe = function(df1, con = NULL) {
   test_mandatory_fields(df = df1, arrayname = .ghEnv$meta$arrRnaquantification, 
                         silent = TRUE)
 
   check_entity_exists_at_id(entity = .ghEnv$meta$arrMeasurementSet,
-                            id = sort(unique(df1$measurementset_id)))
+                            id = sort(unique(df1$measurementset_id)),
+                            con = con)
   check_entity_exists_at_id(entity = .ghEnv$meta$arrBiosample,
-                            id = sort(unique(df1$biosample_id)))
+                            id = sort(unique(df1$biosample_id)),
+                            con = con)
   # check_entity_exists_at_id(entity = 'FEATURE',
   #                           id = sort(unique(df1$feature_id)))
 }

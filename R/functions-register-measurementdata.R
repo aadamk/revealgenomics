@@ -326,7 +326,7 @@ register_in_memory_matrix = function(mat, measurementset) {
 register_expression_dataframe = function(df1, dataset_version, con = NULL){
   con = use_ghEnv_if_null(con)
   
-  test_register_expression_dataframe(df1)
+  test_register_expression_dataframe(df1, con = con)
   
   ms_id = unique(df1$measurementset_id)
   if (length(ms_id) != 1) {
