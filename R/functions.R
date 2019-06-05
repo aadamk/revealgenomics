@@ -1305,7 +1305,8 @@ download_unpivot_info_join = function(qq,
   res1[, 'ARBITRARY_IDX'] = NULL # in case this was introduced by the `cross_join`
                                  # Once `project(ARRAY, -ARBITRARY_IDX)` is possible (scidb 19.3), we can skip this step
   
-  if (mandatory_fields_only) {
+  if (mandatory_fields_only | # if user requested mandatory fields only
+      !.ghEnv$meta$L$array[[strip_namespace(arrayname)]]$infoArray) { # if flex fields do not exist for given entity
     res_df = res1
   } else { # try joining with INFO array
     res2 = tryCatch({ # to capture case when download of INFO array fails due to very large size
