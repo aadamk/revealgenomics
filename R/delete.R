@@ -499,11 +499,13 @@ delete_dataset_internal <- function(dataset_id, datasetVersion, datasetStructure
         column.name <- get_base_idname(next.parent.entity)  ## Get the name for the column that contains the IDs for this measurement type.
         
         for (next.row in 1:nrow(next.entity.ids) ) {
-          delete_entity(entity = next.entity, 
-                        id = next.entity.ids[next.row, column.name], 
-                        dataset_version = next.entity.ids[next.row, "dataset_version"],  
-                        delete_by_entity = next.parent.entity, 
-                        con = con)
+          if (next.entity.ids[next.row, ]$entity == next.entity) {
+            delete_entity(entity = next.entity, 
+                          id = next.entity.ids[next.row, column.name], 
+                          dataset_version = next.entity.ids[next.row, "dataset_version"],  
+                          delete_by_entity = next.parent.entity, 
+                          con = con)
+          }
         }
       }
     }
@@ -539,6 +541,7 @@ delete_dataset_internal <- function(dataset_id, datasetVersion, datasetStructure
                 dataset_version = datasetVersion, 
                 delete_by_entity = "DATASET", 
                 con = con)
+  
 }
 
 #' @export
