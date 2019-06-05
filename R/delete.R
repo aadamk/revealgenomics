@@ -444,6 +444,16 @@ print_dataset_subelements <- function(dataset_id, datasetVersion, print.nonexist
 ##  eventually delete the actual measurement data as well.
 ##-----------------------------------------------------------------------------=
 delete_dataset_internal <- function(dataset_id, datasetVersion, datasetStructure = NULL, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  
+  ##-----------------=
+  ## Delete permissions for this dataset from permissions table
+  ##-----------------=
+  if (as.logical(options('revealgenomics.use_scidb_ee'))) {
+    query = paste0("delete(permissions.dataset_id, dataset_id = ", dataset_id, ")")
+    cat("Delete permissions for this dataset from permissions table\n", query, "\n")
+    iquery(con$db, query = query)
+  }
   
   ## Get the list of sub-entities.
   ## If the dataset's structure is provided, then use that structure, otherwise call
