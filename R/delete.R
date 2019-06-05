@@ -180,9 +180,8 @@ delete_project <- function(project_id, con = NULL) {
   }
   ## Note, incorrect projectIDs will be caught by the call to "search_datasets()".
 
-  projectExists = try({check_entity_exists_at_id(entity = .ghEnv$meta$arrProject, id = project_id)},
-                      silent = TRUE)
-  if (class(projectExists) == 'try-error') {
+  project_df = get_projects(project_id = project_id, con = con)
+  if (nrow(project_df) != 1) {
     cat("Project ", project_id, " does not exist. Nothing to delete.\n")
     return(invisible(NULL))
   }
@@ -192,14 +191,20 @@ delete_project <- function(project_id, con = NULL) {
   datasets <- search_datasets(project_id = project_id, con = con)
   
   datasetStructures.lst <- list()
-  
-  if (nrow(datasets) > 0) {
+  if (class(datasets) == "NULL") {
+    ## If there are no datasests, then indicate that there are no datasets underneath.
+    cat("Project", project_id, "contains no datasets. \n\n")
+  } else if (nrow(datasets) > 0) {
     ## First re-order the datasets by ascending dataset number and descending version 
     ##  number (so the most recent version of each dataset is first).
     datasets <-  datasets[order(datasets[,"dataset_id"], -datasets[,"dataset_version"]), ]
     
-    datasetNames <- apply(datasets[, c("dataset_id", "dataset_version")],  MARGIN = 1,  FUN = function(x) { paste(x, collapse = "_ver")})
-    cat("Project ", project_id, " consists of DATASET(S):  \t", paste(datasetNames, collapse=", "), "\n\n", sep="")
+    datasetNames <- apply(
+      datasets[, c("dataset_id", "dataset_version", "name")],  
+      MARGIN = 1,  
+      FUN = function(x) { paste0(x[1], "_ver", x[2], " (", x[3], ")")})
+    cat("Project ", project_id, " (", project_df$name, ")", 
+        " consists of DATASET(S):  \t", paste(datasetNames, collapse=", "), "\n\n", sep="")
     
     
     
