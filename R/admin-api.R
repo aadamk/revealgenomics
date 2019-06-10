@@ -1,8 +1,8 @@
 #BEGIN_COPYRIGHT
 #
 # PARADIGM4 INC.
-# This file is distributed along with the Paradigm4 Enterprise SciDB 
-# distribution kit and may only be used with a valid Paradigm4 contract 
+# This file is distributed along with the Paradigm4 Enterprise SciDB
+# distribution kit and may only be used with a valid Paradigm4 contract
 # and in accord with the terms and conditions specified by that contract.
 #
 # Copyright (C) 2010 - 2018 Paradigm4 Inc.
@@ -18,35 +18,35 @@
 # show_dataset_permissions(con, 'gemini_dataset')
 #
 # GRANT:
-# set_permissions(con, 'gary', 'gemini_dataset', TRUE) 
-# 
+# set_permissions(con, 'gary', 'gemini_dataset', TRUE)
+#
 # REVOKE:
 # set_permissions(con, 'gary', 'gemini_dataset', FALSE)
 #
 # GRANT to multiple datsets:
-# set_permissions(con, 'gary', c('gemini_dataset', 'Kriti_test_dataset'), TRUE) 
+# set_permissions(con, 'gary', c('gemini_dataset', 'Kriti_test_dataset'), TRUE)
 
 PERMISSIONS_ARRAY = function() { 'permissions.dataset_id' }
 DATASET_ARRAY = function() { full_arrayname(.ghEnv$meta$arrDataset) }
 
 #' list users registered with scidb
-#' 
+#'
 list_users = function(con = NULL)
 {
   con = use_ghEnv_if_null(con)
-  iquery(con$db, "project(list('users'), name)", 
-         return=T, only_attributes=T, 
+  iquery(con$db, "project(list('users'), name)",
+         return=T, only_attributes=T,
          schema="<user_name:string>[i]")
 }
 
-#' list studies 
-#' 
+#' list studies
+#'
 #' faster optionthan get_datasets()
 list_datasets = function(con = NULL)
 {
   con = use_ghEnv_if_null(con)
-  iquery(con$db, paste0("project(filter(", DATASET_ARRAY(), ", dataset_version=1), name)"), 
-         return=T, only_attributes=T, 
+  iquery(con$db, paste0("project(filter(", DATASET_ARRAY(), ", dataset_version=1), name)"),
+         return=T, only_attributes=T,
          schema = "<dataset_name:string>[i]")
 }
 
@@ -54,55 +54,55 @@ list_datasets = function(con = NULL)
 show_permissions_inner = function(con = NULL, dataset_filter= 'true', user_filter='true')
 {
   con = use_ghEnv_if_null(con)
-  iquery(con$db, 
+  iquery(con$db,
          paste0(
            "project(
-           equi_join(
-           project(
-           apply(
-           filter(",
-           DATASET_ARRAY(), ",
-           (", dataset_filter, ") and dataset_version = 1
-           ),
-           dataset_name, name
-           ),
-           dataset_name
-           ),
-           equi_join(
-           filter(",
-           PERMISSIONS_ARRAY(),", 
-           access
-           ) as PERMS,
-           project(
-           apply(
-           filter(
-           list('users'),",
-           user_filter, "
-           ),
-           idx, int64(id),
-           user_name, name
-           ),
-           user_name, idx
-           ) as USERS,
-           'left_names=user_id',
-           'right_names=idx',
-           'algorithm=hash_replicate_right',
-           'keep_dimensions=T'
-           ),
-           'left_names=dataset_id',
-           'right_names=dataset_id',
-           'algorithm=hash_replicate_right'
-           ),
+                   equi_join(
+                             project(
+                                     apply(
+                                           filter(",
+                                                  DATASET_ARRAY(), ",
+                                                  (", dataset_filter, ") and dataset_version = 1
+                                           ),
+                                           dataset_name, name
+                                    ),
+                                    dataset_name
+                             ) as l,
+                             equi_join(
+                                      filter(",
+                                             PERMISSIONS_ARRAY(),",
+                                             access
+                                      ) as PERMS,
+                                      project(
+                                              apply(
+                                                    filter(
+                                                           list('users'),",
+                                                           user_filter, "
+                                                    ),
+                                                    idx, int64(id),
+                                              user_name, name
+                                              ),
+                                              user_name, idx
+                                     ) as USERS,
+                                     left_names: user_id,
+                                     right_names:idx,
+                                     algorithm:'hash_replicate_right',
+                                     keep_dimensions:true
+                            ) as r,
+                            left_names:l.dataset_id,
+                            right_names:r.dataset_id,
+                            algorithm:'hash_replicate_right'
+                     ),
            dataset_name, user_name
-  )"), 
+     )"),
      return=T, only_attributes=T,
      schema='<dataset_name:string, user_name:string>[i]'
-  )   
+  )
 }
 
 #' show user permissions
-#' 
-#' to be run only by scidbadmin, or user 
+#'
+#' to be run only by scidbadmin, or user
 #' with Read capability to permissions and secured namespaces
 #' @export
 show_user_permissions = function(con = NULL, user_name)
@@ -112,8 +112,8 @@ show_user_permissions = function(con = NULL, user_name)
 }
 
 #' show study permissions
-#' 
-#' to be run only by scidbadmin, or user 
+#'
+#' to be run only by scidbadmin, or user
 #' with Read capability to permissions and secured namespaces
 #' @export
 show_dataset_permissions = function(con = NULL, dataset_name)
@@ -123,12 +123,12 @@ show_dataset_permissions = function(con = NULL, dataset_name)
 }
 
 #' set per study access permissions for a user
-#' 
-#' to be run only by scidbadmin, or user 
+#'
+#' to be run only by scidbadmin, or user
 #' with Read / Write capability to permissions and secured namespaces
-#' 
+#'
 #' can supply multiple study names at a time
-#' 
+#'
 #' @export
 set_permissions = function(con = NULL, user_name, dataset_names, allowed)
 {
@@ -166,10 +166,10 @@ set_permissions = function(con = NULL, user_name, dataset_names, allowed)
     dataset_version=1
     ),",
          dataset_build_str, ",
-    'left_names=name',
-    'right_names=dataset_name',
-    'keep_dimensions=1',
-    'algorithm=hash_replicate_right'
+    left_names: name,
+    right_names:dataset_name,
+    keep_dimensions:true,
+    algorithm:'hash_replicate_right'
     ),
     dataset_id
     )"), schema = "<dataset_idx:int64>[i]",
@@ -183,7 +183,7 @@ set_permissions = function(con = NULL, user_name, dataset_names, allowed)
   if( allowed == FALSE )
   {
     permission='false'
-  } else 
+  } else
   {
     permission='true'
   }
@@ -205,10 +205,10 @@ set_permissions = function(con = NULL, user_name, dataset_names, allowed)
 }
 
 #' grant initial access to a user
-#' 
+#'
 #' function to be called while onboarding a user
 #' can only be called by scidbadmin
-#' 
+#'
 #' @export
 grant_initial_access = function(con = NULL, user_name) {
   con = use_ghEnv_if_null(con)
@@ -230,7 +230,7 @@ grant_initial_access = function(con = NULL, user_name) {
     stop(paste("Can't find user", user_name))
   }
   user_idx = as.numeric(user_idx$id)
-  
+
   available_roles = iquery(con$db, "list('roles')", return = T)$name
   reader_role = 'reveal_data_readers'
   if (reader_role %in% available_roles) { # Preferred method
@@ -240,28 +240,28 @@ grant_initial_access = function(con = NULL, user_name) {
   } else { # Not the preferred method
     stop("Asking to individually add namespace permissions for user -- create a central role: ",  reader_role, "instead\n")
     cat("Grant read access to public namespace\n")
-    iquery(con$db, 
+    iquery(con$db,
            paste0("set_role_permissions('", user_name, "', 'namespace', '",
                   find_namespace('FEATURE'), "', 'rl')"))
     cat("Grant read, write access to GENELIST namespace\n")
-    iquery(con$db, 
+    iquery(con$db,
            paste0("set_role_permissions('", user_name, "', 'namespace', '",
                   find_namespace(.ghEnv$meta$arrGenelist), "', 'crudl')"))
     cat("Grant list access to secure namespace (required for study level security)\n")
-    iquery(con$db, 
+    iquery(con$db,
            paste0("set_role_permissions('", user_name, "', 'namespace', '",
                   find_namespace('DATASET'), "', 'l')"))
   }
-  
+
   cat("Granting access to publc studies\n")
   studylist = iquery(con$db, paste0("project(", full_arrayname(.ghEnv$meta$arrDataset), ", public)"), return = T)
   studylist$dataset_version = NULL
   studylist = unique(studylist)
   studylist = studylist[studylist$public, ]
-  
+
   if (nrow(studylist) > 0) {
     query = paste0("build(<dataset_id:int64>
-                   [dataset_id_idx=1:",nrow(studylist),"],", 
+                   [dataset_id_idx=1:",nrow(studylist),"],",
                    "'[", paste0(studylist$dataset_id, collapse = ","),"]',true )")
     query = paste0("apply(", query, ",user_id,", user_idx, ",access, true)")
     query = paste0("redimension(", query, ", ", PERMISSIONS_ARRAY(), ")")
@@ -274,13 +274,13 @@ grant_initial_access = function(con = NULL, user_name) {
 }
 
 #' whether to use secure_scan or not
-#' 
+#'
 #' use this as a switch to choose between
 #' - secure_scan (apply study-level security on dataset_id; must have permissions.dataset_id array)
 #' - scan (just use regular scan of arrays)
 custom_scan = function() {
   # Use secure_scan for SciDB enterprise edition only
-  ifelse(options("revealgenomics.use_scidb_ee"), 
+  ifelse(options("revealgenomics.use_scidb_ee"),
          "secure_scan",
          "scan")
 }

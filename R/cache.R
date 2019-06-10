@@ -16,23 +16,23 @@
 # BASE FUNCTIONS: Begin
 update_entity_cache = function(entitynm, con = NULL) {
   con = use_ghEnv_if_null(con)
-  
+
   arraynm =  full_arrayname(entitynm)
   if (get_entity_infoArrayExists(entitynm)) { # INFO array exists
     idname = get_base_idname(entitynm)
-    qq = paste0("equi_join(", 
-                arraynm, ", ", 
-                arraynm, "_INFO, ",
-                "'left_names=", idname, "', ", 
-                "'right_names=", idname, "', ",
-                "'left_outer=1', 'keep_dimensions=1')"
+    qq = paste0("equi_join(",
+                arraynm, " as l, ",
+                arraynm, "_INFO as r, ",
+                "left_names:l.", idname, ", ",
+                "right_names:r.", idname, ", ",
+                "left_outer:true, keep_dimensions:true)"
     )
     zz = iquery(con$db, qq, return = TRUE)
     zz[, 'instance_id'] = NULL
     zz[, 'value_no'] = NULL
     zz = unpivot(df1 = zz, arrayname = entitynm)
     if (nrow(zz) > 1) zz = zz[order(zz[, idname]), ]
-    
+
     if (entitynm != .ghEnv$meta$arrOntology) zz = autoconvert_char(df1 = zz)
     .ghEnv$cache[[entitynm]] = zz
   } else { # INFO array does not exist
@@ -41,23 +41,23 @@ update_entity_cache = function(entitynm, con = NULL) {
 }
 
 #' get_ENTITY for cached entities
-#' 
+#'
 #' Currently works for ONTOLOGY, DEFINITION, VARIANT_KEY, FEATURE_SYNONYM,
 #' GENE_SYMBOL
-#' 
+#'
 #' @param cache_df typically result of a `get_entity_from_cache()` call
 #' @param entitynm entity name
 #' @param id       the id-s to be selected (can be `NULL`)
 get_entity_from_cache = function(entitynm, id, updateCache, con = NULL) {
   con = use_ghEnv_if_null(con)
-  
+
   if (updateCache | is.null(.ghEnv$cache[[entitynm]])){
     update_entity_cache(entitynm = entitynm, con = con)
   }
   if (nrow(.ghEnv$cache[[entitynm]]) == 0) {
     update_entity_cache(entitynm = entitynm, con = con)
-  } 
-  
+  }
+
   cache_df = .ghEnv$cache[[entitynm]]
   base_ids = get_base_idname(entitynm)
   if (!is.null(id)){
@@ -69,10 +69,10 @@ get_entity_from_cache = function(entitynm, id, updateCache, con = NULL) {
   }
   if (length(base_ids) > 1) {
     stop("This caching function currently supports entities with
-         one base idname only. Current entity: ", entitynm, 
+         one base idname only. Current entity: ", entitynm,
          "has multiple base ids: ", pretty_print(base_ids))
   }
-  if (all(base_ids %in% 
+  if (all(base_ids %in%
           colnames(res_df))) {
     row.names(res_df) = res_df[, base_ids]
   }
@@ -84,92 +84,92 @@ get_entity_from_cache = function(entitynm, id, updateCache, con = NULL) {
 
 ##### VARIANT_KEY #####
 update_metadata_attrkey_cache = function(con = NULL){
-  update_entity_cache(entitynm = .ghEnv$meta$arrMetadataAttrKey, 
+  update_entity_cache(entitynm = .ghEnv$meta$arrMetadataAttrKey,
                       con = con)
 }
 
 get_metadata_attrkey_from_cache = function(metadata_attrkey_id, updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrMetadataAttrKey, 
-                        id = metadata_attrkey_id, 
-                        updateCache = updateCache, 
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrMetadataAttrKey,
+                        id = metadata_attrkey_id,
+                        updateCache = updateCache,
                         con = con)
 }
 
 
 ##### VARIANT_KEY #####
 update_variant_key_cache = function(con = NULL){
-  update_entity_cache(entitynm = .ghEnv$meta$arrVariantKey, 
+  update_entity_cache(entitynm = .ghEnv$meta$arrVariantKey,
                       con = con)
 }
 
 get_variant_key_from_cache = function(variant_key_id, updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrVariantKey, 
-                        id = variant_key_id, 
-                        updateCache = updateCache, 
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrVariantKey,
+                        id = variant_key_id,
+                        updateCache = updateCache,
                         con = con)
 }
 
-##### DEFINITION ##### 
+##### DEFINITION #####
 update_definition_cache = function(con = NULL){
-  update_entity_cache(entitynm = .ghEnv$meta$arrDefinition, 
+  update_entity_cache(entitynm = .ghEnv$meta$arrDefinition,
                       con = con)
 }
 
 get_definition_from_cache = function(definition_id, updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrDefinition, 
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrDefinition,
                         id = definition_id,
-                        updateCache = updateCache, 
+                        updateCache = updateCache,
                         con = con)
 }
 
-##### ONTOLOGY ##### 
+##### ONTOLOGY #####
 update_ontology_cache = function(con = NULL){
-  update_entity_cache(entitynm = .ghEnv$meta$arrOntology, 
+  update_entity_cache(entitynm = .ghEnv$meta$arrOntology,
                       con = con)
 }
 
 get_ontology_from_cache = function(ontology_id, updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrOntology, 
-                        id = ontology_id, 
-                        updateCache = updateCache, 
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrOntology,
+                        id = ontology_id,
+                        updateCache = updateCache,
                         con = con)
 }
 
-##### FEATURE-SYNONYM ##### 
+##### FEATURE-SYNONYM #####
 update_feature_synonym_cache = function(con = NULL){
-  update_entity_cache(entitynm = .ghEnv$meta$arrFeatureSynonym, 
+  update_entity_cache(entitynm = .ghEnv$meta$arrFeatureSynonym,
                       con = con)
 }
 
 get_feature_synonym_from_cache = function(feature_synonym_id, updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrFeatureSynonym, 
-                        id = feature_synonym_id, 
-                        updateCache = updateCache, 
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrFeatureSynonym,
+                        id = feature_synonym_id,
+                        updateCache = updateCache,
                         con = con)
 }
 
-##### GENE-SYMBOLS ##### 
+##### GENE-SYMBOLS #####
 update_gene_symbol_cache = function(con = NULL){
-  update_entity_cache(entitynm = .ghEnv$meta$arrGeneSymbol, 
+  update_entity_cache(entitynm = .ghEnv$meta$arrGeneSymbol,
                       con = con)
 }
 
 get_gene_symbol_from_cache = function(gene_symbol_id, updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrGeneSymbol, 
-                        id = gene_symbol_id, 
-                        updateCache = updateCache, 
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrGeneSymbol,
+                        id = gene_symbol_id,
+                        updateCache = updateCache,
                         con = con)
 }
 
 ##### CHROMOSOME_KEY #####
 update_chromosome_key_cache = function(con = NULL){
-  update_entity_cache(entitynm = .ghEnv$meta$arrChromosomeKey, 
+  update_entity_cache(entitynm = .ghEnv$meta$arrChromosomeKey,
                       con = con)
 }
 
 get_chromosome_key_from_cache = function(chromosome_key_id, updateCache, con = NULL){
-  get_entity_from_cache(entitynm = .ghEnv$meta$arrChromosomeKey, 
-                        id = chromosome_key_id, 
-                        updateCache = updateCache, 
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrChromosomeKey,
+                        id = chromosome_key_id,
+                        updateCache = updateCache,
                         con = con)
 }
