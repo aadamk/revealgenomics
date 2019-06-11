@@ -587,8 +587,9 @@ delete_featureset = function(featureset_id, con = NULL) {
       }
     )
     names(counts_at_entity) = entities
-    if (any(counts_at_entity != 0)) {
-      non_empty_entities = names(counts_at_entity)[which( !is.na(counts_at_entity) & counts_at_entity > 0)]
+    counts_at_entity_non_na = counts_at_entity[which(!is.na(counts_at_entity))]
+    if (any(counts_at_entity_non_na != 0)) {
+      non_empty_entities = names(counts_at_entity_non_na)[which( !is.na(counts_at_entity_non_na) & counts_at_entity_non_na > 0)]
       stop("Cannot delete featureset: ", featureset_id, ", featureset_name: ", fset$name, 
            "\nData exists for featureset_id at following entities: ",
            pretty_print(
