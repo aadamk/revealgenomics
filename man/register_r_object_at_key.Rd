@@ -18,7 +18,7 @@ Store an R object in scidb and associate it with user provided key
 }
 \examples{
 \dontrun{
-  rg_connect(username = 'scidbadmin') # or any user with access to gh_secure namespace
+  rg_connect(username = 'scidbadmin') # or any user with access to gh_r_object_store namespace
   revealgenomics:::register_r_object_at_key(r_obj = c(1:10), key = "asdf")
   # To retrieve data, run
   revealgenomics:::retrieve_r_object_at_key(key = "asdf")

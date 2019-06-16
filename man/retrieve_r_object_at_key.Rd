@@ -2,7 +2,7 @@
 % Please edit documentation in R/r_object_in_scidb.R
 \name{retrieve_r_object_at_key}
 \alias{retrieve_r_object_at_key}
-\title{Retriev R object associated with key}
+\title{Retrieve R object associated with key}
 \usage{
 retrieve_r_object_at_key(key, con = NULL)
 }
@@ -12,11 +12,11 @@ retrieve_r_object_at_key(key, con = NULL)
 \item{con}{connection object}
 }
 \description{
-Retriev R object associated with key
+Retrieve R object associated with key
 }
 \examples{
 \dontrun{
-  rg_connect(username = 'scidbadmin') # or any user with access to gh_secure namespace
+  rg_connect(username = 'scidbadmin') # or any user with access to gh_r_object_store namespace
   revealgenomics:::retrieve_r_object_at_key(key = "asdf")
   revealgenomics:::retrieve_r_object_at_key(key = "KeyDoesNotExist")
   # No R object found at key: KeyDoesNotExist

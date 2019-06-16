@@ -66,7 +66,7 @@ register_r_object_at_key = function(r_obj, key, con = NULL) {
   iquery(con$db, query)
 }
 
-#' Retrive R object associated with key
+#' Retrieve R object associated with key
 #' @param key   key associated with the R object
 #' @param con   connection object
 #' @examples 
