@@ -157,3 +157,22 @@ drop_equi_join_dims = function(df1) {
   df1[, c('instance_id', 'value_no')] = c(NULL, NULL)
   df1
 }
+
+#' Formulate query to build array from vector
+#' 
+#' @param vec vector of integers
+formulate_build_literal_query = function(vec, value_name = 'value_id', index_name = 'idx') {
+  vec = sort(unique(vec))
+  stopifnot(class(vec) == 'integer' | class(vec) == 'numeric')
+  if (class(vec) == 'numeric') {
+    message("Potentially converting floating points to integers")
+    vec = as.integer(vec)
+  }
+  paste0(
+    "build(<", value_name, ":int64>[", index_name, "=0:", 
+    length(vec)-1, 
+    "], '[", 
+    paste0(vec, collapse = ","),
+    "]', true)"
+  )
+} 
