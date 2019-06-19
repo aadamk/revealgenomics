@@ -711,6 +711,47 @@ search_expression_by_one_measurementset_zero_or_more_features = function(entity,
 }
 
 
+#' Subpath for `search_expression`
+#' 
+#' implementation of `search_expression` when searching by one or more biosamples. Here you are not selecting by MeasurementSet-s or Features. 
+#' 
+#' @param biosample data.frame of biosamples at which to search for expression data
+#' @param biosample_id vector of biosample_id-s at which to search for expression data
+search_expression_by_one_or_more_biosamples = function(
+  entity, biosample = NULL, biosample_id = NULL, formExpressionSet = FALSE, con = NULL
+) {
+  if (is.null(biosample) & is.null(biosample_id)) stop("One of the parameters: biosample and biosample_ref must be non null")
+  if (!is.null(biosample) & !is.null(biosample_id)) stop("Both the parameters: biosample and biosample_ref cannot be non null together. Use only one at a time")
+  if (!is.null(biosample) & is.null(biosample_id)) { stopifnot('biosample_id' %in% colnames(biosample)); biosample_id = biosample$biosample_id }
+  
+  con = use_ghEnv_if_null(con = con)
+  arr0 = full_arrayname(entity)
+  qq = paste0(custom_scan(), "(", arr0, ")")
+  
+  q1 = formulate_build_literal_query(vec = biosample_id, value_name = 'biosample_id', index_name = 'idx')
+  q2 = formulate_equi_join_query(left_array_or_query = qq, right_array_or_query = q1, left_fields_to_join_by = 'biosample_id', right_fields_to_join_by = 'biosample_id', keep_dimensions = TRUE)
+  res = drop_equi_join_dims(iquery(con$db, q2, return = TRUE))
+  if (!formExpressionSet) {
+    return(res)
+  } else {
+    biosample_ref = get_biosamples(biosample_id = unique(res$biosample_id), con = con)
+    feature_df = get_features(feature_id = unique(res$feature_id), con = con)
+    measurementset_df = get_measurementsets(measurementset_id = unique(res$measurementset_id), con = con)
+    dataset_version = unique(res$dataset_id)
+    if (length(dataset_version) > 1) stop("__dataset_version__: have not handled case where multiple dataset versions are returned in expression search")
+    if (length(unique(res$measurementset_id)) == 1) {
+      formulate_list_expression_set(
+        expr_df = res, 
+        dataset_version = dataset_version, 
+        measurementset = measurementset_df, 
+        biosample = biosample_ref, 
+        feature = feature_df)
+    } else {
+      stop("Not implemented returning list of ExpressionSet-s yet")
+    }
+  }
+}
+
 #' Deprecated function for searching variant data
 #' 
 #' This function is kept around for backward compatibility. 
