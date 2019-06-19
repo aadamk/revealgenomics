@@ -223,10 +223,54 @@ get_entity_data_class = function(entity){
   .ghEnv$meta$L$array[[entity]]$data_class
 }
 
+#' Get entity id
+#' 
+#' Get entity id from entity name
+#' 
+#' @examples 
+#' get_entity_id('PROJECT')                 # 1002
+#' get_entity_id('VARIANT')                 # 8002
+#' get_entity_id(c('PROJECT', 'VARIANT'))   # c(1002, 8002)
+#'\dontrun{
+#' get_entity_id(c('PROJECT', 'asdf'))      # Error
+#' }
 get_entity_id = function(entity){
-  .ghEnv$meta$L$array[[entity]]$entity_id
+  if (!all(entity %in% get_entity_names())) {
+    stop("The following are not valid entities: ", 
+         pretty_print(entity[!(entity %in% get_entity_names())]))
+  }
+  if (length(entity) >= 1) {
+    sapply(.ghEnv$meta$L$array[entity], function(elem) elem$entity_id)
+  } else {
+    stop("Expect entity to be vector or length 1 or more")
+  }
 }
 
+#' Get entity name
+#' 
+#' Get entity name from entity id
+#' 
+#' @examples 
+#' get_entity_from_entity_id(1002)            # 'PROJECT'
+#' get_entity_from_entity_id(8002)            # 'VARIANT'
+#' get_entity_from_entity_id(c(1002, 8002))   # c('PROJECT', 'VARIANT')
+#'\dontrun{
+#' get_entity_from_entity_id(c(1002, -1))     # Error
+#' }
+get_entity_from_entity_id = function(entity_id) {
+  entity_id_lookup = get_entity_id(entity = get_entity_names())
+  m1 = find_matches_and_return_indices(
+    source = entity_id, 
+    target = entity_id_lookup
+  )
+  if (length(m1$source_unmatched_idx) > 0) {
+    stop("No entity for entity id: ", 
+         pretty_print(entity_id[m1$source_unmatched_idx]))
+  }
+  entities = names(entity_id_lookup[m1$target_matched_idx])
+  stopifnot(all(entities %in% get_entity_names()))
+  entities
+}
 
 get_delete_by_entity = function(entity) { 
   entity = strip_namespace(entity)
