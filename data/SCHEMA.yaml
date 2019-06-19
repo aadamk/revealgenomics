@@ -429,6 +429,7 @@ array:
     compression_on: TRUE
   # CHROMOSOME_KEY
   CHROMOSOME_KEY:
+    entity_id: 1012
     data_class:
       metadata
     namespace:
@@ -450,6 +451,7 @@ array:
     cached: TRUE
   # EXOMIC_VARIANT
   EXOMIC_VARIANT:
+    entity_id: 2007
     data_class:
       featuredata
     namespace:
@@ -485,6 +487,7 @@ array:
     compression_on: TRUE
   # EXOMIC_VARIANT_CALL
   EXOMIC_VARIANT_CALL:
+    entity_id: 8009
     data_class:
       measurementdata
     measurementdata_subclass:
