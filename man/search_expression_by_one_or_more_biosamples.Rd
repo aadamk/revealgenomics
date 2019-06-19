@@ -4,8 +4,13 @@
 \alias{search_expression_by_one_or_more_biosamples}
 \title{Subpath for \code{search_expression}}
 \usage{
-search_expression_by_one_or_more_biosamples(entity, biosample,
-  formExpressionSet = FALSE, con = NULL)
+search_expression_by_one_or_more_biosamples(entity, biosample = NULL,
+  biosample_id = NULL, formExpressionSet = FALSE, con = NULL)
+}
+\arguments{
+\item{biosample}{data.frame of biosamples at which to search for expression data}
+
+\item{biosample_id}{vector of biosample_id-s at which to search for expression data}
 }
 \description{
 implementation of \code{search_expression} when searching by one or more biosamples. Here you are not selecting by MeasurementSet-s or Features.

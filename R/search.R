@@ -457,7 +457,7 @@ search_expression = function(measurementset = NULL,
     if (getOption("revealgenomics.debug", FALSE)) {
       cat("Not searching by biosample; Using optimized search path\n")
     }
-    dao_search_expression(entity = entity,
+    search_expression_by_one_measurementset_zero_or_more_features(entity = entity,
                           measurementset = measurementset, 
                           biosample_ref = biosample_ref, 
                           feature = feature, 
@@ -586,9 +586,9 @@ search_rnaquantification_scidb = function(arrayname,
 }
 
 
-#' Faster implementation of `search_expression` for UI development
+#' Subpath for `search_expression`
 #' 
-#' Here, there is no option to select by specific biosamples
+#' Faster implementation of `search_expression` for one measurementset (Pipeline), and multiple features. Here, there is no option to select by specific biosamples
 #' 
 #' @param biosample_ref Reference dataframe containing at least the biosample data for 
 #'                      current study (e.g. by calling 
@@ -596,7 +596,7 @@ search_rnaquantification_scidb = function(arrayname,
 #'                      OK if more biosample rows are provided (e.g. by calling
 #'                      `get_biosamples()`)
 #' 
-dao_search_expression = function(entity, 
+search_expression_by_one_measurementset_zero_or_more_features = function(entity, 
                                  measurementset, 
                                  biosample_ref, 
                                  feature = NULL, 
