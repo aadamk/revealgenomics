@@ -176,3 +176,14 @@ formulate_build_literal_query = function(vec, value_name = 'value_id', index_nam
     "]', true)"
   )
 } 
+
+formulate_equi_join_query = function(left_array_or_query, right_array_or_query, left_fields_to_join_by, right_fields_to_join_by, keep_dimensions = TRUE) {
+  paste0(
+    "equi_join(", 
+    left_array_or_query, 
+    ", ", right_array_or_query, 
+    ", 'left_names=",  paste0(left_fields_to_join_by, collapse=","), "'", 
+    ", 'right_names=", paste0(right_fields_to_join_by, collapse=","), "'", 
+    ifelse(keep_dimensions, ", 'keep_dimensions=true')", ", 'keep_dimensions=false')")
+  )
+}
