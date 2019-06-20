@@ -1314,6 +1314,7 @@ createDataReader = function(pipeline_df, measurement_set){
          "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" = ,
          "{[DNAnexus]-[Variant_DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" = ,
+         "{[DNAnexus]-[Mutect2 + Variant_Annotation v0.4] Mutect2 / SnpEff / GEMINI}{DNA}" = ,
          "{[external]-[Single Nucleotide Variant] MuTect / seurat / strelka}{DNA}" = ,
          "{[external]-[Single Nucleotide Variant] Targeted Region - DNA Analysis Pipeline for Cancer (Personalis)}{DNA}" =
              DataReaderVariantFormatA$new(pipeline_df = pipeline_df,
