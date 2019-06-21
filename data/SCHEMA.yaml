@@ -802,6 +802,30 @@ array:
     delete_by_entity: MEASUREMENTSET
     infoArray: FALSE
     compression_on: TRUE
+  # ONTOLOGY_CATEGORY
+  ONTOLOGY_CATEGORY:
+    entity_id: 1013
+    data_class:
+      metadata
+    data_subclass:
+      metadata_curated_values
+    namespace: 
+      - gh_public
+    attributes: 
+      ontology_category: string
+    dims: 
+      ontology_category_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    unique_fields:
+      - ontology_category
+    search_by_entity: 
+    delete_by_entity: ONTOLOGY_CATEGORY
+    infoArray: FALSE
+    compression_on: FALSE
+    cached: TRUE
   # ONTOLOGY
   ONTOLOGY:
     entity_id: 1010

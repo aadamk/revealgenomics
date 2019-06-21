@@ -200,6 +200,12 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
                           con = con)
 }
 
+get_ontology_category = function(ontology_category_id = NULL, updateCache = FALSE, con = NULL){
+  get_ontology_category_from_cache(ontology_category_id = ontology_category_id, 
+                          updateCache = updateCache, 
+                          con = con)
+}
+
 get_metadata_attrkey = function(metadata_attrkey_id = NULL, updateCache = FALSE, con = NULL){
   get_metadata_attrkey_from_cache(metadata_attrkey_id = metadata_attrkey_id, 
                                   updateCache = updateCache, 

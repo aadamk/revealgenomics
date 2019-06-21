@@ -161,6 +161,10 @@ test_register_chromosome_key = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrChromosomeKey, df, uniq, silent)
 }
 
+test_register_ontology_category = function(df1, uniq, silent = TRUE){
+  run_tests_dataframe(entity = .ghEnv$meta$arrOntologyCategory, df = df1, uniq, silent)
+}
+
 test_register_featureset = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrFeatureset, df, uniq, silent)
 }

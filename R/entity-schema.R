@@ -59,6 +59,7 @@ get_mandatory_fields_for_register_entity = function(arrayname){
     if (!(entitynm %in% c(.ghEnv$meta$arrProject,
                           .ghEnv$meta$arrDataset,
                           .ghEnv$meta$arrOntology,
+                          .ghEnv$meta$arrOntologyCategory,
                           .ghEnv$meta$arrMetadataAttrKey, 
                           .ghEnv$meta$arrVariantKey, 
                           .ghEnv$meta$arrChromosomeKey))) {

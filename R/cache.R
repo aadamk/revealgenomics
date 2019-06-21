@@ -173,3 +173,16 @@ get_chromosome_key_from_cache = function(chromosome_key_id, updateCache, con = N
                         updateCache = updateCache, 
                         con = con)
 }
+
+##### ONTOLOGY_CATEGORY #####
+update_ontology_category_cache = function(con = NULL){
+  update_entity_cache(entitynm = .ghEnv$meta$arrOntologyCategory, 
+                      con = con)
+}
+
+get_ontology_category_from_cache = function(ontology_category_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrOntologyCategory, 
+                        id = ontology_category_id, 
+                        updateCache = updateCache, 
+                        con = con)
+}

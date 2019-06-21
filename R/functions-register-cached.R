@@ -61,6 +61,21 @@ register_chromosome_key = function(df1, only_test = FALSE, con = NULL){
   } # end of if (!only_test)
 }
 
+register_ontology_category = function(df1, only_test = FALSE, con = NULL) {
+  uniq = unique_fields()[[.ghEnv$meta$arrOntologyCategory]]
+  test_register_ontology_category(df1 = df1, uniq, silent = ifelse(only_test, FALSE, TRUE))
+  
+  if (!only_test) {
+    arrayname = full_arrayname(.ghEnv$meta$arrOntologyCategory)
+    ids = register_tuple_return_id(df1, arrayname, uniq, con = con)
+    
+    # force update the cache
+    update_ontology_category_cache(con = con)
+    
+    return(ids)
+  } # end of if (!only_test)
+}
+
 #' @export
 register_ontology_term = function(df, only_test = FALSE, con = NULL){
   if (!('category' %in% colnames(df))) df$category = 'uncategorized'

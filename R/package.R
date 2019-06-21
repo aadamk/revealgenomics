@@ -29,6 +29,7 @@ NULL
 
 .ghEnv$meta$arrMetadataAttrKey = 'METADATA_ATTRKEY'
 .ghEnv$meta$arrOntology = 'ONTOLOGY'
+.ghEnv$meta$arrOntologyCategory = 'ONTOLOGY_CATEGORY'
 .ghEnv$meta$arrDefinition = 'DEFINITION'
 .ghEnv$meta$arrProject = 'PROJECT'
 .ghEnv$meta$arrDataset = 'DATASET'

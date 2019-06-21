@@ -233,3 +233,54 @@ test_that("Check that variant registration works properly", {
     force = TRUE)
   }
 })
+
+test_that("Check that ontology_category registration works properly", {
+  # cat("# Now connect to scidb\n")
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
+  if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
+    init_db(arrays_to_init = .ghEnv$meta$arrOntologyCategory, force = TRUE)
+    # Get the existing variant_key fields
+    oc1 = revealgenomics:::get_ontology_category()
+    expect_true(nrow(oc1) == 0)
+    
+    # Register a dummy ontology_category field
+    dummy_category = "dummy"
+    new_ontology_category_id = revealgenomics:::register_ontology_category(
+      df = data.frame(ontology_category = dummy_category, stringsAsFactors = FALSE))
+    # Check that cache is increased by 1 element
+    oc2 = revealgenomics:::get_ontology_category()
+    expect_true(nrow(oc2) == nrow(oc1) + 1)
+    
+    # Verify that the dummy key was uploaded properly
+    expect_true(revealgenomics:::get_ontology_category(ontology_category_id = new_ontology_category_id)$ontology_category == dummy_category)
+    
+    # Delete the dummy ontology_category field
+    delete_entity(entity = .ghEnv$meta$arrOntologyCategory, id = new_ontology_category_id)
+    # Check that the cache is updated, and count has decreased by 1
+    oc3 = revealgenomics:::get_ontology_category()
+    expect_true(nrow(oc3) == nrow(oc1))
+    expect_true(nrow(revealgenomics:::get_ontology_category(ontology_category_id = new_ontology_category_id)) == 0)
+    
+    ###### PHASE 2A #####
+    # Now upload two keys at a time
+    dummy_category_2a = c("dummy1", "dummy2")
+    new_ontology_category_id_2a = revealgenomics:::register_ontology_category(
+      df = data.frame(ontology_category = dummy_category_2a, stringsAsFactors = FALSE))
+    expect_true(length(new_ontology_category_id_2a) == 2)
+    
+    # Now upload two keys at a time
+    dummy_category_2b = c("dummy1", "dummy3")
+    new_ontology_category_id_2b = revealgenomics:::register_ontology_category(
+      df = data.frame(ontology_category = dummy_category_2b, stringsAsFactors = FALSE))
+    expect_true(length(new_ontology_category_id_2b) == 2)
+    expect_true(all(
+      revealgenomics:::get_ontology_category(ontology_category_id = new_ontology_category_id_2b)$ontology_category %in% 
+        c("dummy1", "dummy3")))
+    expect_true(identical(sort(unique(revealgenomics:::get_ontology_category()$ontology_category)), 
+                          sort(unique(c(dummy_category_2a, dummy_category_2b)))))
+    
+    # Clean-up
+    init_db(arrays_to_init = c(.ghEnv$meta$arrOntologyCategory), force = TRUE)
+  }
+})
+
