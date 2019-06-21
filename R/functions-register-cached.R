@@ -28,6 +28,21 @@ register_metadata_attrkey = function(df1, only_test = FALSE, con = NULL){
   } # end of if (!only_test)
 }
 
+register_metadata_value = function(df1, only_test = FALSE, con = NULL){
+  uniq = unique_fields()[[.ghEnv$meta$arrMetadataValue]]
+  test_register_metadata_value(df1 = df1, uniq = uniq, silent = ifelse(only_test, FALSE, TRUE))
+  
+  if (!only_test) {
+    arrayname = full_arrayname(.ghEnv$meta$arrMetadataValue)
+    ids = register_tuple_return_id(df1, arrayname, uniq, con = con)
+    
+    # force update the cache
+    update_metadata_value_cache(con = con)
+    
+    return(ids)
+  } # end of if (!only_test)
+}
+
 
 #' @export
 register_variant_key = function(df1, only_test = FALSE, con = NULL){

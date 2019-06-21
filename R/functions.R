@@ -212,6 +212,12 @@ get_metadata_attrkey = function(metadata_attrkey_id = NULL, updateCache = FALSE,
                                   con = con)
 }
 
+get_metadata_value = function(metadata_value_id = NULL, updateCache = FALSE, con = NULL){
+  get_metadata_value_from_cache(metadata_value_id = metadata_value_id, 
+                                  updateCache = updateCache, 
+                                  con = con)
+}
+
 #' @export
 search_attributes = function(entity, updateCache = FALSE, con = NULL) {
   entity_info = get_entity_info()
@@ -233,6 +239,30 @@ search_attributes = function(entity, updateCache = FALSE, con = NULL) {
 search_metadata_attrkey = function(entity_id, updateCache = FALSE, con = NULL){
   metadtata_attrs_in_db = get_metadata_attrkey(updateCache = updateCache, con = con)
   metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
+}
+
+#' Search metadata value array by values
+#' 
+#' @param metadata_value values to search by. If \code{NULL}, return all values at that category
+#' @param ontology_category ontology category to search by (default: "uncategorized"). If \code{NULL}, search values across all categories
+search_metadata_value = function(metadata_value = NULL, ontology_category = "uncategorized", 
+                                 updateCache = FALSE, con = NULL){
+  if (is.null(metadata_value) & is.null(ontology_category)) {
+    stop("Must supply non-null value for at least one of `metadata_value` and `ontology_category`. Otherwise use `get_metadata_value()`")
+  }
+  metadata_value_in_db = get_metadata_value(updateCache = updateCache, con = con)
+  if (!is.null(ontology_category)) {
+    stopifnot(length(ontology_category) == 1)
+    ontology_category_id = search_ontology_category(ontology_category = ontology_category)$ontology_category_id
+    stopifnot(!is.na(ontology_category_id))
+    metadata_value_in_db = metadata_value_in_db[
+      metadata_value_in_db$ontology_category_id == ontology_category_id, ]
+  }
+  if (is.null(metadata_value)) {
+    metadata_value_in_db
+  } else {
+    metadata_value_in_db[metadata_value_in_db$metadata_value %in% metadata_value, ]
+  }
 }
 
 #' Search ontology category by categories

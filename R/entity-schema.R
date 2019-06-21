@@ -61,6 +61,7 @@ get_mandatory_fields_for_register_entity = function(arrayname){
                           .ghEnv$meta$arrOntology,
                           .ghEnv$meta$arrOntologyCategory,
                           .ghEnv$meta$arrMetadataAttrKey, 
+                          .ghEnv$meta$arrMetadataValue, 
                           .ghEnv$meta$arrVariantKey, 
                           .ghEnv$meta$arrChromosomeKey))) {
       mandatory_fields = c('dataset_id', attrs)

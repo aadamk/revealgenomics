@@ -153,6 +153,10 @@ test_register_metadata_attrkey = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrMetadataAttrKey, df, uniq, silent)
 }
 
+test_register_metadata_value = function(df1, uniq, silent = TRUE){
+  run_tests_dataframe(entity = .ghEnv$meta$arrMetadataValue, df = df1, uniq, silent)
+}
+
 test_register_variant_key = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrVariantKey, df, uniq, silent)
 }

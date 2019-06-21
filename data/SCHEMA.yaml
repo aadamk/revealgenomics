@@ -826,6 +826,34 @@ array:
     infoArray: FALSE
     compression_on: FALSE
     cached: TRUE
+  # METADATA_VALUE
+  METADATA_VALUE:
+    entity_id: 1014
+    data_class:
+      metadata
+    data_subclass:
+      metadata_curated_values
+    namespace: 
+      - gh_public
+    attributes: 
+      ontology_category_id: int64
+      metadata_value: string
+      created: string
+      updated: string
+    dims: 
+      metadata_value_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    unique_fields:
+      - ontology_category_id
+      - metadata_value
+    search_by_entity: 
+    delete_by_entity: METADATA_VALUE
+    infoArray: FALSE
+    compression_on: FALSE
+    cached: TRUE
   # ONTOLOGY
   ONTOLOGY:
     entity_id: 1010

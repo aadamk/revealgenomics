@@ -298,3 +298,117 @@ test_that("Check that ontology_category registration works properly", {
   }
 })
 
+#### metadata_value ####
+test_that("Check that metadata_value registration works properly", {
+  # cat("# Now connect to scidb\n")
+  e0 = tryCatch({rg_connect()}, error = function(e) {e})
+  if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
+    init_db(arrays_to_init = .ghEnv$meta$arrMetadataValue, force = TRUE)
+    # Get the existing metadata_value fields
+    mv1 = revealgenomics:::get_metadata_value()
+    expect_true(nrow(mv1) == 0)
+    
+    # Register a dummy metadata_value field
+    metadata_value = "metadata_value"
+    ontology_category_id_uncategorized = revealgenomics:::search_ontology_category(ontology_category = 'uncategorized')$ontology_category_id
+    new_metadata_value_id = revealgenomics:::register_metadata_value(
+      df = data.frame(
+        metadata_value = metadata_value, 
+        ontology_category_id = ontology_category_id_uncategorized, 
+        stringsAsFactors = FALSE))
+    # Check that cache is increased by 1 element
+    mv2 = revealgenomics:::get_metadata_value()
+    expect_true(nrow(mv2) == nrow(mv1) + 1)
+    
+    # Verify that the metadata_value key was uploaded properly
+    expect_true(revealgenomics:::get_metadata_value(metadata_value_id = new_metadata_value_id)$metadata_value == metadata_value)
+    
+    # Delete the metadata_value field
+    delete_entity(entity = .ghEnv$meta$arrMetadataValue, id = new_metadata_value_id)
+    # Check that the cache is updated, and count has decreased by 1
+    mv3 = revealgenomics:::get_metadata_value()
+    expect_true(nrow(mv3) == nrow(mv1))
+    expect_true(nrow(revealgenomics:::get_metadata_value(metadata_value_id = new_metadata_value_id)) == 0)
+    
+    ###### PHASE 2A #####
+    # Now upload two keys at a time
+    metadata_value_2a = c("metadata_value1", "metadata_value2")
+    new_metadata_value_id_2a = revealgenomics:::register_metadata_value(
+      df = data.frame(metadata_value = metadata_value_2a, 
+                      ontology_category_id = ontology_category_id_uncategorized, 
+                      stringsAsFactors = FALSE))
+    expect_true(length(new_metadata_value_id_2a) == 2)
+    
+    # Now upload two keys at a time
+    metadata_value_2b = c("metadata_value1", "metadata_value3")
+    new_metadata_value_id_2b = revealgenomics:::register_metadata_value(
+      df = data.frame(metadata_value = metadata_value_2b, 
+                      ontology_category_id = ontology_category_id_uncategorized, 
+                      stringsAsFactors = FALSE))
+    expect_true(length(new_metadata_value_id_2b) == 2)
+    expect_true(all(
+      revealgenomics:::get_metadata_value(metadata_value_id = new_metadata_value_id_2b)$metadata_value %in% 
+        c("metadata_value1", "metadata_value3")))
+    expect_true(identical(sort(unique(revealgenomics:::get_metadata_value()$metadata_value)), 
+                          sort(unique(c(metadata_value_2a, metadata_value_2b)))))
+    
+    # Search function
+    testthat::expect_equal(
+      length(unique(revealgenomics:::search_metadata_value(metadata_value = c("metadata_value3", "metadata_value2", "metadata_value1"))$metadata_value_id)),
+      3
+    )
+    testthat::expect_equal(
+      sum(is.na(revealgenomics:::search_metadata_value(metadata_value = c("metadata_value3", "metadata_value2", "metadata_value1x"))$metadata_value_id)),
+      1
+    )
+    testthat::expect_equal(
+      sort(unique(revealgenomics:::search_metadata_value(metadata_value = metadata_value_2b)$metadata_value_id)),
+      sort(new_metadata_value_id_2b)
+    )
+    
+    # Register value at separate ontology
+    init_db(arrays_to_init = c(.ghEnv$meta$arrOntologyCategory), force = TRUE)
+    ontology_category_id = revealgenomics:::register_ontology_category(df1 = data.frame(ontology_category = 'primary_disease'))
+    disease_vec = c('leukemia', 'myeloma', 'rheumatoid arthritis')
+    metadata_value_id = revealgenomics:::register_metadata_value(
+      df1 = data.frame(
+        metadata_value = disease_vec,
+        ontology_category_id = ontology_category_id, 
+        stringsAsFactors = FALSE
+      ))
+    expect_equal(
+      nrow(revealgenomics:::search_metadata_value(metadata_value = 'leukemia')),
+      0
+    )
+    expect_equal(
+      nrow(revealgenomics:::search_metadata_value(metadata_value = 'leukemia', ontology_category = 'primary_disease')),
+      1
+    )
+    expect_equal(
+      sort(revealgenomics:::search_metadata_value(metadata_value = NULL, ontology_category = 'primary_disease')$metadata_value),
+      sort(disease_vec)
+    )
+    expect_equal(
+      class(try(revealgenomics:::search_metadata_value(metadata_value = NULL, ontology_category = NULL), silent = T)),
+      "try-error")
+    expect_equal(
+      nrow(revealgenomics:::search_metadata_value(metadata_value = 'leukemia', ontology_category = NULL)),
+      1)
+    
+    # Register leukemia as a general term and then run the search
+    revealgenomics:::register_metadata_value(
+      df1 = data.frame(
+        metadata_value = 'leukemia', 
+        ontology_category_id = revealgenomics:::search_ontology_category(ontology_category = 'uncategorized')$ontology_category_id,
+        stringsAsFactors = FALSE
+      ))
+    # Now run the search across ontology categories
+    expect_equal(
+      nrow(revealgenomics:::search_metadata_value(metadata_value = 'leukemia', ontology_category = NULL)),
+      2)
+    init_db(arrays_to_init = c(.ghEnv$meta$arrOntologyCategory), force = TRUE)
+
+    # Clean-up
+    init_db(arrays_to_init = c(.ghEnv$meta$arrMetadataValue), force = TRUE)
+  }
+})
