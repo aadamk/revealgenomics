@@ -244,7 +244,7 @@ test_that("Check that ontology_category registration works properly", {
     expect_true(nrow(oc1) == 1)
     
     expect_equal(
-      ontology_category_id = revealgenomics:::search_ontology_category(ontology_category = 'uncategorized')$ontology_category_id,
+      revealgenomics:::search_ontology_category(ontology_category = 'uncategorized')$ontology_category_id,
       1)
     
     # Register a dummy ontology_category field
@@ -362,8 +362,8 @@ test_that("Check that metadata_value registration works properly", {
       3
     )
     testthat::expect_equal(
-      sum(is.na(revealgenomics:::search_metadata_value(metadata_value = c("metadata_value3", "metadata_value2", "metadata_value1x"))$metadata_value_id)),
-      1
+      nrow(revealgenomics:::search_metadata_value(metadata_value = c("metadata_value3", "metadata_value2", "metadata_value1x"))),
+      2
     )
     testthat::expect_equal(
       sort(unique(revealgenomics:::search_metadata_value(metadata_value = metadata_value_2b)$metadata_value_id)),
