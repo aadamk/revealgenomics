@@ -279,6 +279,20 @@ test_that("Check that ontology_category registration works properly", {
     expect_true(identical(sort(unique(revealgenomics:::get_ontology_category()$ontology_category)), 
                           sort(unique(c(dummy_category_2a, dummy_category_2b)))))
     
+    # Search function
+    testthat::expect_equal(
+      length(unique(revealgenomics:::search_ontology_category(ontology_category = c("dummy3", "dummy2", "dummy1"))$ontology_category_id)),
+      3
+    )
+    testthat::expect_equal(
+      sum(is.na(revealgenomics:::search_ontology_category(ontology_category = c("dummy3", "dummy2", "dummy1x"))$ontology_category_id)),
+      1
+    )
+    testthat::expect_equal(
+      sort(unique(revealgenomics:::search_ontology_category(ontology_category = dummy_category_2b)$ontology_category_id)),
+      sort(new_ontology_category_id_2b)
+    )
+    
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrOntologyCategory), force = TRUE)
   }

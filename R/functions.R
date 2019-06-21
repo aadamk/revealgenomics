@@ -235,6 +235,18 @@ search_metadata_attrkey = function(entity_id, updateCache = FALSE, con = NULL){
   metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
 }
 
+#' Search ontology category by categories
+#' 
+#' Search by categories and return \code{data.frame} of \code{ontology_category_id, ontology_category}
+#' 
+#' @param ontology_category one or more categories to search by
+search_ontology_category = function(ontology_category, updateCache = FALSE, con = NULL){
+  ontology_category_in_db = get_ontology_category(updateCache = updateCache, con = con)
+  m1 = find_matches_and_return_indices(source = ontology_category, 
+                                       target = ontology_category_in_db$ontology_category)
+  ontology_category_in_db[match(ontology_category, ontology_category_in_db$ontology_category), ]
+}
+
 #' @export
 get_variant_key = function(variant_key_id = NULL, updateCache = FALSE, con = NULL){
   get_variant_key_from_cache(variant_key_id = variant_key_id, 
