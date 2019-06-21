@@ -239,22 +239,22 @@ test_that("Check that ontology_category registration works properly", {
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = .ghEnv$meta$arrOntologyCategory, force = TRUE)
-    # Get the existing variant_key fields
+    # Get the existing ontology_category fields
     oc1 = revealgenomics:::get_ontology_category()
     expect_true(nrow(oc1) == 1)
     
     # Register a dummy ontology_category field
-    dummy_category = "dummy"
+    ontology_category_category = "ontology_category"
     new_ontology_category_id = revealgenomics:::register_ontology_category(
-      df = data.frame(ontology_category = dummy_category, stringsAsFactors = FALSE))
+      df = data.frame(ontology_category = ontology_category_category, stringsAsFactors = FALSE))
     # Check that cache is increased by 1 element
     oc2 = revealgenomics:::get_ontology_category()
     expect_true(nrow(oc2) == nrow(oc1) + 1)
     
-    # Verify that the dummy key was uploaded properly
-    expect_true(revealgenomics:::get_ontology_category(ontology_category_id = new_ontology_category_id)$ontology_category == dummy_category)
+    # Verify that the ontology_category key was uploaded properly
+    expect_true(revealgenomics:::get_ontology_category(ontology_category_id = new_ontology_category_id)$ontology_category == ontology_category_category)
     
-    # Delete the dummy ontology_category field
+    # Delete the ontology_category field
     delete_entity(entity = .ghEnv$meta$arrOntologyCategory, id = new_ontology_category_id)
     # Check that the cache is updated, and count has decreased by 1
     oc3 = revealgenomics:::get_ontology_category()
@@ -263,33 +263,33 @@ test_that("Check that ontology_category registration works properly", {
     
     ###### PHASE 2A #####
     # Now upload two keys at a time
-    dummy_category_2a = c("dummy1", "dummy2")
+    ontology_category_2a = c("ontology_category1", "ontology_category2")
     new_ontology_category_id_2a = revealgenomics:::register_ontology_category(
-      df = data.frame(ontology_category = dummy_category_2a, stringsAsFactors = FALSE))
+      df = data.frame(ontology_category = ontology_category_2a, stringsAsFactors = FALSE))
     expect_true(length(new_ontology_category_id_2a) == 2)
     
     # Now upload two keys at a time
-    dummy_category_2b = c("dummy1", "dummy3")
+    ontology_category_2b = c("ontology_category1", "ontology_category3")
     new_ontology_category_id_2b = revealgenomics:::register_ontology_category(
-      df = data.frame(ontology_category = dummy_category_2b, stringsAsFactors = FALSE))
+      df = data.frame(ontology_category = ontology_category_2b, stringsAsFactors = FALSE))
     expect_true(length(new_ontology_category_id_2b) == 2)
     expect_true(all(
       revealgenomics:::get_ontology_category(ontology_category_id = new_ontology_category_id_2b)$ontology_category %in% 
-        c("dummy1", "dummy3")))
+        c("ontology_category1", "ontology_category3")))
     expect_true(identical(sort(unique(revealgenomics:::get_ontology_category()$ontology_category)), 
-                          sort(unique(c(dummy_category_2a, dummy_category_2b)))))
+                          sort(unique(c(ontology_category_2a, ontology_category_2b)))))
     
     # Search function
     testthat::expect_equal(
-      length(unique(revealgenomics:::search_ontology_category(ontology_category = c("dummy3", "dummy2", "dummy1"))$ontology_category_id)),
+      length(unique(revealgenomics:::search_ontology_category(ontology_category = c("ontology_category3", "ontology_category2", "ontology_category1"))$ontology_category_id)),
       3
     )
     testthat::expect_equal(
-      sum(is.na(revealgenomics:::search_ontology_category(ontology_category = c("dummy3", "dummy2", "dummy1x"))$ontology_category_id)),
+      sum(is.na(revealgenomics:::search_ontology_category(ontology_category = c("ontology_category3", "ontology_category2", "ontology_category1x"))$ontology_category_id)),
       1
     )
     testthat::expect_equal(
-      sort(unique(revealgenomics:::search_ontology_category(ontology_category = dummy_category_2b)$ontology_category_id)),
+      sort(unique(revealgenomics:::search_ontology_category(ontology_category = ontology_category_2b)$ontology_category_id)),
       sort(new_ontology_category_id_2b)
     )
     
