@@ -278,7 +278,7 @@ array:
     entity_id: 9001
     data_class:
       measurementdata_cache
-    measurementdata_subclass:
+    data_subclass:
       measurementdata_cache
     namespace:
       - gh_secure
@@ -318,7 +318,7 @@ array:
     entity_id: 8001
     data_class:
       measurementdata
-    measurementdata_subclass:
+    data_subclass:
       rnaquantification
     namespace: 
       - gh_secure
@@ -381,7 +381,7 @@ array:
     entity_id: 8002
     data_class:
       measurementdata
-    measurementdata_subclass:
+    data_subclass:
       variant
     namespace: 
       - gh_secure
@@ -490,7 +490,7 @@ array:
     entity_id: 8009
     data_class:
       measurementdata
-    measurementdata_subclass:
+    data_subclass:
       exomic_variant
     namespace: 
       - gh_secure
@@ -536,7 +536,7 @@ array:
     entity_id: 8003
     data_class:
       measurementdata
-    measurementdata_subclass:
+    data_subclass:
       variant
     namespace: 
       - gh_secure
@@ -592,7 +592,7 @@ array:
     entity_id: 8004
     data_class:
       measurementdata
-    measurementdata_subclass:
+    data_subclass:
       proteomics
     namespace: 
       - gh_secure
@@ -633,7 +633,7 @@ array:
     entity_id: 8005
     data_class:
       measurementdata
-    measurementdata_subclass:
+    data_subclass:
       copynumber_mat
     namespace: 
       - gh_secure
@@ -674,7 +674,7 @@ array:
     entity_id: 8006
     data_class:
       measurementdata
-    measurementdata_subclass:
+    data_subclass:
       copynumber_mat_string
     namespace: 
       - gh_secure
@@ -715,7 +715,7 @@ array:
     entity_id: 8007
     data_class:
       measurementdata
-    measurementdata_subclass:
+    data_subclass:
       copynumber_variant
     namespace: 
       - gh_secure
@@ -766,7 +766,7 @@ array:
     entity_id: 8008
     data_class:
       measurementdata
-    measurementdata_subclass:
+    data_subclass:
       cytometry_cytof
     namespace: 
       - gh_secure
