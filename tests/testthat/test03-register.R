@@ -241,7 +241,7 @@ test_that("Check that ontology_category registration works properly", {
     init_db(arrays_to_init = .ghEnv$meta$arrOntologyCategory, force = TRUE)
     # Get the existing variant_key fields
     oc1 = revealgenomics:::get_ontology_category()
-    expect_true(nrow(oc1) == 0)
+    expect_true(nrow(oc1) == 1)
     
     # Register a dummy ontology_category field
     dummy_category = "dummy"

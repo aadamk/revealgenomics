@@ -137,6 +137,20 @@ init_db = function(arrays_to_init = NULL,
     }}
   }
   
+  if (.ghEnv$meta$arrOntologyCategory %in% arrays_to_init) {
+    message("Initializing ontology categories array with starter value: `uncategorized`")
+    query = paste0(
+      "store(redimension(build(<ontology_category:string> [ontology_category_id=1:1], 'uncategorized'), ",
+      revealgenomics:::full_arrayname(.ghEnv$meta$arrOntologyCategory), 
+      "), ", 
+      revealgenomics:::full_arrayname(.ghEnv$meta$arrOntologyCategory), 
+      ")"
+    )
+    iquery(db, query)
+    # Update cache
+    invisible(revealgenomics:::get_ontology_category(updateCache = TRUE))
+  }
+  
   if ( (tolower(resp_perm) == 'y' | tolower(resp_perm) == 'yes') & !is.na(resp_perm)) {
     cat("Proceeding with initialization of permissions array\n")
     init_permissions_array(con = con)
