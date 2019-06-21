@@ -239,9 +239,13 @@ test_that("Check that ontology_category registration works properly", {
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
     init_db(arrays_to_init = .ghEnv$meta$arrOntologyCategory, force = TRUE)
-    # Get the existing ontology_category fields
+    # Get the existing ontology_category fields -- one category should already exist == 'uncategorized'
     oc1 = revealgenomics:::get_ontology_category()
     expect_true(nrow(oc1) == 1)
+    
+    expect_equal(
+      ontology_category_id = revealgenomics:::search_ontology_category(ontology_category = 'uncategorized')$ontology_category_id,
+      1)
     
     # Register a dummy ontology_category field
     ontology_category_category = "ontology_category"
@@ -412,3 +416,4 @@ test_that("Check that metadata_value registration works properly", {
     init_db(arrays_to_init = c(.ghEnv$meta$arrMetadataValue), force = TRUE)
   }
 })
+
