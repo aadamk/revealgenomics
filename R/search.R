@@ -497,10 +497,26 @@ search_expression = function(measurementset = NULL,
 }
 
 formulate_list_expression_set = function(expr_df, dataset_version, measurementset, biosample, feature){
-  if (nrow(measurementset) > 1) {stop("currently does not support returning expressionSets for multiple rnaquantification sets")}
   if (length(dataset_version) != 1) {stop("currently does not support returning expressionSets for multiple dataset_verions")}
   
-  convertToExpressionSet(expr_df, biosample_df = biosample, feature_df = feature)
+  if (nrow(measurementset) == 1) {
+    convertToExpressionSet(expr_df, biosample_df = biosample, feature_df = feature)
+  } else if (nrow(measurementset) > 1) {
+    L1 = lapply(
+      measurementset$measurementset_id,
+      function(msmtset_id) {
+        convertToExpressionSet(
+          expr_df = expr_df[expr_df$measurementset_id == msmtset_id, ],
+          biosample_df = biosample,
+          feature_df = feature)  }
+    )
+    names(L1) = paste0(
+      "measuremenset_id: ", measurementset$measurementset_id, 
+      "; measurementset_name: ", measurementset$name
+    )
+  } else {
+    stop("Expected measurementset data.frame to contain 1 or more rows")
+  }
 }
 
 search_rnaquantification_scidb = function(arrayname,
@@ -739,16 +755,12 @@ search_expression_by_one_or_more_biosamples = function(
     measurementset_df = get_measurementsets(measurementset_id = unique(res$measurementset_id), con = con)
     dataset_version = unique(res$dataset_id)
     if (length(dataset_version) > 1) stop("__dataset_version__: have not handled case where multiple dataset versions are returned in expression search")
-    if (length(unique(res$measurementset_id)) == 1) {
-      formulate_list_expression_set(
-        expr_df = res, 
-        dataset_version = dataset_version, 
-        measurementset = measurementset_df, 
-        biosample = biosample_ref, 
-        feature = feature_df)
-    } else {
-      stop("Not implemented returning list of ExpressionSet-s yet")
-    }
+    formulate_list_expression_set(
+      expr_df = res, 
+      dataset_version = dataset_version, 
+      measurementset = measurementset_df, 
+      biosample = biosample_ref, 
+      feature = feature_df)
   }
 }
 
