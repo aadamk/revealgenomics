@@ -236,7 +236,20 @@ grant_initial_access = function(con = NULL, user_name) {
   if (reader_role %in% available_roles) { # Preferred method
     cat("Adding user to role:", reader_role, "\n")
     query = paste0("add_user_to_role('", user_name, "', '", reader_role, "')")
-    iquery(con$db, query)
+    status = try({iquery(con$db, query)}, silent = TRUE) # Till https://paradigm4.atlassian.net/browse/SDB-6563 is fixed
+    if (is.null(status)) {
+      message("User added successfully to '", reader_role, 
+              "' role")
+    } else if (class(status) == 'try-error') {
+      if (length(grep("already exists", status, value = T)) == 1) {
+        message("User has already been added to '", reader_role, 
+                "' role")
+      } else {
+        stop("Unexpected error: ", status)
+      }
+    } else {
+      stop("Expected status to be NULL or of class try-error")
+    } 
   } else { # Not the preferred method
     stop("Asking to individually add namespace permissions for user -- create a central role: ",  reader_role, "instead\n")
     cat("Grant read access to public namespace\n")
@@ -253,7 +266,7 @@ grant_initial_access = function(con = NULL, user_name) {
                   find_namespace('DATASET'), "', 'l')"))
   }
   
-  cat("Granting access to publc studies\n")
+  cat("Granting access to public studies\n")
   studylist = iquery(con$db, paste0("project(", full_arrayname(.ghEnv$meta$arrDataset), ", public)"), return = T)
   studylist$dataset_version = NULL
   studylist = unique(studylist)
