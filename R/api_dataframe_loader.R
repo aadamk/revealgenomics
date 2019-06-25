@@ -1407,6 +1407,7 @@ createDataLoader = function(data_df, reference_object, feature_annotation_df = N
          "{[DNAnexus]-[Variant_Custom: GATK + PoN + Annotate] GATK / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: VarScan + Annotate] VarScan / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[Variant_Custom: VarScan + PoN + Annotate] VarScan / SnpEff / GEMINI}{DNA}" = ,
+         "{[DNAnexus]-[Mutect2 + Variant_Annotation v0.4] Mutect2 / SnpEff / GEMINI}{DNA}" = ,
          "{[DNAnexus]-[DNA-seq Tumor Only v1.3] Mutect / SnpEff / GEMINI (non-TCGA gnomAD & ExAC)}{DNA}" = 
            DataLoaderVariantGemini$new(data_df = data_df,
                                        reference_object = reference_object),
