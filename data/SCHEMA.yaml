@@ -5,6 +5,8 @@ array:
     entity_id: 1001
     data_class:
       metadata
+    data_subclass:
+      metadata_curated_values
     namespace:
       - gh_public
     attributes:
@@ -28,6 +30,8 @@ array:
     entity_id: 1002
     data_class:
       metadata
+    data_subclass:
+      metadata_project_tree_node
     namespace: 
       - gh_public
     attributes: 
@@ -52,6 +56,8 @@ array:
     entity_id: 1003
     data_class:
       metadata
+    data_subclass:
+      metadata_project_tree_member
     namespace: 
       - gh_secure
     attributes: 
@@ -85,6 +91,8 @@ array:
     entity_id: 1004
     data_class:
       metadata
+    data_subclass:
+      metadata_project_tree_member
     namespace: 
       - gh_secure
     attributes: 
@@ -121,6 +129,8 @@ array:
     entity_id: 1005
     data_class:
       metadata
+    data_subclass:
+      metadata_project_tree_member
     namespace: 
       - gh_secure
     attributes: 
@@ -158,6 +168,8 @@ array:
     entity_id: 1006
     data_class:
       metadata
+    data_subclass:
+      metadata_project_tree_member
     namespace: 
       - gh_secure
     attributes:
@@ -196,6 +208,8 @@ array:
     entity_id: 1007
     data_class:
       metadata
+    data_subclass:
+      metadata_project_tree_member
     namespace:
       - gh_secure
     attributes:
