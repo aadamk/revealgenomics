@@ -447,8 +447,18 @@ register_mandatory_and_flex_fields = function(df, arrayname, con = NULL){
   int64_fields = get_int64fields(arrayname)
   infoArray = get_infoArray(arrayname)
   
-  non_info_cols = c(get_idname(strip_namespace(arrayname)), 
-                    mandatory_fields()[[strip_namespace(arrayname)]])
+  entitynm = strip_namespace(arrayname)
+  non_info_cols = c(get_idname(entitynm), 
+                    mandatory_fields()[[entitynm]])
+  
+  # for `metadata` entities tagged under subclass `project_tree`, register into entity info fields 
+  if (get_entity_class(entity = entitynm) == 'metadata' & 
+        .ghEnv$meta$L$array[[entitynm]]$data_subclass == 'metadata_project_tree_member') {
+    message("Populating ENTITY_FLEX_FIELDS array for ", nrow(df), " entries of array: ", arrayname)
+    register_entity_flex_fields(df1 = df, idname = idname, arrayname = arrayname, con = con)
+  }
+  
+  # Register mandatory fields
   register_tuple(df = df[, non_info_cols], ids_int64_conv = c(idname, int64_fields), arrayname, con = con)
   if(infoArray){
     cat("Registering info for ", nrow(df)," entries in array: ", arrayname, "_INFO\n", sep = "")
@@ -637,6 +647,96 @@ register_info = function(df, idname, arrayname, con = NULL){
     register_tuple(df = info, ids_int64_conv = c(idname, 'key_id'), 
                    arrayname = paste(arrayname,"_INFO",sep=""), con = con)
   }
+}
+
+#' Register info for entities into entity wide array
+#' 
+#' Curate attributes (column names) into one array, values (column values) in another, 
+#' and link all into one common entity-side array
+register_entity_flex_fields = function(df1, idname, arrayname, con = NULL){
+  entitynm = strip_namespace(arrayname)
+  entity_id = as.integer(get_entity_id(entity = entitynm))
+  colnames(df1) = gsub("^info_", "", colnames(df1))
+  fields_to_skip_for_indexing = switch(
+    entitynm,
+    'DATASET' = c('project_id', 'public'),
+    'INDIVIDUAL' = character(),
+    'BIOSAMPLE' = c('individual_id'),
+    'MEASUREMENTSET' = c('experimentset_id', 'featureset_id'),
+    stop("Not covered fields to skip for entity: ", entitynm)
+  )
+  df_for_indexing = df1[, !(colnames(df1) %in% fields_to_skip_for_indexing)]
+  
+  pivot_cols = get_idname(entitynm)
+  metadata_attrkeys = colnames(df_for_indexing)[
+    !(colnames(df_for_indexing) %in% pivot_cols)
+  ]
+  
+  metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id, con = con)
+  if (!(all(metadata_attrkeys %in% metadtata_attrs_in_db$metadata_attrkey))) {
+    new_metadata_attrkeys = metadata_attrkeys[!(metadata_attrkeys %in% metadtata_attrs_in_db$metadata_attrkey)]
+    cat("Registering new metadata attributes:", 
+        pretty_print(new_metadata_attrkeys), 
+        "\n")
+    metadata_attr_id = register_metadata_attrkey(
+      df1 = data.frame(metadata_attrkey = new_metadata_attrkeys, 
+                       entity_id = entity_id,
+                       stringsAsFactors = FALSE), 
+      con = con
+    )
+  }
+  
+  df_for_indexing2 = df_for_indexing %>% 
+    gather("metadata_attrkey", "metadata_value",  .dots = -pivot_cols)
+  mak_db = search_metadata_attrkey(entity_id = entity_id, con = con)
+  m1 = find_matches_and_return_indices(
+    source = df_for_indexing2$metadata_attrkey, 
+    target = mak_db$metadata_attrkey
+  )
+  stopifnot(length(m1$source_unmatched_idx) == 0)
+  df_for_indexing2$metadata_attrkey_id = mak_db$metadata_attrkey_id[m1$target_matched_idx]
+  
+  message("TODO: Need to handle ontology / controlled vocabulary terms.",
+          "Lumping everything under `uncategorized` for now")
+  ont_category = search_ontology_category(ontology_category = 'uncategorized', con = con)
+  
+  message("Registering metadata values")
+  uniq_meta_vals = unique(df_for_indexing2$metadata_value)
+  mv_idx = register_metadata_value(
+    df1 = data.frame(ontology_category_id = ont_category$ontology_category_id, 
+                     metadata_value = uniq_meta_vals,
+                     stringsAsFactors = FALSE), con = con)
+  mv_df = get_metadata_value(metadata_value_id = mv_idx, con = con)
+  
+  m1 = find_matches_and_return_indices(
+    source = df_for_indexing2$metadata_value,
+    target = mv_df$metadata_value)
+  stopifnot(length(m1$source_unmatched_idx) == 0)
+  
+  df_for_indexing2$metadata_value_id = mv_df$metadata_value_id[m1$target_matched_idx]
+  df_for_indexing2[ , c('metadata_value', 'metadata_attrkey')] = c(NULL, NULL)
+  # Attaching more required indices 
+  df_for_indexing2$entity_id = entity_id
+  df_for_indexing2$entity_base_id = df_for_indexing2[, get_base_idname(entitynm)]
+  if ('entitynm' == .ghEnv$meta$arrProject) {
+    df_for_indexing2$dataset_id = 0 # placeholder public dataset used only for indexing PROJECTS within 
+                                    # secured array  
+    df_for_indexing2$dataset_version = 1
+  }
+  
+  message("Uploading ", nrow(df_for_indexing2), " metadata attribute - value pairs")
+  df_arr = as.scidb_int64_cols(
+    con$db, df_for_indexing2, 
+    int64_cols = colnames(df_for_indexing2))
+  
+  message("Inserting ", nrow(df_for_indexing2), " metadata attribute - value pairs into: ", 
+          full_arrayname(.ghEnv$meta$arrEntityFlexFields))
+  iquery(con$db,
+         paste0("insert(redimension(", 
+                df_arr@name, 
+                ", ", full_arrayname(.ghEnv$meta$arrEntityFlexFields), 
+                "), ", full_arrayname(.ghEnv$meta$arrEntityFlexFields), ")"))
+
 }
 
 count_unique_calls = function(variants){
