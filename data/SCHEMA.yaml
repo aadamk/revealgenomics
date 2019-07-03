@@ -868,6 +868,55 @@ array:
     infoArray: FALSE
     compression_on: FALSE
     cached: TRUE
+  # ENTITY_FLEX_FIELDS
+  ENTITY_FLEX_FIELDS:
+    entity_id: 1015
+    data_class:
+      metadata
+    data_subclass:
+      metadata_values
+    namespace: 
+      - gh_secure
+    attributes: 
+      metadata_value_id: int64
+    dims: 
+      entity_id:
+        start: 0
+        end: Inf
+        chunk_interval: 2
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 32
+        overlap: 0
+      dataset_version:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      metadata_attrkey_id:
+        start: 0
+        end: Inf
+        chunk_interval: 2048
+        overlap: 0
+      entity_base_id:
+        start: 0
+        end: Inf
+        chunk_interval: 65536
+        overlap: 0
+    unique_fields:
+      - entity_id
+      - dataset_id
+      - dataset_version
+      - metadata_attrkey_id
+      - entity_base_id
+      - metadata_value_id
+    search_by_entity: DATASET
+    delete_by_entity: DATASET
+    infoArray: FALSE
+    compression_on: FALSE
+    cached: TRUE
   # ONTOLOGY
   ONTOLOGY:
     entity_id: 1010
