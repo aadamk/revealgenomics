@@ -456,6 +456,14 @@ delete_dataset_internal <- function(dataset_id, datasetVersion, datasetStructure
     iquery(con$db, query = query)
   }
   
+  ##-----------------=
+  ## Delete search index entries for this dataset
+  ##-----------------=
+  query = paste0("delete(", full_arrayname(.ghEnv$meta$arrEntityFlexFields), 
+                 ", dataset_id = ", dataset_id, ")")
+  cat("Delete search index entries for this dataset\n", query, "\n")
+  iquery(con$db, query = query)
+  
   ## Get the list of sub-entities.
   ## If the dataset's structure is provided, then use that structure, otherwise call
   ##  the function to get the dataset's sub-structure.
