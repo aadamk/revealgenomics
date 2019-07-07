@@ -179,7 +179,8 @@ search_entity = function(entity, id, ...){
                       entity_parents_table$entity)
   
   ## Verify that the given entity can be searched for.
-  if (is.na(entity_parents_table$search_by_entity[entity_idx])) {
+  entity_to_search_by = entity_parents_table$search_by_entity[entity_idx]
+  if (is.na(entity_to_search_by)) {
     ## If it is not a valid element to search by, stop and give an error message.
     stop(paste0("Searching for entity == '", entity, "' is not supported!"))
     
@@ -189,7 +190,13 @@ search_entity = function(entity, id, ...){
     f = NULL
     try({f = get(fn_name)}, silent = TRUE)
     if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
-    f(id, ...) 
+    if (entity_to_search_by == .ghEnv$meta$arrDataset) {
+      f(dataset_id = id, ...) 
+    } else {
+      message("Expected to search entity: `", entity, "` by `DATASET`; searching by `", 
+              entity_to_search_by, "` instead")
+      f(id, ...) 
+    }
   }
 }
 
