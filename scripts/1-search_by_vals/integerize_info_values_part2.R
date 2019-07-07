@@ -1,14 +1,19 @@
+rm(list=ls())
+library(revealgenomics)
+
 # 1. Run script `integerize_info_values.R`
 # --- this places the index in named arrays not maintained by the API
 
 # 2. Initialize the search by values index arrays
-rm(list=ls())
 if (FALSE) {
   rg_connect(username = 'scidbadmin')
-    init_db(
+  init_db(
     arrays_to_init = c(.ghEnv$meta$arrEntityFlexFields, 
                        .ghEnv$meta$arrMetadataValue))
 }
+
+creds_file = '~/.rg_config_secure-rw.json'
+rg_connect(username = read_json(creds_file)$`user-name`, password = read_json(creds_file)$`user-password`)
 
 # 3. Move the named arrays from step (1) into API maintained arrays
 
