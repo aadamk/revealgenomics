@@ -870,11 +870,11 @@ array:
     cached: TRUE
   # ENTITY_FLEX_FIELDS
   ENTITY_FLEX_FIELDS:
-    entity_id: 1015
+    entity_id: 8010
     data_class:
-      metadata
+      measurementdata
     data_subclass:
-      metadata_values
+      metadata_index
     namespace: 
       - gh_secure
     attributes: 
