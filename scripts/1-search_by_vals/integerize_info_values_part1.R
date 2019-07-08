@@ -12,6 +12,9 @@ if (FALSE) {
   #   iquery(con_admin$db, "create array gh_public.VALUE_STORE <value:string>[value_id]")
   # }
   init_db(arrays_to_init = c(
+    .ghEnv$meta$arrOntologyCategory), 
+    con = con_admin)
+  init_db(arrays_to_init = c(
     .ghEnv$meta$arrMetadataValue, 
     .ghEnv$meta$arrEntityFlexFields
   ), con = con_admin)
@@ -111,6 +114,7 @@ format(object.size(L1), units="Mb")
 uniq_vals = sort(unique(unlist(sapply(L1, function(elem) unique(elem$val)))))
 length(uniq_vals)
 # [1] 146411
+# [1] 147169 (with mandatory fields being indexed)
 # [1] 1062032 # TCGA + scrnaseq machine
 # [1] 1062058 # TCGA + scrnaseq machine (with mandatory fields being indexed)
 
@@ -140,6 +144,7 @@ if (length(which(duplicated(uniq_vals_df$metadata_value))) > 0) {
 }
 format(object.size(uniq_vals_df), units="Mb")
 # [1] "11 Mb"
+# [1] "20.8 Mb" (mandatory fields + extra col for ontology category id)
 # [1] "123.9 Mb" # TCGA + scrnaseq machine
 # [1] "200.9 Mb" # TCGA + scrnaseq machine (mandatory fields + extra col for ontology category id)
 
