@@ -757,7 +757,7 @@ search_expression_by_one_or_more_biosamples = function(
     biosample_ref = get_biosamples(biosample_id = unique(res$biosample_id), con = con)
     feature_df = get_features(feature_id = unique(res$feature_id), con = con)
     measurementset_df = get_measurementsets(measurementset_id = unique(res$measurementset_id), con = con)
-    dataset_version = unique(res$dataset_id)
+    dataset_version = unique(res$dataset_version)
     if (length(dataset_version) > 1) stop("__dataset_version__: have not handled case where multiple dataset versions are returned in expression search")
     formulate_list_expression_set(
       expr_df = res, 
