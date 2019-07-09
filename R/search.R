@@ -514,6 +514,7 @@ formulate_list_expression_set = function(expr_df, dataset_version, measurementse
       "measuremenset_id: ", measurementset$measurementset_id, 
       "; measurementset_name: ", measurementset$name
     )
+    L1
   } else {
     stop("Expected measurementset data.frame to contain 1 or more rows")
   }
