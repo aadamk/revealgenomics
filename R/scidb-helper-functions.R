@@ -154,8 +154,7 @@ remove_versions = function(arayname, con = NULL)
 }
 
 drop_equi_join_dims = function(df1) {
-  df1[, c('instance_id', 'value_no')] = c(NULL, NULL)
-  df1
+  df1[, grep("^instance_id|^value_no", colnames(df1), invert = T)]
 }
 
 #' Formulate query to build array from vector

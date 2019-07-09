@@ -747,6 +747,9 @@ search_expression_by_one_or_more_biosamples = function(
   q1 = formulate_build_literal_query(vec = biosample_id, value_name = 'biosample_id', index_name = 'idx')
   q2 = formulate_equi_join_query(left_array_or_query = qq, right_array_or_query = q1, left_fields_to_join_by = 'biosample_id', right_fields_to_join_by = 'biosample_id', keep_dimensions = TRUE)
   res = drop_equi_join_dims(iquery(con$db, q2, return = TRUE))
+  if ('idx' %in% colnames(res)) {
+    res$idx = NULL # drop idx column introduced by one of the joins
+  }
   if (!formExpressionSet) {
     return(res)
   } else {
