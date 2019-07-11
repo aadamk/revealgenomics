@@ -12,7 +12,7 @@ r:
   - release
 
 env:
-  - SCIDB_VER=18.1-ext
+  - SCIDB_VER=19.3-ext
 
 services:
   - docker
