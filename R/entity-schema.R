@@ -78,7 +78,8 @@ get_mandatory_fields_for_register_entity = function(arrayname){
     } else {
       mandatory_fields = attrs
     }
-  } else if (entity_class %in% c('measurementdata', 'measurementdata_cache')) {
+  } else if (entity_class %in% c('measurementdata', 'measurementdata_cache',
+                                 'metadata_index')) {
     dims = get_idname(entitynm)
     dims = dims[!(dims %in% c('dataset_version'))]
     mandatory_fields = c(dims, attrs)
