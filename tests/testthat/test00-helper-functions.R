@@ -1,4 +1,4 @@
-context("test-helper-functions.R")
+context("test00-helper-functions")
 
 test_that("verify output of pretty_print", {
   expect_true(pretty_print(c(1:3)) == "1, 2, 3")

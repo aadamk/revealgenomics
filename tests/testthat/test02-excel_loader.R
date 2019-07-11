@@ -1,4 +1,4 @@
-context("test-excel_loader.R")
+context("test02-excel_loader: ")
 
 test_that("Check that upload fails if user does not use data.frame", {
   scidb_tmpl_path = system.file("extdata",

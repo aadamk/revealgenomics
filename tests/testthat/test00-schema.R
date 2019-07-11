@@ -1,4 +1,4 @@
-context("test-schema.R")
+context("test00-schema")
 
 
 test_that("get_base_idname(ENTITY) matches entity_id for metadata classes", {

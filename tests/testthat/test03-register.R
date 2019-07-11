@@ -1,4 +1,4 @@
-context("test-register.R")
+context("test03-register: ")
 
 
 test_that("register_biosample with reserved column `sample_name` fails", {
@@ -280,8 +280,8 @@ test_that("Check that ontology_category registration works properly", {
     expect_true(all(
       revealgenomics:::get_ontology_category(ontology_category_id = new_ontology_category_id_2b)$ontology_category %in% 
         c("ontology_category1", "ontology_category3")))
-    expect_true(identical(sort(unique(revealgenomics:::get_ontology_category()$ontology_category)), 
-                          sort(unique(c(ontology_category_2a, ontology_category_2b)))))
+    expect_equal(sort(unique(revealgenomics:::get_ontology_category()$ontology_category)), 
+                          sort(unique(c(ontology_category_2a, ontology_category_2b, 'uncategorized'))))
     
     # Search function
     testthat::expect_equal(
