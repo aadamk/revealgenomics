@@ -64,7 +64,7 @@ NULL
 .ghEnv$meta$arrCopynumber_variant = 'COPYNUMBER_VARIANT'
 .ghEnv$meta$arrCytometry_cytof = 'CYTOMETRY_CYTOF'
 
-# Prepare variables for the cache
+# Prepare variables for the cache -- same code is repeated at init_db()
 .ghEnv$cache$lookup = list()
 .ghEnv$cache[[.ghEnv$meta$arrOntology]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrVariantKey]] = NULL
