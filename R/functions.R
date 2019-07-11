@@ -460,10 +460,14 @@ register_mandatory_and_flex_fields = function(df, arrayname, con = NULL){
   
   # for `metadata` entities tagged under subclass `project_tree`, register into entity info fields 
   if (get_entity_class(entity = entitynm) == 'metadata' & 
-        .ghEnv$meta$L$array[[entitynm]]$data_subclass == 'metadata_project_tree_member') {
-    message("Populating ENTITY_FLEX_FIELDS array for ", nrow(df), " entries of array: ", arrayname)
-    register_entity_flex_fields(df1 = df, idname = idname, arrayname = arrayname, con = con)
+      !is.null(.ghEnv$meta$L$array[[entitynm]]$data_subclass)) { # if subclass is NULL, then 
+                                                                 # definitely not a project tree member
+    if (.ghEnv$meta$L$array[[entitynm]]$data_subclass == 'metadata_project_tree_member') {
+      message("Populating ENTITY_FLEX_FIELDS array for ", nrow(df), " entries of array: ", arrayname)
+      register_entity_flex_fields(df1 = df, idname = idname, arrayname = arrayname, con = con)
+    }
   }
+        
   
   # Register mandatory fields
   register_tuple(df = df[, non_info_cols], ids_int64_conv = c(idname, int64_fields), arrayname, con = con)
