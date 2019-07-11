@@ -674,6 +674,7 @@ register_entity_flex_fields = function(df1, idname, arrayname, con = NULL){
     'INDIVIDUAL' = character(),
     'BIOSAMPLE' = c('individual_id'),
     'MEASUREMENTSET' = c('experimentset_id', 'featureset_id'),
+    'EXPERIMENTSET' = c('experiment_type_API'), 
     stop("Not covered fields to skip for entity: ", entitynm)
   )
   df_for_indexing = df1[, !(colnames(df1) %in% fields_to_skip_for_indexing)]
