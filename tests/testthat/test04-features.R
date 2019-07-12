@@ -1,4 +1,4 @@
-context("test-download.R")
+context("test04-features: ")
 
 #### feature download works when feature_id is a long integer ####
 test_that("Check that feature download works when feature_id is a long integer ", {

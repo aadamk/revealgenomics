@@ -1,4 +1,4 @@
-context("test-caching")
+context("test01-caching")
 
 test_that("Check that cache is automatically updated while registering or deleting cached entities", {
   # cat("# Now connect to scidb\n")
@@ -13,17 +13,17 @@ test_that("Check that cache is automatically updated while registering or deleti
     new_ont_id = register_ontology_term(df = data.frame(term = dummy_val, source_name = "...", source_version = "..."))
     # Check that cache is increased by 1 element
     ont2 = get_ontology()
-    stopifnot(nrow(ont2) == nrow(ont1) + 1)
+    expect_equal(nrow(ont2), nrow(ont1) + 1)
     
     # Verify that the dummy term was uploaded properly
-    stopifnot(get_ontology(ontology_id = new_ont_id)$term == dummy_val)
+    expect_equal(get_ontology(ontology_id = new_ont_id)$term, dummy_val)
     
     # Delete the dummy ontology field
     delete_entity(entity = .ghEnv$meta$arrOntology, id = new_ont_id)
     # Check that the cache is updated, and count has decreased by 1
     ont3 = get_ontology()
-    stopifnot(nrow(ont3) == nrow(ont1))
-    stopifnot(nrow(get_ontology(ontology_id = new_ont_id)) == 0)
+    expect_equal(nrow(ont3), nrow(ont1))
+    expect_equal(nrow(get_ontology(ontology_id = new_ont_id)), 0)
     
     # Clean-up
     init_db(arrays_to_init = c(.ghEnv$meta$arrOntology), force = TRUE)

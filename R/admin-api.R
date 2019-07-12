@@ -306,3 +306,38 @@ add_user_to_data_loaders = function(con) {
  # iquery -aq "set_role_permissions('revealgenomics_data_loaders', 'namespace', 'gh_public_rw', 'ruld')"
  # iquery -aq "add_user_to_role('secure_user', 'revealgenomics_data_loaders')"
 }
+
+#' Function to show rules for user
+#' 
+#' Since \code{iquery(con$db, "show_roles_for_user(...)", return=TRUE)} does not work
+#' Refer https://github.com/Paradigm4/accelerated_io_tools/issues/33
+show_roles_for_user = function(con) {
+  # First run the query using a save command
+  set.seed(1)
+  filepath = paste0('/dev/shm/show_roles_for_user_output_', stringi::stri_rand_strings(n = 1, length = 6), ".tsv")
+  query0 = paste0(
+    "show_roles_for_user('", revealgenomics:::get_logged_in_user(con = con), "')"
+  )
+  query1 = paste0(
+    "save(", query0, ", '", filepath, "', -2, 'tsv')"
+  )
+  tmp_array = paste0('show_roles_for_user_output_', stringi::stri_rand_strings(n = 1, length = 6))
+  query1 = paste0(
+    "store(", query0, ", ", tmp_array, ")"
+  )
+  
+  xx = try({
+    iquery(con$db, query1)
+  }, silent = TRUE)
+  if (class(xx) == "try-error") stop("Issue running query: \n\t", 
+                                     query1, 
+                                     "\n\n Potentially relating to permissions of user to save at specified location: \n\t",  
+                                     filepath, 
+                                     "\n Inspect parameter `io-paths-list` in scidb config.")
+  
+  iquery(con$db, tmp_array, return = T)
+  # Read the output 
+  roles = read.delim(file = filepath, header = F, stringsAsFactors = F)[, 1]
+  
+  return(roles)
+}

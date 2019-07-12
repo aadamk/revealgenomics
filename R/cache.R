@@ -82,7 +82,7 @@ get_entity_from_cache = function(entitynm, id, updateCache, con = NULL) {
 # BASE FUNCTIONS: End
 ###################################################################################
 
-##### VARIANT_KEY #####
+##### METADATA_ATTRKEY #####
 update_metadata_attrkey_cache = function(con = NULL){
   update_entity_cache(entitynm = .ghEnv$meta$arrMetadataAttrKey, 
                       con = con)
@@ -91,6 +91,19 @@ update_metadata_attrkey_cache = function(con = NULL){
 get_metadata_attrkey_from_cache = function(metadata_attrkey_id, updateCache, con = NULL){
   get_entity_from_cache(entitynm = .ghEnv$meta$arrMetadataAttrKey, 
                         id = metadata_attrkey_id, 
+                        updateCache = updateCache, 
+                        con = con)
+}
+
+##### METADATA_VALUE #####
+update_metadata_value_cache = function(con = NULL){
+  update_entity_cache(entitynm = .ghEnv$meta$arrMetadataValue, 
+                      con = con)
+}
+
+get_metadata_value_from_cache = function(metadata_value_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrMetadataValue, 
+                        id = metadata_value_id, 
                         updateCache = updateCache, 
                         con = con)
 }
@@ -170,6 +183,19 @@ update_chromosome_key_cache = function(con = NULL){
 get_chromosome_key_from_cache = function(chromosome_key_id, updateCache, con = NULL){
   get_entity_from_cache(entitynm = .ghEnv$meta$arrChromosomeKey, 
                         id = chromosome_key_id, 
+                        updateCache = updateCache, 
+                        con = con)
+}
+
+##### ONTOLOGY_CATEGORY #####
+update_ontology_category_cache = function(con = NULL){
+  update_entity_cache(entitynm = .ghEnv$meta$arrOntologyCategory, 
+                      con = con)
+}
+
+get_ontology_category_from_cache = function(ontology_category_id, updateCache, con = NULL){
+  get_entity_from_cache(entitynm = .ghEnv$meta$arrOntologyCategory, 
+                        id = ontology_category_id, 
                         updateCache = updateCache, 
                         con = con)
 }

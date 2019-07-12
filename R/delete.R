@@ -349,7 +349,8 @@ get_dataset_subelements <- function(dataset_id, datasetVersion, con = NULL, ...)
 
 
   entities_to_search <- db_schema[(db_schema$search_by_entity == 'DATASET')
-                                  & !is.na(db_schema$search_by_entity), ]$entity
+                                  & !is.na(db_schema$search_by_entity) 
+                                  & db_schema$class != 'measurementdata', ]$entity
 
   for (next.entity in as.character(entities_to_search)) {
     if (next.entity == .ghEnv$meta$arrDefinition) {
@@ -454,6 +455,14 @@ delete_dataset_internal <- function(dataset_id, datasetVersion, datasetStructure
     cat("Delete permissions for this dataset from permissions table\n", query, "\n")
     iquery(con$db, query = query)
   }
+  
+  ##-----------------=
+  ## Delete search index entries for this dataset
+  ##-----------------=
+  query = paste0("delete(", full_arrayname(.ghEnv$meta$arrEntityFlexFields), 
+                 ", dataset_id = ", dataset_id, ")")
+  cat("Delete search index entries for this dataset\n", query, "\n")
+  iquery(con$db, query = query)
   
   ## Get the list of sub-entities.
   ## If the dataset's structure is provided, then use that structure, otherwise call

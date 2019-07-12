@@ -29,6 +29,9 @@ NULL
 
 .ghEnv$meta$arrMetadataAttrKey = 'METADATA_ATTRKEY'
 .ghEnv$meta$arrOntology = 'ONTOLOGY'
+.ghEnv$meta$arrOntologyCategory = 'ONTOLOGY_CATEGORY'
+.ghEnv$meta$arrMetadataValue = 'METADATA_VALUE'
+.ghEnv$meta$arrEntityFlexFields = 'ENTITY_FLEX_FIELDS'
 .ghEnv$meta$arrDefinition = 'DEFINITION'
 .ghEnv$meta$arrProject = 'PROJECT'
 .ghEnv$meta$arrDataset = 'DATASET'
@@ -61,7 +64,7 @@ NULL
 .ghEnv$meta$arrCopynumber_variant = 'COPYNUMBER_VARIANT'
 .ghEnv$meta$arrCytometry_cytof = 'CYTOMETRY_CYTOF'
 
-# Prepare variables for the cache
+# Prepare variables for the cache -- same code is repeated at init_db()
 .ghEnv$cache$lookup = list()
 .ghEnv$cache[[.ghEnv$meta$arrOntology]] = NULL
 .ghEnv$cache[[.ghEnv$meta$arrVariantKey]] = NULL

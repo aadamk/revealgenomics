@@ -2,7 +2,7 @@
 # Check that samples loaded for each pipeline have correct suffix
 # - Fusion, Variant, CopyNumber: `DNA`
 # - Gene expression: `RNA` (could be `__mRNA` or `__RNA`)
-context("test-excel_loader-samples.R")
+context("test03-excel_loader-samples: ")
 
 test_that("For data loaded via Excel template, check that biosamples associated with specific pipelines
           have the appropiate suffix: DNA or RNA", {

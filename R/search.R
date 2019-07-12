@@ -567,10 +567,7 @@ search_rnaquantification_scidb = function(arrayname,
                  qq, ",",
                  qq2, ")")
       qq = paste("project(", qq, ", value)")
-      # options(scidb.aio = TRUE) # try faster path: Shim uses aio_save with atts_only=0 which will include dimensions
-      #                           # https://github.com/Paradigm4/SciDBR/commit/85895a77549a24c16766e6adf4dcc6311ee21acc
       res = iquery(con$db, qq, return = T)
-      # options(scidb.aio = FALSE)
     }
   } else if (!is.null(measurementset_id) & !is.null(biosample_id) & is.null(feature_id)) { # user selected rqs and bs, not f
     selected_names = c('measurementset_id', 'biosample_id')

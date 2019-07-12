@@ -179,7 +179,8 @@ search_entity = function(entity, id, ...){
                       entity_parents_table$entity)
   
   ## Verify that the given entity can be searched for.
-  if (is.na(entity_parents_table$search_by_entity[entity_idx])) {
+  entity_to_search_by = entity_parents_table$search_by_entity[entity_idx]
+  if (is.na(entity_to_search_by)) {
     ## If it is not a valid element to search by, stop and give an error message.
     stop(paste0("Searching for entity == '", entity, "' is not supported!"))
     
@@ -189,7 +190,13 @@ search_entity = function(entity, id, ...){
     f = NULL
     try({f = get(fn_name)}, silent = TRUE)
     if (is.null(f)) try({f = get(paste(fn_name, "s", sep = ""))}, silent = TRUE)
-    f(id, ...) 
+    if (entity_to_search_by == .ghEnv$meta$arrDataset) {
+      f(dataset_id = id, ...) 
+    } else {
+      message("Expected to search entity: `", entity, "` by `DATASET`; searching by `", 
+              entity_to_search_by, "` instead")
+      f(id, ...) 
+    }
   }
 }
 
@@ -200,8 +207,20 @@ get_ontology = function(ontology_id = NULL, updateCache = FALSE, con = NULL){
                           con = con)
 }
 
+get_ontology_category = function(ontology_category_id = NULL, updateCache = FALSE, con = NULL){
+  get_ontology_category_from_cache(ontology_category_id = ontology_category_id, 
+                          updateCache = updateCache, 
+                          con = con)
+}
+
 get_metadata_attrkey = function(metadata_attrkey_id = NULL, updateCache = FALSE, con = NULL){
   get_metadata_attrkey_from_cache(metadata_attrkey_id = metadata_attrkey_id, 
+                                  updateCache = updateCache, 
+                                  con = con)
+}
+
+get_metadata_value = function(metadata_value_id = NULL, updateCache = FALSE, con = NULL){
+  get_metadata_value_from_cache(metadata_value_id = metadata_value_id, 
                                   updateCache = updateCache, 
                                   con = con)
 }
@@ -227,6 +246,42 @@ search_attributes = function(entity, updateCache = FALSE, con = NULL) {
 search_metadata_attrkey = function(entity_id, updateCache = FALSE, con = NULL){
   metadtata_attrs_in_db = get_metadata_attrkey(updateCache = updateCache, con = con)
   metadtata_attrs_in_db[metadtata_attrs_in_db$entity_id == entity_id, ]
+}
+
+#' Search metadata value array by values
+#' 
+#' @param metadata_value values to search by. If \code{NULL}, return all values at that category
+#' @param ontology_category ontology category to search by (default: "uncategorized"). If \code{NULL}, search values across all categories
+search_metadata_value = function(metadata_value = NULL, ontology_category = "uncategorized", 
+                                 updateCache = FALSE, con = NULL){
+  if (is.null(metadata_value) & is.null(ontology_category)) {
+    stop("Must supply non-null value for at least one of `metadata_value` and `ontology_category`. Otherwise use `get_metadata_value()`")
+  }
+  metadata_value_in_db = get_metadata_value(updateCache = updateCache, con = con)
+  if (!is.null(ontology_category)) {
+    stopifnot(length(ontology_category) == 1)
+    ontology_category_id = search_ontology_category(ontology_category = ontology_category)$ontology_category_id
+    stopifnot(!is.na(ontology_category_id))
+    metadata_value_in_db = metadata_value_in_db[
+      metadata_value_in_db$ontology_category_id == ontology_category_id, ]
+  }
+  if (is.null(metadata_value)) {
+    metadata_value_in_db
+  } else {
+    metadata_value_in_db[metadata_value_in_db$metadata_value %in% metadata_value, ]
+  }
+}
+
+#' Search ontology category by categories
+#' 
+#' Search by categories and return \code{data.frame} of \code{ontology_category_id, ontology_category}
+#' 
+#' @param ontology_category one or more categories to search by
+search_ontology_category = function(ontology_category, updateCache = FALSE, con = NULL){
+  ontology_category_in_db = get_ontology_category(updateCache = updateCache, con = con)
+  m1 = find_matches_and_return_indices(source = ontology_category, 
+                                       target = ontology_category_in_db$ontology_category)
+  ontology_category_in_db[match(ontology_category, ontology_category_in_db$ontology_category), ]
 }
 
 #' @export
@@ -399,8 +454,22 @@ register_mandatory_and_flex_fields = function(df, arrayname, con = NULL){
   int64_fields = get_int64fields(arrayname)
   infoArray = get_infoArray(arrayname)
   
-  non_info_cols = c(get_idname(strip_namespace(arrayname)), 
-                    mandatory_fields()[[strip_namespace(arrayname)]])
+  entitynm = strip_namespace(arrayname)
+  non_info_cols = c(get_idname(entitynm), 
+                    mandatory_fields()[[entitynm]])
+  
+  # for `metadata` entities tagged under subclass `project_tree`, register into entity info fields 
+  if (get_entity_class(entity = entitynm) == 'metadata' & 
+      !is.null(.ghEnv$meta$L$array[[entitynm]]$data_subclass)) { # if subclass is NULL, then 
+                                                                 # definitely not a project tree member
+    if (.ghEnv$meta$L$array[[entitynm]]$data_subclass == 'metadata_project_tree_member') {
+      message("Populating ENTITY_FLEX_FIELDS array for ", nrow(df), " entries of array: ", arrayname)
+      register_entity_flex_fields(df1 = df, idname = idname, arrayname = arrayname, con = con)
+    }
+  }
+        
+  
+  # Register mandatory fields
   register_tuple(df = df[, non_info_cols], ids_int64_conv = c(idname, int64_fields), arrayname, con = con)
   if(infoArray){
     cat("Registering info for ", nrow(df)," entries in array: ", arrayname, "_INFO\n", sep = "")
@@ -449,11 +518,8 @@ register_tuple_return_id = function(df,
   }
   projected_attrs = paste0(uniq[!(uniq %in% do_not_project)], # dataset_id is a dimension, and does not need to be projected
                            collapse = ",")
-  options(scidb.aio = TRUE) # try faster path: Shim uses aio_save with atts_only=0 which will include dimensions
-                            # https://github.com/Paradigm4/SciDBR/commit/85895a77549a24c16766e6adf4dcc6311ee21acc
   xx = iquery(con$db, paste0("project(", arrayname, ", ", 
                              projected_attrs, ")"), return = TRUE)
-  options(scidb.aio = FALSE)
   matching_entity_ids = find_matches_with_db(df_for_upload = df, df_in_db = xx, unique_fields = uniq)
   nonmatching_idx = which(is.na(matching_entity_ids))
   matching_idx = which(!is.na(matching_entity_ids))
@@ -592,6 +658,97 @@ register_info = function(df, idname, arrayname, con = NULL){
     register_tuple(df = info, ids_int64_conv = c(idname, 'key_id'), 
                    arrayname = paste(arrayname,"_INFO",sep=""), con = con)
   }
+}
+
+#' Register info for entities into entity wide array
+#' 
+#' Curate attributes (column names) into one array, values (column values) in another, 
+#' and link all into one common entity-side array
+register_entity_flex_fields = function(df1, idname, arrayname, con = NULL){
+  entitynm = strip_namespace(arrayname)
+  entity_id = as.integer(get_entity_id(entity = entitynm))
+  colnames(df1) = gsub("^info_", "", colnames(df1))
+  fields_to_skip_for_indexing = switch(
+    entitynm,
+    'DATASET' = c('project_id', 'public'),
+    'INDIVIDUAL' = character(),
+    'BIOSAMPLE' = c('individual_id'),
+    'MEASUREMENTSET' = c('experimentset_id', 'featureset_id'),
+    'EXPERIMENTSET' = c('experiment_type_API'), 
+    stop("Not covered fields to skip for entity: ", entitynm)
+  )
+  df_for_indexing = df1[, !(colnames(df1) %in% fields_to_skip_for_indexing)]
+  
+  pivot_cols = get_idname(entitynm)
+  metadata_attrkeys = colnames(df_for_indexing)[
+    !(colnames(df_for_indexing) %in% pivot_cols)
+  ]
+  
+  metadtata_attrs_in_db = search_metadata_attrkey(entity_id = entity_id, con = con)
+  if (!(all(metadata_attrkeys %in% metadtata_attrs_in_db$metadata_attrkey))) {
+    new_metadata_attrkeys = metadata_attrkeys[!(metadata_attrkeys %in% metadtata_attrs_in_db$metadata_attrkey)]
+    cat("Registering new metadata attributes:", 
+        pretty_print(new_metadata_attrkeys), 
+        "\n")
+    metadata_attr_id = register_metadata_attrkey(
+      df1 = data.frame(metadata_attrkey = new_metadata_attrkeys, 
+                       entity_id = entity_id,
+                       stringsAsFactors = FALSE), 
+      con = con
+    )
+  }
+  
+  df_for_indexing2 = df_for_indexing %>% 
+    gather("metadata_attrkey", "metadata_value",  .dots = -pivot_cols)
+  mak_db = search_metadata_attrkey(entity_id = entity_id, con = con)
+  m1 = find_matches_and_return_indices(
+    source = df_for_indexing2$metadata_attrkey, 
+    target = mak_db$metadata_attrkey
+  )
+  stopifnot(length(m1$source_unmatched_idx) == 0)
+  df_for_indexing2$metadata_attrkey_id = mak_db$metadata_attrkey_id[m1$target_matched_idx]
+  
+  message("TODO: Need to handle ontology / controlled vocabulary terms.",
+          "Lumping everything under `uncategorized` for now")
+  ont_category = search_ontology_category(ontology_category = 'uncategorized', con = con)
+  
+  message("Registering metadata values")
+  uniq_meta_vals = unique(df_for_indexing2$metadata_value)
+  mv_idx = register_metadata_value(
+    df1 = data.frame(ontology_category_id = ont_category$ontology_category_id, 
+                     metadata_value = uniq_meta_vals,
+                     stringsAsFactors = FALSE), con = con)
+  mv_df = get_metadata_value(metadata_value_id = mv_idx, con = con)
+  
+  m1 = find_matches_and_return_indices(
+    source = df_for_indexing2$metadata_value,
+    target = mv_df$metadata_value)
+  stopifnot(length(m1$source_unmatched_idx) == 0)
+  
+  df_for_indexing2$metadata_value_id = mv_df$metadata_value_id[m1$target_matched_idx]
+  df_for_indexing2[ , c('metadata_value', 'metadata_attrkey')] = c(NULL, NULL)
+  # Attaching more required indices 
+  df_for_indexing2$entity_id = entity_id
+  df_for_indexing2$entity_base_id = df_for_indexing2[, get_base_idname(entitynm)]
+  if ('entitynm' == .ghEnv$meta$arrProject) {
+    df_for_indexing2$dataset_id = 0 # placeholder public dataset used only for indexing PROJECTS within 
+                                    # secured array  
+    df_for_indexing2$dataset_version = 1
+  }
+  
+  message("Uploading ", nrow(df_for_indexing2), " metadata attribute - value pairs")
+  df_arr = as.scidb_int64_cols(
+    con$db, df_for_indexing2, 
+    int64_cols = colnames(df_for_indexing2))
+  
+  message("Inserting ", nrow(df_for_indexing2), " metadata attribute - value pairs into: ", 
+          full_arrayname(.ghEnv$meta$arrEntityFlexFields))
+  iquery(con$db,
+         paste0("insert(redimension(", 
+                df_arr@name, 
+                ", ", full_arrayname(.ghEnv$meta$arrEntityFlexFields), 
+                "), ", full_arrayname(.ghEnv$meta$arrEntityFlexFields), ")"))
+
 }
 
 count_unique_calls = function(variants){

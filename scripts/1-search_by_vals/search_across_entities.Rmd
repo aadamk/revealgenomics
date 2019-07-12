@@ -1,0 +1,55 @@
+---
+title: "Search across entities"
+output: html_notebook
+---
+
+```{r, include=FALSE}
+rm(list=ls())
+library(revealgenomics)
+```
+
+## Connect to SciDB
+
+```{r}
+if (file.exists('~/.rg_config_secure-ro.json')) {
+  creds_file = '~/.rg_config_secure-ro.json'
+  rg_connect(username = read_json(creds_file)$`user-name`, password = read_json(creds_file)$`user-password`) 
+} else {
+  rg_connect(username = Sys.getenv("LOGNAME")) # will prompt for password
+}
+```
+
+## Retrieve all the search terms
+
+We incur a one-time cost to download the searchable terms, and then handle the grep in R.
+
+```{r}
+index_df = revealgenomics:::get_metadata_value()
+index_df = index_df[order(index_df$metadata_value_id), ]
+index_df = index_df[, !(colnames(index_df) %in% c('created', 'updated'))]
+index_df
+```
+
+## Now let us grep a keyword of interest
+
+```{r}
+keyword = 'leukemia'
+index_subdf = index_df[grep(keyword, index_df$metadata_value), ]
+index_subdf
+```
+
+## Search across entities
+
+Now search across entities to find datasets that match any related index terms
+
+```{r}
+find_dataset_id_by_metadata_value(metadata_value_df = index_subdf)
+```
+
+Another search term -- now doing the two steps in one go
+
+```{r}
+find_dataset_id_by_metadata_value(
+  metadata_value_df = index_df[grep("myeloma", index_df$metadata_value, ignore.case = T), ])
+```
+

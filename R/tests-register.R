@@ -153,12 +153,20 @@ test_register_metadata_attrkey = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrMetadataAttrKey, df, uniq, silent)
 }
 
+test_register_metadata_value = function(df1, uniq, silent = TRUE){
+  run_tests_dataframe(entity = .ghEnv$meta$arrMetadataValue, df = df1, uniq, silent)
+}
+
 test_register_variant_key = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrVariantKey, df, uniq, silent)
 }
 
 test_register_chromosome_key = function(df, uniq, silent = TRUE){
   run_tests_dataframe(entity = .ghEnv$meta$arrChromosomeKey, df, uniq, silent)
+}
+
+test_register_ontology_category = function(df1, uniq, silent = TRUE){
+  run_tests_dataframe(entity = .ghEnv$meta$arrOntologyCategory, df = df1, uniq, silent)
 }
 
 test_register_featureset = function(df, uniq, silent = TRUE){
