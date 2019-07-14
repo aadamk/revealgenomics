@@ -500,7 +500,8 @@ formulate_list_expression_set = function(expr_df, dataset_version, measurementse
   if (length(dataset_version) != 1) {stop("currently does not support returning expressionSets for multiple dataset_verions")}
   
   if (nrow(measurementset) == 1) {
-    convertToExpressionSet(expr_df, biosample_df = biosample, feature_df = feature)
+    convertToExpressionSet(expr_df, biosample_df = biosample, feature_df = feature,
+                           measurementset_df = measurementset)
   } else if (nrow(measurementset) > 1) {
     L1 = lapply(
       measurementset$measurementset_id,
@@ -508,7 +509,8 @@ formulate_list_expression_set = function(expr_df, dataset_version, measurementse
         convertToExpressionSet(
           expr_df = expr_df[expr_df$measurementset_id == msmtset_id, ],
           biosample_df = biosample,
-          feature_df = feature)  }
+          feature_df = feature,
+          measurementset_df = measurementset)  }
     )
     names(L1) = paste0(
       "measuremenset_id: ", measurementset$measurementset_id, 
