@@ -77,9 +77,14 @@ yum install libcurl-devel
 Next, install the following R packages from CRAN
 ```{sh}
 sudo R
-# Then run
-source("http://bioconductor.org/biocLite.R"); 
-biocLite(c("Biobase")); 
+
+# install bioconductor using
+# https://bioconductor.org/install/
+
+# install Biobase
+BiocManager::install('Biobase')
+
+# Then install a few dependencies
 install.packages(c('roxygen2', 
                    'tidyr', 
                    'RPostgreSQL', 
