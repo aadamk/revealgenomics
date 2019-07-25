@@ -90,11 +90,13 @@ calculate_statistics_rnaquantification = function(measurementset_id = NULL, deco
     return(c)
   } else {
     ms = get_measurementsets(measurementset_id = unique(sort(c$measurementset_id)), 
+                             mandatory_fields_only = TRUE, 
                              all_versions =  TRUE,
                              con = con)
     ms = plyr::rename(ms, c('name' = 'pipeline'))
     
     d = get_datasets(dataset_id = unique(sort(c$dataset_id)),
+                     mandatory_fields_only = TRUE, 
                      all_versions =  TRUE,
                      con = con)
     d = plyr::rename(d, c('name' = 'study_name'))
