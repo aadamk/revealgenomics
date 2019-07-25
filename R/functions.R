@@ -997,6 +997,7 @@ get_features = function(feature_id = NULL, mandatory_fields_only = FALSE, con = 
           ", 'left_names=feature_id', 'right_names=feature_id', 'keep_dimensions=1')"), 
         return = T)
       ftr = drop_equi_join_dims(ftr)
+      ftr[, c('val', 'i')] = c(NULL, NULL) # drop columns introduced by upload and join
       if (mandatory_fields_only) {
         result = ftr
       } else {
