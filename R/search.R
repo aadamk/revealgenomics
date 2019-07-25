@@ -341,7 +341,7 @@ search_features = function(
     con = con)
   
   if (!is.null(feature_type)){
-    df1[df1$feature_type %in% feature_type, ]
+    drop_na_columns(df1[df1$feature_type %in% feature_type, ])
   } else {
     df1
   }
