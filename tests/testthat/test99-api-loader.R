@@ -4,8 +4,7 @@ test_that("Register entities via workbook works OK", {
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = get_entity_names(),
-            force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     df_referenceset = data.frame(
       name = c("GRCh37", "GRCh38"), 
       description = "...",
@@ -173,5 +172,8 @@ test_that("Register entities via workbook works OK", {
     ftrs = search_features(gene_symbol = c('PARP2', 'RHOA', 'JAK2', 'TP53'))
     v2 = search_variant(measurementset = ms_variant, feature = ftrs)
     expect_true(all.equal(dim(v2), c(5, 21)))
+    
+    # Clean up
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })

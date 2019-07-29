@@ -17,7 +17,8 @@ test_that("Check that variant_key registration works properly", {
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = .ghEnv$meta$arrVariantKey, force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
+    
     # Get the existing variant_key fields
     vk1 = get_variant_key()
     expect_true(nrow(vk1) == 0)
@@ -59,7 +60,7 @@ test_that("Check that variant_key registration works properly", {
                     sort(unique(c(dummy_val_2a, dummy_val_2b)))))
     
     # Clean-up
-    init_db(arrays_to_init = c(.ghEnv$meta$arrVariantKey), force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })
 
@@ -67,7 +68,7 @@ test_that("Check that chromosome_key registration works properly", {
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = .ghEnv$meta$arrChromosomeKey, force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     # Get the existing chromosome_key fields
     ck1 = revealgenomics:::get_chromosome_key()
     expect_true(nrow(ck1) == 0)
@@ -109,7 +110,7 @@ test_that("Check that chromosome_key registration works properly", {
                           sort(unique(c(dummy_val_2a, dummy_val_2b)))))
     
     # Clean-up
-    init_db(arrays_to_init = c(.ghEnv$meta$arrChromosomeKey), force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })
 
@@ -117,18 +118,7 @@ test_that("Check that variant registration works properly", {
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = c(
-      .ghEnv$meta$arrVariantKey,
-      .ghEnv$meta$arrVariant,
-      .ghEnv$meta$arrFeature,
-      .ghEnv$meta$arrFeatureSynonym,
-      .ghEnv$meta$arrBiosample,
-      .ghEnv$meta$arrMeasurementSet,
-      .ghEnv$meta$arrDataset,
-      .ghEnv$meta$arrMetadataAttrKey,
-      .ghEnv$meta$arrGeneSymbol
-      ), 
-      force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     
     # Register dummy dataset
     dataset_id = register_dataset(df = data.frame(
@@ -219,18 +209,7 @@ test_that("Check that variant registration works properly", {
       as.matrix(df_var2)))
 
     # Clean-up
-    init_db(arrays_to_init = c(
-      .ghEnv$meta$arrVariantKey,
-      .ghEnv$meta$arrVariant,
-      .ghEnv$meta$arrFeature,
-      .ghEnv$meta$arrFeatureSynonym,
-      .ghEnv$meta$arrBiosample,
-      .ghEnv$meta$arrMeasurementSet,
-      .ghEnv$meta$arrDataset,
-      .ghEnv$meta$arrMetadataAttrKey,
-      .ghEnv$meta$arrGeneSymbol
-    ), 
-    force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })
 
@@ -238,7 +217,7 @@ test_that("Check that ontology_category registration works properly", {
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = .ghEnv$meta$arrOntologyCategory, force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     # Get the existing ontology_category fields -- one category should already exist == 'uncategorized'
     oc1 = revealgenomics:::get_ontology_category()
     expect_true(nrow(oc1) == 1)
@@ -298,7 +277,7 @@ test_that("Check that ontology_category registration works properly", {
     )
     
     # Clean-up
-    init_db(arrays_to_init = c(.ghEnv$meta$arrOntologyCategory), force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })
 
@@ -307,7 +286,7 @@ test_that("Check that metadata_value registration works properly", {
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = .ghEnv$meta$arrMetadataValue, force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     # Get the existing metadata_value fields
     mv1 = revealgenomics:::get_metadata_value()
     expect_true(nrow(mv1) == 0)
@@ -371,7 +350,7 @@ test_that("Check that metadata_value registration works properly", {
     )
     
     # Register value at separate ontology
-    init_db(arrays_to_init = c(.ghEnv$meta$arrOntologyCategory), force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     ontology_category_id = revealgenomics:::register_ontology_category(df1 = data.frame(ontology_category = 'primary_disease'))
     disease_vec = c('leukemia', 'myeloma', 'rheumatoid arthritis')
     metadata_value_id = revealgenomics:::register_metadata_value(
@@ -410,10 +389,10 @@ test_that("Check that metadata_value registration works properly", {
     expect_equal(
       nrow(revealgenomics:::search_metadata_value(metadata_value = 'leukemia', ontology_category = NULL)),
       2)
-    init_db(arrays_to_init = c(.ghEnv$meta$arrOntologyCategory), force = TRUE)
-
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
+    
     # Clean-up
-    init_db(arrays_to_init = c(.ghEnv$meta$arrMetadataValue), force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })
 
