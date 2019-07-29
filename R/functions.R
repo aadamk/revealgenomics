@@ -700,6 +700,11 @@ register_entity_flex_fields = function(df1, idname, arrayname, con = NULL){
   
   df_for_indexing2 = df_for_indexing %>% 
     gather("metadata_attrkey", "metadata_value",  .dots = -pivot_cols)
+  na_check = is.na(df_for_indexing2$metadata_value)
+  if (length(which(na_check)) > 0) {
+    message("Dropping ", length(which(na_check)), " NA values from ", nrow(df_for_indexing2), " entries")
+    df_for_indexing2 = df_for_indexing2[which(!na_check), ]
+  }
   mak_db = search_metadata_attrkey(entity_id = entity_id, con = con)
   m1 = find_matches_and_return_indices(
     source = df_for_indexing2$metadata_attrkey, 
@@ -708,7 +713,7 @@ register_entity_flex_fields = function(df1, idname, arrayname, con = NULL){
   stopifnot(length(m1$source_unmatched_idx) == 0)
   df_for_indexing2$metadata_attrkey_id = mak_db$metadata_attrkey_id[m1$target_matched_idx]
   
-  message("TODO: Need to handle ontology / controlled vocabulary terms.",
+  message("TODO: Need to handle ontology / controlled vocabulary terms. ",
           "Lumping everything under `uncategorized` for now")
   ont_category = search_ontology_category(ontology_category = 'uncategorized', con = con)
   
