@@ -46,6 +46,7 @@ NULL
 .ghEnv$meta$arrFeature = 'FEATURE'
 .ghEnv$meta$arrFeatureSynonym = 'FEATURE_SYNONYM'
 .ghEnv$meta$arrGeneSymbol = 'GENE_SYMBOL'
+.ghEnv$meta$arrFeatureSummary = 'FEATURE_SUMMARY'
 
 .ghEnv$meta$arrGenelist = 'GENELIST'
 .ghEnv$meta$arrGenelist_gene = 'GENELIST_GENE'
