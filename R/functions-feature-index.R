@@ -1,10 +1,72 @@
-if (FALSE) {
-  rm(list=ls())
-  library(revealgenomics)
-  creds_file = '~/.rg_config_secure-ro.json'
-  rg_connect(username = read_json(creds_file)$`user-name`, password = read_json(creds_file)$`user-password`)
+register_feature_summary_at_measurementset = function(measurementset_df, dataset_version = NULL, con = NULL) {
+  con = use_ghEnv_if_null(con = con)
+  entity = ms_idx$entity
+  
+  if (is.null(dataset_version)) {
+    dataset_version = measurementset_df$dataset_version
+  } else {
+    if (dataset_version != measurementset_df$dataset_version) {
+      stop("User supplied dataset_version = ", dataset_version, 
+           " but measurementset has dataset_version = ", measurementset_df$dataset_version)
+    }
+  }
+  if (measurementset_df$entity != 'FUSION') {
+    qq = paste0(
+      "aggregate(
+      filter(", 
+      revealgenomics:::custom_scan(), "(",
+      full_arrayname(entity), 
+      "), 
+      measurementset_id = ", measurementset_idx, 
+      " AND dataset_version = ", dataset_version, "), ",
+      "count(*), measurementset_id, feature_id)")
+    res = iquery(con$db, qq, return = TRUE)
+  } else { # special handling for fusion
+    qq = paste0(
+      "aggregate(
+      filter(", 
+      revealgenomics:::custom_scan(), "(",
+      full_arrayname(entity), 
+      "), 
+        measurementset_id = ", measurementset_idx, 
+      " AND dataset_version = ", dataset_version, "), ",
+      "count(*), measurementset_id, feature_id_left, feature_id_right)")
+    res = iquery(con$db, qq, return = TRUE)
+    message("Need to mangle feature_id_left and feature_id_right into common feature_id for FUSION case")
+    browser()
+  }
+  
+  stopifnot(length(unique(res$feature_id)) == nrow(res))
+  
+  cat("\t# features:", nrow(res), 
+      "\n\tpreview of feature_id-s:", pretty_print(res$feature_id),
+      "\n")
+  if (nrow(res) > 0) {
+    message("Uploading feature summary at pipeline")
+    resX = as.scidb_int64_cols(db = con$db, df1 = res, 
+                               int64_cols = c('measurementset_id', 
+                                              'feature_id', 
+                                              'count'))
+    qq0 = paste0(
+      "apply(", 
+      resX@name, 
+      ", biosample_count, int32(count)", 
+      ", dataset_id, int64(", measurementset_df$dataset_id, ")",  
+      ", dataset_version, int64(", dataset_version, ")", 
+      ")"
+    )
+    qq1 = paste0(
+      "insert(redimension(", 
+      qq0, ", ", 
+      full_arrayname(.ghEnv$meta$arrFeatureSummary), "), ", 
+      full_arrayname(.ghEnv$meta$arrFeatureSummary), ")"
+    )
+    message("Inserting")
+    iquery(con$db, qq1)
+  } else {
+    message("No entries for this pipeline")
+  }
 }
-
 
 find_entities_that_have_features = function(feature_df, entity = c('DATASET', 'MEASUREMENTSET'), con = NULL) {
   entity = match.arg(entity)
@@ -79,7 +141,7 @@ find_entities_that_have_features = function(feature_df, entity = c('DATASET', 'M
   }
 }
 
-if (FALSE) {
+if (FALSE) { # sample usage shown here
   feature_df = search_features(gene_symbol = c('EGFR', 'KRAS', 'TP53', 'MYC', 'CD276'), mandatory_fields_only = T)
   res = find_entities_that_have_features(
     feature_df = feature_df,
