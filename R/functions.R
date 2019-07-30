@@ -708,7 +708,7 @@ register_entity_flex_fields = function(df1, idname, arrayname, con = NULL){
   stopifnot(length(m1$source_unmatched_idx) == 0)
   df_for_indexing2$metadata_attrkey_id = mak_db$metadata_attrkey_id[m1$target_matched_idx]
   
-  message("TODO: Need to handle ontology / controlled vocabulary terms.",
+  message("TODO: Need to handle ontology / controlled vocabulary terms. ",
           "Lumping everything under `uncategorized` for now")
   ont_category = search_ontology_category(ontology_category = 'uncategorized', con = con)
   
