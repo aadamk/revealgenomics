@@ -351,6 +351,8 @@ get_dataset_subelements <- function(dataset_id, datasetVersion, con = NULL, ...)
   entities_to_search <- db_schema[(db_schema$search_by_entity == 'DATASET')
                                   & !is.na(db_schema$search_by_entity) 
                                   & db_schema$class != 'measurementdata', ]$entity
+  
+  entities_to_search = entities_to_search[entities_to_search != .ghEnv$meta$arrEntityFlexFields]
 
   for (next.entity in as.character(entities_to_search)) {
     if (next.entity == .ghEnv$meta$arrDefinition) {
