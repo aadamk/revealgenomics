@@ -112,7 +112,7 @@ test_that("Register entities via workbook works OK", {
     fsets = get_featuresets()
     stopifnot(nrow(fsets) == 2)
     target_featureset_id = fsets[grep("37", fsets$name), ]$featureset_id
-    ftr_record = build_reference_gene_set(featureset_id = target_featureset_id) 
+    # ftr_record = build_reference_gene_set(featureset_id = target_featureset_id) # commenting this as we do not have any default files for GRCh37
     
     target_featureset_id = fsets[grep("38", fsets$name), ]$featureset_id
     ftr_record = build_reference_gene_set(featureset_id = target_featureset_id)
