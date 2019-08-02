@@ -154,14 +154,11 @@ init_db = function(arrays_to_init = NULL,
   # Clean up any package cache
   message("Cleaning up any local cache values")
   .ghEnv$cache$lookup = list()
-  .ghEnv$cache[[.ghEnv$meta$arrOntology]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrVariantKey]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrChromosomeKey]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrDefinition]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrFeatureSynonym]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrGeneSymbol]] = NULL
-  
-  
+  cached_entities = get_entity_names()[sapply(get_entity_names(), revealgenomics:::is_entity_cached)]
+  for (entity in cached_entities) {
+    .ghEnv$cache[[entity]] = NULL
+  }
+
   if ( (tolower(resp_perm) == 'y' | tolower(resp_perm) == 'yes') & !is.na(resp_perm)) {
     cat("Proceeding with initialization of permissions array\n")
     init_permissions_array(con = con)
