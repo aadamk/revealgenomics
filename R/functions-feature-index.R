@@ -1,6 +1,8 @@
 register_feature_summary_at_measurementset = function(measurementset_df, dataset_version = NULL, con = NULL) {
   con = use_ghEnv_if_null(con = con)
-  entity = ms_idx$entity
+  entity = measurementset_df$entity
+  if (nrow(measurementset_df) != 1) stop("Expect to register feature summary one measurementset at a time. ", 
+                                           "Supplied, nrow(measurementset_df) = ", nrow(measurementset_df))
   
   if (is.null(dataset_version)) {
     dataset_version = measurementset_df$dataset_version
@@ -17,7 +19,7 @@ register_feature_summary_at_measurementset = function(measurementset_df, dataset
       revealgenomics:::custom_scan(), "(",
       full_arrayname(entity), 
       "), 
-      measurementset_id = ", measurementset_idx, 
+      measurementset_id = ", measurementset_df$measurementset_id, 
       " AND dataset_version = ", dataset_version, "), ",
       "count(*), measurementset_id, feature_id)")
     res = iquery(con$db, qq, return = TRUE)
@@ -28,7 +30,7 @@ register_feature_summary_at_measurementset = function(measurementset_df, dataset
       revealgenomics:::custom_scan(), "(",
       full_arrayname(entity), 
       "), 
-        measurementset_id = ", measurementset_idx, 
+        measurementset_id = ", measurementset_df$measurementset_id, 
       " AND dataset_version = ", dataset_version, "), ",
       "count(*), measurementset_id, feature_id_left, feature_id_right)")
     res = iquery(con$db, qq, return = TRUE)
@@ -38,9 +40,8 @@ register_feature_summary_at_measurementset = function(measurementset_df, dataset
   
   stopifnot(length(unique(res$feature_id)) == nrow(res))
   
-  cat("\t# features:", nrow(res), 
-      "\n\tpreview of feature_id-s:", pretty_print(res$feature_id),
-      "\n")
+  message("\t# features:", nrow(res), 
+      "\n\tpreview of feature_id-s:", pretty_print(res$feature_id))
   if (nrow(res) > 0) {
     message("Uploading feature summary at pipeline")
     resX = as.scidb_int64_cols(db = con$db, df1 = res, 
