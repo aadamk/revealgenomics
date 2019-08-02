@@ -133,8 +133,8 @@ test_that("Register entities via workbook works OK", {
     
     # TODO: walk all pipelines and measurementset IDs to verify data.
     ftrs = search_features(gene_symbol = c('TXNIP'))
-    if (nrow(ftrs) != 1) {
-      stop("If more than one feature for TXNIP at this point; need to adjust test")
+    if (nrow(ftrs) > 2) {
+      stop("If more than two features for TXNIP at this point; need to adjust test")
     }
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Tophat Fusion',]
     mn = mn[grep("37", mn$featureset_name), ]
