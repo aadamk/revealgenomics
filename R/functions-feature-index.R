@@ -34,8 +34,15 @@ register_feature_summary_at_measurementset = function(measurementset_df, dataset
       " AND dataset_version = ", dataset_version, "), ",
       "count(*), measurementset_id, feature_id_left, feature_id_right)")
     res = iquery(con$db, qq, return = TRUE)
-    message("Need to mangle feature_id_left and feature_id_right into common feature_id for FUSION case")
-    browser()
+    message("Combining feature_id_left and feature_id_right into common feature_id for FUSION case")
+    res_left  = res[, c('measurementset_id', 'feature_id_left', 'count')] %>% 
+      plyr::rename(c('feature_id_left' = 'feature_id'))
+    res_right = res[, c('measurementset_id', 'feature_id_right', 'count')] %>% 
+      plyr::rename(c('feature_id_right' = 'feature_id'))
+    res = rbind(res_left, res_right)
+    res = as.data.frame(res %>% 
+      group_by(.data$measurementset_id, .data$feature_id) %>%
+      summarise(count = sum(.data$count)))
   }
   
   stopifnot(length(unique(res$feature_id)) == nrow(res))
