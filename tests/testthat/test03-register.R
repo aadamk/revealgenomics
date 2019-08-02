@@ -289,7 +289,7 @@ test_that("Check that metadata_value registration works properly", {
     init_db(arrays_to_init = get_entity_names(), force = TRUE)
     # Get the existing metadata_value fields
     mv1 = revealgenomics:::get_metadata_value()
-    expect_true(nrow(mv1) == 0)
+    expect_equal(nrow(mv1), 0)
     
     # Register a dummy metadata_value field
     metadata_value = "metadata_value"
@@ -301,17 +301,17 @@ test_that("Check that metadata_value registration works properly", {
         stringsAsFactors = FALSE))
     # Check that cache is increased by 1 element
     mv2 = revealgenomics:::get_metadata_value()
-    expect_true(nrow(mv2) == nrow(mv1) + 1)
+    expect_equal(nrow(mv2), nrow(mv1) + 1)
     
     # Verify that the metadata_value key was uploaded properly
-    expect_true(revealgenomics:::get_metadata_value(metadata_value_id = new_metadata_value_id)$metadata_value == metadata_value)
+    expect_equal(revealgenomics:::get_metadata_value(metadata_value_id = new_metadata_value_id)$metadata_value, metadata_value)
     
     # Delete the metadata_value field
     delete_entity(entity = .ghEnv$meta$arrMetadataValue, id = new_metadata_value_id)
     # Check that the cache is updated, and count has decreased by 1
     mv3 = revealgenomics:::get_metadata_value()
-    expect_true(nrow(mv3) == nrow(mv1))
-    expect_true(nrow(revealgenomics:::get_metadata_value(metadata_value_id = new_metadata_value_id)) == 0)
+    expect_equal(nrow(mv3), nrow(mv1))
+    expect_equal(nrow(revealgenomics:::get_metadata_value(metadata_value_id = new_metadata_value_id)), 0)
     
     ###### PHASE 2A #####
     # Now upload two keys at a time
@@ -320,7 +320,7 @@ test_that("Check that metadata_value registration works properly", {
       df = data.frame(metadata_value = metadata_value_2a, 
                       ontology_category_id = ontology_category_id_uncategorized, 
                       stringsAsFactors = FALSE))
-    expect_true(length(new_metadata_value_id_2a) == 2)
+    expect_equal(length(new_metadata_value_id_2a), 2)
     
     # Now upload two keys at a time
     metadata_value_2b = c("metadata_value1", "metadata_value3")
@@ -328,12 +328,12 @@ test_that("Check that metadata_value registration works properly", {
       df = data.frame(metadata_value = metadata_value_2b, 
                       ontology_category_id = ontology_category_id_uncategorized, 
                       stringsAsFactors = FALSE))
-    expect_true(length(new_metadata_value_id_2b) == 2)
+    expect_equal(length(new_metadata_value_id_2b), 2)
     expect_true(all(
       revealgenomics:::get_metadata_value(metadata_value_id = new_metadata_value_id_2b)$metadata_value %in% 
         c("metadata_value1", "metadata_value3")))
-    expect_true(identical(sort(unique(revealgenomics:::get_metadata_value()$metadata_value)), 
-                          sort(unique(c(metadata_value_2a, metadata_value_2b)))))
+    expect_identical(sort(unique(revealgenomics:::get_metadata_value()$metadata_value)), 
+                          sort(unique(c(metadata_value_2a, metadata_value_2b))))
     
     # Search function
     testthat::expect_equal(
