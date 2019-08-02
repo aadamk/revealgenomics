@@ -14,7 +14,17 @@ load(paste('data/processed/test_processed_', ip_date, '.RData', sep = ''))
 #### functions for analysing run_time data ####
 
 ##----------------------
-## NUMBER OF NAs
+# get_numNAobs()
+# This function gets the number of runs where data was not returned while executing 
+# search_expression() or search_biosamples()
+# INPUT:
+# dat: A list data-set with the exact same structure as returned by reshape_data.R. Refer to 
+# reshape_data.R for understanding the exact structure of this list data-set.
+# dType: Expression data or biosample data. Expected inputs are exp_dt for expression data
+# bio_dt for biosample data
+# OUTPUT:
+# A data frame with the number of failed runs for each study in dat.
+#
 get_numNAobs <- function(dat, dType) {
   ret <- lapply(X = dat, FUN = function(k) apply(X = k[[dType]], MARGIN = 2, 
                                                  FUN = function(m) length(which(is.na(m)))))

@@ -1,14 +1,17 @@
 rm(list = ls())
 ##-----------------------------------------------------------------------------------------------##
 # This script can be used to plot static or interactive graphs for comparing the run time of two 
-branches
+# branches.
+# Scripts in this folder have been written specifically for the structure of the data returned by
+# reshape_data.R. This data is a list with each element holding data for a particular study.
+# Please refer to reshape_data.R for understanding the exact structure of the data.
 ##-----------------------------------------------------------------------------------------------##
 
 #### Load data
 ip_date = '20190730'
 load(paste('data/processed/test_processed_', ip_date, '.RData', sep = ''))
 
-#### Box-plot
+#### Box-plot ####
 
 ##-------------------------------------
 ## STATIC PLOT
