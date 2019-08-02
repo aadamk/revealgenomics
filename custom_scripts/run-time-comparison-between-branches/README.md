@@ -20,7 +20,7 @@ with each element holding data for a particular study.
 - For further details please refer to this script.
 
 ## plot_runTime_data.R
-- This function plots a static and interactive plot for comparing the run time of two branches.
+- This script can be used to plot static or interactive graphs for comparing the run time of two branches.
 - For further details please refer to this script.
 
 # Folder structure
@@ -28,9 +28,9 @@ with each element holding data for a particular study.
 - This folder has scripts and data.
 - Data is saved in the folder ./data
 - ./data has the following structure -
-  * ./data/raw -
-  * ./data/log_raw -
-  * ./data/processed -
+  * ./data/raw - this folder will contain/contains raw downloaded run time data
+  * ./data/log_raw - this folder will contain/contains log files generated while recording run time
+  * ./data/processed - this folder contains a processed/modified form of run time data
 
 # Execution process
 

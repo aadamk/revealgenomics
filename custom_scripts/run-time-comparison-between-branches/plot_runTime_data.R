@@ -1,4 +1,8 @@
 rm(list = ls())
+##-----------------------------------------------------------------------------------------------##
+# This script can be used to plot static or interactive graphs for comparing the run time of two 
+branches
+##-----------------------------------------------------------------------------------------------##
 
 #### Load data
 ip_date = '20190730'
@@ -8,6 +12,7 @@ load(paste('data/processed/test_processed_', ip_date, '.RData', sep = ''))
 
 ##-------------------------------------
 ## STATIC PLOT
+
 dType = 'exp'                                                                                      ## 'exp', 'bio'
 rtdat_sorted <- rtdat[order(unname(unlist(lapply(X = rtdat, FUN = function(k) {
   as.numeric(gsub(pattern = ' Mb', replacement = '', x = k[[paste(dType, '_size', sep = '')]]))
