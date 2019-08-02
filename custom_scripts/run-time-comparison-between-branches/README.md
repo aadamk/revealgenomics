@@ -1,7 +1,6 @@
 Scripts in this folder allow us to compare the performance of different branches by examining the
 run time of search_biosamples() and search_expressionset()
 
-#-------------------------------------------------------------------------------------------------#
 # A brief description of scripts in this folder
 
 ## get_downloadTime_data.R
@@ -24,7 +23,6 @@ with each element holding data for a particular study.
 - This function plots a static and interactive plot for comparing the run time of two branches.
 - For further details please refer to this script.
 
-#-------------------------------------------------------------------------------------------------#
 # Folder structure
 
 - This folder has scripts and data.
@@ -34,7 +32,6 @@ with each element holding data for a particular study.
   * ./data/log_raw -
   * ./data/processed -
 
-#-------------------------------------------------------------------------------------------------#
 # Execution process
 
 - Please create the following folders - /data, /data/raw, /data/log_raw, /data/processed
