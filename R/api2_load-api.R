@@ -352,7 +352,9 @@ api_register_featuresets_experimentsets_measurementsets = function(
   refset38_id = refSets[grep("grch38", refSets$name, ignore.case = T), ]$referenceset_id
   if (length(refset37_id) != 1 |
               length(refset38_id) != 1) {
-    stop("Following logic expects one featureset named as grch38 and one featureset named as grch37")
+    stop("Expected exactly one referenceset each for grch37 and grch38. ", 
+         "Found: (grch37) -- ", length(refset37_id), 
+         "; (grch38) -- ", length(refset38_id))
   }
   
   ftrset_df$referenceset_id = -1
