@@ -143,7 +143,7 @@ test_that("Register entities via workbook works OK", {
     expect_true(all.equal(dim(v1), c(3, 15)))
     
     ftrs = search_features(gene_symbol = c('IGH'))
-    mn = ms[ms$pipeline_scidb == '[external]-[Fusion] custom pipeline - Foundation Medicine',]
+    mn = ms[grep("Fusion.*Foundation", ms$pipeline_scidb),]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('IGH feature search\n')
     expect_true(all.equal(dim(v1), c(2, 25)))
