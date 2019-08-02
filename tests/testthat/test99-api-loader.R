@@ -112,7 +112,13 @@ test_that("Register entities via workbook works OK", {
     fsets = get_featuresets()
     stopifnot(nrow(fsets) == 2)
     target_featureset_id = fsets[grep("37", fsets$name), ]$featureset_id
-    # ftr_record = build_reference_gene_set(featureset_id = target_featureset_id) # commenting this as we do not have any default files for GRCh37
+    ftr_record = build_reference_gene_set(
+      featureset_id = target_featureset_id, 
+      gene_annotation_file_path = system.file("extdata", 
+                                              "gene__hugo__hgnc_complete_set.txt.gz", package="revealgenomics"), # these are grch38 files but we use this to populate the featureset anyway
+      gene_location_file_path = system.file("extdata", 
+                                            "gene__grch38_release85_homosap_gene__newGene.tsv.gz", package="revealgenomics") # again a grch38 file
+                                          ) 
     
     target_featureset_id = fsets[grep("38", fsets$name), ]$featureset_id
     ftr_record = build_reference_gene_set(featureset_id = target_featureset_id)
