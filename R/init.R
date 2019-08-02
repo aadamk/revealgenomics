@@ -82,12 +82,12 @@ init_db = function(arrays_to_init = NULL,
     dims = arr$dims
     
     fullnm = full_arrayname(entitynm = name)
-    cat("Trying to remove array ", fullnm, "\n")
+    message("Trying to remove array ", fullnm)
     tryCatch({iquery(db, paste("remove(", fullnm, ")"), force=TRUE)},
              error = function(e){cat("====Failed to remove array: ", fullnm, ",\n",sep = "")})
     info_flag = arr$infoArray
     if (!is.null(info_flag)) { if(info_flag){
-      cat("Trying to remove array ", fullnm, "_INFO\n", sep = "")
+      message("Trying to remove array ", fullnm, "_INFO")
       tryCatch({iquery(db, paste("remove(", fullnm, "_INFO)", sep = ""), force=TRUE)},
                error = function(e){cat("====Failed to remove", paste("remove array: ", fullnm, "_INFO\n", sep = ""))})
     }}
@@ -108,7 +108,7 @@ init_db = function(arrays_to_init = NULL,
     fullnm = full_arrayname(entitynm = name)
     tryCatch({
       query =       paste("create array", fullnm, attr_str, "[", dim_str, "]")
-      cat("running: ", query, "\n")
+      message("running: ", query)
       iquery(db,
              query
       )},
@@ -128,7 +128,7 @@ init_db = function(arrays_to_init = NULL,
         query = paste("create array ", fullnm, "_INFO <key: string, val: string> [", 
                       dim_str, ", ", key_str, "]",
                       sep = "")
-        cat("running: ", query, "\n")
+        message("running: ", query)
         iquery(db,
                query
         )
