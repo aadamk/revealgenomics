@@ -360,6 +360,9 @@ register_entities_workbook = function(workbook,
         if ("error" %in% class(errorStatus)) {
           cat("failed loading data\n")
         }
+        
+        # Populate the feature summary for latest measurementset
+        register_feature_summary_at_measurementset(measurementset_df = reference_object$measurement_set)
       } # end of loop through unique files in a measurementsets
       qc_res = run_quality_control_checks(measurementset_id = msmtset_id_sel)
       if ( (length(qc_res$condition1_failures) > 0) | 

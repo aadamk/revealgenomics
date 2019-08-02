@@ -31,10 +31,7 @@ test_that("Check that upload works for `Definitions` sheet of Excel template ", 
     dfDefn$dataset_id = 9999
     dfDefn$Notes = '...'
 
-    init_db(
-      arrays_to_init = c(.ghEnv$meta$arrDefinition, 
-                         .ghEnv$meta$arrMetadataAttrKey),
-      force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     
     # cat("# Register definitions\n")
     def_id = register_definitions(df = as.data.frame(dfDefn))
@@ -58,5 +55,8 @@ test_that("Check that upload works for `Definitions` sheet of Excel template ", 
     # cat("# Clean-up\n")
     delete_entity(entity = .ghEnv$meta$arrDefinition, id = def_id$definition_id)
     expect_true(nrow(get_definitions(updateCache = T)) == 0)
+    
+    # Clean up
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })

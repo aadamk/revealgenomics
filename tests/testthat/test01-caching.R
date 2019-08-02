@@ -4,7 +4,7 @@ test_that("Check that cache is automatically updated while registering or deleti
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = .ghEnv$meta$arrOntology, force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     # Get the existing ontology fields
     ont1 = get_ontology()
     
@@ -26,6 +26,6 @@ test_that("Check that cache is automatically updated while registering or deleti
     expect_equal(nrow(get_ontology(ontology_id = new_ont_id)), 0)
     
     # Clean-up
-    init_db(arrays_to_init = c(.ghEnv$meta$arrOntology), force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })

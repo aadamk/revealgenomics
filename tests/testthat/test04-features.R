@@ -5,11 +5,8 @@ test_that("Check that feature download works when feature_id is a long integer "
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = c(.ghEnv$meta$arrFeature, 
-                               .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym, 
-                               .ghEnv$meta$arrMetadataAttrKey), 
-            force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
+    
     feature_id = register_feature(df = data.frame(name = "dummyFeature", 
                                      gene_symbol = "dummySymbol",
                                      featureset_id = 1000, 
@@ -26,12 +23,7 @@ test_that("Check that feature download works when feature_id is a long integer "
     expect_true(nrow(get_features()) == 1)
     
     # Clean-up
-    init_db(arrays_to_init = c(.ghEnv$meta$arrFeature, 
-                               .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym, 
-                               .ghEnv$meta$arrMetadataAttrKey), 
-            force = TRUE)
-    
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })
 
@@ -40,12 +32,7 @@ test_that("Simple check that feature registration handles synonyms appropriately
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
-                               .ghEnv$meta$arrFeatureset, 
-                               .ghEnv$meta$arrFeature, 
-                               .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym, 
-                               .ghEnv$meta$arrMetadataAttrKey), force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     # Any random referenceset
     refset = get_referenceset()
     if (nrow(refset) >= 1) { # If ReferenceSet has been  filled by this time
@@ -84,13 +71,7 @@ test_that("Simple check that feature registration handles synonyms appropriately
                 feature_record$feature_id))
     
     # Clean-up
-    init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
-                               .ghEnv$meta$arrFeatureset, 
-                               .ghEnv$meta$arrFeature, 
-                               .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym, 
-                               .ghEnv$meta$arrMetadataAttrKey), force = TRUE)
-    
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })
 
@@ -99,12 +80,7 @@ test_that("Advanced check that feature registration handles synonyms appropriate
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
-                               .ghEnv$meta$arrFeatureset, 
-                               .ghEnv$meta$arrFeature, 
-                               .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym, 
-                               .ghEnv$meta$arrMetadataAttrKey), force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     # Any random referenceset
     refset = get_referenceset()
     if (nrow(refset) >= 1) { # If ReferenceSet has been  filled by this time
@@ -356,11 +332,6 @@ test_that("Advanced check that feature registration handles synonyms appropriate
     )
     
     # Clean-up
-    init_db(arrays_to_init = c(.ghEnv$meta$arrReferenceset, 
-                               .ghEnv$meta$arrFeatureset, 
-                               .ghEnv$meta$arrFeature, 
-                               .ghEnv$meta$arrGeneSymbol,
-                               .ghEnv$meta$arrFeatureSynonym, 
-                               .ghEnv$meta$arrMetadataAttrKey), force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })

@@ -82,12 +82,12 @@ init_db = function(arrays_to_init = NULL,
     dims = arr$dims
     
     fullnm = full_arrayname(entitynm = name)
-    cat("Trying to remove array ", fullnm, "\n")
+    message("Trying to remove array ", fullnm)
     tryCatch({iquery(db, paste("remove(", fullnm, ")"), force=TRUE)},
              error = function(e){cat("====Failed to remove array: ", fullnm, ",\n",sep = "")})
     info_flag = arr$infoArray
     if (!is.null(info_flag)) { if(info_flag){
-      cat("Trying to remove array ", fullnm, "_INFO\n", sep = "")
+      message("Trying to remove array ", fullnm, "_INFO")
       tryCatch({iquery(db, paste("remove(", fullnm, "_INFO)", sep = ""), force=TRUE)},
                error = function(e){cat("====Failed to remove", paste("remove array: ", fullnm, "_INFO\n", sep = ""))})
     }}
@@ -108,7 +108,7 @@ init_db = function(arrays_to_init = NULL,
     fullnm = full_arrayname(entitynm = name)
     tryCatch({
       query =       paste("create array", fullnm, attr_str, "[", dim_str, "]")
-      cat("running: ", query, "\n")
+      message("running: ", query)
       iquery(db,
              query
       )},
@@ -128,7 +128,7 @@ init_db = function(arrays_to_init = NULL,
         query = paste("create array ", fullnm, "_INFO <key: string, val: string> [", 
                       dim_str, ", ", key_str, "]",
                       sep = "")
-        cat("running: ", query, "\n")
+        message("running: ", query)
         iquery(db,
                query
         )
@@ -154,14 +154,11 @@ init_db = function(arrays_to_init = NULL,
   # Clean up any package cache
   message("Cleaning up any local cache values")
   .ghEnv$cache$lookup = list()
-  .ghEnv$cache[[.ghEnv$meta$arrOntology]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrVariantKey]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrChromosomeKey]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrDefinition]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrFeatureSynonym]] = NULL
-  .ghEnv$cache[[.ghEnv$meta$arrGeneSymbol]] = NULL
-  
-  
+  cached_entities = get_entity_names()[sapply(get_entity_names(), revealgenomics:::is_entity_cached)]
+  for (entity in cached_entities) {
+    .ghEnv$cache[[entity]] = NULL
+  }
+
   if ( (tolower(resp_perm) == 'y' | tolower(resp_perm) == 'yes') & !is.na(resp_perm)) {
     cat("Proceeding with initialization of permissions array\n")
     init_permissions_array(con = con)

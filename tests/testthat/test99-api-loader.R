@@ -4,8 +4,7 @@ test_that("Register entities via workbook works OK", {
   # cat("# Now connect to scidb\n")
   e0 = tryCatch({rg_connect()}, error = function(e) {e})
   if (!("error" %in% class(e0))) { # do not run this on EE installs, mainly targeted for Travis
-    init_db(arrays_to_init = get_entity_names(),
-            force = TRUE)
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
     df_referenceset = data.frame(
       name = c("GRCh37", "GRCh38"), 
       description = "...",
@@ -113,7 +112,13 @@ test_that("Register entities via workbook works OK", {
     fsets = get_featuresets()
     stopifnot(nrow(fsets) == 2)
     target_featureset_id = fsets[grep("37", fsets$name), ]$featureset_id
-    ftr_record = build_reference_gene_set(featureset_id = target_featureset_id) 
+    ftr_record = build_reference_gene_set(
+      featureset_id = target_featureset_id, 
+      gene_annotation_file_path = system.file("extdata", 
+                                              "gene__hugo__hgnc_complete_set.txt.gz", package="revealgenomics"), # these are grch38 files but we use this to populate the featureset anyway
+      gene_location_file_path = system.file("extdata", 
+                                            "gene__grch38_release85_homosap_gene__newGene.tsv.gz", package="revealgenomics") # again a grch38 file
+                                          ) 
     
     target_featureset_id = fsets[grep("38", fsets$name), ]$featureset_id
     ftr_record = build_reference_gene_set(featureset_id = target_featureset_id)
@@ -128,8 +133,8 @@ test_that("Register entities via workbook works OK", {
     
     # TODO: walk all pipelines and measurementset IDs to verify data.
     ftrs = search_features(gene_symbol = c('TXNIP'))
-    if (nrow(ftrs) != 1) {
-      stop("If more than one feature for TXNIP at this point; need to adjust test")
+    if (nrow(ftrs) > 2) {
+      stop("If more than two features for TXNIP at this point; need to adjust test")
     }
     mn = ms[ms$pipeline_scidb == '[external]-[Fusion] Tophat Fusion',]
     mn = mn[grep("37", mn$featureset_name), ]
@@ -138,7 +143,7 @@ test_that("Register entities via workbook works OK", {
     expect_true(all.equal(dim(v1), c(3, 15)))
     
     ftrs = search_features(gene_symbol = c('IGH'))
-    mn = ms[ms$pipeline_scidb == '[external]-[Fusion] custom pipeline - Foundation Medicine',]
+    mn = ms[grep("Fusion.*Foundation", ms$pipeline_scidb),]
     v1 = search_fusion(measurementset = mn, feature = ftrs)
     cat('IGH feature search\n')
     expect_true(all.equal(dim(v1), c(2, 25)))
@@ -173,5 +178,8 @@ test_that("Register entities via workbook works OK", {
     ftrs = search_features(gene_symbol = c('PARP2', 'RHOA', 'JAK2', 'TP53'))
     v2 = search_variant(measurementset = ms_variant, feature = ftrs)
     expect_true(all.equal(dim(v2), c(5, 21)))
+    
+    # Clean up
+    init_db(arrays_to_init = get_entity_names(), force = TRUE)
   }
 })
