@@ -17,12 +17,10 @@ rg_connect(username = read_json(creds_file)$`user-name`,
 
 ## get all the datasets (dataset_id is unique here?)
 dat = get_datasets()
-tgca_dataset_id <- dat$dataset_id[grep(pattern = 'TCGA-', x = dat$name, ignore.case = FALSE)]
-dat <- dat[grep(pattern = 'TCGA-', x = dat$name, ignore.case = FALSE),]
 
 ## get information about all the pipelines (measurement_id is unique here?)
 ms = get_measurementsets()
-ms <- ms[which(ms$dataset_id %in% tgca_dataset_id),]
+ms <- drop_na_columns(ms[ms$entity == 'RNAQUANTIFICATION',])
 
 ####---------------------------------------------------------------------------------------------####
 #### Utility functions to measure run time ####
