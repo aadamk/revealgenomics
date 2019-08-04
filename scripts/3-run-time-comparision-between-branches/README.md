@@ -34,7 +34,7 @@ with each element holding data for a particular study.
 
 # Execution process
 
-- Please create the following folders - `/data, /data/raw, /data/log_raw, /data/processed`
+- Please create the following folders - `./data, ./data/raw, ./data/log_raw, ./data/processed`
 - First, download run time data using `repeat_runs()` in `get_downloadTime_data.R` (follow naming 
 conventions as detailed in this script).
 - Second, reshape downloaded data using `reshape_data.R` (using naming conventions as detailed in 
