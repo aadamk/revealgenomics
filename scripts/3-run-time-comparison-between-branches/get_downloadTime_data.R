@@ -154,7 +154,7 @@ get_compute_time <- function(msi_dataset_id, msi_measurementset_id, branch, verb
 # Verbose: To receive run time messages. The default value is set as TRUE.
 # Logger: If output should written to a log file. The default value is set as TRUE.
 
-OUTPUT:
+# OUTPUT:
 # run time and object size are returned as a data.frame with the following structure -
 #  $ branch                  : chr  
 #  $ biosample_down_time_sec : num  
