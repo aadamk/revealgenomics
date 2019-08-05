@@ -13,30 +13,6 @@ load(paste('data/processed/test_processed_', ip_date, '.RData', sep = ''))
 
 #### Box-plot ####
 
-##-------------------------------------
-## STATIC PLOT
-
-dType = 'exp'                                                                                      ## 'exp', 'bio'
-rtdat_sorted <- rtdat[order(unname(unlist(lapply(X = rtdat, FUN = function(k) {
-  as.numeric(gsub(pattern = ' Mb', replacement = '', x = k[[paste(dType, '_size', sep = '')]]))
-}))))]
-bdat1 <- as.data.frame(do.call(cbind, lapply(rtdat_sorted, FUN = function(k) k[[paste(dType, '_dt', sep = '')]])),
-                       stringsAsFactors = FALSE)
-colnames(bdat1) <- gsub(pattern = '[.]master|[.]dt_enc_v2', replacement = '', x = colnames(bdat1))
-colnames(bdat1) <- unname(unlist(lapply(X = strsplit(colnames(bdat1), split = '_'),
-                                        FUN = function(k) paste(k[[1]], k[[length(k)]], sep = '_'))))
-bplot_labels <- colnames(bdat1)
-bplot_labels[1:(ncol(bdat1)/2)*2] <- ''
-colnames(bdat1) <- NULL
-
-boxplot(bdat1, col = rep(c('blue', 'green'), (ncol(bdat1)/2)),
-        main = 'search_biosample() - run time', ylab = 'seconds', xlab = '', xaxt = 'n', xaxs = FALSE)
-legend(x = 'bottomright', fill = c('blue', 'green'), bty = 'n', horiz = TRUE,
-       legend = c('master', 'data.table_enhancements_v2'))
-grid(col = 'black')
-axis(side = 1, labels = bplot_labels, at = 1:ncol(bdat1), las = 2, cex.axis = 0.6)
-
-##-------------------------------------
 ## INTERACTIVE PLOT
 library('plotly')
 
