@@ -36,7 +36,7 @@ bdat1$study <- gsub(pattern = '[.][0-9]+', replacement = '', bdat1$study)
 bdat1$study <- unname(unlist(lapply(X = strsplit(bdat1$study, split = '_'),
                                     FUN = function(k) paste(k[[1]], k[[length(k)]], sep = '_'))))
 bdat1 <- bdat1[which(!is.na(bdat1$time)),]
-bdat1 <- bdat1[order(bdat1$size, bdat1$study),]
+bdat1 <- bdat1[order(bdat1$size, bdat1$time, bdat1$study),]
 bdat1$branch[which(bdat1$branch %in% 'dt_enc_v2')] <- 'dt_enhancements_v2'
 bdat1$branch <- as.factor(bdat1$branch)
 bdat1$study <- factor(bdat1$study, 
