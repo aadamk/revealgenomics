@@ -53,7 +53,10 @@ ip_date <- '20190730'
 
 ## Read runtime data
 rtdat <- read.csv(paste('data/raw/', 'runTime_', ip_date, '.csv', sep = ''),
-                  stringsAsFactors = FALSE)
+                  stringsAsFactors = FALSE, 
+                  header = FALSE)
+colnames(rtdat) = c('branch', 'biosample_down_time_sec', 'biosample_size', 'expression_down_time_sec', 
+                    'exp_size', 'ds_name', 'ds_id', 'ms_name', 'ms_id')
 
 ## Create a run time data key and split
 rtdat$key <- paste(rtdat$ds_name, rtdat$ds_id, rtdat$ms_name, rtdat$ms_id, sep = '_')
