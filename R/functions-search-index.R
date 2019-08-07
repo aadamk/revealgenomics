@@ -19,7 +19,9 @@ search_entity_flex_fields = function(dataset_id, dataset_version = 1, con = NULL
 #' @param metadata_value_df portion of \code{get_metadata_value()}, must contain the column \code{metadata_value_id}
 #' 
 #' @export
-find_dataset_id_by_metadata_value = function(metadata_value_df, con = NULL) {
+find_dataset_id_by_metadata_value = function(metadata_value_df, 
+                                             return_attribute_col = FALSE, 
+                                             con = NULL) {
   con = use_ghEnv_if_null(con = con)
   metadata_value_id = metadata_value_df$metadata_value_id
   metadata_value_id = as.integer(sort(metadata_value_id))
@@ -56,10 +58,17 @@ find_dataset_id_by_metadata_value = function(metadata_value_df, con = NULL) {
     ", 'left_names=metadata_value_id', 'right_names=metadata_value_id'",
     ", 'keep_dimensions=true')"
   )
-  aggregate_query = paste0(
-    "grouped_aggregate(",
-    eq_join_query, 
-    ", count(*), dataset_id, entity_id)")
+  if (!return_attribute_col) {
+    aggregate_query = paste0(
+      "grouped_aggregate(",
+      eq_join_query, 
+      ", count(*), dataset_id, entity_id)")
+  } else {
+    aggregate_query = paste0(
+      "grouped_aggregate(",
+      eq_join_query, 
+      ", count(*), dataset_id, metadata_attrkey_id, entity_id)")
+  }
   join_dataset_name = paste0(
     "equi_join(",
     "project(",
@@ -74,6 +83,13 @@ find_dataset_id_by_metadata_value = function(metadata_value_df, con = NULL) {
   res = revealgenomics:::drop_equi_join_dims(iquery(con$db, join_dataset_name, return = T))
   res$entity = revealgenomics:::get_entity_from_entity_id(entity_id = res$entity_id)
   res = plyr::rename(res, c('name' = 'dataset_name'))
-  res = res[, c('dataset_id', 'dataset_name', 'entity_id', 'entity', 'count')]
-  res[order(res$dataset_id, res$entity_id), ]
+  res = res[order(res$dataset_id, res$entity_id), ]
+  if (return_attribute_col) {
+    attribute_columns = revealgenomics:::get_metadata_attrkey(metadata_attrkey_id = unique(res$metadata_attrkey_id), con = con)
+    res$attribute_column = attribute_columns$metadata_attrkey[match(res$metadata_attrkey_id, attribute_columns$metadata_attrkey_id)]
+    res = res[, c('dataset_id', 'dataset_name', 'entity', 'attribute_column', 'count')]
+  } else {
+    res = res[, c('dataset_id', 'dataset_name', 'entity', 'count')]
+  }
+  res
 }
